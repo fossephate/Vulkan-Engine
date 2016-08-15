@@ -1,0 +1,52 @@
+# CMake files
+CMakeCache.txt
+CMakeFiles/
+CTestTestfile.cmake
+Makefile
+Testing/
+cmake_install.cmake
+install_manifest.txt
+
+# Generated files
+Doxyfile
+FindSDL2PP.cmake
+SDL2pp/Config.hh
+sdl2pp.pc
+*.vcxproj*
+*.sln
+Debug/
+Win32/
+
+# Binaries
+examples/*.exe
+examples/audio_sine
+examples/audio_wav
+examples/fill
+examples/image
+examples/lines
+examples/mixer
+examples/mixer_effects
+examples/mixer_music
+examples/mixer_music_sine
+examples/rendertarget
+examples/sprites
+examples/ttf
+libSDL2pp.a
+libSDL2pp.dll
+libSDL2pp.dll.a
+libSDL2pp.so
+libSDL2pp.so.*
+tests/*.exe
+tests/live_mixer
+tests/live_rendering
+tests/test_error
+tests/test_optional
+tests/test_pointrect
+tests/test_pointrect_constexpr
+tests/test_rwops
+
+# Generated tests
+tests/SDL2pp_*_hh_test*
+
+# Doxygen-generated documentation
+doxygen/
