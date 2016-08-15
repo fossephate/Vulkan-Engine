@@ -9,7 +9,7 @@ class renderer {
 		renderer();
 		~renderer();
 
-	private:
+	//private:
 		void _initInstance();
 		void _deInitInstance();
 
@@ -20,9 +20,9 @@ class renderer {
 		void _initDebug();
 		void _deInitDebug();
 
-		VkInstance						_instance					= nullptr;// init private var as nullptr
-		VkPhysicalDevice				_gpu						= nullptr;// init private var as nullptr
-		VkDevice						_device						= nullptr;// init private var as nullptr
+		VkInstance						_instance					= VK_NULL_HANDLE;// init private var as nullptr
+		VkPhysicalDevice				_gpu						= VK_NULL_HANDLE;// init private var as nullptr
+		VkDevice						_device						= VK_NULL_HANDLE;// init private var as nullptr
 		VkPhysicalDeviceProperties		_gpu_properties				= {};// init private var as {}
 
 		uint32_t						_graphics_family_index		= 0;
@@ -33,6 +33,6 @@ class renderer {
 		std::vector<const char*> _device_extensions;
 
 
-		VkDebugReportCallbackEXT _debug_report = nullptr;
+		VkDebugReportCallbackEXT _debug_report = VK_NULL_HANDLE;
 		VkDebugReportCallbackCreateInfoEXT debug_callback_create_info = {};
 };

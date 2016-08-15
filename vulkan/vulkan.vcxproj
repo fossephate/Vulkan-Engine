@@ -71,25 +71,25 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(SolutionDir)\$(ProjectName)\build\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>intermediate\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>C:\VulkanSDK\1.0.21.1\Include;$(IncludePath)</IncludePath>
+    <IncludePath>D:\Google Drive\development\cpp\Win\graphicalProjects\vulkan\include;C:\VulkanSDK\1.0.21.1\Include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\VulkanSDK\1.0.21.1\Bin32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)\$(ProjectName)\build\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>intermediate\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>C:\VulkanSDK\1.0.21.1\Include;$(IncludePath)</IncludePath>
+    <IncludePath>D:\Google Drive\development\cpp\Win\graphicalProjects\vulkan\include;C:\VulkanSDK\1.0.21.1\Include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\VulkanSDK\1.0.21.1\Bin32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)\$(ProjectName)\build\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>intermediate\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>C:\VulkanSDK\1.0.21.1\Include;$(IncludePath)</IncludePath>
+    <IncludePath>D:\Google Drive\development\cpp\Win\graphicalProjects\vulkan\include;C:\VulkanSDK\1.0.21.1\Include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\VulkanSDK\1.0.21.1\Bin;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)\$(ProjectName)\build\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>intermediate\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>C:\VulkanSDK\1.0.21.1\Include;$(IncludePath)</IncludePath>
+    <IncludePath>D:\Google Drive\development\cpp\Win\graphicalProjects\vulkan\include;C:\VulkanSDK\1.0.21.1\Include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\VulkanSDK\1.0.21.1\Bin;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

@@ -67,7 +67,7 @@ void renderer::_deInitInstance()
 	// destroys the instance
 	vkDestroyInstance(_instance, nullptr);
 	// extra destroys the instance? lol
-	_instance = nullptr;
+	_instance = VK_NULL_HANDLE;
 }
 
 void renderer::_initDevice()
@@ -168,7 +168,7 @@ void renderer::_initDevice()
 void renderer::_deInitDevice()
 {
 	vkDestroyDevice(_device, nullptr);
-	_device = nullptr;
+	_device = VK_NULL_HANDLE;
 }
 
 
@@ -233,11 +233,11 @@ void renderer::_setupDebug()
 	debug_callback_create_info.pfnCallback = vulkanDebugCallback;
 
 	debug_callback_create_info.flags =
-		VK_DEBUG_REPORT_INFORMATION_BIT_EXT |
+//		VK_DEBUG_REPORT_INFORMATION_BIT_EXT |
 		VK_DEBUG_REPORT_WARNING_BIT_EXT |
 		VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT |
 		VK_DEBUG_REPORT_ERROR_BIT_EXT |
-		VK_DEBUG_REPORT_DEBUG_BIT_EXT |
+//		VK_DEBUG_REPORT_DEBUG_BIT_EXT |
 		VK_DEBUG_REPORT_FLAG_BITS_MAX_ENUM_EXT |
 		0;
 
@@ -268,8 +268,8 @@ void renderer::_setupDebug()
 
 }
 
-PFN_vkCreateDebugReportCallbackEXT fvkCreateDebugReportCallbackEXT = nullptr;
-PFN_vkDestroyDebugReportCallbackEXT fvkDestroyDebugReportCallbackEXT = nullptr;
+PFN_vkCreateDebugReportCallbackEXT fvkCreateDebugReportCallbackEXT = VK_NULL_HANDLE;
+PFN_vkDestroyDebugReportCallbackEXT fvkDestroyDebugReportCallbackEXT = VK_NULL_HANDLE;
 
 void renderer::_initDebug()
 {
@@ -297,5 +297,5 @@ void renderer::_deInitDebug()
 	// destroy debug instance
 	fvkDestroyDebugReportCallbackEXT(_instance, _debug_report, nullptr);
 	// extra destroy
-	_debug_report = nullptr;
+	_debug_report = VK_NULL_HANDLE;
 }
