@@ -24,6 +24,8 @@ class renderer {
 		VkPhysicalDevice				_gpu						= VK_NULL_HANDLE;// init private var as nullptr
 		VkDevice						_device						= VK_NULL_HANDLE;// init private var as nullptr
 		VkPhysicalDeviceProperties		_gpu_properties				= {};// init private var as {}
+		// queue to send to gpu
+		VkQueue							_queue						= VK_NULL_HANDLE;
 
 		uint32_t						_graphics_family_index		= 0;
 

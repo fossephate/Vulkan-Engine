@@ -51,6 +51,31 @@ glm::mat4 camera(float Translate, glm::vec2 const & Rotate)
 
 ## Release notes
 
+#### [GLM 0.9.7.6](https://github.com/g-truc/glm/releases/tag/0.9.7.6) - 2016-07-16
+##### Improvements:
+- Added pkg-config file #509
+- Updated list of compiler versions detected
+- Improved C++ 11 STL detection #523
+
+##### Fixes:
+- Fixed STL for C++11 detection on ICC #510
+- Fixed missing vec1 overload to length2 and distance2 functions #431
+- Fixed long long warnings when using C++98 on GCC and Clang #482
+- Fixed scalar reciprocal functions (GTC_reciprocal) #520
+
+#### [GLM 0.9.7.5](https://github.com/g-truc/glm/releases/tag/0.9.7.5) - 2016-05-24
+##### Improvements:
+- Added Visual C++ Clang toolset detection
+
+##### Fixes:
+- Fixed uaddCarry warning #497
+- Fixed roundPowerOfTwo and floorPowerOfTwo #503
+- Fixed Visual C++ SIMD instruction set automatic detection in 64 bits
+- Fixed to_string when used with GLM_FORCE_INLINE #506
+- Fixed GLM_FORCE_INLINE with binary vec4 operators
+- Fixed GTX_extended_min_max filename typo #386
+- Fixed intersectRayTriangle to not do any unintentional backface culling
+
 #### [GLM 0.9.7.4](https://github.com/g-truc/glm/releases/tag/0.9.7.4) - 2016-03-19
 ##### Fixes:
 - Fixed asinh and atanh warning with C++98 STL #484

@@ -7,9 +7,6 @@
 #include <glm/gtc/type_ptr.hpp>
 
 
-#include <iostream>
-
-
 
 /*
 #ifdef _MSC_VER

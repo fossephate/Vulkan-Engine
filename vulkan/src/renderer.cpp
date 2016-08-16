@@ -158,11 +158,8 @@ void renderer::_initDevice()
 
 	errorCheck(vkCreateDevice(_gpu, &device_create_info, nullptr, &_device));// takes type vkresult and logs errors if there are any
 
-	/*auto err = vkCreateDevice(_gpu, &device_create_info, nullptr, &_device);
-	if (VK_SUCCESS != err) {
-		assert(0 && "Vulkan ERROR: Device creation failed.");
-		std::exit( -1 );
-	}*/
+
+
 }
 
 void renderer::_deInitDevice()
