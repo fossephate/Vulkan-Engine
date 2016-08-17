@@ -138,7 +138,7 @@ void renderer::_initDevice()
 	VkDeviceQueueCreateInfo device_queue_create_info{};
 	device_queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 	device_queue_create_info.queueFamilyIndex = _graphics_family_index;
-	device_queue_create_info.queueCount = 1;
+	device_queue_create_info.queueCount = 1;// more?
 	device_queue_create_info.pQueuePriorities = queue_priorities;
 
 
@@ -158,7 +158,8 @@ void renderer::_initDevice()
 
 	errorCheck(vkCreateDevice(_gpu, &device_create_info, nullptr, &_device));// takes type vkresult and logs errors if there are any
 
-
+	vkGetDeviceQueue(_device, _graphics_family_index, 0, &_queue);// gets queue handle
+	//vkGetDeviceQueue(_device, _graphics_family_index, 1, &_queue_2);// gets queue handle // diff handle if add more
 
 }
 
