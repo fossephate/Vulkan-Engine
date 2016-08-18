@@ -1,7 +1,10 @@
 #pragma once
 
-#include <vulkan\vulkan.h>
+#include "platform.h"
 #include <vector>
+#include <string>
+
+class window;
 
 
 class renderer {
@@ -9,7 +12,20 @@ class renderer {
 		renderer();
 		~renderer();
 
-	//private:
+		window * createWindow(uint32_t _size_x, uint32_t _size_y, std::string window_name);
+
+		bool	run();
+
+		const VkInstance						getVulkanInstance() const;
+		const VkPhysicalDevice					getVulkanPhysicalDevice() const;
+		const VkDevice							getVulkanDevice() const;
+		const VkQueue							getVulkanQueue() const;
+		const uint32_t							getVulkanGraphicsQueueFamilyIndex() const;
+		const VkPhysicalDeviceProperties	&	getVulkanPhysicalDeviceProperties() const;
+
+
+	private:
+		void _setupLayersAndExtensions();
 		void _initInstance();
 		void _deInitInstance();
 
@@ -28,6 +44,11 @@ class renderer {
 		VkQueue							_queue						= VK_NULL_HANDLE;
 
 		uint32_t						_graphics_family_index		= 0;
+
+
+		window *_window = nullptr;
+
+
 
 		std::vector<const char*> _instance_layers;
 		std::vector<const char*> _instance_extensions;

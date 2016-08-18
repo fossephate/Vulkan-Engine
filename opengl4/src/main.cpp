@@ -62,6 +62,7 @@ static const int SCREEN_WIDTH = 960;
 static const int SCREEN_HEIGHT = 540;
 
 
+// SDL2
 
 int main(int argc, char **argv) {
 
@@ -69,11 +70,7 @@ int main(int argc, char **argv) {
 	SDL_GLContext mainContext; /* Our opengl context handle */
 
 
-	SDL2pp::SDL sdl(SDL_INIT_VIDEO);
-
-	SDL2pp::Window win("Hello World!", 100, 100, 640, 480, SDL_WINDOW_SHOWN);
-
-	/*
+	
 	mainWindow = SDL_CreateWindow("Window Title", // window title
 			100, // initial x position
 			100, // initial y position
@@ -81,7 +78,7 @@ int main(int argc, char **argv) {
 			600, // height, in pixels
 			SDL_WINDOW_OPENGL
 	);
-	*/
+
 	if (!mainWindow) { /* Die if creation failed */
 		std::cout << "SDL_CreateWindow Error: " << SDL_GetError() << std::endl;
 		SDL_Quit();
@@ -160,6 +157,34 @@ int main(int argc, char **argv) {
 	*/
 
 
+
+
+
+	return 0;
+}
+
+
+
+
+// SDL2pp
+
+int main2(int argc, char **argv)
+{
+	SDL2pp::SDL sdl(SDL_INIT_VIDEO);
+
+	SDL2pp::Window mainWindow("Hello World!",
+		100,// initial x position
+		100,// initial y position
+		800,// width, in pixels
+		600,// height, in pixels
+		SDL_WINDOW_SHOWN// flags this point onwards
+	);
+
+	if (!mainWindow) { /* Die if creation failed */
+		std::cout << "SDL_CreateWindow Error: " << SDL_GetError() << std::endl;
+		SDL_Quit();
+		return 1;
+	}
 
 
 

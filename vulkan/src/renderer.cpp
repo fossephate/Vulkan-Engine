@@ -1,5 +1,9 @@
+#include "BUILD_OPTIONS.h"
+#include "platform.h"
+
 #include "renderer.h"
 #include "shared.h"
+#include "window.h"
 
 
 #include <cstdlib>
@@ -10,24 +14,74 @@
 #include <sstream>
 
 
-#ifdef _WIN32
-#include <windows.h>
-#endif // _WIN32
-
-
 // _instance is a private var
 
+// constructor
 renderer::renderer() {
+	_setupLayersAndExtensions();
 	_setupDebug();
 	_initInstance();
 	_initDebug();
 	_initDevice();
 }
 
+// deconstructor
 renderer::~renderer() {
+	delete _window;
 	_deInitDevice();
 	_deInitDebug();
 	_deInitInstance();
+}
+
+window * renderer::createWindow(uint32_t _size_x, uint32_t _size_y, std::string window_name)
+{
+	_window = new window(this, _size_x, _size_y, window_name);
+	return _window;
+}
+
+bool renderer::run()
+{
+	// if window exists
+	if (nullptr != _window) {
+		return _window->update();
+	}
+	return true;
+}
+
+const VkInstance renderer::getVulkanInstance() const
+{
+	return _instance;
+}
+
+const VkPhysicalDevice renderer::getVulkanPhysicalDevice() const
+{
+	return _gpu;
+}
+
+const VkDevice renderer::getVulkanDevice() const
+{
+	return _device;
+}
+
+const VkQueue renderer::getVulkanQueue() const
+{
+	return _queue;
+}
+
+const uint32_t renderer::getVulkanGraphicsQueueFamilyIndex() const
+{
+	return _graphics_family_index;
+}
+
+const VkPhysicalDeviceProperties & renderer::getVulkanPhysicalDeviceProperties() const
+{
+	return _gpu_properties;
+}
+
+void renderer::_setupLayersAndExtensions()
+{
+	_instance_extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+	_instance_extensions.push_back(PLATFORM_SURFACE_EXTENSION_NAME);
 }
 
 // private methods that create and destroy an instance
@@ -52,13 +106,6 @@ void renderer::_initInstance() {
 	
 
 	errorCheck(vkCreateInstance(&instance_create_info, nullptr, &_instance));// takes type vkresult and logs errors if there are any
-	
-	/*auto err = vkCreateInstance( &instance_create_info, nullptr, &_instance );
-
-	if (VK_SUCCESS != err) {
-		assert(0 && "Vulkan ERROR: Create instance failed.");
-		std::exit(-1);
-	}*/
 
 }
 
@@ -168,6 +215,10 @@ void renderer::_deInitDevice()
 	vkDestroyDevice(_device, nullptr);
 	_device = VK_NULL_HANDLE;
 }
+
+
+
+#if BUILD_ENABLE_VULKAN_DEBUG
 
 
 // long function definition
@@ -297,3 +348,11 @@ void renderer::_deInitDebug()
 	// extra destroy
 	_debug_report = VK_NULL_HANDLE;
 }
+
+#else
+
+void renderer::_setupDebug() {};
+void renderer::_initDebug() {};
+void renderer::_deInitDebug() {};
+
+#endif// BUILD_ENABLE_VULKAN_DEBUG

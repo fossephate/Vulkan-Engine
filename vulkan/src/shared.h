@@ -1,7 +1,8 @@
 #pragma once
 
+
+#include "platform.h"
 #include <iostream>
-#include <vulkan/vulkan.h>
 #include <assert.h>
 
 void errorCheck(VkResult result);

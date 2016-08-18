@@ -1,7 +1,11 @@
 
+#include "BUILD_OPTIONS.h"
 #include "shared.h"
 
-void errorCheck(VkResult result) {
+#if BUILD_ENABLE_VULKAN_RUNTIME_DEBUG
+
+void errorCheck(VkResult result)
+{
 	if (result < 0) {
 		switch (result)
 		{
@@ -64,4 +68,12 @@ void errorCheck(VkResult result) {
 		}
 		assert(0 && "Vulkan runtime error.");
 	}
-};
+}
+
+
+#else
+
+void errorCheck(VkResult result) {};
+
+
+#endif// BUILD_ENABLE_VULKAN_RUNTIME_DEBUG

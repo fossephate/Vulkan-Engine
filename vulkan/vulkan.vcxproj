@@ -148,11 +148,17 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\renderer.cpp" />
     <ClCompile Include="src\shared.cpp" />
+    <ClCompile Include="src\window.cpp" />
+    <ClCompile Include="src\window_sdl2.cpp" />
+    <ClCompile Include="src\window_win32.cpp" />
+    <ClCompile Include="src\window_xcb.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="renderer.h" />
+    <ClInclude Include="src\BUILD_OPTIONS.h" />
+    <ClInclude Include="src\platform.h" />
     <ClInclude Include="src\renderer.h" />
     <ClInclude Include="src\shared.h" />
+    <ClInclude Include="src\window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
