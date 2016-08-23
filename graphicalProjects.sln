@@ -7,6 +7,29 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opengl4", "opengl4\opengl4.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vulkan", "vulkan\vulkan.vcxproj", "{373EB2F7-130F-4269-B461-700E4BCD1E67}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{686E90BE-BD5E-41DA-850C-3324414EFA36}"
+	ProjectSection(SolutionItems) = preProject
+		vulkan\include\base\camera.hpp = vulkan\include\base\camera.hpp
+		vulkan\include\base\frustum.hpp = vulkan\include\base\frustum.hpp
+		vulkan\include\base\keycodes.hpp = vulkan\include\base\keycodes.hpp
+		vulkan\include\base\threadpool.hpp = vulkan\include\base\threadpool.hpp
+		vulkan\include\base\vulkanandroid.cpp = vulkan\include\base\vulkanandroid.cpp
+		vulkan\include\base\vulkanandroid.h = vulkan\include\base\vulkanandroid.h
+		vulkan\include\base\vulkanbuffer.hpp = vulkan\include\base\vulkanbuffer.hpp
+		vulkan\include\base\vulkandebug.cpp = vulkan\include\base\vulkandebug.cpp
+		vulkan\include\base\vulkandebug.h = vulkan\include\base\vulkandebug.h
+		vulkan\include\base\vulkandevice.hpp = vulkan\include\base\vulkandevice.hpp
+		vulkan\include\base\vulkanexamplebase.cpp = vulkan\include\base\vulkanexamplebase.cpp
+		vulkan\include\base\vulkanexamplebase.h = vulkan\include\base\vulkanexamplebase.h
+		vulkan\include\base\vulkanframebuffer.hpp = vulkan\include\base\vulkanframebuffer.hpp
+		vulkan\include\base\vulkanMeshLoader.hpp = vulkan\include\base\vulkanMeshLoader.hpp
+		vulkan\include\base\vulkanswapchain.hpp = vulkan\include\base\vulkanswapchain.hpp
+		vulkan\include\base\vulkantextoverlay.hpp = vulkan\include\base\vulkantextoverlay.hpp
+		vulkan\include\base\vulkanTextureLoader.hpp = vulkan\include\base\vulkanTextureLoader.hpp
+		vulkan\include\base\vulkantools.cpp = vulkan\include\base\vulkantools.cpp
+		vulkan\include\base\vulkantools.h = vulkan\include\base\vulkantools.h
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -15,22 +38,22 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{AC9CD84C-58AD-4561-9D9D-57F809027F5C}.Debug|x64.ActiveCfg = Debug|x64
-		{AC9CD84C-58AD-4561-9D9D-57F809027F5C}.Debug|x64.Build.0 = Debug|x64
-		{AC9CD84C-58AD-4561-9D9D-57F809027F5C}.Debug|x86.ActiveCfg = Debug|Win32
-		{AC9CD84C-58AD-4561-9D9D-57F809027F5C}.Debug|x86.Build.0 = Debug|Win32
+		{AC9CD84C-58AD-4561-9D9D-57F809027F5C}.Debug|x64.ActiveCfg = Release|x64
+		{AC9CD84C-58AD-4561-9D9D-57F809027F5C}.Debug|x64.Build.0 = Release|x64
+		{AC9CD84C-58AD-4561-9D9D-57F809027F5C}.Debug|x86.ActiveCfg = Release|x64
+		{AC9CD84C-58AD-4561-9D9D-57F809027F5C}.Debug|x86.Build.0 = Release|x64
 		{AC9CD84C-58AD-4561-9D9D-57F809027F5C}.Release|x64.ActiveCfg = Release|x64
 		{AC9CD84C-58AD-4561-9D9D-57F809027F5C}.Release|x64.Build.0 = Release|x64
-		{AC9CD84C-58AD-4561-9D9D-57F809027F5C}.Release|x86.ActiveCfg = Release|Win32
-		{AC9CD84C-58AD-4561-9D9D-57F809027F5C}.Release|x86.Build.0 = Release|Win32
-		{373EB2F7-130F-4269-B461-700E4BCD1E67}.Debug|x64.ActiveCfg = Debug|x64
-		{373EB2F7-130F-4269-B461-700E4BCD1E67}.Debug|x64.Build.0 = Debug|x64
-		{373EB2F7-130F-4269-B461-700E4BCD1E67}.Debug|x86.ActiveCfg = Debug|Win32
-		{373EB2F7-130F-4269-B461-700E4BCD1E67}.Debug|x86.Build.0 = Debug|Win32
+		{AC9CD84C-58AD-4561-9D9D-57F809027F5C}.Release|x86.ActiveCfg = Release|x64
+		{AC9CD84C-58AD-4561-9D9D-57F809027F5C}.Release|x86.Build.0 = Release|x64
+		{373EB2F7-130F-4269-B461-700E4BCD1E67}.Debug|x64.ActiveCfg = Release|x64
+		{373EB2F7-130F-4269-B461-700E4BCD1E67}.Debug|x64.Build.0 = Release|x64
+		{373EB2F7-130F-4269-B461-700E4BCD1E67}.Debug|x86.ActiveCfg = Release|x64
+		{373EB2F7-130F-4269-B461-700E4BCD1E67}.Debug|x86.Build.0 = Release|x64
 		{373EB2F7-130F-4269-B461-700E4BCD1E67}.Release|x64.ActiveCfg = Release|x64
 		{373EB2F7-130F-4269-B461-700E4BCD1E67}.Release|x64.Build.0 = Release|x64
-		{373EB2F7-130F-4269-B461-700E4BCD1E67}.Release|x86.ActiveCfg = Release|Win32
-		{373EB2F7-130F-4269-B461-700E4BCD1E67}.Release|x86.Build.0 = Release|Win32
+		{373EB2F7-130F-4269-B461-700E4BCD1E67}.Release|x86.ActiveCfg = Release|x64
+		{373EB2F7-130F-4269-B461-700E4BCD1E67}.Release|x86.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
