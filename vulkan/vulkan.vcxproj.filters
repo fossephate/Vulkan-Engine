@@ -18,24 +18,24 @@
     <ClCompile Include="include\base\vulkantools.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="include\base\vulkanexamplebase.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="include\base\vulkandebug.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="mesh.cpp">
+    <ClCompile Include="include\base\vulkanApp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\base\vulkandebug.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\base\vulkantools.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\base\vulkanexamplebase.h">
+    <ClInclude Include="include\base\vulkandebug.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\base\vulkanApp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

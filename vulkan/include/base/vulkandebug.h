@@ -51,7 +51,7 @@ namespace vkDebug
 	// Extension spec can be found at https://github.com/KhronosGroup/Vulkan-Docs/blob/1.0-VK_EXT_debug_marker/doc/specs/vulkan/appendices/VK_EXT_debug_marker.txt
 	// Note that the extension will only be present if run from an offline debugging application
 	// The actual check for extension presence and enabling it on the device is done in the example base class
-	// See VulkanExampleBase::createInstance and VulkanExampleBase::createDevice (base/vulkanexamplebase.cpp)
+	// See vulkanApp::createInstance and vulkanApp::createDevice (base/vulkanApp.cpp)
 	namespace DebugMarker
 	{
 		// Set to true if function pointer for the debug marker are available

@@ -26,6 +26,11 @@
 #include <vulkan/vulkan.h>
 #include "vulkantools.h"
 
+#ifdef USE_SDL2
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_syswm.h>
+#endif
+
 #ifdef __ANDROID__
 #include "vulkanandroid.h"
 #endif
@@ -102,39 +107,47 @@ public:
 	* @note Targets other than XCB ar not yet supported
 	*/
 	void initSurface(
-#ifdef _WIN32
+
+#ifdef USE_SDL2
 		void* platformHandle, void* platformWindow
-#else
-#ifdef __ANDROID__
-		ANativeWindow* window
-#else
+#elif defined _WIN32
+		void* platformHandle, void* platformWindow
+#elif defined __linux__
 		xcb_connection_t* connection, xcb_window_t window
-#endif
+#elif defined __ANDROID__
+		ANativeWindow* window
 #endif
 	)
 	{
 		VkResult err;
 
-		// Create the os-specific surface
-#ifdef _WIN32
+// Create the os-specific surface
+// cross platform
+#if 0//defined USE_SDL2
 		VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {};
 		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
 		surfaceCreateInfo.hinstance = (HINSTANCE)platformHandle;
 		surfaceCreateInfo.hwnd = (HWND)platformWindow;
 		err = vkCreateWin32SurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface);
-#else
-#ifdef __ANDROID__
-		VkAndroidSurfaceCreateInfoKHR surfaceCreateInfo = {};
-		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
-		surfaceCreateInfo.window = window;
-		err = vkCreateAndroidSurfaceKHR(instance, &surfaceCreateInfo, NULL, &surface);
-#else
+// fall back to native
+#elif defined _WIN32
+		VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {};
+		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+		surfaceCreateInfo.hinstance = (HINSTANCE)platformHandle;
+		surfaceCreateInfo.hwnd = (HWND)platformWindow;
+		err = vkCreateWin32SurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface);
+#elif defined __linux__
 		VkXcbSurfaceCreateInfoKHR surfaceCreateInfo = {};
 		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
 		surfaceCreateInfo.connection = connection;
 		surfaceCreateInfo.window = window;
 		err = vkCreateXcbSurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface);
-#endif
+#elif defined __ANDROID__
+		VkAndroidSurfaceCreateInfoKHR surfaceCreateInfo = {};
+		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
+		surfaceCreateInfo.window = window;
+		err = vkCreateAndroidSurfaceKHR(instance, &surfaceCreateInfo, NULL, &surface);
+
 #endif
 
 		// Get available queue family properties
