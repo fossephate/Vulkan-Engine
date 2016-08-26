@@ -1,14 +1,6 @@
-/*
-* Class wrapping access to the swap chain
-* 
-* A swap chain is a collection of framebuffers used for rendering and presentation to the windowing system
-*
-* Copyright (C) 2016 by Sascha Willems - www.saschawillems.de
-*
-* This code is licensed under the MIT license (MIT) (http://opensource.org/licenses/MIT)
-*/
 
-#pragma once
+
+#include "vulkanswapchain.hpp"
 
 #include <stdlib.h>
 #include <string>

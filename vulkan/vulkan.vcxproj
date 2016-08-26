@@ -28,6 +28,7 @@
     <ClInclude Include="include\base\vulkandebug.h" />
     <ClInclude Include="include\base\vulkanApp.h" />
     <ClInclude Include="include\base\vulkantools.h" />
+    <ClInclude Include="include\main\global.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{373EB2F7-130F-4269-B461-700E4BCD1E67}</ProjectGuid>

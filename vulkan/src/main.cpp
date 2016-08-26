@@ -27,8 +27,7 @@
 #include <vector>
 #include <random>
 
-
-#define USE_SDL2 1
+#include "main/global.h"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE

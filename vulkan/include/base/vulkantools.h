@@ -89,7 +89,7 @@ namespace vkTools
 #endif
 
 	// Load a GLSL shader
-	// Note : Only for testing purposes, support for directly feeding GLSL shaders into Vulkan
+	// Note : Only for testing psdl2rposes, support for directly feeding GLSL shaders into Vulkan
 	// may be dropped at some point	
 	VkShaderModule loadShaderGLSL(const char *fileName, VkDevice device, VkShaderStageFlagBits stage);
 

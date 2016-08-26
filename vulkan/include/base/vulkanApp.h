@@ -8,18 +8,19 @@
 
 #pragma once
 
-#ifdef _WIN32
-#pragma comment(linker, "/subsystem:windows")
-#include <windows.h>
-#include <fcntl.h>
-#include <io.h>
-#elif defined(__ANDROID__)
-#include <android/native_activity.h>
-#include <android/asset_manager.h>
-#include <android_native_app_glue.h>
-#include "vulkanandroid.h"
+// include os specific files
+#if defined(_WIN32)
+	#pragma comment(linker, "/subsystem:windows")
+	#include <windows.h>
+	#include <fcntl.h>
+	#include <io.h>
 #elif defined(__linux__)
-#include <xcb/xcb.h>
+	#include <xcb/xcb.h>
+#elif defined(__ANDROID__)
+	#include <android/native_activity.h>
+	#include <android/asset_manager.h>
+	#include <android_native_app_glue.h>
+	#include "vulkanandroid.h"
 #endif
 
 #include <iostream>
@@ -30,6 +31,15 @@
 #include <glm/glm.hpp>
 #include <string>
 #include <array>
+
+// global
+#include "main/global.h"
+
+// load SDL2 if using it
+#if USE_SDL2
+	#include <SDL2/SDL.h>
+	#include <SDL2/SDL_syswm.h>
+#endif
 
 #include "vulkan/vulkan.h"
 
@@ -50,7 +60,6 @@ typedef VkPhysicalDeviceFeatures (*PFN_GetEnabledFeatures)();
 class vulkanApp
 {
 	private:
-
 		// Set to true when example is created with enabled validation layers
 		bool enableValidation = false;
 
@@ -211,68 +220,93 @@ class vulkanApp
 		std::string title = "Vulkan Application";
 		std::string name = "vulkanApplication";
 
-		struct 
-		{
+		struct {
 			VkImage image;
 			VkDeviceMemory mem;
 			VkImageView view;
 		} depthStencil;
 
 		// Gamepad state (only one pad supported)
-		struct
-		{
+		struct {
 			glm::vec2 axisLeft = glm::vec2(0.0f);
 			glm::vec2 axisRight = glm::vec2(0.0f);
 		} gamePadState;
 		
 
-		// OS specific 
-	#if defined(_WIN32)
-		HWND window;
-		HINSTANCE windowInstance;
-	#elif defined(__ANDROID__)
-		android_app* androidApp;
-		// true if application has focused, false if moved to background
-		bool focused = false;
-	#elif defined(__linux__)
-		struct {
-			bool left = false;
-			bool right = false;
-			bool middle = false;
-		} mouseButtons;
-		bool quit = false;
-		xcb_connection_t *connection;
-		xcb_screen_t *screen;
-		xcb_window_t window;
-		xcb_intern_atom_reply_t *atom_wm_delete_window;
-	#endif
+		
+		#if USE_SDL2
+			SDL_SysWMinfo windowInfo;
+		#endif
 
-		// Default constructor
-		vulkanApp(bool enableValidation, PFN_GetEnabledFeatures enabledFeaturesFn = nullptr);
+		// OS specific
+		/* WINDOWS */
+		#if defined(_WIN32)
+			HWND window;
+			HINSTANCE windowInstance;
 
-		// destructor
-		~vulkanApp();
+		/* LINUX */
+		#elif defined(__linux__)
+			struct {
+				bool left = false;
+				bool right = false;
+				bool middle = false;
+			} mouseButtons;
+			bool quit = false;
+			xcb_connection_t *connection;
+			xcb_screen_t *screen;
+			xcb_window_t window;
+			xcb_intern_atom_reply_t *atom_wm_delete_window;
 
-		// Setup the vulkan instance, enable required extensions and connect to the physical device (GPU)
-		void initVulkan(bool enableValidation);
+		/* ANDROID */
+		#elif defined(__ANDROID__)
+			android_app* androidApp;
+			// true if application has focused, false if moved to background
+			bool focused = false;
 
-	#if 1//defined(USE_SDL2)
-		void setupConsole(std::string title);
-		void setupWindow();
-		//void handleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-	#elif defined(_WIN32)
-		void setupConsole(std::string title);
-		HWND setupWindow(HINSTANCE hinstance, WNDPROC wndproc);
-		void handleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-	#elif defined(__linux__)
-		xcb_window_t setupWindow();
-		void initxcbConnection();
-		void handleEvent(const xcb_generic_event_t *event);
-	#elif defined(__ANDROID__)
-		static int32_t handleAppInput(struct android_app* app, AInputEvent* event);
-		static void handleAppCommand(android_app* app, int32_t cmd);
+		#endif
 
-	#endif
+			// Default constructor
+			vulkanApp(bool enableValidation, PFN_GetEnabledFeatures enabledFeaturesFn = nullptr);
+
+			// destructor
+			~vulkanApp();
+
+			// Setup the vulkan instance, enable required extensions and connect to the physical device (GPU)
+			void initVulkan(bool enableValidation);
+
+		#if USE_SDL2
+
+			/* WINDOWS */
+			#if defined(_WIN32)
+				void setupConsole(std::string title);
+				void setupWindow();
+				void handleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+			/* LINUX */
+			#elif defined(__linux__)
+				// TODO
+			/* ANDROID */
+			#elif defined(__ANDROID__)
+				// TODO
+			#endif
+		/* WINDOWS */
+		#elif defined(_WIN32)
+			void setupConsole(std::string title);
+			HWND setupWindow(HINSTANCE hinstance, WNDPROC wndproc);
+			void handleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+		/* LINUX */
+		#elif defined(__linux__)
+			xcb_window_t setupWindow();
+			void initxcbConnection();
+			void handleEvent(const xcb_generic_event_t *event);
+
+		/* ANDROID */
+		#elif defined(__ANDROID__)
+			static int32_t handleAppInput(struct android_app* app, AInputEvent* event);
+			static void handleAppCommand(android_app* app, int32_t cmd);
+
+		#endif
 
 
 		// Pure virtual render function (override in derived class)
@@ -403,98 +437,110 @@ class vulkanApp
 
 };
 
+
 // OS specific macros for the example main entry points
-#if 1//defined(USE_SDL2)
+#if USE_SDL2
+	// Cross platform entry point
+	
+	/* WINDOWS */
+	#if defined(_WIN32)
+		#define VULKAN_EXAMPLE_MAIN()																		\
+		VulkanExample *vulkanExample;																		\
+																											\
+		LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)						\
+		{																									\
+																											\
+			if (vulkanExample != NULL) {																	\
+				vulkanExample->handleMessages(hWnd, uMsg, wParam, lParam);									\
+			}																								\
+			return (DefWindowProc(hWnd, uMsg, wParam, lParam));												\
+																											\
+		}																									\
+																											\
+		int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow)	\
+		{																									\
+			vulkanExample = new VulkanExample();															\
+			vulkanExample->setupWindow();																	\
+			vulkanExample->initSwapchain();																	\
+			vulkanExample->prepare();																		\
+			vulkanExample->renderLoop();																	\
+			delete(vulkanExample);																			\
+			return 0;																						\
+		}
 
-#define VULKAN_EXAMPLE_MAIN()																		\
-VulkanExample *vulkanExample;																		\
-/*																									\
-LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)						\
-{																									\
-																									\
-	if (vulkanExample != NULL)																		\
-	{																								\
-		vulkanExample->handleMessages(hWnd, uMsg, wParam, lParam);									\
-	}																								\
-	return (DefWindowProc(hWnd, uMsg, wParam, lParam));												\
-																									\
-}																									\
-*/																									\
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow)	\
-{																									\
-	vulkanExample = new VulkanExample();															\
-	vulkanExample->setupWindow();																	\
-	vulkanExample->initSwapchain();																	\
-	vulkanExample->prepare();																		\
-	vulkanExample->renderLoop();																	\
-	delete(vulkanExample);																			\
-	return 0;																						\
-}
+	/* LINUX */
+	#elif defined(__linux__)
+		// TODO
 
+	/* ANDROID */
+	#elif defined(_WIN32)
+		// TODO
 
+	#endif
 
+/* WINDOWS */
 #elif defined(_WIN32)
+	// Windows entry point
+	#define VULKAN_EXAMPLE_MAIN()																		\
+	VulkanExample *vulkanExample;																		\
+	LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)						\
+	{																									\
+		if (vulkanExample != NULL)																		\
+		{																								\
+			vulkanExample->handleMessages(hWnd, uMsg, wParam, lParam);									\
+		}																								\
+		return (DefWindowProc(hWnd, uMsg, wParam, lParam));												\
+	}																									\
+	int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow)	\
+	{																									\
+		vulkanExample = new VulkanExample();															\
+		vulkanExample->setupWindow(hInstance, WndProc);													\
+		vulkanExample->initSwapchain();																	\
+		vulkanExample->prepare();																		\
+		vulkanExample->renderLoop();																	\
+		delete(vulkanExample);																			\
+		return 0;																						\
+	}
 
-// Windows entry point
-#define VULKAN_EXAMPLE_MAIN()																		\
-VulkanExample *vulkanExample;																		\
-LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)						\
-{																									\
-	if (vulkanExample != NULL)																		\
-	{																								\
-		vulkanExample->handleMessages(hWnd, uMsg, wParam, lParam);									\
-	}																								\
-	return (DefWindowProc(hWnd, uMsg, wParam, lParam));												\
-}																									\
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow)	\
-{																									\
-	vulkanExample = new VulkanExample();															\
-	vulkanExample->setupWindow(hInstance, WndProc);													\
-	vulkanExample->initSwapchain();																	\
-	vulkanExample->prepare();																		\
-	vulkanExample->renderLoop();																	\
-	delete(vulkanExample);																			\
-	return 0;																						\
-}
-
+/* LINUX */
 #elif defined(__linux__)
-// Linux entry point
-// todo: extract command line arguments
-#define VULKAN_EXAMPLE_MAIN()																		\
-VulkanExample *vulkanExample;																		\
-static void handleEvent(const xcb_generic_event_t *event)											\
-{																									\
-	if (vulkanExample != NULL)																		\
-	{																								\
-		vulkanExample->handleEvent(event);															\
-	}																								\
-}																									\
-int main(const int argc, const char *argv[])													    \
-{																									\
-	vulkanExample = new VulkanExample();															\
-	vulkanExample->setupWindow();					 												\
-	vulkanExample->initSwapchain();																	\
-	vulkanExample->prepare();																		\
-	vulkanExample->renderLoop();																	\
-	delete(vulkanExample);																			\
-	return 0;																						\
-}
+	// Linux entry point
+	// todo: extract command line arguments
+	#define VULKAN_EXAMPLE_MAIN()																		\
+	VulkanExample *vulkanExample;																		\
+	static void handleEvent(const xcb_generic_event_t *event)											\
+	{																									\
+		if (vulkanExample != NULL)																		\
+		{																								\
+			vulkanExample->handleEvent(event);															\
+		}																								\
+	}																									\
+	int main(const int argc, const char *argv[])													    \
+	{																									\
+		vulkanExample = new VulkanExample();															\
+		vulkanExample->setupWindow();					 												\
+		vulkanExample->initSwapchain();																	\
+		vulkanExample->prepare();																		\
+		vulkanExample->renderLoop();																	\
+		delete(vulkanExample);																			\
+		return 0;																						\
+	}
 
-
+/* ANDROID */
 #elif defined(__ANDROID__)
-// Android entry point
-// A note on app_dummy(): This is required as the compiler may otherwise remove the main entry point of the application
-#define VULKAN_EXAMPLE_MAIN()																		\
-VulkanExample *vulkanExample;																		\
-void android_main(android_app* state)																\
-{																									\
-	app_dummy();																					\
-	vulkanExample = new VulkanExample();															\
-	state->userData = vulkanExample;																\
-	state->onAppCmd = VulkanExample::handleAppCommand;												\
-	state->onInputEvent = VulkanExample::handleAppInput;											\
-	vulkanExample->androidApp = state;																\
-	vulkanExample->renderLoop();																	\
-	delete(vulkanExample);																			\
-}
+	// Android entry point
+	// A note on app_dummy(): This is required as the compiler may otherwise remove the main entry point of the application
+	#define VULKAN_EXAMPLE_MAIN()																		\
+	VulkanExample *vulkanExample;																		\
+	void android_main(android_app* state)																\
+	{																									\
+		app_dummy();																					\
+		vulkanExample = new VulkanExample();															\
+		state->userData = vulkanExample;																\
+		state->onAppCmd = VulkanExample::handleAppCommand;												\
+		state->onInputEvent = VulkanExample::handleAppInput;											\
+		vulkanExample->androidApp = state;																\
+		vulkanExample->renderLoop();																	\
+		delete(vulkanExample);																			\
+	}
 #endif

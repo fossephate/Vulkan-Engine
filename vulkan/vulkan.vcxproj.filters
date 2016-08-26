@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\main">
+      <UniqueIdentifier>{009bfede-ee13-4f5a-b35e-0bfa84a6287c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\base">
+      <UniqueIdentifier>{82ff5ca5-d6c9-4fe0-b6f9-d065b8caa9fd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="include\base\vulkantools.cpp">
@@ -37,6 +43,9 @@
     </ClInclude>
     <ClInclude Include="include\base\vulkanApp.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\main\global.h">
+      <Filter>Header Files\main</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
