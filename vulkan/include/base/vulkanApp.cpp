@@ -76,7 +76,7 @@ const std::string vulkanApp::getAssetPath()
 	#if defined(__ANDROID__)
 		return "";
 	#else
-		return "./data/";
+		return "./assets/";
 	#endif
 }
 

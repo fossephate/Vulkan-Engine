@@ -30,7 +30,7 @@
     <ClCompile Include="include\base\vulkanApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\main.cpp">
+    <ClCompile Include="src\instancing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

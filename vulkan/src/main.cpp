@@ -44,13 +44,13 @@
 
 // Number of instances per object
 #if defined(__ANDROID__)
-#define OBJECT_INSTANCE_COUNT 1024
-// Circular range of plant distribution
+	#define OBJECT_INSTANCE_COUNT 1024
+	// Circular range of plant distribution
 #define PLANT_RADIUS 20.0f
 #else
-#define OBJECT_INSTANCE_COUNT 512
-// Circular range of plant distribution
-#define PLANT_RADIUS 25.0f
+	#define OBJECT_INSTANCE_COUNT 512
+	// Circular range of plant distribution
+	#define PLANT_RADIUS 25.0f
 #endif
 
 // Vertex layout for this example
