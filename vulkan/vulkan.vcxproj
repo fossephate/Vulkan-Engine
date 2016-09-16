@@ -19,16 +19,38 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="include\base\vulkandebug.cpp" />
-    <ClCompile Include="include\base\vulkanApp.cpp" />
-    <ClCompile Include="include\base\vulkantools.cpp" />
+    <ClCompile Include="include\external\imgui\extra_fonts\binary_to_compressed_c.cpp" />
+    <ClCompile Include="include\external\imgui\imgui.cpp" />
+    <ClCompile Include="include\external\imgui\imgui_demo.cpp" />
+    <ClCompile Include="include\external\imgui\imgui_draw.cpp" />
     <ClCompile Include="src\instancing.cpp" />
+    <ClCompile Include="src\vulkanClasses\vulkanApp.cpp" />
+    <ClCompile Include="src\vulkanClasses\vulkandebug.cpp" />
+    <ClCompile Include="src\vulkanClasses\vulkantools.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\base\vulkandebug.h" />
-    <ClInclude Include="include\base\vulkanApp.h" />
-    <ClInclude Include="include\base\vulkantools.h" />
+    <ClInclude Include="include\external\imgui\imconfig.h" />
+    <ClInclude Include="include\external\imgui\imgui.h" />
+    <ClInclude Include="include\external\imgui\imgui_internal.h" />
+    <ClInclude Include="include\external\imgui\stb_rect_pack.h" />
+    <ClInclude Include="include\external\imgui\stb_textedit.h" />
+    <ClInclude Include="include\external\imgui\stb_truetype.h" />
     <ClInclude Include="include\main\global.h" />
+    <ClInclude Include="include\vulkanClasses\camera.hpp" />
+    <ClInclude Include="include\vulkanClasses\frustum.hpp" />
+    <ClInclude Include="include\vulkanClasses\keycodes.hpp" />
+    <ClInclude Include="include\vulkanClasses\threadpool.hpp" />
+    <ClInclude Include="include\vulkanClasses\vulkanandroid.h" />
+    <ClInclude Include="include\vulkanClasses\vulkanApp.h" />
+    <ClInclude Include="include\vulkanClasses\vulkanbuffer.hpp" />
+    <ClInclude Include="include\vulkanClasses\vulkandebug.h" />
+    <ClInclude Include="include\vulkanClasses\vulkandevice.hpp" />
+    <ClInclude Include="include\vulkanClasses\vulkanframebuffer.hpp" />
+    <ClInclude Include="include\vulkanClasses\vulkanMeshLoader.hpp" />
+    <ClInclude Include="include\vulkanClasses\vulkanswapchain.hpp" />
+    <ClInclude Include="include\vulkanClasses\vulkantextoverlay.hpp" />
+    <ClInclude Include="include\vulkanClasses\vulkanTextureLoader.hpp" />
+    <ClInclude Include="include\vulkanClasses\vulkantools.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{373EB2F7-130F-4269-B461-700E4BCD1E67}</ProjectGuid>
@@ -109,10 +131,10 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;VK_USE_PLATFORM_WIN32_KHR;_USE_MATH_DEFINES;NOMINMAX;_CRT_SECURE_NO_WARNINGS;_DEBUG</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
+      <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\include\vulkanClasses</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>vulkan/$(Platform)/vulkan-1.lib;SDL2/$(Platform)/SDL2.lib;assimp/assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
@@ -122,10 +144,11 @@
       <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
       <OpenMPSupport>true</OpenMPSupport>
       <WarningLevel>Level3</WarningLevel>
+      <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\include\vulkanClasses</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>vulkan/$(Platform)/vulkan-1.lib;SDL2/$(Platform)/SDL2.lib;assimp/assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -135,12 +158,12 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;VK_USE_PLATFORM_WIN32_KHR;_USE_MATH_DEFINES;NOMINMAX;_CRT_SECURE_NO_WARNINGS;NDEBUG</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
+      <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\include\vulkanClasses</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>vulkan/$(Platform)/vulkan-1.lib;SDL2/$(Platform)/SDL2.lib;assimp/assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
@@ -149,6 +172,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PreprocessorDefinitions>WIN32;_WINDOWS;VK_USE_PLATFORM_WIN32_KHR;_USE_MATH_DEFINES;NOMINMAX;_CRT_SECURE_NO_WARNINGS;NDEBUG</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
+      <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\include\vulkanClasses</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

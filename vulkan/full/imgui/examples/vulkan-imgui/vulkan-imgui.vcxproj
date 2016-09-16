@@ -1,0 +1,195 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="include\external\imgui\imgui.cpp" />
+    <ClCompile Include="include\external\imgui\imgui_demo.cpp" />
+    <ClCompile Include="include\external\imgui\imgui_draw.cpp" />
+    <ClCompile Include="src\imgui_impl_glfw_vulkan.cpp" />
+    <ClCompile Include="src\main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\external\GLFW\glfw3.h" />
+    <ClInclude Include="include\external\GLFW\glfw3native.h" />
+    <ClInclude Include="include\external\imgui\imconfig.h" />
+    <ClInclude Include="include\external\imgui\imgui.h" />
+    <ClInclude Include="include\external\imgui\imgui_internal.h" />
+    <ClInclude Include="include\external\imgui\stb_rect_pack.h" />
+    <ClInclude Include="include\external\imgui\stb_textedit.h" />
+    <ClInclude Include="include\external\imgui\stb_truetype.h" />
+    <ClInclude Include="src\imgui_impl_glfw_vulkan.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="include\external\imgui\.travis.yml" />
+    <None Include="include\external\imgui\LICENSE" />
+    <None Include="include\external\imgui\README.md" />
+    <None Include="libs\SDL2\x64\SDL2.dll" />
+    <None Include="src\glsl_shader.frag" />
+    <None Include="src\glsl_shader.vert" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="libs\SDL2\x64\SDL2.lib" />
+    <Library Include="libs\SDL2\x64\SDL2main.lib" />
+    <Library Include="libs\SDL2\x64\SDL2test.lib" />
+    <Library Include="libs\vulkan\x64\vulkan-1.lib" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{19433907-af51-4482-aa0f-2db4d8ea78a0}</ProjectGuid>
+    <RootNamespace>vulkan_imgui</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <ProjectName>vulkan-imgui</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)\$(ProjectName)\build\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)\$(ProjectName)\intermediate\$(Platform)\$(Configuration)\</IntDir>
+    <IncludePath>$(SolutionDir)\$(ProjectName)\include;$(SolutionDir)\$(ProjectName)\include\external;$(SolutionDir)\$(ProjectName)\include\base;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>$(SolutionDir)\$(ProjectName)\libs;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86</LibraryPath>
+    <SourcePath>$(SolutionDir)\$(ProjectName)\src;</SourcePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)\$(ProjectName)\build\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)\$(ProjectName)\intermediate\$(Platform)\$(Configuration)\</IntDir>
+    <IncludePath>$(SolutionDir)\$(ProjectName)\include;$(SolutionDir)\$(ProjectName)\include\external;$(SolutionDir)\$(ProjectName)\include\base;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>$(SolutionDir)\$(ProjectName)\libs;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86</LibraryPath>
+    <SourcePath>$(SolutionDir)\$(ProjectName)\src;</SourcePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)\$(ProjectName)\build\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)\$(ProjectName)\intermediate\$(Platform)\$(Configuration)\</IntDir>
+    <IncludePath>$(SolutionDir)\$(ProjectName)\include;$(SolutionDir)\$(ProjectName)\include\external;$(SolutionDir)\$(ProjectName)\include\base;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>$(SolutionDir)\$(ProjectName)\libs;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
+    <SourcePath>$(SolutionDir)\$(ProjectName)\src;</SourcePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)\$(ProjectName)\build\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)\$(ProjectName)\intermediate\$(Platform)\$(Configuration)\</IntDir>
+    <IncludePath>$(SolutionDir)\$(ProjectName)\include;$(SolutionDir)\$(ProjectName)\include\external;$(SolutionDir)\$(ProjectName)\include\base;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>$(SolutionDir)\$(ProjectName)\libs;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
+    <SourcePath>$(SolutionDir)\$(ProjectName)\src;</SourcePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>glfw/$(Platform)/glfw3.lib;vulkan/$(Platform)/vulkan-1.lib;SDL2/$(Platform)/SDL2.lib;assimp/assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>msvcrt.lib</IgnoreSpecificDefaultLibraries>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>glfw/$(Platform)/glfw3.lib;vulkan/$(Platform)/vulkan-1.lib;SDL2/$(Platform)/SDL2.lib;assimp/assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\libs\glfw\lib-vc2010-64;</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>msvcrt.lib</IgnoreSpecificDefaultLibraries>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>glfw/$(Platform)/glfw3.lib;vulkan/$(Platform)/vulkan-1.lib;SDL2/$(Platform)/SDL2.lib;assimp/assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>glfw/$(Platform)/glfw3.lib;vulkan/$(Platform)/vulkan-1.lib;SDL2/$(Platform)/SDL2.lib;assimp/assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\libs\glfw\lib-vc2010-64;</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

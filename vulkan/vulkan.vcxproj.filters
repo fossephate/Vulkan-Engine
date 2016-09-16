@@ -21,13 +21,25 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="include\base\vulkantools.cpp">
+    <ClCompile Include="src\vulkanClasses\vulkanApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="include\base\vulkandebug.cpp">
+    <ClCompile Include="src\vulkanClasses\vulkandebug.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="include\base\vulkanApp.cpp">
+    <ClCompile Include="src\vulkanClasses\vulkantools.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\external\imgui\imgui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\external\imgui\extra_fonts\binary_to_compressed_c.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\external\imgui\imgui_demo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\external\imgui\imgui_draw.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\instancing.cpp">
@@ -35,17 +47,71 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\base\vulkantools.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\base\vulkandebug.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\base\vulkanApp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\main\global.h">
       <Filter>Header Files\main</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vulkanClasses\frustum.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vulkanClasses\threadpool.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vulkanClasses\vulkanandroid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vulkanClasses\vulkanApp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vulkanClasses\vulkanbuffer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vulkanClasses\vulkandebug.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vulkanClasses\vulkandevice.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vulkanClasses\vulkanframebuffer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vulkanClasses\vulkanMeshLoader.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vulkanClasses\vulkantextoverlay.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vulkanClasses\vulkanTextureLoader.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vulkanClasses\vulkantools.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vulkanClasses\keycodes.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\external\imgui\imgui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\external\imgui\imconfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\external\imgui\imgui_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\external\imgui\stb_rect_pack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\external\imgui\stb_textedit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\external\imgui\stb_truetype.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vulkanClasses\camera.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vulkanClasses\vulkanswapchain.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
