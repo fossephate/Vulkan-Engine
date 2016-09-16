@@ -24,6 +24,7 @@
     <ClCompile Include="include\external\imgui\imgui_demo.cpp" />
     <ClCompile Include="include\external\imgui\imgui_draw.cpp" />
     <ClCompile Include="src\instancing.cpp" />
+    <ClCompile Include="src\vulkanClasses\camera.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanApp.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkandebug.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkantools.cpp" />
@@ -36,7 +37,7 @@
     <ClInclude Include="include\external\imgui\stb_textedit.h" />
     <ClInclude Include="include\external\imgui\stb_truetype.h" />
     <ClInclude Include="include\main\global.h" />
-    <ClInclude Include="include\vulkanClasses\camera.hpp" />
+    <ClInclude Include="include\vulkanClasses\camera.h" />
     <ClInclude Include="include\vulkanClasses\frustum.hpp" />
     <ClInclude Include="include\vulkanClasses\keycodes.hpp" />
     <ClInclude Include="include\vulkanClasses\threadpool.hpp" />

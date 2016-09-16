@@ -45,6 +45,9 @@
     <ClCompile Include="src\instancing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\vulkanClasses\camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\main\global.h">
@@ -107,10 +110,10 @@
     <ClInclude Include="include\external\imgui\stb_truetype.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\vulkanClasses\camera.hpp">
+    <ClInclude Include="include\vulkanClasses\vulkanswapchain.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\vulkanClasses\vulkanswapchain.hpp">
+    <ClInclude Include="include\vulkanClasses\camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -7,17 +7,23 @@ void Camera::updateViewMatrix() {
 
 
 	glm::mat4 rotationMatrix = glm::toMat4(this->transform.rotation);
-	glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), this->transform.position);
+	glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), this->transform.translation);
+	glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), this->transform.scale);
 
+	
+	//glm::mat4 full = glm::mat4(1.0f);
+	//glm::translate(full, this->transform.translation);
+	//full *= glm::toMat4(this->transform.rotation);
+	//glm::scale(full, this->transform.scale);
 
 	//glm::mat4 tranfMatrix = translationMatrix * rotationMatrix;
 
 	if (type == CameraType::firstperson) {
 		// rotate then translate
-		this->matrices.view = rotationMatrix * translationMatrix;
+		this->transfMatrix = rotationMatrix * translationMatrix * scaleMatrix;
 	} else {
 		// translate then rotate
-		this->matrices.view = translationMatrix * rotationMatrix;
+		this->transfMatrix = translationMatrix * rotationMatrix * scaleMatrix;
 	}
 }
 
@@ -41,32 +47,66 @@ void Camera::updateAspectRatio(float aspect)
 }
 
 /* TRANSLATION */
-inline void Camera::translate(glm::vec3 delta)
+void Camera::translate(glm::vec3 delta)
 {
-	glm::translate(this->transfMatrix, delta);// which to do?
+	this->translation += delta;
+	//setTranslation(this->position);
+	//glm::translate(this->transfMatrix, delta);// which to do?
 	//this->position += delta;
 	//updateViewMatrix();
 }
 
 
-
-inline void Camera::setTranslation(glm::vec3 translation)
+inline void Camera::setTranslation(glm::vec3 point)
 {
-	this->position = translation;
+	this->translation = point;
 	updateViewMatrix();
 }
 
+
+
+inline glm::vec3 Camera::getTranslation()
+{
+	return this->translation;
+}
+
+
+
+
+
+
 /* ROTATION */
-inline void Camera::rotate(glm::quat delta)
+void Camera::rotate(glm::quat delta)
 {
 	this->rotation += delta;
 	updateViewMatrix();
 }
 
+
+
 inline void Camera::setRotation(glm::quat rotation)
 {
 	this->rotation = rotation;
 	updateViewMatrix();
+}
+
+
+inline glm::quat Camera::getRotation() {
+	return this->rotation;
+}
+
+
+void Camera::decompMatrix() {
+
+	glm::mat4 transformation; // your transformation matrix.
+	//glm::vec3 scale;
+	//glm::quat rotation;
+	//glm::vec3 translation;
+	glm::vec3 skew;
+	glm::vec4 perspective;
+
+	glm::decompose(transformation, scale, this->rotation, this->translation, skew, perspective);
+
 }
 
 
@@ -88,13 +128,13 @@ void Camera::update(float deltaTime)
 			float moveSpeed = deltaTime * movementSpeed;
 
 			if (keys.up)
-				position += camFront * moveSpeed;
+				this->translation += camFront * moveSpeed;
 			if (keys.down)
-				position -= camFront * moveSpeed;
+				this->translation -= camFront * moveSpeed;
 			if (keys.left)
-				position -= glm::normalize(glm::cross(camFront, glm::vec3(0.0f, 1.0f, 0.0f))) * moveSpeed;
+				this->translation -= glm::normalize(glm::cross(camFront, glm::vec3(0.0f, 1.0f, 0.0f))) * moveSpeed;
 			if (keys.right)
-				position += glm::normalize(glm::cross(camFront, glm::vec3(0.0f, 1.0f, 0.0f))) * moveSpeed;
+				this->translation += glm::normalize(glm::cross(camFront, glm::vec3(0.0f, 1.0f, 0.0f))) * moveSpeed;
 
 			updateViewMatrix();
 		}
@@ -129,13 +169,13 @@ inline bool Camera::updatePad(glm::vec2 axisLeft, glm::vec2 axisRight, float del
 		if (fabsf(axisLeft.y) > deadZone)
 		{
 			float pos = (fabsf(axisLeft.y) - deadZone) / range;
-			position -= camFront * pos * ((axisLeft.y < 0.0f) ? -1.0f : 1.0f) * moveSpeed;
+			this->translation -= camFront * pos * ((axisLeft.y < 0.0f) ? -1.0f : 1.0f) * moveSpeed;
 			retVal = true;
 		}
 		if (fabsf(axisLeft.x) > deadZone)
 		{
 			float pos = (fabsf(axisLeft.x) - deadZone) / range;
-			position += glm::normalize(glm::cross(camFront, glm::vec3(0.0f, 1.0f, 0.0f))) * pos * ((axisLeft.x < 0.0f) ? -1.0f : 1.0f) * moveSpeed;
+			this->translation += glm::normalize(glm::cross(camFront, glm::vec3(0.0f, 1.0f, 0.0f))) * pos * ((axisLeft.x < 0.0f) ? -1.0f : 1.0f) * moveSpeed;
 			retVal = true;
 		}
 

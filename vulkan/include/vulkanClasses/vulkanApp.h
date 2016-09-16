@@ -52,7 +52,7 @@
 #include "vulkanTextureLoader.hpp"
 #include "vulkanMeshLoader.hpp"
 #include "vulkantextoverlay.hpp"
-#include "camera.hpp"
+#include "camera.h"
 
 // Function pointer for getting physical device fetures to be enabled
 typedef VkPhysicalDeviceFeatures (*PFN_GetEnabledFeatures)();

@@ -11,7 +11,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
-#include "glm/gtc/matrix_transform.hpp"
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 
 class Camera
 {
@@ -35,20 +36,29 @@ public:
 
 	struct {
 		glm::quat rotation = glm::quat();
-		glm::vec3 position = glm::vec3();
-		glm::mat4 transfM = glm::mat4();
+		glm::vec3 translation = glm::vec3();
+		glm::vec3 scale = glm::vec3(1.0, 1.0, 1.0);
+		//glm::mat4 transfMatrix = glm::mat4();
 	} transform;
 
+	// set refs for convenience
 	glm::quat & rotation = transform.rotation;
-	glm::vec3 & position = transform.position;
+	glm::vec3 & translation = transform.translation;
+	glm::vec3 & scale = transform.scale;
 
 	struct
 	{
 		glm::mat4 view;
+		//glm::mat4 transfMatrix;
+		glm::mat4 & transfMatrix = view;
 		glm::mat4 projection;
+
 	} matrices;
 
-	glm::mat4 & transfMatrix = matrices.view;
+	glm::mat4 & transfMatrix = matrices.transfMatrix;
+
+	glm::mat4 & projection = matrices.projection;
+
 
 	struct
 	{
@@ -70,9 +80,15 @@ public:
 	void translate(glm::vec3 delta);
 	void setTranslation(glm::vec3 translation);
 
+	glm::vec3 getTranslation();
+
 	// rotate
 	void rotate(glm::quat delta);
 	void setRotation(glm::quat rotation);
+
+	glm::quat getRotation();
+
+	void decompMatrix();
 	
 
 

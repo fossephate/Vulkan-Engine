@@ -358,7 +358,7 @@ void vulkanApp::renderLoop()
 	destWidth = width;
 	destHeight = height;
 
-	#if defined(USE_SDL2)
+	#if USE_SDL2
 		this->handleInput();
 	#endif
 
@@ -1091,7 +1091,11 @@ void vulkanApp::initVulkan(bool enableValidation)
 				int32_t posy = HIWORD(lParam);
 				rotation.x += (mousePos.y - (float)posy) * 1.25f * rotationSpeed;
 				rotation.y -= (mousePos.x - (float)posx) * 1.25f * rotationSpeed;
-				camera.rotate(glm::vec3((mousePos.y - (float)posy) * camera.rotationSpeed, -(mousePos.x - (float)posx) * camera.rotationSpeed, 0.0f));
+
+				glm::vec3 vrot(glm::vec3((mousePos.y - (float)posy) * camera.rotationSpeed, -(mousePos.x - (float)posx) * camera.rotationSpeed, 0.0f));
+				glm::quat qrot(vrot);
+				camera.rotate(qrot);
+
 				mousePos = glm::vec2((float)posx, (float)posy);
 				viewUpdated = true;
 			}
