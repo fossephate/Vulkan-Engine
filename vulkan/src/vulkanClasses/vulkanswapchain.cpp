@@ -117,14 +117,7 @@
 //)
 
 
-#if USE_SDL2
-	#if defined(_WIN32)
-		void VulkanSwapChain::initSurface(void * windowInstance, SDL_Window * SDLWindowInstance)
-	#elif defined(__linux__)
-		
-	#endif
-// native
-#elif defined(_WIN32)
+#if defined(_WIN32)
 	void VulkanSwapChain::initSurface(void * platformHandle, void * platformWindow)
 #elif defined(__linux__)
 	void VulkanSwapChain::initSurface(xcb_connection_t * connection, xcb_window_t window)
@@ -136,33 +129,34 @@
 
 	// cross platform
 	// check if using SDL2
-	#if USE_SDL2
-			
-		// get window info from SDLWindowInstance
-		SDL_SysWMinfo windowInfo;
-		SDL_GetWindowWMInfo(SDLWindowInstance, &windowInfo);
-			
-		/* WINDOWS*/
-		#if defined(_WIN32)
-			VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {};
-			surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-			surfaceCreateInfo.pNext = NULL;
-			surfaceCreateInfo.hinstance = (HINSTANCE)windowInstance;
-			surfaceCreateInfo.hwnd = windowInfo.info.win.window;
-			err = vkCreateWin32SurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface);
+	//#if USE_SDL2
+	//		
+	//	// get window info from SDLWindowInstance
+	//	SDL_SysWMinfo windowInfo;
+	//	SDL_GetWindowWMInfo(SDLWindowInstance, &windowInfo);
+	//		
+	//	/* WINDOWS*/
+	//	#if defined(_WIN32)
+	//		VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {};
+	//		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+	//		surfaceCreateInfo.pNext = NULL;
+	//		surfaceCreateInfo.hinstance = (HINSTANCE)windowInstance;
+	//		surfaceCreateInfo.hwnd = windowInfo.info.win.window;
+	//		err = vkCreateWin32SurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface);
 
-		/* LINUX */
-		#elif defined(__linux__)
-			// TODO
+	//	/* LINUX */
+	//	#elif defined(__linux__)
+	//		// TODO
 
-		/* ANDROID */
-		#elif defined(__ANDROID__)
-			// TODO
-		#endif
+	//	/* ANDROID */
+	//	#elif defined(__ANDROID__)
+	//		// TODO
+	//	#endif
+
 
 	// if not, make a native surface instead
 	/* WINDOWS */
-	#elif defined(_WIN32)
+	#if defined(_WIN32)
 		VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {};
 		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
 		surfaceCreateInfo.hinstance = (HINSTANCE)platformHandle;
@@ -181,7 +175,6 @@
 		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
 		surfaceCreateInfo.window = window;
 		err = vkCreateAndroidSurfaceKHR(instance, &surfaceCreateInfo, NULL, &surface);
-
 	#endif
 
 	// Get available queue family properties
@@ -263,6 +256,42 @@
 	}
 	colorSpace = surfaceFormats[0].colorSpace;
 }
+
+
+
+//void VulkanSwapChain::initSurfaceWindowsSurface()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

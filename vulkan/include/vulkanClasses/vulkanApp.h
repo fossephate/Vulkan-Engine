@@ -233,12 +233,30 @@ class vulkanApp
 			glm::vec2 axisRight = glm::vec2(0.0f);
 		} gamePadState;
 
-		struct {
-			struct {
 
-			} windows;
+		// Default constructor
+		vulkanApp(bool enableValidation, PFN_GetEnabledFeatures enabledFeaturesFn = nullptr);
+		// destructor
+		~vulkanApp();
+		// Setup the vulkan instance, enable required extensions and connect to the physical device (GPU)
+		void initVulkan(bool enableValidation);
+
+
+
+		struct {
+			#if defined(_WIN32)
+				struct {
+					HWND windowHandle;
+					HINSTANCE windowInstance;
+				} windows;
+			#endif
 			
 		} platformSpecific;
+
+
+
+
+
 		
 
 		
@@ -246,10 +264,12 @@ class vulkanApp
 			SDL_Window * SDLWindow;
 		#endif
 
+
+
 		// OS specific
 		/* WINDOWS */
 		#if defined(_WIN32)
-			HWND window;
+			HWND windowHandle;
 			HINSTANCE windowInstance;
 
 		/* LINUX */
@@ -260,25 +280,18 @@ class vulkanApp
 				bool middle = false;
 			} mouseButtons;
 			bool quit = false;
-			xcb_connection_t *connection;
-			xcb_screen_t *screen;
+			xcb_connection_t * connection;
+			xcb_screen_t * screen;
 			xcb_window_t window;
-			xcb_intern_atom_reply_t *atom_wm_delete_window;W
+			xcb_intern_atom_reply_t * atom_wm_delete_window;
 		/* ANDROID */
 		#elif defined(__ANDROID__)
-			android_app* androidApp;
+			android_app * androidApp;
 			// true if application has focused, false if moved to background
 			bool focused = false;
 		#endif
 
-			// Default constructor
-			vulkanApp(bool enableValidation, PFN_GetEnabledFeatures enabledFeaturesFn = nullptr);
 
-			// destructor
-			~vulkanApp();
-
-			// Setup the vulkan instance, enable required extensions and connect to the physical device (GPU)
-			void initVulkan(bool enableValidation);
 
 		#if USE_SDL2
 
@@ -296,6 +309,7 @@ class vulkanApp
 			#elif defined(__ANDROID__)
 				// TODO
 			#endif
+
 		/* WINDOWS */
 		#elif defined(_WIN32)
 			void setupConsole(std::string title);

@@ -386,6 +386,8 @@ void vulkanApp::renderLoop()
 			}
 
 			render();
+
+
 			frameCounter++;
 			auto tEnd = std::chrono::high_resolution_clock::now();
 			auto tDiff = std::chrono::duration<double, std::milli>(tEnd - tStart).count();
@@ -406,7 +408,7 @@ void vulkanApp::renderLoop()
 			if (fpsTimer > 1000.0f) {
 				if (!enableTextOverlay) {
 					std::string windowTitle = getWindowTitle();
-					SetWindowText(window, windowTitle.c_str());
+					SetWindowText(this->windowHandle, windowTitle.c_str());
 				}
 				lastFPS = frameCounter;
 				updateTextOverlay();
@@ -836,7 +838,7 @@ void vulkanApp::initVulkan(bool enableValidation)
 	{
 
 		SDL_Window *mySDLWindow;
-		SDL_SysWMinfo info;
+		SDL_SysWMinfo windowInfo;
 		std::string windowTitle = "test";
 
 		SDL_Init(SDL_INIT_EVERYTHING);
@@ -850,20 +852,31 @@ void vulkanApp::initVulkan(bool enableValidation)
 			SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE
 		);
 
-		SDL_VERSION(&info.version); // initialize info structure with SDL version info
+		SDL_VERSION(&windowInfo.version); // initialize info structure with SDL version info
 
-		if (SDL_GetWindowWMInfo(mySDLWindow, &info)) {
-			std::cout << "success" << std::endl;
+		if (SDL_GetWindowWMInfo(mySDLWindow, &windowInfo)) {
+			std::cout << "SDL window initialization success." << std::endl;
 		}
 		else {
-			std::cout << "!!! ERROR: Couldn't get window information: " << SDL_GetError() << std::endl;
+			std::cout << "ERROR!: SDL window init: Couldn't get window information: " << SDL_GetError() << std::endl;
 		}
 
-		// get hinstance from sdl window
-		HINSTANCE SDLhinstance = GetModuleHandle(NULL);
-		this->windowInstance = SDLhinstance;
-		this->SDLWindow = mySDLWindow;
+		/* WINDOWS */
+		#if defined(_WIN32)
+			// get hinstance from sdl window
+			HINSTANCE SDLhinstance = GetModuleHandle(NULL);// not sure how this works? (gets current window?) might limit number of windows later
+			this->windowInstance = SDLhinstance;
 
+			// get window handle from sdl window
+			HWND SDLhandle = windowInfo.info.win.window;
+			this->windowHandle = SDLhandle;
+
+		#elif defined(__linux__)
+			// TODO
+		#endif
+
+		// not really used for init anymore, kept bc will prob be needed for input
+		this->SDLWindow = mySDLWindow;
 	}
 
 	// handle input
@@ -1697,22 +1710,23 @@ void vulkanApp::windowResized()
 
 void vulkanApp::initSwapchain()
 {
-	// if using SDL2
-	#if USE_SDL2
-		/* WINDOWS*/
-		#if defined(_WIN32)
-			swapChain.initSurface(this->windowInstance, this->SDLWindow);
-		/* LINUX */
-		#elif defined(__linux__)
-		
-		/* ANDROID */
-		#elif defined(__ANDROID__)
-		
-		#endif
+	//// if using SDL2
+	//#if USE_SDL2
+	//	/* WINDOWS*/
+	//	#if defined(_WIN32)
+	//		swapChain.initSurface(this->windowInstance, this->SDLWindow);
+	//	/* LINUX */
+	//	#elif defined(__linux__)
+	//	
+	//	/* ANDROID */
+	//	#elif defined(__ANDROID__)
+	//	
+	//	#endif
+	//#endif
 
 	/* OS specific surface creation */
-	#elif defined(_WIN32)
-		swapChain.initSurface(windowInstance, window);
+	#if defined(_WIN32)
+		swapChain.initSurface(this->windowInstance, this->windowHandle);
 	#elif defined(__linux__)
 		swapChain.initSurface(connection, window);
 	#elif defined(__ANDROID__)	

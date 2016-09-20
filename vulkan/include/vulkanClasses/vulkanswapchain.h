@@ -122,51 +122,17 @@ class VulkanSwapChain
 		// define params for this function based on os and settings
 		#if USE_SDL2
 			#if defined(_WIN32)
-				void initSurface(void * windowInstance, SDL_Window * SDLWindowInstance);
+				void initSurface(void * platformHandle, void * platformWindow);// this is the same as it is without use sdl2
 			#elif defined(__linux__)
 				// TODO
 			#endif
 		#elif defined(_WIN32)
-			void initSurface(void * platformHandle, void * platformWindow);
+			void initSurface(void * platformHandle, void * platformWindow);// this is the same as it is with use sdl2
 		#elif defined(__linux__)
 			void initSurface(xcb_connection_t* connection, xcb_window_t window);
 		#elif defined(__ANDROID__)
 			ANativeWindow* window
 		#endif
-
-
-		
-		
-		/*
-		void initSurface(
-			// check if using SDL2
-			#if USE_SDL2
-				// WINDOWS
-				#if defined(_WIN32)
-					void *windowInstance, SDL_Window *SDLWindowInstance
-				// LINUX
-				#elif defined(__linux__)
-					// TODO
-
-				// ANDROID
-				#elif defined(__ANDROID__)
-					// TODO
-				#endif
-			// if not, make a native surface instead
-			// WINDOWS
-			#elif defined(_WIN32)
-				void* platformHandle, void* platformWindow
-
-			// LINUX
-			#elif defined(__linux__)
-				xcb_connection_t* connection, xcb_window_t window
-
-			// ANDROID
-			#elif defined(__ANDROID__)
-				ANativeWindow* window
-			#endif
-		);
-		*/
 
 		/**
 		* Set instance, physical and logical device to use for the swpachain and get all required function pointers
