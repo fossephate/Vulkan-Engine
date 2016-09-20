@@ -13,6 +13,7 @@
 #include <time.h> 
 #include <vector>
 #include <random>
+#include <chrono>
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -533,11 +534,31 @@ public:
 			uboVS.view = glm::rotate(uboVS.view, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
 			uboVS.view = glm::rotate(uboVS.view, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
 			uboVS.view = glm::rotate(uboVS.view, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+
 		}
 
 		if (!paused)
 		{
-			uboVS.time += frameTimer * 0.05f;
+			/*
+			auto now = std::chrono::system_clock::now();
+			auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
+			auto epoch = now_ms.time_since_epoch();
+			double time = epoch.count();
+			
+
+			//uboVS.time += frameTimer * 0.05f;
+			time = time / 147405412324800.0;
+			*/
+
+			auto now = std::chrono::system_clock::now();
+			auto time = std::chrono::system_clock::to_time_t(now);
+			auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) -
+				std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch());
+
+			auto msT = 16*sin(ms.count() * 0.000005) + 16;
+
+			uboVS.time = msT;
+
 		}
 
 		memcpy(uniformData.vsScene.mapped, &uboVS, sizeof(uboVS));
@@ -593,7 +614,14 @@ public:
 
 	virtual void getOverlayText(VulkanTextOverlay *textOverlay)
 	{
+		/*auto now = std::chrono::system_clock::now();
+		auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
+		auto epoch = now_ms.time_since_epoch();
+		double time = epoch.count();
+		time = time;*/
+
 		textOverlay->addText("Rendering " + std::to_string(INSTANCE_COUNT) + " instances", 5.0f, 85.0f, VulkanTextOverlay::alignLeft);
+		//textOverlay->addText("Current Time: " + std::to_string(time), 5.0f, 105.0f, VulkanTextOverlay::alignLeft);
 	}
 };
 

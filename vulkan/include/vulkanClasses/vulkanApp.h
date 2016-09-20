@@ -42,13 +42,14 @@
 #endif
 
 #include "vulkan/vulkan.h"
+//#include <vulkan/vulkan.hpp>// DO THIS LATER
 
 #include "keycodes.hpp"
 #include "vulkantools.h"
 #include "vulkandebug.h"
 
 #include "vulkandevice.hpp"
-#include "vulkanswapchain.hpp"
+#include "vulkanswapchain.h"
 #include "vulkanTextureLoader.hpp"
 #include "vulkanMeshLoader.hpp"
 #include "vulkantextoverlay.hpp"
@@ -231,11 +232,18 @@ class vulkanApp
 			glm::vec2 axisLeft = glm::vec2(0.0f);
 			glm::vec2 axisRight = glm::vec2(0.0f);
 		} gamePadState;
+
+		struct {
+			struct {
+
+			} windows;
+			
+		} platformSpecific;
 		
 
 		
 		#if USE_SDL2
-			SDL_Window	*SDLWindow;
+			SDL_Window * SDLWindow;
 		#endif
 
 		// OS specific
@@ -255,14 +263,12 @@ class vulkanApp
 			xcb_connection_t *connection;
 			xcb_screen_t *screen;
 			xcb_window_t window;
-			xcb_intern_atom_reply_t *atom_wm_delete_window;
-
+			xcb_intern_atom_reply_t *atom_wm_delete_window;W
 		/* ANDROID */
 		#elif defined(__ANDROID__)
 			android_app* androidApp;
 			// true if application has focused, false if moved to background
 			bool focused = false;
-
 		#endif
 
 			// Default constructor
@@ -438,6 +444,8 @@ class vulkanApp
 		void submitFrame();
 
 };
+
+
 
 
 // OS specific macros for the example main entry points

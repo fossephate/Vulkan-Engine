@@ -223,6 +223,7 @@ void vulkanApp::prepare()
 	#if defined(__ANDROID__)
 		textureLoader->assetManager = androidApp->activity->assetManager;
 	#endif
+
 	if (enableTextOverlay)
 	{
 		// Load the text rendering shaders
@@ -353,13 +354,16 @@ void vulkanApp::loadMesh(std::string filename, vkMeshLoader::MeshBuffer * meshBu
 	delete(mesh);
 }
 
+
+
+
 void vulkanApp::renderLoop()
 {
 	destWidth = width;
 	destHeight = height;
 
 	#if USE_SDL2
-		this->handleInput();
+		//this->handleInput();
 	#endif
 
 	#if defined(_WIN32)
@@ -544,24 +548,47 @@ void vulkanApp::renderLoop()
 	vkDeviceWaitIdle(device);
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void vulkanApp::updateTextOverlay()
 {
 	if (!enableTextOverlay) {
 		return;
 	}
-
 	textOverlay->beginTextUpdate();
-
 	textOverlay->addText(title, 5.0f, 5.0f, VulkanTextOverlay::alignLeft);
-
 	std::stringstream ss;
 	ss << std::fixed << std::setprecision(2) << (frameTimer * 1000.0f) << "ms (" << lastFPS << " fps)";
 	textOverlay->addText(ss.str(), 5.0f, 25.0f, VulkanTextOverlay::alignLeft);
-
 	textOverlay->addText(deviceProperties.deviceName, 5.0f, 45.0f, VulkanTextOverlay::alignLeft);
-
 	getOverlayText(textOverlay);
-
 	textOverlay->endTextUpdate();
 }
 
@@ -1670,29 +1697,27 @@ void vulkanApp::windowResized()
 
 void vulkanApp::initSwapchain()
 {
+	// if using SDL2
+	#if USE_SDL2
+		/* WINDOWS*/
+		#if defined(_WIN32)
+			swapChain.initSurface(this->windowInstance, this->SDLWindow);
+		/* LINUX */
+		#elif defined(__linux__)
+		
+		/* ANDROID */
+		#elif defined(__ANDROID__)
+		
+		#endif
 
-
-// if using SDL2
-#if USE_SDL2
-	/* WINDOWS*/
-	#if defined(_WIN32)
-		swapChain.initSurface(this->windowInstance, this->SDLWindow);
-	/* LINUX */
+	/* OS specific surface creation */
+	#elif defined(_WIN32)
+		swapChain.initSurface(windowInstance, window);
 	#elif defined(__linux__)
-		
-	/* ANDROID */
-	#elif defined(__ANDROID__)
-		
+		swapChain.initSurface(connection, window);
+	#elif defined(__ANDROID__)	
+		swapChain.initSurface(androidApp->window);
 	#endif
-
-/* OS specific surface creation */
-#elif defined(_WIN32)
-	swapChain.initSurface(windowInstance, window);
-#elif defined(__ANDROID__)	
-	swapChain.initSurface(androidApp->window);
-#elif defined(__linux__)
-	swapChain.initSurface(connection, window);
-#endif
 }
 
 void vulkanApp::setupSwapChain()

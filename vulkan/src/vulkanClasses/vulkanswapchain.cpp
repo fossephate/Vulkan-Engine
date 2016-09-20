@@ -87,34 +87,50 @@
 * @note Targets other than XCB ar not yet supported
 */
 // define params for this function based on os and settings
-void VulkanSwapChain::initSurface(
-	// check if using SDL2
-	#if USE_SDL2
-		/* WINDOWS */
-		#if defined(_WIN32)
-			void *windowInstance, SDL_Window *SDLWindowInstance
-		/* LINUX */
-		#elif defined(__linux__)
-			// TODO
+//void VulkanSwapChain::initSurface(
+//	// check if using SDL2
+//	#if USE_SDL2
+//		/* WINDOWS */
+//		#if defined(_WIN32)
+//			void * windowInstance, SDL_Window * SDLWindowInstance
+//		/* LINUX */
+//		#elif defined(__linux__)
+//			// TODO
+//
+//		/* ANDROID */
+//		#elif defined(__ANDROID__)
+//			// TODO
+//		#endif
+//	// if not, make a native surface instead
+//	/* WINDOWS */
+//	#elif defined(_WIN32)
+//		void * platformHandle, void * platformWindow
+//
+//	/* LINUX */
+//	#elif defined(__linux__)
+//		xcb_connection_t* connection, xcb_window_t window
+//
+//	/* ANDROID */
+//	#elif defined(__ANDROID__)
+//		ANativeWindow* window
+//	#endif
+//)
 
-		/* ANDROID */
-		#elif defined(__ANDROID__)
-			// TODO
-		#endif
-	// if not, make a native surface instead
-	/* WINDOWS */
-	#elif defined(_WIN32)
-		void* platformHandle, void* platformWindow
 
-	/* LINUX */
+#if USE_SDL2
+	#if defined(_WIN32)
+		void VulkanSwapChain::initSurface(void * windowInstance, SDL_Window * SDLWindowInstance)
 	#elif defined(__linux__)
-		xcb_connection_t* connection, xcb_window_t window
-
-	/* ANDROID */
-	#elif defined(__ANDROID__)
-		ANativeWindow* window
+		
 	#endif
-)
+// native
+#elif defined(_WIN32)
+	void VulkanSwapChain::initSurface(void * platformHandle, void * platformWindow)
+#elif defined(__linux__)
+	void VulkanSwapChain::initSurface(xcb_connection_t * connection, xcb_window_t window)
+#elif defined(__ANDROID__)
+	void VulkanSwapChain::initSurface(ANativeWindow * window)
+#endif
 {
 	VkResult err;
 

@@ -27,6 +27,7 @@
     <ClCompile Include="src\vulkanClasses\camera.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanApp.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkandebug.cpp" />
+    <ClCompile Include="src\vulkanClasses\vulkanswapchain.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkantools.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -48,7 +49,7 @@
     <ClInclude Include="include\vulkanClasses\vulkandevice.hpp" />
     <ClInclude Include="include\vulkanClasses\vulkanframebuffer.hpp" />
     <ClInclude Include="include\vulkanClasses\vulkanMeshLoader.hpp" />
-    <ClInclude Include="include\vulkanClasses\vulkanswapchain.hpp" />
+    <ClInclude Include="include\vulkanClasses\vulkanswapchain.h" />
     <ClInclude Include="include\vulkanClasses\vulkantextoverlay.hpp" />
     <ClInclude Include="include\vulkanClasses\vulkanTextureLoader.hpp" />
     <ClInclude Include="include\vulkanClasses\vulkantools.h" />

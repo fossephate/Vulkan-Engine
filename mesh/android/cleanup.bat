@@ -1,1 +1,0 @@
-FOR /d /r . %%x IN (assets) DO @IF EXIST "%%x" rd /s /q "%%x"
