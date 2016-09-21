@@ -20,7 +20,7 @@
 	#include <android/native_activity.h>
 	#include <android/asset_manager.h>
 	#include <android_native_app_glue.h>
-	#include "vulkanandroid.h"
+	#include "vulkanAndroid.h"
 #endif
 
 #include <iostream>
@@ -41,18 +41,17 @@
 	#include <SDL2/SDL_syswm.h>
 #endif
 
-#include "vulkan/vulkan.h"
-//#include <vulkan/vulkan.hpp>// DO THIS LATER
+#include <vulkan/vulkan.hpp>
 
 #include "keycodes.hpp"
-#include "vulkantools.h"
-#include "vulkandebug.h"
+#include "vulkanTools.h"
+#include "vulkanDebug.h"
 
-#include "vulkandevice.hpp"
-#include "vulkanswapchain.h"
+#include "vulkanDevice.hpp"
+#include "vulkanSwapChain.h"
 #include "vulkanTextureLoader.hpp"
 #include "vulkanMeshLoader.hpp"
-#include "vulkantextoverlay.hpp"
+#include "vulkanTextOverlay.hpp"
 #include "camera.h"
 
 // Function pointer for getting physical device fetures to be enabled
@@ -122,7 +121,7 @@ class vulkanApp
 		VkDevice device;
 
 		/** @brief Encapsulated physical and logical vulkan device */
-		vk::VulkanDevice *vulkanDevice;
+		vkx::VulkanDevice *vulkanDevice;
 
 		// Handle to the device graphics queue that command buffers are submitted to
 		VkQueue queue;
@@ -186,6 +185,12 @@ class vulkanApp
 		// Returns the base asset path (for shaders, models, textures) depending on the os
 		const std::string getAssetPath();
 
+
+
+
+
+
+
 	public:
 
 		bool prepared = false;
@@ -205,7 +210,7 @@ class vulkanApp
 		bool paused = false;
 
 		bool enableTextOverlay = false;
-		VulkanTextOverlay *textOverlay;
+		vkx::VulkanTextOverlay *textOverlay;
 
 		// Use to adjust mouse rotation speed
 		float rotationSpeed = 1.0f;
@@ -446,7 +451,7 @@ class vulkanApp
 
 		// Called when the text overlay is updating
 		// Can be overriden in derived class to add custom text to the overlay
-		virtual void getOverlayText(VulkanTextOverlay * textOverlay);
+		virtual void getOverlayText(vkx::VulkanTextOverlay * textOverlay);
 
 		// Prepare the frame for workload submission
 		// - Acquires the next image from the swap chain 

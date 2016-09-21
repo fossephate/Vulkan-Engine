@@ -89,7 +89,7 @@ namespace vk
 	struct Framebuffer
 	{
 	private:
-		vk::VulkanDevice *vulkanDevice;
+		vkx::VulkanDevice *vulkanDevice;
 	public:
 		uint32_t width, height;
 		VkFramebuffer framebuffer;

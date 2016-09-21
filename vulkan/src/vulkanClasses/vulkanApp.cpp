@@ -8,11 +8,6 @@
 
 #include "main/global.h"
 
-// load SDL2 if using it
-#if USE_SDL2
-	#include <SDL2/SDL.h>
-	#include <SDL2/SDL_syswm.h>
-#endif
 
 #include "vulkanApp.h"
 
@@ -151,6 +146,16 @@ void vulkanApp::flushSetupCommandBuffer()
 	setupCmdBuffer = VK_NULL_HANDLE; 
 }
 
+
+
+
+
+
+
+
+
+
+
 VkCommandBuffer vulkanApp::createCommandBuffer(VkCommandBufferLevel level, bool begin)
 {
 	VkCommandBuffer cmdBuffer;
@@ -171,6 +176,13 @@ VkCommandBuffer vulkanApp::createCommandBuffer(VkCommandBufferLevel level, bool 
 
 	return cmdBuffer;
 }
+
+
+
+
+
+
+
 
 void vulkanApp::flushCommandBuffer(VkCommandBuffer commandBuffer, VkQueue queue, bool free)
 {
@@ -193,12 +205,18 @@ void vulkanApp::flushCommandBuffer(VkCommandBuffer commandBuffer, VkQueue queue,
 	}
 }
 
+
+
+
 void vulkanApp::createPipelineCache()
 {
 	VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
 	pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
 	VK_CHECK_RESULT(vkCreatePipelineCache(device, &pipelineCacheCreateInfo, nullptr, &pipelineCache));
 }
+
+
+
 
 void vulkanApp::prepare()
 {
@@ -230,7 +248,7 @@ void vulkanApp::prepare()
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
 		shaderStages.push_back(loadShader(getAssetPath() + "shaders/base/textoverlay.vert.spv", VK_SHADER_STAGE_VERTEX_BIT));
 		shaderStages.push_back(loadShader(getAssetPath() + "shaders/base/textoverlay.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT));
-		textOverlay = new VulkanTextOverlay(
+		textOverlay = new vkx::VulkanTextOverlay(
 			vulkanDevice,
 			queue,
 			frameBuffers,
@@ -243,6 +261,9 @@ void vulkanApp::prepare()
 		updateTextOverlay();
 	}
 }
+
+
+
 
 VkPipelineShaderStageCreateInfo vulkanApp::loadShader(std::string fileName, VkShaderStageFlagBits stage)
 {
@@ -261,6 +282,10 @@ VkPipelineShaderStageCreateInfo vulkanApp::loadShader(std::string fileName, VkSh
 	shaderModules.push_back(shaderStage.module);
 	return shaderStage;
 }
+
+
+
+
 
 VkBool32 vulkanApp::createBuffer(VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VkDeviceSize size, void * data, VkBuffer * buffer, VkDeviceMemory * memory)
 {
@@ -286,10 +311,16 @@ VkBool32 vulkanApp::createBuffer(VkBufferUsageFlags usageFlags, VkMemoryProperty
 	return true;
 }
 
+
+
+
 VkBool32 vulkanApp::createBuffer(VkBufferUsageFlags usage, VkDeviceSize size, void * data, VkBuffer *buffer, VkDeviceMemory *memory)
 {
 	return createBuffer(usage, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, size, data, buffer, memory);
 }
+
+
+
 
 VkBool32 vulkanApp::createBuffer(VkBufferUsageFlags usage, VkDeviceSize size, void * data, VkBuffer * buffer, VkDeviceMemory * memory, VkDescriptorBufferInfo * descriptor)
 {
@@ -304,6 +335,9 @@ VkBool32 vulkanApp::createBuffer(VkBufferUsageFlags usage, VkDeviceSize size, vo
 	}
 }
 
+
+
+
 VkBool32 vulkanApp::createBuffer(VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryPropertyFlags, VkDeviceSize size, void * data, VkBuffer * buffer, VkDeviceMemory * memory, VkDescriptorBufferInfo * descriptor)
 {
 	VkBool32 res = createBuffer(usage, memoryPropertyFlags, size, data, buffer, memory);
@@ -317,6 +351,9 @@ VkBool32 vulkanApp::createBuffer(VkBufferUsageFlags usage, VkMemoryPropertyFlags
 	}
 }
 
+
+
+
 void vulkanApp::loadMesh(std::string filename, vkMeshLoader::MeshBuffer * meshBuffer, std::vector<vkMeshLoader::VertexLayout> vertexLayout, float scale)
 {
 	vkMeshLoader::MeshCreateInfo meshCreateInfo;
@@ -325,6 +362,8 @@ void vulkanApp::loadMesh(std::string filename, vkMeshLoader::MeshBuffer * meshBu
 	meshCreateInfo.uvscale = glm::vec2(1.0f);
 	loadMesh(filename, meshBuffer, vertexLayout, &meshCreateInfo);
 }
+
+
 
 void vulkanApp::loadMesh(std::string filename, vkMeshLoader::MeshBuffer * meshBuffer, std::vector<vkMeshLoader::VertexLayout> vertexLayout, vkMeshLoader::MeshCreateInfo *meshCreateInfo)
 {
@@ -353,6 +392,14 @@ void vulkanApp::loadMesh(std::string filename, vkMeshLoader::MeshBuffer * meshBu
 
 	delete(mesh);
 }
+
+
+
+
+
+
+
+
 
 
 
@@ -585,16 +632,16 @@ void vulkanApp::updateTextOverlay()
 		return;
 	}
 	textOverlay->beginTextUpdate();
-	textOverlay->addText(title, 5.0f, 5.0f, VulkanTextOverlay::alignLeft);
+	textOverlay->addText(title, 5.0f, 5.0f, vkx::VulkanTextOverlay::alignLeft);
 	std::stringstream ss;
 	ss << std::fixed << std::setprecision(2) << (frameTimer * 1000.0f) << "ms (" << lastFPS << " fps)";
-	textOverlay->addText(ss.str(), 5.0f, 25.0f, VulkanTextOverlay::alignLeft);
-	textOverlay->addText(deviceProperties.deviceName, 5.0f, 45.0f, VulkanTextOverlay::alignLeft);
+	textOverlay->addText(ss.str(), 5.0f, 25.0f, vkx::VulkanTextOverlay::alignLeft);
+	textOverlay->addText(deviceProperties.deviceName, 5.0f, 45.0f, vkx::VulkanTextOverlay::alignLeft);
 	getOverlayText(textOverlay);
 	textOverlay->endTextUpdate();
 }
 
-void vulkanApp::getOverlayText(VulkanTextOverlay *textOverlay)
+void vulkanApp::getOverlayText(vkx::VulkanTextOverlay * textOverlay)
 {
 	// Can be overriden in derived class
 }
@@ -783,7 +830,7 @@ void vulkanApp::initVulkan(bool enableValidation)
 	// Vulkan device creation
 	// This is handled by a separate class that gets a logical device representation
 	// and encapsulates functions related to a device
-	vulkanDevice = new vk::VulkanDevice(physicalDevice);
+	vulkanDevice = new vkx::VulkanDevice(physicalDevice);
 	VK_CHECK_RESULT(vulkanDevice->createLogicalDevice(enabledFeatures));
 	device = vulkanDevice->logicalDevice;
 
@@ -997,7 +1044,7 @@ void vulkanApp::initVulkan(bool enableValidation)
 		AdjustWindowRectEx(&windowRect, dwStyle, FALSE, dwExStyle);
 
 		std::string windowTitle = getWindowTitle();
-		window = CreateWindowEx(0,
+		windowHandle = CreateWindowEx(0,
 			name.c_str(),
 			windowTitle.c_str(),
 			dwStyle | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
@@ -1014,21 +1061,21 @@ void vulkanApp::initVulkan(bool enableValidation)
 			// Center on screen
 			uint32_t x = (GetSystemMetrics(SM_CXSCREEN) - windowRect.right) / 2;
 			uint32_t y = (GetSystemMetrics(SM_CYSCREEN) - windowRect.bottom) / 2;
-			SetWindowPos(window, 0, x, y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+			SetWindowPos(windowHandle, 0, x, y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 		}
 
-		if (!window) {
+		if (!windowHandle) {
 			printf("Could not create window!\n");
 			fflush(stdout);
 			return 0;
 			exit(1);
 		}
 
-		ShowWindow(window, SW_SHOW);
-		SetForegroundWindow(window);
-		SetFocus(window);
+		ShowWindow(windowHandle, SW_SHOW);
+		SetForegroundWindow(windowHandle);
+		SetFocus(windowHandle);
 
-		return window;
+		return windowHandle;
 	}
 
 	void vulkanApp::handleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -1041,7 +1088,7 @@ void vulkanApp::initVulkan(bool enableValidation)
 			PostQuitMessage(0);
 			break;
 		case WM_PAINT:
-			ValidateRect(window, NULL);
+			ValidateRect(windowHandle, NULL);
 			break;
 		case WM_KEYDOWN:
 			switch (wParam)

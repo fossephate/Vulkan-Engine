@@ -12,10 +12,10 @@
 
 #include <vector>
 
-#include "vulkan/vulkan.h"
-#include "vulkantools.h"
+#include <vulkan/vulkan.h>
+#include "vulkanTools.h"
 
-namespace vk
+namespace vkx
 {	
 	/**
 	* @brief Encapsulates access to a Vulkan buffer backed up by device memory

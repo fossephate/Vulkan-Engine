@@ -15,14 +15,13 @@
 #include <stdio.h>
 #include <vector>
 #include <map>
-#ifdef _WIN32
-#include <windows.h>
-#include <fcntl.h>
-#include <io.h>
+
+#if defined(_WIN32)
+	#include <windows.h>
+	#include <fcntl.h>
+	#include <io.h>
 #else
 #endif
-
-#include "vulkan/vulkan.h"
 
 #include <assimp/Importer.hpp> 
 #include <assimp/scene.h>     
@@ -33,7 +32,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "vulkandevice.hpp"
+#include <vulkan/vulkan.hpp>
+#include "vulkanDevice.hpp"
 
 #if defined(__ANDROID__)
 #include <android/asset_manager.h>
@@ -231,7 +231,7 @@ namespace vkMeshLoader
 class VulkanMeshLoader 
 {
 private:
-	vk::VulkanDevice *vulkanDevice;
+	vkx::VulkanDevice *vulkanDevice;
 
 	static const int defaultFlags = aiProcess_FlipWindingOrder | aiProcess_Triangulate | aiProcess_PreTransformVertices | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals;
 
@@ -289,7 +289,7 @@ public:
 	*
 	* @param vulkanDevice Pointer to a valid VulkanDevice
 	*/
-	VulkanMeshLoader(vk::VulkanDevice *vulkanDevice)
+	VulkanMeshLoader(vkx::VulkanDevice * vulkanDevice)
 	{
 		assert(vulkanDevice != nullptr);
 		this->vulkanDevice = vulkanDevice;
@@ -315,7 +315,7 @@ public:
 	*/
 	bool LoadMesh(const std::string& filename, int flags = defaultFlags)
 	{
-#if defined(__ANDROID__)
+		#if defined(__ANDROID__)
 		// Meshes are stored inside the apk on Android (compressed)
 		// So they need to be loaded via the asset manager
 
@@ -332,26 +332,22 @@ public:
 		pScene = Importer.ReadFileFromMemory(meshData, size, flags);
 
 		free(meshData);
-#else
+		#else
 		pScene = Importer.ReadFile(filename.c_str(), flags);
-#endif
+		#endif
 
-		if (pScene)
-		{
+		if (pScene) {
 			m_Entries.clear();
 			m_Entries.resize(pScene->mNumMeshes);
 			// Read in all meshes in the scene
-			for (auto i = 0; i < m_Entries.size(); i++)
-			{
+			for (auto i = 0; i < m_Entries.size(); i++) {
 				m_Entries[i].vertexBase = numVertices;
 				numVertices += pScene->mMeshes[i]->mNumVertices;
 				const aiMesh* paiMesh = pScene->mMeshes[i];
 				InitMesh(&m_Entries[i], paiMesh, pScene);
 			}
 			return true;
-		}
-		else 
-		{
+		} else {
 			printf("Error parsing '%s': '%s'\n", filename.c_str(), Importer.GetErrorString());
 #if defined(__ANDROID__)
 			LOGE("Error parsing '%s': '%s'", filename.c_str(), Importer.GetErrorString());
@@ -376,8 +372,7 @@ public:
 
 		aiVector3D Zero3D(0.0f, 0.0f, 0.0f);
 
-		for (unsigned int i = 0; i < paiMesh->mNumVertices; i++) 
-		{
+		for (unsigned int i = 0; i < paiMesh->mNumVertices; i++) {
 			aiVector3D* pPos = &(paiMesh->mVertices[i]);
 			aiVector3D* pNormal = &(paiMesh->mNormals[i]);
 			aiVector3D* pTexCoord = (paiMesh->HasTextureCoords(0)) ? &(paiMesh->mTextureCoords[0][i]) : &Zero3D;
@@ -407,8 +402,7 @@ public:
 		dim.size = dim.max - dim.min;
 
 		uint32_t indexBase = static_cast<uint32_t>(meshEntry->Indices.size());
-		for (unsigned int i = 0; i < paiMesh->mNumFaces; i++)
-		{
+		for (unsigned int i = 0; i < paiMesh->mNumFaces; i++) {
 			const aiFace& Face = paiMesh->mFaces[i];
 			if (Face.mNumIndices != 3)
 				continue;

@@ -87,35 +87,6 @@
 * @note Targets other than XCB ar not yet supported
 */
 // define params for this function based on os and settings
-//void VulkanSwapChain::initSurface(
-//	// check if using SDL2
-//	#if USE_SDL2
-//		/* WINDOWS */
-//		#if defined(_WIN32)
-//			void * windowInstance, SDL_Window * SDLWindowInstance
-//		/* LINUX */
-//		#elif defined(__linux__)
-//			// TODO
-//
-//		/* ANDROID */
-//		#elif defined(__ANDROID__)
-//			// TODO
-//		#endif
-//	// if not, make a native surface instead
-//	/* WINDOWS */
-//	#elif defined(_WIN32)
-//		void * platformHandle, void * platformWindow
-//
-//	/* LINUX */
-//	#elif defined(__linux__)
-//		xcb_connection_t* connection, xcb_window_t window
-//
-//	/* ANDROID */
-//	#elif defined(__ANDROID__)
-//		ANativeWindow* window
-//	#endif
-//)
-
 
 #if defined(_WIN32)
 	void VulkanSwapChain::initSurface(void * platformHandle, void * platformWindow)
@@ -126,33 +97,6 @@
 #endif
 {
 	VkResult err;
-
-	// cross platform
-	// check if using SDL2
-	//#if USE_SDL2
-	//		
-	//	// get window info from SDLWindowInstance
-	//	SDL_SysWMinfo windowInfo;
-	//	SDL_GetWindowWMInfo(SDLWindowInstance, &windowInfo);
-	//		
-	//	/* WINDOWS*/
-	//	#if defined(_WIN32)
-	//		VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {};
-	//		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-	//		surfaceCreateInfo.pNext = NULL;
-	//		surfaceCreateInfo.hinstance = (HINSTANCE)windowInstance;
-	//		surfaceCreateInfo.hwnd = windowInfo.info.win.window;
-	//		err = vkCreateWin32SurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface);
-
-	//	/* LINUX */
-	//	#elif defined(__linux__)
-	//		// TODO
-
-	//	/* ANDROID */
-	//	#elif defined(__ANDROID__)
-	//		// TODO
-	//	#endif
-
 
 	// if not, make a native surface instead
 	/* WINDOWS */

@@ -1,4 +1,4 @@
-#include "vulkandebug.h"
+#include "vulkanDebug.h"
 #include <iostream>
 
 namespace vkDebug

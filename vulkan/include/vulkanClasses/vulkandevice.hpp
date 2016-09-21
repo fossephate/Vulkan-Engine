@@ -16,7 +16,7 @@
 #include "vulkantools.h"
 #include "vulkanbuffer.hpp"
 
-namespace vk
+namespace vkx
 {	
 	struct VulkanDevice
 	{
@@ -51,7 +51,7 @@ namespace vk
 		*
 		* @param physicalDevice Phyiscal device that is to be used
 		*/
-		VulkanDevice(VkPhysicalDevice physicalDevice)
+		vkx::VulkanDevice(VkPhysicalDevice physicalDevice)
 		{
 			assert(physicalDevice);
 			this->physicalDevice = physicalDevice;
@@ -101,14 +101,10 @@ namespace vk
 		*/
 		uint32_t getMemoryType(uint32_t typeBits, VkMemoryPropertyFlags properties, VkBool32 *memTypeFound = nullptr)
 		{
-			for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++)
-			{
-				if ((typeBits & 1) == 1)
-				{
-					if ((memoryProperties.memoryTypes[i].propertyFlags & properties) == properties)
-					{
-						if (memTypeFound)
-						{
+			for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++) {
+				if ((typeBits & 1) == 1) {
+					if ((memoryProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+						if (memTypeFound) {
 							*memTypeFound = true;
 						}
 						return i;
@@ -117,24 +113,20 @@ namespace vk
 				typeBits >>= 1;
 			}
 
-#if defined(__ANDROID__)
-			//todo : Exceptions are disabled by default on Android (need to add LOCAL_CPP_FEATURES += exceptions to Android.mk), so for now just return zero
-			if (memTypeFound)
-			{
-				*memTypeFound = false;
-			}
-			return 0;
-#else
-			if (memTypeFound)
-			{
-				*memTypeFound = false;
+			#if defined(__ANDROID__)
+				//todo : Exceptions are disabled by default on Android (need to add LOCAL_CPP_FEATURES += exceptions to Android.mk), so for now just return zero
+				if (memTypeFound) {
+					*memTypeFound = false;
+				}
 				return 0;
-			}
-			else
-			{
-				throw std::runtime_error("Could not find a matching memory type");
-			}
-#endif
+				#else
+				if (memTypeFound) {
+					*memTypeFound = false;
+					return 0;
+				} else {
+					throw std::runtime_error("Could not find a matching memory type");
+				}
+			#endif
 		}
 
 		/**
@@ -149,12 +141,9 @@ namespace vk
 		uint32_t getQueueFamiliyIndex(VkQueueFlagBits queueFlags)
 		{
 			// If a compute queue is requested, try to find a separate compute queue family from graphics first
-			if (queueFlags & VK_QUEUE_COMPUTE_BIT)
-			{
-				for (uint32_t i = 0; i < static_cast<uint32_t>(queueFamilyProperties.size()); i++)
-				{
-					if ((queueFamilyProperties[i].queueFlags & queueFlags) && ((queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0))
-					{
+			if (queueFlags & VK_QUEUE_COMPUTE_BIT) {
+				for (uint32_t i = 0; i < static_cast<uint32_t>(queueFamilyProperties.size()); i++) {
+					if ((queueFamilyProperties[i].queueFlags & queueFlags) && ((queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0)) {
 						return i;
 						break;
 					}
@@ -162,21 +151,19 @@ namespace vk
 			}
 
 			// For other queue types or if no separate compute queue is present, return the first one to support the requested flags
-			for (uint32_t i = 0; i < static_cast<uint32_t>(queueFamilyProperties.size()); i++)
-			{
-				if (queueFamilyProperties[i].queueFlags & queueFlags)
-				{
+			for (uint32_t i = 0; i < static_cast<uint32_t>(queueFamilyProperties.size()); i++) {
+				if (queueFamilyProperties[i].queueFlags & queueFlags) {
 					return i;
 					break;
 				}
 			}
 
-#if defined(__ANDROID__)
-			//todo : Exceptions are disabled by default on Android (need to add LOCAL_CPP_FEATURES += exceptions to Android.mk), so for now just return zero
-			return 0;
-#else
-			throw std::runtime_error("Could not find a matching queue family index");
-#endif
+			#if defined(__ANDROID__)
+				//todo : Exceptions are disabled by default on Android (need to add LOCAL_CPP_FEATURES += exceptions to Android.mk), so for now just return zero
+				return 0;
+			#else
+				throw std::runtime_error("Could not find a matching queue family index");
+			#endif
 		}
 
 		/**
@@ -200,8 +187,7 @@ namespace vk
 			// Note that the indices may overlap depending on the implementation
 
 			// Graphics queue
-			if (requestedQueueTypes & VK_QUEUE_GRAPHICS_BIT)
-			{
+			if (requestedQueueTypes & VK_QUEUE_GRAPHICS_BIT) {
 				queueFamilyIndices.graphics = getQueueFamiliyIndex(VK_QUEUE_GRAPHICS_BIT);
 				float queuePriority(0.0f);
 				VkDeviceQueueCreateInfo queueInfo{};
@@ -330,7 +316,7 @@ namespace vk
 		*
 		* @return VK_SUCCESS if buffer handle and memory have been created and (optionally passed) data has been copied
 		*/
-		VkResult createBuffer(VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags, vk::Buffer *buffer, VkDeviceSize size, void *data = nullptr)
+		VkResult createBuffer(VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags, vkx::Buffer *buffer, VkDeviceSize size, void *data = nullptr)
 		{
 			buffer->device = logicalDevice;
 
@@ -377,7 +363,7 @@ namespace vk
 		*
 		* @note Source and destionation pointers must have the approriate transfer usage flags set (TRANSFER_SRC / TRANSFER_DST)
 		*/
-		void copyBuffer(vk::Buffer *src, vk::Buffer *dst, VkQueue queue, VkBufferCopy *copyRegion = nullptr)
+		void copyBuffer(vkx::Buffer *src, vkx::Buffer *dst, VkQueue queue, VkBufferCopy *copyRegion = nullptr)
 		{
 			assert(dst->size <= src->size);
 			assert(src->buffer && src->buffer);

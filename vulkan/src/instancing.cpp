@@ -20,8 +20,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <vulkan/vulkan.h>
-#include "vulkanApp.h"
+#include <vulkan/vulkan.hpp>
+#include "vulkanClasses/vulkanApp.h"
 
 #define VERTEX_BUFFER_BIND_ID 0
 #define INSTANCE_BUFFER_BIND_ID 1
@@ -617,7 +617,7 @@ public:
 		updateUniformBuffer(true);
 	}
 
-	virtual void getOverlayText(VulkanTextOverlay * textOverlay)
+	virtual void getOverlayText(vkx::VulkanTextOverlay * textOverlay)
 	{
 
 		/*auto now = std::chrono::system_clock::now();
@@ -631,7 +631,7 @@ public:
 			std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch());
 		auto msT = ms.count();//1 * sin(ms.count() * 0.001);*/
 
-		textOverlay->addText("Rendering " + std::to_string(INSTANCE_COUNT) + " instances", 5.0f, 85.0f, VulkanTextOverlay::alignLeft);
+		textOverlay->addText("Rendering " + std::to_string(INSTANCE_COUNT) + " instances", 5.0f, 85.0f, vkx::VulkanTextOverlay::alignLeft);
 		//textOverlay->addText("Current Time: " + std::to_string(msT), 5.0f, 105.0f, VulkanTextOverlay::alignLeft);
 	}
 };
