@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan.hpp>
 #include <gli/gli.hpp>
 
-#include "vulkandevice.hpp"
+#include "vulkanDevice.hpp"
 
 #if defined(__ANDROID__)
 #include <android/asset_manager.h>
