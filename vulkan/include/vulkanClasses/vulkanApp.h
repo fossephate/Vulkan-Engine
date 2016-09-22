@@ -49,9 +49,9 @@
 
 #include "vulkanDevice.hpp"
 #include "vulkanSwapChain.h"
-#include "vulkanTextureLoader.hpp"
-#include "vulkanMeshLoader.hpp"
-#include "vulkanTextOverlay.hpp"
+#include "vulkanTextureLoader.h"
+#include "vulkanMeshLoader.h"
+#include "vulkanTextOverlay.h"
 #include "camera.h"
 
 // Function pointer for getting physical device fetures to be enabled
@@ -62,10 +62,8 @@ class vulkanApp
 	private:
 		// Set to true when example is created with enabled validation layers
 		bool enableValidation = false;
-
 		// Set to true when the debug marker extension is detected
 		bool enableDebugMarkers = false;
-
 		// Set to true if v-sync will be forced for the swapchain
 		bool enableVSync = false;
 
@@ -92,6 +90,8 @@ class vulkanApp
 		// Called if the window is resized and some resources have to be recreatesd
 		void windowResize();
 
+
+
 	protected:
 
 		// Last frame time, measured using a high performance timer (if available)
@@ -103,69 +103,48 @@ class vulkanApp
 
 		// Vulkan instance, stores all per-application states
 		VkInstance instance;
-
 		// Physical device (GPU) that Vulkan will ise
 		VkPhysicalDevice physicalDevice;
-
 		// Stores physical device properties (for e.g. checking device limits)
 		VkPhysicalDeviceProperties deviceProperties;
-
 		// Stores phyiscal device features (for e.g. checking if a feature is available)
 		VkPhysicalDeviceFeatures deviceFeatures;
-
 		// Stores all available memory (type) properties for the physical device
 		VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
-
 		/** @brief Logical device, application's view of the physical device (GPU) */
 		// todo: getter? should always point to VulkanDevice->device
 		VkDevice device;
-
 		/** @brief Encapsulated physical and logical vulkan device */
-		vkx::VulkanDevice *vulkanDevice;
-
+		vkx::VulkanDevice * vulkanDevice;
 		// Handle to the device graphics queue that command buffers are submitted to
 		VkQueue queue;
-
 		// Color buffer format
 		VkFormat colorformat = VK_FORMAT_B8G8R8A8_UNORM;
-
 		// Depth buffer format
 		// Depth format is selected during Vulkan initialization
 		VkFormat depthFormat;
-
 		// Command buffer pool
 		VkCommandPool cmdPool;
-
 		// Command buffer used for setup
 		VkCommandBuffer setupCmdBuffer = VK_NULL_HANDLE;
-
 		/** @brief Pipeline stages used to wait at for graphics queue submissions */
 		VkPipelineStageFlags submitPipelineStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-
 		// Contains command buffers and semaphores to be presented to the queue
 		VkSubmitInfo submitInfo;
-
 		// Command buffers used for rendering
 		std::vector<VkCommandBuffer> drawCmdBuffers;
-
 		// Global render pass for frame buffer writes
 		VkRenderPass renderPass;
-
 		// List of available frame buffers (same as number of swap chain images)
 		std::vector<VkFramebuffer>frameBuffers;
-
 		// Active frame buffer index
 		uint32_t currentBuffer = 0;
-
 		// Descriptor set pool
 		VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
-
 		// List of shader modules created (stored for cleanup)
 		std::vector<VkShaderModule> shaderModules;
-
 		// Pipeline cache object
 		VkPipelineCache pipelineCache;
-
 		// Wraps the swap chain to present images (framebuffers) to the windowing system
 		VulkanSwapChain swapChain;
 

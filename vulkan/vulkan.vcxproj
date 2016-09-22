@@ -30,13 +30,11 @@
     <ClInclude Include="include\vulkanClasses\vulkanBuffer.hpp" />
     <ClInclude Include="include\vulkanClasses\vulkanDebug.h" />
     <ClInclude Include="include\vulkanClasses\vulkanDevice.hpp" />
-    <ClInclude Include="include\vulkanClasses\vulkanFrameBuffer.hpp" />
+    <ClInclude Include="include\vulkanClasses\vulkanFrameBuffer.h" />
     <ClInclude Include="include\vulkanClasses\vulkanMeshLoader.h" />
-    <ClInclude Include="include\vulkanClasses\vulkanMeshLoader.hpp" />
     <ClInclude Include="include\vulkanClasses\vulkanSwapChain.h" />
     <ClInclude Include="include\vulkanClasses\vulkanTextOverlay.h" />
-    <ClInclude Include="include\vulkanClasses\vulkanTextOverlay.hpp" />
-    <ClInclude Include="include\vulkanClasses\vulkanTextureLoader.hpp" />
+    <ClInclude Include="include\vulkanClasses\vulkanTextureLoader.h" />
     <ClInclude Include="include\vulkanClasses\vulkanTools.h" />
     <ClInclude Include="src\vulkanClasses\gltf\forward.hpp" />
     <ClInclude Include="src\vulkanClasses\gltf\gltf.hpp" />
@@ -47,8 +45,10 @@
     <ClCompile Include="src\vulkanClasses\vulkanAndroid.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanApp.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanDebug.cpp" />
+    <ClCompile Include="src\vulkanClasses\vulkanFrameBuffer.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanMeshLoader.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanSwapChain.cpp" />
+    <ClCompile Include="src\vulkanClasses\vulkanTextOverlay.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTextureLoader.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTools.cpp" />
   </ItemGroup>

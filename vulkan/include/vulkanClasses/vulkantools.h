@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "vulkan/vulkan.h"
-
 #include <math.h>
 #include <stdlib.h>
 #include <string>
@@ -20,14 +18,19 @@
 #include <vector>
 #include <iostream>
 #include <stdexcept>
+
 #if defined(_WIN32)
-#include <windows.h>
-#include <fcntl.h>
-#include <io.h>
-#elif defined(__ANDROID__)
-#include "vulkanandroid.h"
-#include <android/asset_manager.h>
+	#include <windows.h>
+	#include <fcntl.h>
+	#include <io.h>
 #endif
+
+#if defined(__ANDROID__)
+	#include "vulkanAndroid.h"
+	#include <android/asset_manager.h>
+#endif
+
+#include <vulkan/vulkan.hpp>
 
 // Custom define for better code readability
 #define VK_FLAGS_NONE 0

@@ -1,5 +1,4 @@
 #pragma once
-#include "vulkan/vulkan.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -9,14 +8,20 @@
 #include <assert.h>
 #include <stdio.h>
 #include <vector>
+#include <iostream>
+
 #ifdef _WIN32
-#include <windows.h>
-#include <fcntl.h>
-#include <io.h>
+	#include <windows.h>
+	#include <fcntl.h>
+	#include <io.h>
 #endif
+
+#include <vulkan/vulkan.hpp>
+
 #ifdef __ANDROID__
-#include "vulkanandroid.h"
+	#include "vulkanAndroid.h"
 #endif
+
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>

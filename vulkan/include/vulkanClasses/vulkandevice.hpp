@@ -12,9 +12,9 @@
 
 #include <exception>
 #include <assert.h>
-#include "vulkan/vulkan.h"
-#include "vulkantools.h"
-#include "vulkanbuffer.hpp"
+#include <vulkan/vulkan.hpp>
+#include "vulkanTools.h"
+#include "vulkanBuffer.hpp"
 
 namespace vkx
 {	

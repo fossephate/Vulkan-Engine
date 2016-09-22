@@ -1,5 +1,4 @@
 #include "vulkanDebug.h"
-#include <iostream>
 
 namespace vkDebug
 {

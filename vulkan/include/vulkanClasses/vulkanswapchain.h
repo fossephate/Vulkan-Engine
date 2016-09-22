@@ -38,13 +38,13 @@
 
 
 
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan.hpp>
 #include "vulkanTools.h"
 
 
 
 #if defined(__ANDROID__)
-	#include "vulkanandroid.h"
+	#include "vulkanAndroid.h"
 #endif
 
 // Macro to get a procedure address based on a vulkan instance
