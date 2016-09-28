@@ -40,7 +40,7 @@
     <ClInclude Include="src\vulkanClasses\gltf\gltf.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\instancing.cpp" />
+    <ClCompile Include="src\indirect.cpp" />
     <ClCompile Include="src\vulkanClasses\camera.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanAndroid.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanApp.cpp" />

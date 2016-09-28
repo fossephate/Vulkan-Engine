@@ -7,8 +7,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opengl4", "opengl4\opengl4.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vulkan", "vulkan\vulkan.vcxproj", "{373EB2F7-130F-4269-B461-700E4BCD1E67}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mesh", "mesh\mesh.vcxproj", "{5705CA9F-95A0-477C-9169-4CBB0484A44A}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -33,14 +31,6 @@ Global
 		{373EB2F7-130F-4269-B461-700E4BCD1E67}.Release|x64.Build.0 = Release|x64
 		{373EB2F7-130F-4269-B461-700E4BCD1E67}.Release|x86.ActiveCfg = Release|x64
 		{373EB2F7-130F-4269-B461-700E4BCD1E67}.Release|x86.Build.0 = Release|x64
-		{5705CA9F-95A0-477C-9169-4CBB0484A44A}.Debug|x64.ActiveCfg = Debug|x64
-		{5705CA9F-95A0-477C-9169-4CBB0484A44A}.Debug|x64.Build.0 = Debug|x64
-		{5705CA9F-95A0-477C-9169-4CBB0484A44A}.Debug|x86.ActiveCfg = Release|x64
-		{5705CA9F-95A0-477C-9169-4CBB0484A44A}.Debug|x86.Build.0 = Release|x64
-		{5705CA9F-95A0-477C-9169-4CBB0484A44A}.Release|x64.ActiveCfg = Release|x64
-		{5705CA9F-95A0-477C-9169-4CBB0484A44A}.Release|x64.Build.0 = Release|x64
-		{5705CA9F-95A0-477C-9169-4CBB0484A44A}.Release|x86.ActiveCfg = Release|x64
-		{5705CA9F-95A0-477C-9169-4CBB0484A44A}.Release|x86.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

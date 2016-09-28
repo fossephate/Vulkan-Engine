@@ -122,7 +122,7 @@ class vulkanApp
 		VkFormat colorformat = VK_FORMAT_B8G8R8A8_UNORM;
 		// Depth buffer format
 		// Depth format is selected during Vulkan initialization
-		VkFormat depthFormat;
+		//VkFormat depthFormat;
 		// Command buffer pool
 		VkCommandPool cmdPool;
 		// Command buffer used for setup

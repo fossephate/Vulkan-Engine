@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include <time.h> 
+#include <time.h>
 #include <vector>
 #include <random>
 
@@ -91,9 +91,9 @@ public:
 	};
 
 	// Contains the instanced data
-	vk::Buffer instanceBuffer;
+	vkx::Buffer instanceBuffer;
 	// Contains the indirect drawing commands
-	vk::Buffer indirectCommandsBuffer;
+	vkx::Buffer indirectCommandsBuffer;
 	uint32_t indirectDrawCount;
 
 	struct {
@@ -102,7 +102,7 @@ public:
 	} uboVS;
 
 	struct {
-		vk::Buffer scene;
+		vkx::Buffer scene;
 	} uniformData;
 
 	struct {
@@ -131,10 +131,11 @@ public:
 		enableTextOverlay = true;
 		title = "Vulkan Example - Indirect rendering";
 		camera.type = Camera::CameraType::firstperson;
-		camera.setPerspective(60.0f, (float)width / (float)height, 0.1f, 512.0f);
-		camera.setRotation(glm::vec3(-12.0f, 159.0f, 0.0f));
+		camera.setProjection(60.0f, (float)width / (float)height, 0.1f, 512.0f);
+		//camera.setRotation(glm::quat(glm::vec3(-12.0f, 159.0f, 0.0f)));
 		camera.setTranslation(glm::vec3(0.4f, 1.25f, 0.0f));
 		camera.movementSpeed = 5.0f;
+		camera.rotationSpeed = 0.01f;
 	}
 
 	~VulkanExample()
@@ -541,7 +542,7 @@ public:
 			objectCount += indirectCmd.instanceCount;
 		}
 
-		vk::Buffer stagingBuffer;
+		vkx::Buffer stagingBuffer;
 		VK_CHECK_RESULT(vulkanDevice->createBuffer(
 			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
@@ -579,7 +580,7 @@ public:
 			instanceData[i].texIndex = i / OBJECT_INSTANCE_COUNT;
 		}
 
-		vk::Buffer stagingBuffer;
+		vkx::Buffer stagingBuffer;
 		VK_CHECK_RESULT(vulkanDevice->createBuffer(
 			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
@@ -615,7 +616,7 @@ public:
 	{
 		if (viewChanged)
 		{
-			uboVS.projection = camera.matrices.perspective;
+			uboVS.projection = camera.matrices.projection;
 			uboVS.view = camera.matrices.view;
 		}
 
@@ -666,12 +667,12 @@ public:
 		updateUniformBuffer(true);
 	}
 
-	virtual void getOverlayText(VulkanTextOverlay *textOverlay)
+	virtual void getOverlayText(vkx::VulkanTextOverlay *textOverlay)
 	{
-		textOverlay->addText(std::to_string(objectCount) + " objects", 5.0f, 85.0f, VulkanTextOverlay::alignLeft);
+		textOverlay->addText(std::to_string(objectCount) + " objects", 5.0f, 85.0f, vkx::VulkanTextOverlay::alignLeft);
 		if (!vulkanDevice->features.multiDrawIndirect)
 		{
-			textOverlay->addText("multiDrawIndirect not supported", 5.0f, 105.0f, VulkanTextOverlay::alignLeft);
+			textOverlay->addText("multiDrawIndirect not supported", 5.0f, 105.0f, vkx::VulkanTextOverlay::alignLeft);
 		}
 	}
 };

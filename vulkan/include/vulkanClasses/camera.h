@@ -84,6 +84,7 @@ public:
 
 	// rotate
 	void rotate(glm::quat delta);
+	void rotate(glm::vec3 delta);
 	void setRotation(glm::quat rotation);
 
 	glm::quat getRotation();

@@ -6,7 +6,10 @@
 void Camera::updateViewMatrix() {
 
 
-	glm::mat4 rotationMatrix = glm::toMat4(this->transform.rotation);
+	//glm::mat4 rotationMatrix = glm::toMat4(this->transform.rotation);
+	glm::mat4 rotationMatrix = glm::mat4_cast(this->transform.rotation);
+	//glm::mat4 rotationMatrix = glm::mat4(1.0f)*glm::mat4_cast(this->transform.rotation);
+
 	glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), this->transform.translation);
 	glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), this->transform.scale);
 
@@ -57,7 +60,7 @@ void Camera::translate(glm::vec3 delta)
 }
 
 
-inline void Camera::setTranslation(glm::vec3 point)
+/*inline */void Camera::setTranslation(glm::vec3 point)
 {
 	this->translation = point;
 	updateViewMatrix();
@@ -78,13 +81,20 @@ inline glm::vec3 Camera::getTranslation()
 /* ROTATION */
 void Camera::rotate(glm::quat delta)
 {
-	this->rotation += delta;
+	this->rotation *= delta;
 	updateViewMatrix();
 }
 
+/*void Camera::rotate(glm::vec3 delta)
+{
+	this->rotation
+	updateViewMatrix();
+}*/
 
 
-inline void Camera::setRotation(glm::quat rotation)
+
+
+/*inline */void Camera::setRotation(glm::quat rotation)
 {
 	this->rotation = rotation;
 	updateViewMatrix();

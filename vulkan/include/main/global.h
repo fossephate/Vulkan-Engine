@@ -1,3 +1,3 @@
 #pragma once
 
-#define USE_SDL2 1
+#define USE_SDL2 0
