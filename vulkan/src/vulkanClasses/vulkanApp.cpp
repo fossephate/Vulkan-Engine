@@ -177,6 +177,11 @@ VkCommandBuffer vulkanApp::createCommandBuffer(VkCommandBufferLevel level, bool 
 	return cmdBuffer;
 }
 
+vk::CommandBuffer vulkanApp::createCommandBuffer2(vk::CommandBufferLevel level, bool begin)
+{
+	return vk::CommandBuffer();
+}
+
 
 
 
@@ -203,6 +208,10 @@ void vulkanApp::flushCommandBuffer(VkCommandBuffer commandBuffer, VkQueue queue,
 	if (free) {
 		vkFreeCommandBuffers(device, cmdPool, 1, &commandBuffer);
 	}
+}
+
+void vulkanApp::flushCommandBuffer2(vk::CommandBuffer commandBuffer, vk::Queue queue, bool free)
+{
 }
 
 
@@ -281,6 +290,11 @@ VkPipelineShaderStageCreateInfo vulkanApp::loadShader(std::string fileName, VkSh
 	assert(shaderStage.module != NULL);
 	shaderModules.push_back(shaderStage.module);
 	return shaderStage;
+}
+
+vk::PipelineShaderStageCreateInfo vulkanApp::loadShader2(std::string fileName, vk::ShaderStageFlagBits stage)
+{
+	return vk::PipelineShaderStageCreateInfo();
 }
 
 
@@ -1634,9 +1648,14 @@ void vulkanApp::setupDepthStencil()
 	depthStencilView.subresourceRange.layerCount = 1;
 
 
-	VkMemoryRequirements memReqs;
+	//VkMemoryRequirements memReqs;
 
-	VK_CHECK_RESULT(vkCreateImage(device, &image, nullptr, &depthStencil.image));
+	vk::MemoryRequirements memReqs;
+
+	//device
+	VK_CHECK_RESULT()
+
+	/*VK_CHECK_RESULT(vkCreateImage(device, &image, nullptr, &depthStencil.image));
 	vkGetImageMemoryRequirements(device, depthStencil.image, &memReqs);
 	mem_alloc.allocationSize = memReqs.size;
 	mem_alloc.memoryTypeIndex = vulkanDevice->getMemoryType(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
@@ -1644,7 +1663,7 @@ void vulkanApp::setupDepthStencil()
 	VK_CHECK_RESULT(vkBindImageMemory(device, depthStencil.image, depthStencil.mem, 0));
 
 	depthStencilView.image = depthStencil.image;
-	VK_CHECK_RESULT(vkCreateImageView(device, &depthStencilView, nullptr, &depthStencil.view));
+	VK_CHECK_RESULT(vkCreateImageView(device, &depthStencilView, nullptr, &depthStencil.view));*/
 }
 
 void vulkanApp::setupFrameBuffer()
