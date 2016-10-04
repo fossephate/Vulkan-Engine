@@ -11,12 +11,11 @@
 
 #include "vulkanApp.h"
 
-VkResult vulkanApp::createInstance(bool enableValidation)
+vk::Result vulkanApp::createInstance(bool enableValidation)
 {
 	this->enableValidation = enableValidation;
 
-	VkApplicationInfo appInfo = {};
-	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+	vk::ApplicationInfo appInfo;
 	appInfo.pApplicationName = name.c_str();
 	appInfo.pEngineName = name.c_str();
 	appInfo.apiVersion = VK_MAKE_VERSION(1, 0, 13);// VK_API_VERSION_1_0;
@@ -36,8 +35,7 @@ VkResult vulkanApp::createInstance(bool enableValidation)
 		enabledExtensions.push_back(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
 	#endif
 
-	VkInstanceCreateInfo instanceCreateInfo = {};
-	instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+	vk::InstanceCreateInfo instanceCreateInfo;
 	instanceCreateInfo.pNext = NULL;
 	instanceCreateInfo.pApplicationInfo = &appInfo;
 	
@@ -91,13 +89,14 @@ void vulkanApp::createCommandBuffers() {
 	// Create one command buffer for each swap chain image and reuse for rendering
 	drawCmdBuffers.resize(swapChain.imageCount);
 
-	VkCommandBufferAllocateInfo cmdBufAllocateInfo =
-		vkTools::initializers::commandBufferAllocateInfo(
+	vk::CommandBufferAllocateInfo cmdBufAllocateInfo =
+		vkx::commandBufferAllocateInfo(
 			cmdPool,
-			VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+			vk::CommandBufferLevel::ePrimary,
 			static_cast<uint32_t>(drawCmdBuffers.size()));
 
-	VK_CHECK_RESULT(vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, drawCmdBuffers.data()));
+	//VK_CHECK_RESULT(vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, drawCmdBuffers.data()));
+	device.allocateCommandBuffers(&cmdBufAllocateInfo, drawCmdBuffers.data());
 }
 
 void vulkanApp::destroyCommandBuffers()
@@ -108,22 +107,24 @@ void vulkanApp::destroyCommandBuffers()
 void vulkanApp::createSetupCommandBuffer()
 {
 	if (setupCmdBuffer != VK_NULL_HANDLE) {
-		vkFreeCommandBuffers(device, cmdPool, 1, &setupCmdBuffer);
+		//vkFreeCommandBuffers(device, cmdPool, 1, &setupCmdBuffer);
+		device.freeCommandBuffers(cmdPool, 1, &setupCmdBuffer);
 		setupCmdBuffer = VK_NULL_HANDLE; // todo : check if still necessary
 	}
 
-	VkCommandBufferAllocateInfo cmdBufAllocateInfo =
-		vkTools::initializers::commandBufferAllocateInfo(
+	vk::CommandBufferAllocateInfo cmdBufAllocateInfo =
+		vkx::commandBufferAllocateInfo(
 			cmdPool,
-			VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+			vk::CommandBufferLevel::ePrimary,
 			1);
 
-	VK_CHECK_RESULT(vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, &setupCmdBuffer));
+	//VK_CHECK_RESULT(vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, &setupCmdBuffer));
+	device.allocateCommandBuffers(&cmdBufAllocateInfo, &setupCmdBuffer);
 
-	VkCommandBufferBeginInfo cmdBufInfo = {};
-	cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	vk::CommandBufferBeginInfo cmdBufInfo;
 
-	VK_CHECK_RESULT(vkBeginCommandBuffer(setupCmdBuffer, &cmdBufInfo));
+	//VK_CHECK_RESULT(vkBeginCommandBuffer(setupCmdBuffer, &cmdBufInfo));
+	setupCmdBuffer.begin(&cmdBufInfo);
 }
 
 void vulkanApp::flushSetupCommandBuffer()
@@ -132,17 +133,21 @@ void vulkanApp::flushSetupCommandBuffer()
 		return;
 	}
 
-	VK_CHECK_RESULT(vkEndCommandBuffer(setupCmdBuffer));
+	//VK_CHECK_RESULT(vkEndCommandBuffer(setupCmdBuffer));
+	setupCmdBuffer.end();
 
-	VkSubmitInfo submitInfo = {};
-	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	vk::SubmitInfo submitInfo;
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &setupCmdBuffer;
 
-	VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE));
-	VK_CHECK_RESULT(vkQueueWaitIdle(queue));
+	//VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE));
+	queue.submit(1, &submitInfo, VK_NULL_HANDLE);
+	//VK_CHECK_RESULT(vkQueueWaitIdle(queue));
+	queue.waitIdle();
 
-	vkFreeCommandBuffers(device, cmdPool, 1, &setupCmdBuffer);
+	//vkFreeCommandBuffers(device, cmdPool, 1, &setupCmdBuffer);
+	device.freeCommandBuffers(cmdPool, 1, &setupCmdBuffer);
+	
 	setupCmdBuffer = VK_NULL_HANDLE; 
 }
 
@@ -156,62 +161,57 @@ void vulkanApp::flushSetupCommandBuffer()
 
 
 
-VkCommandBuffer vulkanApp::createCommandBuffer(VkCommandBufferLevel level, bool begin)
+vk::CommandBuffer vulkanApp::createCommandBuffer(vk::CommandBufferLevel level, bool begin)
 {
-	VkCommandBuffer cmdBuffer;
+	vk::CommandBuffer cmdBuffer;
 
-	VkCommandBufferAllocateInfo cmdBufAllocateInfo =
-		vkTools::initializers::commandBufferAllocateInfo(
+	vk::CommandBufferAllocateInfo cmdBufAllocateInfo =
+		vkx::commandBufferAllocateInfo(
 			cmdPool,
 			level,
 			1);
 
-	VK_CHECK_RESULT(vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, &cmdBuffer));
+	//VK_CHECK_RESULT(vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, &cmdBuffer));
+	device.allocateCommandBuffers(&cmdBufAllocateInfo, &cmdBuffer);
 
 	// If requested, also start the new command buffer
 	if (begin) {
-		VkCommandBufferBeginInfo cmdBufInfo = vkTools::initializers::commandBufferBeginInfo();
-		VK_CHECK_RESULT(vkBeginCommandBuffer(cmdBuffer, &cmdBufInfo));
+		vk::CommandBufferBeginInfo cmdBufInfo;
+		//VK_CHECK_RESULT(vkBeginCommandBuffer(cmdBuffer, &cmdBufInfo));
+		cmdBuffer.begin(&cmdBufInfo);
 	}
 
 	return cmdBuffer;
 }
 
-vk::CommandBuffer vulkanApp::createCommandBuffer2(vk::CommandBufferLevel level, bool begin)
-{
-	return vk::CommandBuffer();
-}
 
 
 
 
 
 
-
-
-void vulkanApp::flushCommandBuffer(VkCommandBuffer commandBuffer, VkQueue queue, bool free)
+void vulkanApp::flushCommandBuffer(vk::CommandBuffer commandBuffer, vk::Queue queue, bool free)
 {
 	if (commandBuffer == VK_NULL_HANDLE) {
 		return;
 	}
 	
-	VK_CHECK_RESULT(vkEndCommandBuffer(commandBuffer));
+	//VK_CHECK_RESULT(vkEndCommandBuffer(commandBuffer));
+	commandBuffer.end();
 
-	VkSubmitInfo submitInfo = {};
-	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	vk::SubmitInfo submitInfo;
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &commandBuffer;
 
-	VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE));
-	VK_CHECK_RESULT(vkQueueWaitIdle(queue));
+	//VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE));
+	queue.submit(1, &submitInfo, VK_NULL_HANDLE);
+	//VK_CHECK_RESULT(vkQueueWaitIdle(queue));
+	queue.waitIdle();
 
 	if (free) {
-		vkFreeCommandBuffers(device, cmdPool, 1, &commandBuffer);
+		//vkFreeCommandBuffers(device, cmdPool, 1, &commandBuffer);
+		device.freeCommandBuffers(cmdPool, 1, &commandBuffer);
 	}
-}
-
-void vulkanApp::flushCommandBuffer2(vk::CommandBuffer commandBuffer, vk::Queue queue, bool free)
-{
 }
 
 
@@ -219,9 +219,9 @@ void vulkanApp::flushCommandBuffer2(vk::CommandBuffer commandBuffer, vk::Queue q
 
 void vulkanApp::createPipelineCache()
 {
-	VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
-	pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-	VK_CHECK_RESULT(vkCreatePipelineCache(device, &pipelineCacheCreateInfo, nullptr, &pipelineCache));
+	vk::PipelineCacheCreateInfo pipelineCacheCreateInfo;
+	//VK_CHECK_RESULT(vkCreatePipelineCache(device, &pipelineCacheCreateInfo, nullptr, &pipelineCache));
+	device.createPipelineCache(&pipelineCacheCreateInfo, nullptr, &pipelineCache);
 }
 
 
@@ -254,9 +254,9 @@ void vulkanApp::prepare()
 	if (enableTextOverlay)
 	{
 		// Load the text rendering shaders
-		std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
-		shaderStages.push_back(loadShader(getAssetPath() + "shaders/base/textoverlay.vert.spv", VK_SHADER_STAGE_VERTEX_BIT));
-		shaderStages.push_back(loadShader(getAssetPath() + "shaders/base/textoverlay.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT));
+		std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
+		shaderStages.push_back(loadShader(getAssetPath() + "shaders/base/textoverlay.vert.spv", vk::ShaderStageFlagBits::eVertex));
+		shaderStages.push_back(loadShader(getAssetPath() + "shaders/base/textoverlay.frag.spv", vk::ShaderStageFlagBits::eFragment));
 		textOverlay = new vkx::VulkanTextOverlay(
 			vulkanDevice,
 			queue,
@@ -274,16 +274,15 @@ void vulkanApp::prepare()
 
 
 
-VkPipelineShaderStageCreateInfo vulkanApp::loadShader(std::string fileName, VkShaderStageFlagBits stage)
+vk::PipelineShaderStageCreateInfo vulkanApp::loadShader(std::string fileName, vk::ShaderStageFlagBits stage)
 {
-	VkPipelineShaderStageCreateInfo shaderStage = {};
-	shaderStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	vk::PipelineShaderStageCreateInfo shaderStage;
 	shaderStage.stage = stage;
 
 	#if defined(__ANDROID__)
-		shaderStage.module = vkTools::loadShader(androidApp->activity->assetManager, fileName.c_str(), device, stage);
+		shaderStage.module = vkx::loadShader(androidApp->activity->assetManager, fileName.c_str(), device, stage);
 	#else
-		shaderStage.module = vkTools::loadShader(fileName.c_str(), device, stage);
+		shaderStage.module = vkx::loadShader(fileName.c_str(), device, stage);
 	#endif
 
 	shaderStage.pName = "main"; // todo : make param
@@ -292,35 +291,39 @@ VkPipelineShaderStageCreateInfo vulkanApp::loadShader(std::string fileName, VkSh
 	return shaderStage;
 }
 
-vk::PipelineShaderStageCreateInfo vulkanApp::loadShader2(std::string fileName, vk::ShaderStageFlagBits stage)
+
+
+
+
+
+vk::Bool32 vulkanApp::createBuffer(vk::BufferUsageFlags usageFlags, vk::MemoryPropertyFlags memoryPropertyFlags, vk::DeviceSize size, void * data, vk::Buffer * buffer, vk::DeviceMemory * memory)
 {
-	return vk::PipelineShaderStageCreateInfo();
-}
+	vk::MemoryRequirements memReqs;
+	vk::MemoryAllocateInfo memAlloc;
+	vk::BufferCreateInfo bufferCreateInfo = vkx::bufferCreateInfo(usageFlags, size);
 
+	//VK_CHECK_RESULT(vkCreateBuffer(device, &bufferCreateInfo, nullptr, buffer));
+	device.createBuffer(&bufferCreateInfo, nullptr, buffer);
 
+	//vkGetBufferMemoryRequirements(device, *buffer, &memReqs);
+	device.getBufferMemoryRequirements(*buffer, &memReqs);
 
-
-
-VkBool32 vulkanApp::createBuffer(VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VkDeviceSize size, void * data, VkBuffer * buffer, VkDeviceMemory * memory)
-{
-	VkMemoryRequirements memReqs;
-	VkMemoryAllocateInfo memAlloc = vkTools::initializers::memoryAllocateInfo();
-	VkBufferCreateInfo bufferCreateInfo = vkTools::initializers::bufferCreateInfo(usageFlags, size);
-
-	VK_CHECK_RESULT(vkCreateBuffer(device, &bufferCreateInfo, nullptr, buffer));
-
-	vkGetBufferMemoryRequirements(device, *buffer, &memReqs);
 	memAlloc.allocationSize = memReqs.size;
 	memAlloc.memoryTypeIndex = vulkanDevice->getMemoryType(memReqs.memoryTypeBits, memoryPropertyFlags);
-	VK_CHECK_RESULT(vkAllocateMemory(device, &memAlloc, nullptr, memory));
+	//VK_CHECK_RESULT(vkAllocateMemory(device, &memAlloc, nullptr, memory));
+	device.allocateMemory(&memAlloc, nullptr, memory);
 
 	if (data != nullptr) {
 		void *mapped;
-		VK_CHECK_RESULT(vkMapMemory(device, *memory, 0, size, 0, &mapped));
+		//VK_CHECK_RESULT(vkMapMemory(device, *memory, 0, size, 0, &mapped));
+		device.mapMemory(*memory, 0, size, 0, &mapped);
+
 		memcpy(mapped, data, size);
-		vkUnmapMemory(device, *memory);
+		//vkUnmapMemory(device, *memory);
+		device.unmapMemory(*memory);
 	}
-	VK_CHECK_RESULT(vkBindBufferMemory(device, *buffer, *memory, 0));
+	//VK_CHECK_RESULT(vkBindBufferMemory(device, *buffer, *memory, 0));
+	device.bindBufferMemory(*buffer, *memory, 0);
 
 	return true;
 }
@@ -328,17 +331,17 @@ VkBool32 vulkanApp::createBuffer(VkBufferUsageFlags usageFlags, VkMemoryProperty
 
 
 
-VkBool32 vulkanApp::createBuffer(VkBufferUsageFlags usage, VkDeviceSize size, void * data, VkBuffer *buffer, VkDeviceMemory *memory)
+vk::Bool32 vulkanApp::createBuffer(vk::BufferUsageFlags usage, vk::DeviceSize size, void * data, vk::Buffer *buffer, vk::DeviceMemory *memory)
 {
-	return createBuffer(usage, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, size, data, buffer, memory);
+	return createBuffer(usage, vk::MemoryPropertyFlagBits::eHostVisible, size, data, buffer, memory);
 }
 
 
 
 
-VkBool32 vulkanApp::createBuffer(VkBufferUsageFlags usage, VkDeviceSize size, void * data, VkBuffer * buffer, VkDeviceMemory * memory, VkDescriptorBufferInfo * descriptor)
+vk::Bool32 vulkanApp::createBuffer(vk::BufferUsageFlags usage, vk::DeviceSize size, void * data, vk::Buffer * buffer, vk::DeviceMemory * memory, vk::DescriptorBufferInfo * descriptor)
 {
-	VkBool32 res = createBuffer(usage, size, data, buffer, memory);
+	vk::Bool32 res = createBuffer(usage, size, data, buffer, memory);
 	if (res) {
 		descriptor->offset = 0;
 		descriptor->buffer = *buffer;
@@ -352,9 +355,9 @@ VkBool32 vulkanApp::createBuffer(VkBufferUsageFlags usage, VkDeviceSize size, vo
 
 
 
-VkBool32 vulkanApp::createBuffer(VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryPropertyFlags, VkDeviceSize size, void * data, VkBuffer * buffer, VkDeviceMemory * memory, VkDescriptorBufferInfo * descriptor)
+vk::Bool32 vulkanApp::createBuffer(vk::BufferUsageFlags usage, vk::MemoryPropertyFlags memoryPropertyFlags, vk::DeviceSize size, void * data, vk::Buffer * buffer, vk::DeviceMemory * memory, vk::DescriptorBufferInfo * descriptor)
 {
-	VkBool32 res = createBuffer(usage, memoryPropertyFlags, size, data, buffer, memory);
+	vk::Bool32 res = createBuffer(usage, memoryPropertyFlags, size, data, buffer, memory);
 	if (res) {
 		descriptor->offset = 0;
 		descriptor->buffer = *buffer;
@@ -390,7 +393,7 @@ void vulkanApp::loadMesh(std::string filename, vkMeshLoader::MeshBuffer * meshBu
 	mesh->LoadMesh(filename);
 	assert(mesh->m_Entries.size() > 0);
 
-	VkCommandBuffer copyCmd = vulkanApp::createCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, false);
+	vk::CommandBuffer copyCmd = vulkanApp::createCommandBuffer(vk::CommandBufferLevel::ePrimary, false);
 
 	mesh->createBuffers(
 		meshBuffer,
@@ -608,7 +611,8 @@ void vulkanApp::renderLoop()
 	#endif
 
 	// Flush device to make sure all resources can be freed 
-	vkDeviceWaitIdle(device);
+	//vkDeviceWaitIdle(device);
+	device.waitIdle();
 }
 
 
@@ -747,36 +751,50 @@ vulkanApp::~vulkanApp()
 	// Clean up Vulkan resources
 	swapChain.cleanup();
 	if (descriptorPool != VK_NULL_HANDLE) {
-		vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+		//vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+		device.destroyDescriptorPool(descriptorPool, nullptr);
 	}
 	if (setupCmdBuffer != VK_NULL_HANDLE) {
-		vkFreeCommandBuffers(device, cmdPool, 1, &setupCmdBuffer);
-
+		//vkFreeCommandBuffers(device, cmdPool, 1, &setupCmdBuffer);
+		device.freeCommandBuffers(cmdPool, 1, &setupCmdBuffer);
 	}
 	destroyCommandBuffers();
-	vkDestroyRenderPass(device, renderPass, nullptr);
+	//vkDestroyRenderPass(device, renderPass, nullptr);
+	device.destroyRenderPass(renderPass, nullptr);
+
 	for (uint32_t i = 0; i < frameBuffers.size(); i++) {
-		vkDestroyFramebuffer(device, frameBuffers[i], nullptr);
+		//vkDestroyFramebuffer(device, frameBuffers[i], nullptr);
+		device.destroyFramebuffer(frameBuffers[i], nullptr);
 	}
 
 	for (auto& shaderModule : shaderModules) {
-		vkDestroyShaderModule(device, shaderModule, nullptr);
+		//vkDestroyShaderModule(device, shaderModule, nullptr);
+		device.destroyShaderModule(shaderModule, nullptr);
 	}
-	vkDestroyImageView(device, depthStencil.view, nullptr);
-	vkDestroyImage(device, depthStencil.image, nullptr);
-	vkFreeMemory(device, depthStencil.mem, nullptr);
 
-	vkDestroyPipelineCache(device, pipelineCache, nullptr);
+	//vkDestroyImageView(device, depthStencil.view, nullptr);
+	device.destroyImageView(depthStencil.view, nullptr);
+	//vkDestroyImage(device, depthStencil.image, nullptr);
+	device.destroyImage(depthStencil.image, nullptr);
+	//vkFreeMemory(device, depthStencil.mem, nullptr);
+	device.freeMemory(depthStencil.mem, nullptr);
+
+	//vkDestroyPipelineCache(device, pipelineCache, nullptr);
+	device.destroyPipelineCache(pipelineCache, nullptr);
 
 	if (textureLoader) {
 		delete textureLoader;
 	}
 
-	vkDestroyCommandPool(device, cmdPool, nullptr);
+	//vkDestroyCommandPool(device, cmdPool, nullptr);
+	device.destroyCommandPool(cmdPool, nullptr);
 
-	vkDestroySemaphore(device, semaphores.presentComplete, nullptr);
-	vkDestroySemaphore(device, semaphores.renderComplete, nullptr);
-	vkDestroySemaphore(device, semaphores.textOverlayComplete, nullptr);
+	//vkDestroySemaphore(device, semaphores.presentComplete, nullptr);
+	device.destroySemaphore(semaphores.presentComplete, nullptr);
+	//vkDestroySemaphore(device, semaphores.renderComplete, nullptr);
+	device.destroySemaphore(semaphores.renderComplete, nullptr);
+	//vkDestroySemaphore(device, semaphores.textOverlayComplete, nullptr);
+	device.destroySemaphore(semaphores.textOverlayComplete, nullptr);
 
 	if (enableTextOverlay) {
 		delete textOverlay;
@@ -788,7 +806,8 @@ vulkanApp::~vulkanApp()
 		vkDebug::freeDebugCallback(instance);
 	}
 
-	vkDestroyInstance(instance, nullptr);
+	//vkDestroyInstance(instance, nullptr);
+	instance.destroy(nullptr);
 
 	#if defined(__linux)
 		#if defined(__ANDROID__)
@@ -802,12 +821,12 @@ vulkanApp::~vulkanApp()
 
 void vulkanApp::initVulkan(bool enableValidation)
 {
-	VkResult err;
+	vk::Result err;
 
 	// Vulkan instance
 	err = createInstance(enableValidation);
 	if (err) {
-		vkTools::exitFatal("Could not create Vulkan instance : \n" + vkTools::errorString(err), "Fatal error");
+		vkx::exitFatal("Could not create Vulkan instance : \n" + vkx::errorString(err), "Fatal error");
 	}
 
 	#if defined(__ANDROID__)
@@ -818,7 +837,7 @@ void vulkanApp::initVulkan(bool enableValidation)
 	if (enableValidation) {
 		// The report flags determine what type of messages for the layers will be displayed
 		// For validating (debugging) an appplication the error and warning bits should suffice
-		VkDebugReportFlagsEXT debugReportFlags = VK_DEBUG_REPORT_ERROR_BIT_EXT; // | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
+		vk::DebugReportFlagsEXT debugReportFlags = vk::DebugReportFlagBitsEXT::eError; // | vk::DebugReportFlagBitsEXT::eWarning | vk::DebugReportFlagBitsEXT::ePerformanceWarning;
 		// Additional flags include performance info, loader and layer debug messages, etc.
 		vkDebug::setupDebugging(instance, debugReportFlags, VK_NULL_HANDLE);
 	}
@@ -826,13 +845,16 @@ void vulkanApp::initVulkan(bool enableValidation)
 	// Physical device
 	uint32_t gpuCount = 0;
 	// Get number of available physical devices
-	VK_CHECK_RESULT(vkEnumeratePhysicalDevices(instance, &gpuCount, nullptr));
+	//VK_CHECK_RESULT(vkEnumeratePhysicalDevices(instance, &gpuCount, nullptr));
+	instance.enumeratePhysicalDevices(&gpuCount, nullptr);
+
 	assert(gpuCount > 0);
 	// Enumerate devices
-	std::vector<VkPhysicalDevice> physicalDevices(gpuCount);
-	err = vkEnumeratePhysicalDevices(instance, &gpuCount, physicalDevices.data());
+	std::vector<vk::PhysicalDevice> physicalDevices(gpuCount);
+	//err = vkEnumeratePhysicalDevices(instance, &gpuCount, physicalDevices.data());
+	err = instance.enumeratePhysicalDevices(&gpuCount, physicalDevices.data());
 	if (err) {
-		vkTools::exitFatal("Could not enumerate phyiscal devices : \n" + vkTools::errorString(err), "Fatal error");
+		vkx::exitFatal("Could not enumerate phyiscal devices : \n" + vkx::errorString(err), "Fatal error");
 	}
 
 	// Note :
@@ -845,7 +867,9 @@ void vulkanApp::initVulkan(bool enableValidation)
 	// This is handled by a separate class that gets a logical device representation
 	// and encapsulates functions related to a device
 	vulkanDevice = new vkx::VulkanDevice(physicalDevice);
-	VK_CHECK_RESULT(vulkanDevice->createLogicalDevice(enabledFeatures));
+	//VK_CHECK_RESULT(vulkanDevice->createLogicalDevice(enabledFeatures));
+	vulkanDevice->createLogicalDevice(enabledFeatures);
+
 	device = vulkanDevice->logicalDevice;
 
 	// todo: remove
@@ -860,28 +884,31 @@ void vulkanApp::initVulkan(bool enableValidation)
 	vkGetDeviceQueue(device, vulkanDevice->queueFamilyIndices.graphics, 0, &queue);
 
 	// Find a suitable depth format
-	VkBool32 validDepthFormat = vkTools::getSupportedDepthFormat(physicalDevice, &depthFormat);
+	vk::Bool32 validDepthFormat = vkx::getSupportedDepthFormat(physicalDevice, &depthFormat);
 	assert(validDepthFormat);
 
 	swapChain.connect(instance, physicalDevice, device);
 
 	// Create synchronization objects
-	VkSemaphoreCreateInfo semaphoreCreateInfo = vkTools::initializers::semaphoreCreateInfo();
+	vk::SemaphoreCreateInfo semaphoreCreateInfo;
 	// Create a semaphore used to synchronize image presentation
 	// Ensures that the image is displayed before we start submitting new commands to the queu
-	VK_CHECK_RESULT(vkCreateSemaphore(device, &semaphoreCreateInfo, nullptr, &semaphores.presentComplete));
+	//VK_CHECK_RESULT(vkCreateSemaphore(device, &semaphoreCreateInfo, nullptr, &semaphores.presentComplete));
+	device.createSemaphore(&semaphoreCreateInfo, nullptr, &semaphores.presentComplete);
 	// Create a semaphore used to synchronize command submission
 	// Ensures that the image is not presented until all commands have been sumbitted and executed
-	VK_CHECK_RESULT(vkCreateSemaphore(device, &semaphoreCreateInfo, nullptr, &semaphores.renderComplete));
+	//VK_CHECK_RESULT(vkCreateSemaphore(device, &semaphoreCreateInfo, nullptr, &semaphores.renderComplete));
+	device.createSemaphore(&semaphoreCreateInfo, nullptr, &semaphores.renderComplete);
 	// Create a semaphore used to synchronize command submission
 	// Ensures that the image is not presented until all commands for the text overlay have been sumbitted and executed
 	// Will be inserted after the render complete semaphore if the text overlay is enabled
-	VK_CHECK_RESULT(vkCreateSemaphore(device, &semaphoreCreateInfo, nullptr, &semaphores.textOverlayComplete));
+	//VK_CHECK_RESULT(vkCreateSemaphore(device, &semaphoreCreateInfo, nullptr, &semaphores.textOverlayComplete));
+	device.createSemaphore(&semaphoreCreateInfo, nullptr, &semaphores.textOverlayComplete);
 
 	// Set up submit info structure
 	// Semaphores will stay the same during application lifetime
 	// Command buffer submission info is set by each example
-	submitInfo = vkTools::initializers::submitInfo();
+	submitInfo = vk::SubmitInfo{};
 	submitInfo.pWaitDstStageMask = &submitPipelineStages;
 	submitInfo.waitSemaphoreCount = 1;
 	submitInfo.pWaitSemaphores = &semaphores.presentComplete;
@@ -1560,66 +1587,21 @@ void vulkanApp::buildCommandBuffers()
 
 void vulkanApp::createCommandPool()
 {
-	VkCommandPoolCreateInfo cmdPoolInfo = {};
-	cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	vk::CommandPoolCreateInfo cmdPoolInfo;
 	cmdPoolInfo.queueFamilyIndex = swapChain.queueNodeIndex;
-	cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-	VK_CHECK_RESULT(vkCreateCommandPool(device, &cmdPoolInfo, nullptr, &cmdPool));
+	cmdPoolInfo.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
+	//VK_CHECK_RESULT(vkCreateCommandPool(device, &cmdPoolInfo, nullptr, &cmdPool));
+	device.createCommandPool(&cmdPoolInfo, nullptr, &cmdPool);
 }
 
 void vulkanApp::setupDepthStencil()
 {
-	/*
-	VkImageCreateInfo image = {};
-	image.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-	image.pNext = NULL;
-	image.imageType = VK_IMAGE_TYPE_2D;
-	image.format = depthFormat;
-	image.extent = { width, height, 1 };
-	image.mipLevels = 1;
-	image.arrayLayers = 1;
-	image.samples = VK_SAMPLE_COUNT_1_BIT;
-	image.tiling = VK_IMAGE_TILING_OPTIMAL;
-	image.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-	image.flags = 0;
 
-	VkMemoryAllocateInfo mem_alloc = {};
-	mem_alloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	mem_alloc.pNext = NULL;
-	mem_alloc.allocationSize = 0;
-	mem_alloc.memoryTypeIndex = 0;
-
-	VkImageViewCreateInfo depthStencilView = {};
-	depthStencilView.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-	depthStencilView.pNext = NULL;
-	depthStencilView.viewType = VK_IMAGE_VIEW_TYPE_2D;
-	depthStencilView.format = depthFormat;
-	depthStencilView.flags = 0;
-	depthStencilView.subresourceRange = {};
-	depthStencilView.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-	depthStencilView.subresourceRange.baseMipLevel = 0;
-	depthStencilView.subresourceRange.levelCount = 1;
-	depthStencilView.subresourceRange.baseArrayLayer = 0;
-	depthStencilView.subresourceRange.layerCount = 1;
-
-	VkMemoryRequirements memReqs;
-
-	VK_CHECK_RESULT(vkCreateImage(device, &image, nullptr, &depthStencil.image));
-	vkGetImageMemoryRequirements(device, depthStencil.image, &memReqs);
-	mem_alloc.allocationSize = memReqs.size;
-	mem_alloc.memoryTypeIndex = vulkanDevice->getMemoryType(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-	VK_CHECK_RESULT(vkAllocateMemory(device, &mem_alloc, nullptr, &depthStencil.mem));
-	VK_CHECK_RESULT(vkBindImageMemory(device, depthStencil.image, depthStencil.mem, 0));
-
-	depthStencilView.image = depthStencil.image;
-	VK_CHECK_RESULT(vkCreateImageView(device, &depthStencilView, nullptr, &depthStencil.view));*/
-
-	// C++ WRAPPER
 	vk::ImageCreateInfo image;
 	//image.flags = 0;
 	image.pNext = NULL;
 	image.imageType = vk::ImageType::e2D;
-	//image.format = depthFormat;
+	image.format = depthFormat;
 	image.format = vk::Format::eR8G8B8A8Unorm;
 
 	image.extent = vk::Extent3D{ width, height, 1 };
@@ -1638,7 +1620,7 @@ void vulkanApp::setupDepthStencil()
 	vk::ImageViewCreateInfo depthStencilView;
 	depthStencilView.pNext = NULL;
 	depthStencilView.viewType = vk::ImageViewType::e2D;
-	//depthStencilView.format = depthFormat;
+	depthStencilView.format = depthFormat;
 	depthStencilView.format = vk::Format::eR8G8B8A8Unorm;
 	//depthStencilView.flags = 0;
 	depthStencilView.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
@@ -1647,34 +1629,34 @@ void vulkanApp::setupDepthStencil()
 	depthStencilView.subresourceRange.baseArrayLayer = 0;
 	depthStencilView.subresourceRange.layerCount = 1;
 
-
-	//VkMemoryRequirements memReqs;
-
 	vk::MemoryRequirements memReqs;
 
-	//device
-	VK_CHECK_RESULT()
+	//VK_CHECK_RESULT(vkCreateImage(device, &image, nullptr, &depthStencil.image));
+	device.createImage(&image, nullptr, &depthStencil.image);
 
-	/*VK_CHECK_RESULT(vkCreateImage(device, &image, nullptr, &depthStencil.image));
-	vkGetImageMemoryRequirements(device, depthStencil.image, &memReqs);
+	//vkGetImageMemoryRequirements(device, depthStencil.image, &memReqs);
+	device.getImageMemoryRequirements(depthStencil.image, &memReqs);
+
 	mem_alloc.allocationSize = memReqs.size;
-	mem_alloc.memoryTypeIndex = vulkanDevice->getMemoryType(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-	VK_CHECK_RESULT(vkAllocateMemory(device, &mem_alloc, nullptr, &depthStencil.mem));
-	VK_CHECK_RESULT(vkBindImageMemory(device, depthStencil.image, depthStencil.mem, 0));
+	mem_alloc.memoryTypeIndex = vulkanDevice->getMemoryType(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
+	//VK_CHECK_RESULT(vkAllocateMemory(device, &mem_alloc, nullptr, &depthStencil.mem));
+	device.allocateMemory(&mem_alloc, nullptr, &depthStencil.mem);
+	//VK_CHECK_RESULT(vkBindImageMemory(device, depthStencil.image, depthStencil.mem, 0));
+	device.bindImageMemory(depthStencil.image, depthStencil.mem, 0);
 
 	depthStencilView.image = depthStencil.image;
-	VK_CHECK_RESULT(vkCreateImageView(device, &depthStencilView, nullptr, &depthStencil.view));*/
+	//VK_CHECK_RESULT(vkCreateImageView(device, &depthStencilView, nullptr, &depthStencil.view));
+	device.createImageView(&depthStencilView, nullptr, &depthStencil.view);
 }
 
 void vulkanApp::setupFrameBuffer()
 {
-	VkImageView attachments[2];
+	vk::ImageView attachments[2];
 
 	// Depth/Stencil attachment is the same for all frame buffers
 	attachments[1] = depthStencil.view;
 
-	VkFramebufferCreateInfo frameBufferCreateInfo = {};
-	frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+	vk::FramebufferCreateInfo frameBufferCreateInfo = {};
 	frameBufferCreateInfo.pNext = NULL;
 	frameBufferCreateInfo.renderPass = renderPass;
 	frameBufferCreateInfo.attachmentCount = 2;
@@ -1688,42 +1670,43 @@ void vulkanApp::setupFrameBuffer()
 	for (uint32_t i = 0; i < frameBuffers.size(); i++)
 	{
 		attachments[0] = swapChain.buffers[i].view;
-		VK_CHECK_RESULT(vkCreateFramebuffer(device, &frameBufferCreateInfo, nullptr, &frameBuffers[i]));
+		//VK_CHECK_RESULT(vkCreateFramebuffer(device, &frameBufferCreateInfo, nullptr, &frameBuffers[i]));
+		device.createFramebuffer(&frameBufferCreateInfo, nullptr, &frameBuffers[i]);
 	}
 }
 
 void vulkanApp::setupRenderPass()
 {
-	std::array<VkAttachmentDescription, 2> attachments = {};
+	std::array<vk::AttachmentDescription, 2> attachments = {};
 	// Color attachment
 	attachments[0].format = colorformat;
-	attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
-	attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-	attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-	attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-	attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	attachments[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+	attachments[0].samples = vk::SampleCountFlagBits::e1;
+	attachments[0].loadOp = vk::AttachmentLoadOp::eClear;
+	attachments[0].storeOp = vk::AttachmentStoreOp::eStore;
+	attachments[0].stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+	attachments[0].stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+	attachments[0].initialLayout = vk::ImageLayout::eUndefined;
+	attachments[0].finalLayout = vk::ImageLayout::ePresentSrcKHR;
 	// Depth attachment
 	attachments[1].format = depthFormat;
-	attachments[1].samples = VK_SAMPLE_COUNT_1_BIT;
-	attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-	attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-	attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-	attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	attachments[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+	attachments[1].samples = vk::SampleCountFlagBits::e1;
+	attachments[1].loadOp = vk::AttachmentLoadOp::eClear;
+	attachments[1].storeOp = vk::AttachmentStoreOp::eStore;
+	attachments[1].stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+	attachments[1].stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+	attachments[1].initialLayout = vk::ImageLayout::eUndefined;
+	attachments[1].finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 
-	VkAttachmentReference colorReference = {};
+	vk::AttachmentReference colorReference;
 	colorReference.attachment = 0;
-	colorReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	colorReference.layout = vk::ImageLayout::eColorAttachmentOptimal;
 
-	VkAttachmentReference depthReference = {};
+	vk::AttachmentReference depthReference;
 	depthReference.attachment = 1;
-	depthReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+	depthReference.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 
-	VkSubpassDescription subpassDescription = {};
-	subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	vk::SubpassDescription subpassDescription;
+	subpassDescription.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
 	subpassDescription.colorAttachmentCount = 1;
 	subpassDescription.pColorAttachments = &colorReference;
 	subpassDescription.pDepthStencilAttachment = &depthReference;
@@ -1734,26 +1717,25 @@ void vulkanApp::setupRenderPass()
 	subpassDescription.pResolveAttachments = nullptr;
 
 	// Subpass dependencies for layout transitions
-	std::array<VkSubpassDependency, 2> dependencies;
+	std::array<vk::SubpassDependency, 2> dependencies;
 
 	dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
 	dependencies[0].dstSubpass = 0;
-	dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-	dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-	dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-	dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+	dependencies[0].srcStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
+	dependencies[0].dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+	dependencies[0].srcAccessMask = vk::AccessFlagBits::eMemoryRead;
+	dependencies[0].dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite;
+	dependencies[0].dependencyFlags = vk::DependencyFlagBits::eByRegion;
 
 	dependencies[1].srcSubpass = 0;
 	dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-	dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-	dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-	dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-	dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+	dependencies[1].srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+	dependencies[1].dstStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
+	dependencies[1].srcAccessMask = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite;
+	dependencies[1].dstAccessMask = vk::AccessFlagBits::eMemoryRead;
+	dependencies[1].dependencyFlags = vk::DependencyFlagBits::eByRegion;
 
-	VkRenderPassCreateInfo renderPassInfo = {};
-	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	vk::RenderPassCreateInfo renderPassInfo;
 	renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
 	renderPassInfo.pAttachments = attachments.data();
 	renderPassInfo.subpassCount = 1;
@@ -1761,7 +1743,8 @@ void vulkanApp::setupRenderPass()
 	renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
 	renderPassInfo.pDependencies = dependencies.data();
 
-	VK_CHECK_RESULT(vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass));
+	//VK_CHECK_RESULT(vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass));
+	device.createRenderPass(&renderPassInfo, nullptr, &renderPass);
 }
 
 void vulkanApp::windowResize()
@@ -1780,14 +1763,19 @@ void vulkanApp::windowResize()
 
 	// Recreate the frame buffers
 
-	vkDestroyImageView(device, depthStencil.view, nullptr);
-	vkDestroyImage(device, depthStencil.image, nullptr);
-	vkFreeMemory(device, depthStencil.mem, nullptr);
+	//vkDestroyImageView(device, depthStencil.view, nullptr);
+	device.destroyImageView(depthStencil.view, nullptr);
+	//vkDestroyImage(device, depthStencil.image, nullptr);
+	device.destroyImage(depthStencil.image, nullptr);
+	//vkFreeMemory(device, depthStencil.mem, nullptr);
+	device.freeMemory(depthStencil.mem, nullptr);
+
 	setupDepthStencil();
 	
 	for (uint32_t i = 0; i < frameBuffers.size(); i++)
 	{
-		vkDestroyFramebuffer(device, frameBuffers[i], nullptr);
+		//vkDestroyFramebuffer(device, frameBuffers[i], nullptr);
+		device.destroyFramebuffer(frameBuffers[i], nullptr);
 	}
 	setupFrameBuffer();
 
@@ -1799,8 +1787,10 @@ void vulkanApp::windowResize()
 	createCommandBuffers();
 	buildCommandBuffers();
 
-	vkQueueWaitIdle(queue);
-	vkDeviceWaitIdle(device);
+	//vkQueueWaitIdle(queue);
+	queue.waitIdle();
+	//vkDeviceWaitIdle(device);
+	device.waitIdle();
 
 	if (enableTextOverlay)
 	{

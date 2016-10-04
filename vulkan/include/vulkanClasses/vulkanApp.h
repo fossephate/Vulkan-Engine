@@ -69,13 +69,13 @@ class vulkanApp
 
 		// Device features enabled by the example
 		// If not set, no additional features are enabled (may result in validation layer errors)
-		VkPhysicalDeviceFeatures enabledFeatures = {};
+		vk::PhysicalDeviceFeatures enabledFeatures = {};
 
 		// fps timer (one second interval)
 		float fpsTimer = 0.0f;
 
 		// Create application wide Vulkan instance
-		VkResult createInstance(bool enableValidation);
+		vk::Result createInstance(bool enableValidation);
 
 		// Get window title with example name, device, et.
 		std::string getWindowTitle();
@@ -102,98 +102,52 @@ class vulkanApp
 		uint32_t lastFPS = 0;
 
 		// Vulkan instance, stores all per-application states
-		VkInstance instance;
+		vk::Instance instance;
 		// Physical device (GPU) that Vulkan will ise
-		VkPhysicalDevice physicalDevice;
+		vk::PhysicalDevice physicalDevice;
 		// Stores physical device properties (for e.g. checking device limits)
-		VkPhysicalDeviceProperties deviceProperties;
+		vk::PhysicalDeviceProperties deviceProperties;
 		// Stores phyiscal device features (for e.g. checking if a feature is available)
-		VkPhysicalDeviceFeatures deviceFeatures;
+		vk::PhysicalDeviceFeatures deviceFeatures;
 		// Stores all available memory (type) properties for the physical device
-		VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
+		vk::PhysicalDeviceMemoryProperties deviceMemoryProperties;
 		/** @brief Logical device, application's view of the physical device (GPU) */
 		// todo: getter? should always point to VulkanDevice->device
-		VkDevice device;
+		vk::Device device;
 		/** @brief Encapsulated physical and logical vulkan device */
 		vkx::VulkanDevice * vulkanDevice;
 		// Handle to the device graphics queue that command buffers are submitted to
-		VkQueue queue;
+		vk::Queue queue;
 		// Color buffer format
-		VkFormat colorformat = VK_FORMAT_B8G8R8A8_UNORM;
+		vk::Format colorformat = vk::Format::eB8G8R8A8Unorm;
 		// Depth buffer format
 		// Depth format is selected during Vulkan initialization
-		VkFormat depthFormat;
+		vk::Format depthFormat;
 		// Command buffer pool
-		VkCommandPool cmdPool;
+		vk::CommandPool cmdPool;
 		// Command buffer used for setup
-		VkCommandBuffer setupCmdBuffer = VK_NULL_HANDLE;
+		vk::CommandBuffer setupCmdBuffer = VK_NULL_HANDLE;
 		/** @brief Pipeline stages used to wait at for graphics queue submissions */
-		VkPipelineStageFlags submitPipelineStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		vk::PipelineStageFlags submitPipelineStages = vk::PipelineStageFlagBits::eColorAttachmentOutput;
 		// Contains command buffers and semaphores to be presented to the queue
-		VkSubmitInfo submitInfo;
+		vk::SubmitInfo submitInfo;
 		// Command buffers used for rendering
 		std::vector<VkCommandBuffer> drawCmdBuffers;
 		// Global render pass for frame buffer writes
-		VkRenderPass renderPass;
+		vk::RenderPass renderPass;
 		// List of available frame buffers (same as number of swap chain images)
-		std::vector<VkFramebuffer>frameBuffers;
+		std::vector<vk::Framebuffer>frameBuffers;
 		// Active frame buffer index
 		uint32_t currentBuffer = 0;
 		// Descriptor set pool
-		VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
+		vk::DescriptorPool descriptorPool = VK_NULL_HANDLE;
 		// List of shader modules created (stored for cleanup)
-		std::vector<VkShaderModule> shaderModules;
+		std::vector<vk::ShaderModule> shaderModules;
 		// Pipeline cache object
-		VkPipelineCache pipelineCache;
+		vk::PipelineCache pipelineCache;
 		// Wraps the swap chain to present images (framebuffers) to the windowing system
 		VulkanSwapChain swapChain;
 
-
-
-		// Synchronization semaphores
-		struct {
-			// Swap chain image presentation
-			VkSemaphore presentComplete;
-			// Command buffer submission and execution
-			VkSemaphore renderComplete;
-			// Text overlay submission and execution
-			VkSemaphore textOverlayComplete;
-		} semaphores;
-
-
-
-
-
-		// C++ WRAPPER
-		vk::Instance instance2;// replaces VkInstance instance;
-		vk::PhysicalDevice physicalDevice2;// replaces VkPhysicalDevice physicalDevice;
-		vk::PhysicalDeviceProperties physicalDeviceProperties;// replaces VkPhysicalDeviceProperties deviceProperties;
-		vk::PhysicalDeviceFeatures physicalDeviceFeatures;// replaces VkPhysicalDeviceFeatures deviceFeatures;
-		vk::PhysicalDeviceMemoryProperties physicalDeviceMemoryProperties;// replaces VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
-
-		vk::Device device2;// replaces VkDevice device;
-		vkx::VulkanDevice * vulkanDevice2;// same as before, may change
-
-		vk::Queue queue2;// replaces VkQueue queue
-		vk::Format colorFormat2 = vk::Format::eB8G8R8A8Unorm;// replaces VkFormat colorformat = VK_FORMAT_B8G8R8A8_UNORM;
-		vk::Format depthFormat2;// replaces VkFormat depthFormat;
-
-		vk::CommandPool cmdPool2;// replaces VkCommandPool cmdPool;
-		vk::CommandBuffer setupCmdBuffer2 = VK_NULL_HANDLE;// replaces VkCommandBuffer setupCmdBuffer = VK_NULL_HANDLE;
-		vk::PipelineStageFlags submitPipelineStages2 = vk::PipelineStageFlagBits::eColorAttachmentOutput;// replaces VkPipelineStageFlags submitPipelineStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		
-		vk::SubmitInfo submitInfo2;// replaces VkSubmitInfo submitInfo;
-		std::vector<vk::CommandBuffer> drawCmdBuffers2;// replaces std::vector<VkCommandBuffer> drawCmdBuffers;
-		vk::RenderPass renderPass2;// replaces VkRenderPass renderPass;
-		std::vector<vk::Framebuffer> frameBuffers2;// replaces std::vector<VkFramebuffer>frameBuffers;
-
-		//uint32_t currentBuffer = 0;// the same
-
-		vk::DescriptorPool descriptorPool2 = VK_NULL_HANDLE;// replaces VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
-		std::vector<vk::ShaderModule> shaderModules2;// replaces std::vector<VkShaderModule> shaderModules;
-		vk::PipelineCache pipelineCache2;// replaces VkPipelineCache pipelineCache;
-
-		//VulkanSwapChain swapChain;// the same
 
 
 		// Synchronization semaphores
@@ -204,7 +158,7 @@ class vulkanApp
 			vk::Semaphore renderComplete;
 			// Text overlay submission and execution
 			vk::Semaphore textOverlayComplete;
-		} semaphores2;
+		} semaphores;
 
 
 
@@ -261,9 +215,9 @@ class vulkanApp
 		std::string name = "vulkanApplication";
 
 		struct {
-			VkImage image;
-			VkDeviceMemory mem;
-			VkImageView view;
+			vk::Image image;
+			vk::DeviceMemory mem;
+			vk::ImageView view;
 		} depthStencil;
 
 		struct {
@@ -425,13 +379,11 @@ class vulkanApp
 
 		// Command buffer creation
 		// Creates and returns a new command buffer
-		VkCommandBuffer createCommandBuffer(VkCommandBufferLevel level, bool begin);
-		vk::CommandBuffer createCommandBuffer2(vk::CommandBufferLevel level, bool begin);// replaces ^
+		vk::CommandBuffer createCommandBuffer(vk::CommandBufferLevel level, bool begin);// replaces ^
 
 		// End the command buffer, submit it to the queue and free (if requested)
 		// Note : Waits for the queue to become idle
-		void flushCommandBuffer(VkCommandBuffer commandBuffer, VkQueue queue, bool free);
-		void flushCommandBuffer2(vk::CommandBuffer commandBuffer, vk::Queue queue, bool free);// replaces ^
+		void flushCommandBuffer(vk::CommandBuffer commandBuffer, vk::Queue queue, bool free);// replaces ^
 
 		// Create a cache pool for rendering pipelines
 		void createPipelineCache();
@@ -440,45 +392,11 @@ class vulkanApp
 		virtual void prepare();
 
 		// Load a SPIR-V shader
-		VkPipelineShaderStageCreateInfo loadShader(std::string fileName, VkShaderStageFlagBits stage);
-		vk::PipelineShaderStageCreateInfo loadShader2(std::string fileName, vk::ShaderStageFlagBits stage);// replaces ^
-		
-		// Create a buffer, fill it with data (if != NULL) and bind buffer memory
-		VkBool32 createBuffer(
-			VkBufferUsageFlags usageFlags,
-			VkMemoryPropertyFlags memoryPropertyFlags,
-			VkDeviceSize size,
-			void *data,
-			VkBuffer *buffer,
-			VkDeviceMemory *memory);
-		// This version always uses HOST_VISIBLE memory
-		VkBool32 createBuffer(
-			VkBufferUsageFlags usage,
-			VkDeviceSize size,
-			void *data,
-			VkBuffer *buffer,
-			VkDeviceMemory *memory);
-		// Overload that assigns buffer info to descriptor
-		VkBool32 createBuffer(
-			VkBufferUsageFlags usage,
-			VkDeviceSize size,
-			void *data,
-			VkBuffer *buffer,
-			VkDeviceMemory *memory,
-			VkDescriptorBufferInfo *descriptor);
-		// Overload to pass memory property flags
-		VkBool32 createBuffer(
-			VkBufferUsageFlags usage,
-			VkMemoryPropertyFlags memoryPropertyFlags,
-			VkDeviceSize size,
-			void *data,
-			VkBuffer *buffer,
-			VkDeviceMemory *memory,
-			VkDescriptorBufferInfo *descriptor);
+		vk::PipelineShaderStageCreateInfo loadShader(std::string fileName, vk::ShaderStageFlagBits stage);// replaces ^
 
 		// C++ WRAPPER
 		// Create a buffer, fill it with data (if != NULL) and bind buffer memory
-		vk::Bool32 createBuffer2(
+		vk::Bool32 createBuffer(
 			vk::BufferUsageFlags usageFlags,
 			vk::MemoryPropertyFlags memoryPropertyFlags,
 			vk::DeviceSize size,
@@ -486,14 +404,14 @@ class vulkanApp
 			vk::Buffer *buffer,
 			vk::DeviceMemory *memory);
 		// This version always uses HOST_VISIBLE memory
-		vk::Bool32 createBuffer2(
+		vk::Bool32 createBuffer(
 			vk::BufferUsageFlags usage,
 			vk::DeviceSize size,
 			void *data,
 			vk::Buffer *buffer,
 			vk::DeviceMemory *memory);
 		// Overload that assigns buffer info to descriptor
-		vk::Bool32 createBuffer2(
+		vk::Bool32 createBuffer(
 			vk::BufferUsageFlags usage,
 			vk::DeviceSize size,
 			void *data,
@@ -501,7 +419,7 @@ class vulkanApp
 			vk::DeviceMemory *memory,
 			vk::DescriptorBufferInfo *descriptor);
 		// Overload to pass memory property flags
-		vk::Bool32 createBuffer2(
+		vk::Bool32 createBuffer(
 			vk::BufferUsageFlags usage,
 			vk::MemoryPropertyFlags memoryPropertyFlags,
 			vk::DeviceSize size,

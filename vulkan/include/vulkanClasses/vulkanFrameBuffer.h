@@ -22,13 +22,13 @@ namespace vkx
 	*/
 	struct FramebufferAttachment
 	{
-		VkImage image;
-		VkDeviceMemory memory;
-		VkImageView view;
-		VkFormat format;
-		VkImageSubresourceRange subresourceRange;
-		VkAttachmentDescription description;
-		VkImageLayout initialLayout;
+		vk::Image image;
+		vk::DeviceMemory memory;
+		vk::ImageView view;
+		vk::Format format;
+		vk::ImageSubresourceRange subresourceRange;
+		vk::AttachmentDescription description;
+		vk::ImageLayout initialLayout;
 
 		/**
 		* @brief Returns true if the attachment has a depth component
@@ -54,8 +54,8 @@ namespace vkx
 	{
 		uint32_t width, height;
 		uint32_t layerCount;
-		VkFormat format;
-		VkImageUsageFlags usage;
+		vk::Format format;
+		vk::ImageUsageFlags usage;
 	};
 
 	/**
@@ -67,9 +67,9 @@ namespace vkx
 			vkx::VulkanDevice *vulkanDevice;
 		public:
 			uint32_t width, height;
-			VkFramebuffer framebuffer;
-			VkRenderPass renderPass;
-			VkSampler sampler;
+			vk::Framebuffer framebuffer;
+			vk::RenderPass renderPass;
+			vk::Sampler sampler;
 			std::vector<vkx::FramebufferAttachment> attachments;
 
 			/**
@@ -103,13 +103,13 @@ namespace vkx
 			*
 			* @return VkResult for the sampler creation
 			*/
-			VkResult createSampler(VkFilter magFilter, VkFilter minFilter, VkSamplerAddressMode adressMode);
+			vk::Result createSampler(vk::Filter magFilter, vk::Filter minFilter, vk::SamplerAddressMode adressMode);
 
 			/**
 			* Creates a default render pass setup with one sub pass
 			*
 			* @return VK_SUCCESS if all resources have been created successfully
 			*/
-			VkResult createRenderPass();
+			vk::Result createRenderPass();
 	};
 }

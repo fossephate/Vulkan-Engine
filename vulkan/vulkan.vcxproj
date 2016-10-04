@@ -27,9 +27,8 @@
     <ClInclude Include="include\vulkanClasses\vulkanandroid.h" />
     <ClInclude Include="include\vulkanClasses\vulkanApp.h" />
     <ClInclude Include="include\vulkanClasses\vulkanBuffer.h" />
-    <ClInclude Include="include\vulkanClasses\vulkanBuffer.hpp" />
     <ClInclude Include="include\vulkanClasses\vulkanDebug.h" />
-    <ClInclude Include="include\vulkanClasses\vulkanDevice.hpp" />
+    <ClInclude Include="include\vulkanClasses\vulkanDevice.h" />
     <ClInclude Include="include\vulkanClasses\vulkanFrameBuffer.h" />
     <ClInclude Include="include\vulkanClasses\vulkanMeshLoader.h" />
     <ClInclude Include="include\vulkanClasses\vulkanSwapChain.h" />
@@ -44,7 +43,9 @@
     <ClCompile Include="src\vulkanClasses\camera.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanAndroid.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanApp.cpp" />
+    <ClCompile Include="src\vulkanClasses\vulkanBuffer.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanDebug.cpp" />
+    <ClCompile Include="src\vulkanClasses\vulkanDevice.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanFrameBuffer.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanMeshLoader.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanSwapChain.cpp" />

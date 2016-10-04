@@ -46,29 +46,29 @@ namespace vkx
 		private:
 			vkx::VulkanDevice * vulkanDevice;
 
-			VkQueue queue;
-			VkFormat colorFormat;
-			VkFormat depthFormat;
+			vk::Queue queue;
+			vk::Format colorFormat;
+			vk::Format depthFormat;
 
 			uint32_t *frameBufferWidth;
 			uint32_t *frameBufferHeight;
 
-			VkSampler sampler;
-			VkImage image;
-			VkImageView view;
+			vk::Sampler sampler;
+			vk::Image image;
+			vk::ImageView view;
 			vkx::Buffer vertexBuffer;
-			VkDeviceMemory imageMemory;
-			VkDescriptorPool descriptorPool;
-			VkDescriptorSetLayout descriptorSetLayout;
-			VkDescriptorSet descriptorSet;
-			VkPipelineLayout pipelineLayout;
-			VkPipelineCache pipelineCache;
-			VkPipeline pipeline;
-			VkRenderPass renderPass;
-			VkCommandPool commandPool;
-			std::vector<VkFramebuffer*> frameBuffers;
-			std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
-			VkFence fence;
+			vk::DeviceMemory imageMemory;
+			vk::DescriptorPool descriptorPool;
+			vk::DescriptorSetLayout descriptorSetLayout;
+			vk::DescriptorSet descriptorSet;
+			vk::PipelineLayout pipelineLayout;
+			vk::PipelineCache pipelineCache;
+			vk::Pipeline pipeline;
+			vk::RenderPass renderPass;
+			vk::CommandPool commandPool;
+			std::vector<vk::Framebuffer*> frameBuffers;
+			std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
+			vk::Fence fence;
 
 			// Used during text updates
 			glm::vec4 *mappedLocal = nullptr;
@@ -83,7 +83,7 @@ namespace vkx
 			bool visible = true;
 			bool invalidated = false;
 
-			std::vector<VkCommandBuffer> cmdBuffers;
+			std::vector<vk::CommandBuffer> cmdBuffers;
 
 			/**
 			* Default constructor
@@ -92,13 +92,13 @@ namespace vkx
 			*/
 			VulkanTextOverlay(
 				vkx::VulkanDevice * vulkanDevice,
-				VkQueue queue,
-				std::vector<VkFramebuffer> & framebuffers,
-				VkFormat colorformat,
-				VkFormat depthformat,
+				vk::Queue queue,
+				std::vector<vk::Framebuffer> & framebuffers,
+				vk::Format colorformat,
+				vk::Format depthformat,
 				uint32_t *framebufferwidth,
 				uint32_t *framebufferheight,
-				std::vector<VkPipelineShaderStageCreateInfo> shaderstages);
+				std::vector<vk::PipelineShaderStageCreateInfo> shaderstages);
 
 			/**
 			* Default destructor, frees up all Vulkan resources acquired by the text overlay
@@ -149,7 +149,7 @@ namespace vkx
 			/**
 			* Submit the text command buffers to a queue
 			*/
-			void submit(VkQueue queue, uint32_t bufferindex, VkSubmitInfo submitInfo);
+			void submit(vk::Queue queue, uint32_t bufferindex, vk::SubmitInfo submitInfo);
 
 			/**
 			* Reallocate command buffers for the text overlay
