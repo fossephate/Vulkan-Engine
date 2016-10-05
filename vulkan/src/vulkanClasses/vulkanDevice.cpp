@@ -250,7 +250,7 @@ namespace vkx
 		{
 			void *mapped;
 			//VK_CHECK_RESULT(vkMapMemory(logicalDevice, *memory, 0, size, 0, &mapped));
-			logicalDevice.mapMemory(*memory, 0, size, 0, &mapped);
+			logicalDevice.mapMemory(*memory, 0, size, vk::MemoryMapFlags());//what?
 			memcpy(mapped, data, size);
 			vkUnmapMemory(logicalDevice, *memory);
 		}
@@ -286,7 +286,8 @@ namespace vkx
 		// Create the memory backing up the buffer handle
 		vk::MemoryRequirements memReqs;
 		vk::MemoryAllocateInfo memAlloc;
-		vkGetBufferMemoryRequirements(logicalDevice, buffer->buffer, &memReqs);
+		//vkGetBufferMemoryRequirements(logicalDevice, buffer->buffer, &memReqs);
+		logicalDevice.getBufferMemoryRequirements(buffer->buffer, &memReqs);
 		memAlloc.allocationSize = memReqs.size;
 		// Find a memory type index that fits the properties of the buffer
 		memAlloc.memoryTypeIndex = getMemoryType(memReqs.memoryTypeBits, memoryPropertyFlags);
@@ -329,7 +330,7 @@ namespace vkx
 	{
 		assert(dst->size <= src->size);
 		assert(src->buffer && src->buffer);
-		vk::CommandBuffer copyCmd = createCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, true);
+		vk::CommandBuffer copyCmd = createCommandBuffer(vk::CommandBufferLevel::ePrimary, true);
 		vk::BufferCopy bufferCopy{};
 		if (copyRegion == nullptr) {
 			bufferCopy.size = src->size;
@@ -337,7 +338,8 @@ namespace vkx
 			bufferCopy = *copyRegion;
 		}
 
-		vkCmdCopyBuffer(copyCmd, src->buffer, dst->buffer, 1, &bufferCopy);
+		//vkCmdCopyBuffer(copyCmd, src->buffer, dst->buffer, 1, &bufferCopy);
+		copyCmd.copyBuffer(src->buffer, dst->buffer, 1, &bufferCopy);
 
 		flushCommandBuffer(copyCmd, queue);
 	}
@@ -353,14 +355,14 @@ namespace vkx
 	* @return A handle to the created command buffer
 	*/
 
-	inline vk::CommandPool VulkanDevice::createCommandPool(uint32_t queueFamilyIndex, vk::CommandPoolCreateFlags createFlags)
+	vk::CommandPool VulkanDevice::createCommandPool(uint32_t queueFamilyIndex, vk::CommandPoolCreateFlags createFlags)
 	{
-		vk::CommandPoolCreateInfo cmdPoolInfo = {};
-		cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		vk::CommandPoolCreateInfo cmdPoolInfo;
 		cmdPoolInfo.queueFamilyIndex = queueFamilyIndex;
 		cmdPoolInfo.flags = createFlags;
 		vk::CommandPool cmdPool;
-		VK_CHECK_RESULT(vkCreateCommandPool(logicalDevice, &cmdPoolInfo, nullptr, &cmdPool));
+		//VK_CHECK_RESULT(vkCreateCommandPool(logicalDevice, &cmdPoolInfo, nullptr, &cmdPool));
+		logicalDevice.createCommandPool(&cmdPoolInfo, nullptr, &cmdPool);
 		return cmdPool;
 	}
 
@@ -373,18 +375,19 @@ namespace vkx
 	* @return A handle to the allocated command buffer
 	*/
 
-	inline vk::CommandBuffer VulkanDevice::createCommandBuffer(vk::CommandBufferLevel level, bool begin)
+	vk::CommandBuffer VulkanDevice::createCommandBuffer(vk::CommandBufferLevel level, bool begin)
 	{
 		vk::CommandBufferAllocateInfo cmdBufAllocateInfo = vkx::commandBufferAllocateInfo(commandPool, level, 1);
 
 		vk::CommandBuffer cmdBuffer;
-		VK_CHECK_RESULT(vkAllocateCommandBuffers(logicalDevice, &cmdBufAllocateInfo, &cmdBuffer));
+		//VK_CHECK_RESULT(vkAllocateCommandBuffers(logicalDevice, &cmdBufAllocateInfo, &cmdBuffer));
+		logicalDevice.allocateCommandBuffers(&cmdBufAllocateInfo, &cmdBuffer);
 
 		// If requested, also start recording for the new command buffer
-		if (begin)
-		{
+		if (begin) {
 			vk::CommandBufferBeginInfo cmdBufInfo;
-			VK_CHECK_RESULT(vkBeginCommandBuffer(cmdBuffer, &cmdBufInfo));
+			//VK_CHECK_RESULT(vkBeginCommandBuffer(cmdBuffer, &cmdBufInfo));
+			cmdBuffer.begin(&cmdBufInfo);
 		}
 
 		return cmdBuffer;
@@ -403,28 +406,32 @@ namespace vkx
 
 	inline void VulkanDevice::flushCommandBuffer(vk::CommandBuffer commandBuffer, vk::Queue queue, bool free)
 	{
-		if (commandBuffer == VK_NULL_HANDLE)
-		{
+		if (commandBuffer == VK_NULL_HANDLE) {
 			return;
 		}
 
-		VK_CHECK_RESULT(vkEndCommandBuffer(commandBuffer));
+		//VK_CHECK_RESULT(vkEndCommandBuffer(commandBuffer));
+		commandBuffer.end();
 
 		vk::SubmitInfo submitInfo;
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &commandBuffer;
 
 		// Create fence to ensure that the command buffer has finished executing
-		vk::FenceCreateInfo fenceInfo = vkx::fenceCreateInfo(VK_FLAGS_NONE);
+		vk::FenceCreateInfo fenceInfo;
 		vk::Fence fence;
-		VK_CHECK_RESULT(vkCreateFence(logicalDevice, &fenceInfo, nullptr, &fence));
+		//VK_CHECK_RESULT(vkCreateFence(logicalDevice, &fenceInfo, nullptr, &fence));
+		logicalDevice.createFence(&fenceInfo, nullptr, &fence);
 
 		// Submit to the queue
-		VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, fence));
+		//VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, fence));
+		queue.submit(1, &submitInfo, fence);
 		// Wait for the fence to signal that command buffer has finished executing
-		VK_CHECK_RESULT(vkWaitForFences(logicalDevice, 1, &fence, VK_TRUE, DEFAULT_FENCE_TIMEOUT));
+		//VK_CHECK_RESULT(vkWaitForFences(logicalDevice, 1, &fence, VK_TRUE, DEFAULT_FENCE_TIMEOUT));
+		logicalDevice.waitForFences(1, &fence, VK_TRUE, DEFAULT_FENCE_TIMEOUT);
 
-		vkDestroyFence(logicalDevice, fence, nullptr);
+		//vkDestroyFence(logicalDevice, fence, nullptr);
+		logicalDevice.destroyFence(fence, nullptr);
 
 		if (free) {
 			//vkFreeCommandBuffers(logicalDevice, commandPool, 1, &commandBuffer);
@@ -440,13 +447,13 @@ namespace vkx
 
 	inline VulkanDevice::~VulkanDevice()
 	{
-		if (commandPool)
-		{
-			vkDestroyCommandPool(logicalDevice, commandPool, nullptr);
+		if (commandPool) {
+			//vkDestroyCommandPool(logicalDevice, commandPool, nullptr);
+			logicalDevice.destroyCommandPool(commandPool, nullptr);
 		}
-		if (logicalDevice)
-		{
-			vkDestroyDevice(logicalDevice, nullptr);
+		if (logicalDevice) {
+			//vkDestroyDevice(logicalDevice, nullptr);
+			logicalDevice.destroy(nullptr);
 		}
 	}
 

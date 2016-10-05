@@ -75,10 +75,10 @@ typedef struct _SwapChainBuffers {
 class VulkanSwapChain
 {
 	private:
-		VkInstance instance;
-		VkDevice device;
-		VkPhysicalDevice physicalDevice;
-		VkSurfaceKHR surface;
+		vk::Instance instance;
+		vk::Device device;
+		vk::PhysicalDevice physicalDevice;
+		vk::SurfaceKHR surface;
 		// Function pointers
 		PFN_vkGetPhysicalDeviceSurfaceSupportKHR fpGetPhysicalDeviceSurfaceSupportKHR;
 		PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR fpGetPhysicalDeviceSurfaceCapabilitiesKHR; 
@@ -91,13 +91,13 @@ class VulkanSwapChain
 		PFN_vkQueuePresentKHR fpQueuePresentKHR;
 
 	public:
-		VkFormat colorFormat;
-		VkColorSpaceKHR colorSpace;
+		vk::Format colorFormat;
+		vk::ColorSpaceKHR colorSpace;
 
-		VkSwapchainKHR swapChain = VK_NULL_HANDLE;
+		vk::SwapchainKHR swapChain = VK_NULL_HANDLE;
 
 		uint32_t imageCount;
-		std::vector<VkImage> images;
+		std::vector<vk::Image> images;
 		std::vector<SwapChainBuffer> buffers;
 
 		// Index of the deteced graphics and presenting device queue
@@ -142,7 +142,7 @@ class VulkanSwapChain
 		* @param device Logical representation of the device to create the swapchain for
 		*
 		*/
-		void connect(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device);
+		void connect(vk::Instance instance, vk::PhysicalDevice physicalDevice, vk::Device device);
 
 		/** 
 		* Create the swapchain and get it's images with given width and height
@@ -163,7 +163,7 @@ class VulkanSwapChain
 		*
 		* @return VkResult of the image acquisition
 		*/
-		VkResult acquireNextImage(VkSemaphore presentCompleteSemaphore, uint32_t *imageIndex);
+		vk::Result acquireNextImage(vk::Semaphore presentCompleteSemaphore, uint32_t *imageIndex);
 
 		/**
 		* Queue an image for presentation
@@ -174,7 +174,7 @@ class VulkanSwapChain
 		*
 		* @return VkResult of the queue presentation
 		*/
-		VkResult queuePresent(VkQueue queue, uint32_t imageIndex, VkSemaphore waitSemaphore);
+		vk::Result queuePresent(vk::Queue queue, uint32_t imageIndex, vk::Semaphore waitSemaphore);
 
 
 		/**

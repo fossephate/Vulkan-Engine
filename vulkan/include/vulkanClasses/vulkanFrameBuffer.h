@@ -12,7 +12,7 @@
 #include <iterator>
 #include <vector>
 #include <vulkan/vulkan.hpp>
-#include "vulkanDevice.hpp"
+#include "vulkanDevice.h"
 #include "vulkanTools.h"
 
 namespace vkx

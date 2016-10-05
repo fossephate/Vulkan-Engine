@@ -13,7 +13,7 @@
 #endif
 
 #include <vulkan/vulkan.hpp>
-#include "vulkanDevice.hpp"
+#include "vulkanDevice.h"
 #include <gli/gli.hpp>
 
 
@@ -27,15 +27,15 @@ namespace vkTools
 	*/
 	struct VulkanTexture
 	{
-		VkSampler sampler;
-		VkImage image;
-		VkImageLayout imageLayout;
-		VkDeviceMemory deviceMemory;
-		VkImageView view;
+		vk::Sampler sampler;
+		vk::Image image;
+		vk::ImageLayout imageLayout;
+		vk::DeviceMemory deviceMemory;
+		vk::ImageView view;
 		uint32_t width, height;
 		uint32_t mipLevels;
 		uint32_t layerCount;
-		VkDescriptorImageInfo descriptor;
+		vk::DescriptorImageInfo descriptor;
 	};
 
 	/**
@@ -45,9 +45,9 @@ namespace vkTools
 	{
 		private:
 			vkx::VulkanDevice *vulkanDevice;
-			VkQueue queue;
-			VkCommandBuffer cmdBuffer;
-			VkCommandPool cmdPool;
+			vk::Queue queue;
+			vk::CommandBuffer cmdBuffer;
+			vk::CommandPool cmdPool;
 		public:
 			#if defined(__ANDROID__)
 				AAssetManager* assetManager = nullptr;
@@ -60,7 +60,7 @@ namespace vkTools
 			* @param queue Queue for the copy commands when using staging (queue must support transfers)
 			* @param cmdPool Commandpool used to get command buffers for copies and layout transitions
 			*/
-			VulkanTextureLoader(vkx::VulkanDevice * vulkanDevice, VkQueue queue, VkCommandPool cmdPool);
+			VulkanTextureLoader(vkx::VulkanDevice * vulkanDevice, vk::Queue queue, vk::CommandPool cmdPool);
 
 			/**
 			* Default destructor
@@ -80,7 +80,7 @@ namespace vkTools
 			*
 			* @note Only supports .ktx and .dds
 			*/
-			void loadTexture(std::string filename, VkFormat format, VulkanTexture *texture, bool forceLinear = false, VkImageUsageFlags imageUsageFlags = VK_IMAGE_USAGE_SAMPLED_BIT);
+			void loadTexture(std::string filename, vk::Format format, VulkanTexture *texture, bool forceLinear = false, vk::ImageUsageFlags imageUsageFlags = vk::ImageUsageFlagBits::eSampled);
 
 			/**
 			* Load a cubemap texture including all mip levels from a single file
@@ -91,7 +91,7 @@ namespace vkTools
 			*
 			* @note Only supports .ktx and .dds
 			*/
-			void loadCubemap(std::string filename, VkFormat format, VulkanTexture *texture, VkImageUsageFlags imageUsageFlags = VK_IMAGE_USAGE_SAMPLED_BIT);
+			void loadCubemap(std::string filename, vk::Format format, VulkanTexture *texture, vk::ImageUsageFlags imageUsageFlags = vk::ImageUsageFlagBits::eSampled);
 
 			/**
 			* Load a texture array including all mip levels from a single file
@@ -102,7 +102,7 @@ namespace vkTools
 			*
 			* @note Only supports .ktx and .dds
 			*/
-			void loadTextureArray(std::string filename, VkFormat format, VulkanTexture *texture, VkImageUsageFlags imageUsageFlags = VK_IMAGE_USAGE_SAMPLED_BIT);
+			void loadTextureArray(std::string filename, vk::Format format, VulkanTexture *texture, vk::ImageUsageFlags imageUsageFlags = vk::ImageUsageFlagBits::eSampled);
 
 			/**
 			* Free all Vulkan resources used by a texture object

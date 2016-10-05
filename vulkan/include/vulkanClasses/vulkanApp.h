@@ -47,7 +47,7 @@
 #include "vulkanTools.h"
 #include "vulkanDebug.h"
 
-#include "vulkanDevice.hpp"
+#include "vulkanDevice.h"
 #include "vulkanSwapChain.h"
 #include "vulkanTextureLoader.h"
 #include "vulkanMeshLoader.h"
@@ -55,7 +55,7 @@
 #include "camera.h"
 
 // Function pointer for getting physical device fetures to be enabled
-typedef VkPhysicalDeviceFeatures (*PFN_GetEnabledFeatures)();
+typedef vk::PhysicalDeviceFeatures (*PFN_GetEnabledFeatures)();
 
 class vulkanApp
 {
@@ -132,7 +132,7 @@ class vulkanApp
 		// Contains command buffers and semaphores to be presented to the queue
 		vk::SubmitInfo submitInfo;
 		// Command buffers used for rendering
-		std::vector<VkCommandBuffer> drawCmdBuffers;
+		std::vector<vk::CommandBuffer> drawCmdBuffers;
 		// Global render pass for frame buffer writes
 		vk::RenderPass renderPass;
 		// List of available frame buffers (same as number of swap chain images)

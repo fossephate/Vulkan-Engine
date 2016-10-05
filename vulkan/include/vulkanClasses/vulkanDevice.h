@@ -14,7 +14,7 @@
 #include <assert.h>
 #include <vulkan/vulkan.hpp>
 #include "vulkanTools.h"
-#include "vulkanBuffer.hpp"
+#include "vulkanBuffer.h"
 
 namespace vkx
 {
@@ -96,7 +96,7 @@ namespace vkx
 		*
 		* @return VkResult of the device creation call
 		*/
-		vk::Result createLogicalDevice(vk::PhysicalDeviceFeatures enabledFeatures, bool useSwapChain = true, vk::QueueFlags requestedQueueTypes = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
+		vk::Result createLogicalDevice(vk::PhysicalDeviceFeatures enabledFeatures, bool useSwapChain = true, vk::QueueFlags requestedQueueTypes = vk::QueueFlagBits::eGraphics | vk::QueueFlagBits::eCompute);
 
 		/**
 		* Create a buffer on the device
@@ -147,7 +147,7 @@ namespace vkx
 		*
 		* @return A handle to the created command buffer
 		*/
-		vk::CommandPool createCommandPool(uint32_t queueFamilyIndex, vk::CommandPoolCreateFlags createFlags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+		vk::CommandPool createCommandPool(uint32_t queueFamilyIndex, vk::CommandPoolCreateFlags createFlags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
 
 		/**
 		* Allocate a command buffer from the command pool

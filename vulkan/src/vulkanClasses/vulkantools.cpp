@@ -11,7 +11,7 @@
 namespace vkx
 {
 
-	vk::Bool32 checkGlobalExtensionPresent2(const char * extensionName)
+	vk::Bool32 checkGlobalExtensionPresent(const char * extensionName)
 	{
 		uint32_t extensionCount = 0;
 		std::vector<vk::ExtensionProperties> extensions = vk::enumerateInstanceExtensionProperties();
@@ -270,7 +270,7 @@ namespace vkx
 
 	vk::ImageMemoryBarrier prePresentBarrier(vk::Image presentImage)
 	{
-		vk::ImageMemoryBarrier imageMemoryBarrier = imageMemoryBarrier();
+		vk::ImageMemoryBarrier imageMemoryBarrier;
 		imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
 		//imageMemoryBarrier.dstAccessMask = 0;
 		imageMemoryBarrier.oldLayout = vk::ImageLayout::eColorAttachmentOptimal;
@@ -285,7 +285,7 @@ namespace vkx
 
 	vk::ImageMemoryBarrier postPresentBarrier(vk::Image presentImage)
 	{
-		vk::ImageMemoryBarrier imageMemoryBarrier = imageMemoryBarrier();
+		vk::ImageMemoryBarrier imageMemoryBarrier;
 
 		//imageMemoryBarrier.srcAccessMask = 0;
 		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;

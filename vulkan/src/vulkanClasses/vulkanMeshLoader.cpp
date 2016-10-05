@@ -20,13 +20,13 @@ uint32_t vkMeshLoader::vertexSize(std::vector<vkMeshLoader::VertexLayout> layout
 }
 
 // was static
-void vkMeshLoader::getVertexInputAttributeDescriptions(std::vector<vkMeshLoader::VertexLayout> layout, std::vector<VkVertexInputAttributeDescription> &attributeDescriptions, uint32_t binding)
+void vkMeshLoader::getVertexInputAttributeDescriptions(std::vector<vkMeshLoader::VertexLayout> layout, std::vector<vk::VertexInputAttributeDescription> &attributeDescriptions, uint32_t binding)
 {
 	uint32_t offset = 0;
 	uint32_t location = 0;
 	for (auto& layoutDetail : layout)
 	{
-		VkVertexInputAttributeDescription inputAttribDescription = {};
+		vk::VertexInputAttributeDescription inputAttribDescription;
 		inputAttribDescription.binding = binding;
 		inputAttribDescription.location = location;
 		inputAttribDescription.offset = offset;
@@ -36,11 +36,11 @@ void vkMeshLoader::getVertexInputAttributeDescriptions(std::vector<vkMeshLoader:
 			// UV only has two components
 		case VERTEX_LAYOUT_UV:
 			offset += 2 * sizeof(float);
-			inputAttribDescription.format = VK_FORMAT_R32G32_SFLOAT;
+			inputAttribDescription.format = vk::Format::eR32G32Sfloat;
 			break;
 		default:
 			offset += 3 * sizeof(float);
-			inputAttribDescription.format = VK_FORMAT_R32G32B32_SFLOAT;
+			inputAttribDescription.format = vk::Format::eR32G32B32Sfloat;
 		}
 		attributeDescriptions.push_back(inputAttribDescription);
 		location++;
@@ -56,10 +56,10 @@ void vkMeshLoader::getVertexInputAttributeDescriptions(std::vector<vkMeshLoader:
 
 void vkMeshLoader::Mesh::setupVertexInputState(std::vector<vkMeshLoader::VertexLayout> layout)
 {
-	bindingDescription = vkTools::initializers::vertexInputBindingDescription(
+	bindingDescription = vkx::vertexInputBindingDescription(
 		vertexBufferBinding,
 		vertexSize(layout),
-		VK_VERTEX_INPUT_RATE_VERTEX);
+		vk::VertexInputRate::eVertex);
 
 	attributeDescriptions.clear();
 	uint32_t offset = 0;
@@ -67,10 +67,10 @@ void vkMeshLoader::Mesh::setupVertexInputState(std::vector<vkMeshLoader::VertexL
 	for (auto& layoutDetail : layout)
 	{
 		// Format (layout)
-		VkFormat format = (layoutDetail == VERTEX_LAYOUT_UV) ? VK_FORMAT_R32G32_SFLOAT : VK_FORMAT_R32G32B32_SFLOAT;
+		vk::Format format = (layoutDetail == VERTEX_LAYOUT_UV) ? vk::Format::eR32G32Sfloat : vk::Format::eR32G32B32Sfloat;
 
 		attributeDescriptions.push_back(
-			vkTools::initializers::vertexInputAttributeDescription(
+			vkx::vertexInputAttributeDescription(
 				vertexBufferBinding,
 				binding,
 				format,
@@ -81,7 +81,7 @@ void vkMeshLoader::Mesh::setupVertexInputState(std::vector<vkMeshLoader::VertexL
 		binding++;
 	}
 
-	vertexInputState = vkTools::initializers::pipelineVertexInputStateCreateInfo();
+	vertexInputState = vkx::pipelineVertexInputStateCreateInfo();
 	vertexInputState.vertexBindingDescriptionCount = 1;
 	vertexInputState.pVertexBindingDescriptions = &bindingDescription;
 	vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
@@ -95,32 +95,39 @@ void vkMeshLoader::Mesh::setupVertexInputState(std::vector<vkMeshLoader::VertexL
 
 
 
-void vkMeshLoader::Mesh::drawIndexed(VkCommandBuffer cmdBuffer)
+void vkMeshLoader::Mesh::drawIndexed(vk::CommandBuffer cmdBuffer)
 {
-	VkDeviceSize offsets[1] = { 0 };
-	if (pipeline != VK_NULL_HANDLE)
-	{
-		vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+	vk::DeviceSize offsets[1] = { 0 };
+	if (pipeline != VK_NULL_HANDLE) {
+		//vkCmdBindPipeline(cmdBuffer, vk::PipelineBindPoint::eGraphics, pipeline);
+		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
 	}
-	if ((pipelineLayout != VK_NULL_HANDLE) && (descriptorSet != VK_NULL_HANDLE))
-	{
-		vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, NULL);
+	if ((pipelineLayout != VK_NULL_HANDLE) && (descriptorSet != VK_NULL_HANDLE)) {
+		//vkCmdBindDescriptorSets(cmdBuffer, vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, &descriptorSet, 0, NULL);
+		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, &descriptorSet, 0, NULL);
 	}
-	vkCmdBindVertexBuffers(cmdBuffer, vertexBufferBinding, 1, &buffers.vertices.buf, offsets);
-	vkCmdBindIndexBuffer(cmdBuffer, buffers.indices.buf, 0, VK_INDEX_TYPE_UINT32);
-	vkCmdDrawIndexed(cmdBuffer, buffers.indexCount, 1, 0, 0, 0);
+	//vkCmdBindVertexBuffers(cmdBuffer, vertexBufferBinding, 1, &buffers.vertices.buf, offsets);
+	cmdBuffer.bindVertexBuffers(vertexBufferBinding, 1, &buffers.vertices.buf, offsets);
+	//vkCmdBindIndexBuffer(cmdBuffer, buffers.indices.buf, 0, vk::IndexType::eUint32);
+	cmdBuffer.bindIndexBuffer(buffers.indices.buf, 0, vk::IndexType::eUint32);
+	//vkCmdDrawIndexed(cmdBuffer, buffers.indexCount, 1, 0, 0, 0);
+	cmdBuffer.drawIndexed(buffers.indexCount, 1, 0, 0, 0);
 }
 
 
 // was static
-void vkMeshLoader::freeMeshBufferResources(VkDevice device, vkMeshLoader::MeshBuffer *meshBuffer)
+void vkMeshLoader::freeMeshBufferResources(vk::Device device, vkMeshLoader::MeshBuffer *meshBuffer)
 {
-	vkDestroyBuffer(device, meshBuffer->vertices.buf, nullptr);
-	vkFreeMemory(device, meshBuffer->vertices.mem, nullptr);
-	if (meshBuffer->indices.buf != VK_NULL_HANDLE)
-	{
-		vkDestroyBuffer(device, meshBuffer->indices.buf, nullptr);
-		vkFreeMemory(device, meshBuffer->indices.mem, nullptr);
+	//vkDestroyBuffer(device, meshBuffer->vertices.buf, nullptr);
+	device.destroyBuffer(meshBuffer->vertices.buf, nullptr);
+	//vkFreeMemory(device, meshBuffer->vertices.mem, nullptr);
+	device.freeMemory(meshBuffer->vertices.mem, nullptr);
+	
+	if (meshBuffer->indices.buf != VK_NULL_HANDLE) {
+		//vkDestroyBuffer(device, meshBuffer->indices.buf, nullptr);
+		device.destroyBuffer(meshBuffer->indices.buf, nullptr);
+		//vkFreeMemory(device, meshBuffer->indices.mem, nullptr);
+		device.freeMemory(meshBuffer->indices.mem, nullptr);
 	}
 }
 
@@ -289,8 +296,8 @@ void VulkanMeshLoader::createBuffers(
 	std::vector<vkMeshLoader::VertexLayout> layout,
 	vkMeshLoader::MeshCreateInfo *createInfo,
 	bool useStaging,
-	VkCommandBuffer copyCmd,
-	VkQueue copyQueue)
+	vk::CommandBuffer copyCmd,
+	vk::Queue copyQueue)
 {
 	glm::vec3 scale;
 	glm::vec2 uvscale;
@@ -399,14 +406,14 @@ void VulkanMeshLoader::createBuffers(
 	{
 		// Create staging buffers
 		struct {
-			VkBuffer buffer;
-			VkDeviceMemory memory;
+			vk::Buffer buffer;
+			vk::DeviceMemory memory;
 		} vertexStaging, indexStaging;
 
 		// Vertex buffer
 		vulkanDevice->createBuffer(
-			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+			vk::BufferUsageFlagBits::eTransferSrc,
+			vk::MemoryPropertyFlagBits::eHostVisible,
 			meshBuffer->vertices.size,
 			&vertexStaging.buffer,
 			&vertexStaging.memory,
@@ -414,8 +421,8 @@ void VulkanMeshLoader::createBuffers(
 
 		// Index buffer
 		vulkanDevice->createBuffer(
-			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+			vk::BufferUsageFlagBits::eTransferSrc,
+			vk::MemoryPropertyFlagBits::eHostVisible,
 			meshBuffer->indices.size,
 			&indexStaging.buffer,
 			&indexStaging.memory,
@@ -424,62 +431,78 @@ void VulkanMeshLoader::createBuffers(
 		// Create device local target buffers
 		// Vertex buffer
 		vulkanDevice->createBuffer(
-			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst,
+			vk::MemoryPropertyFlagBits::eDeviceLocal,
 			meshBuffer->vertices.size,
 			&meshBuffer->vertices.buf,
 			&meshBuffer->vertices.mem);
 
 		// Index buffer
 		vulkanDevice->createBuffer(
-			VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst,
+			vk::MemoryPropertyFlagBits::eDeviceLocal,
 			meshBuffer->indices.size,
 			&meshBuffer->indices.buf,
 			&meshBuffer->indices.mem);
 
 		// Copy from staging buffers
-		VkCommandBufferBeginInfo cmdBufInfo = vkTools::initializers::commandBufferBeginInfo();
-		VK_CHECK_RESULT(vkBeginCommandBuffer(copyCmd, &cmdBufInfo));
+		vk::CommandBufferBeginInfo cmdBufInfo;
+		//VK_CHECK_RESULT(vkBeginCommandBuffer(copyCmd, &cmdBufInfo));
+		copyCmd.begin(&cmdBufInfo);
 
-		VkBufferCopy copyRegion = {};
+		vk::BufferCopy copyRegion = {};
 
 		copyRegion.size = meshBuffer->vertices.size;
-		vkCmdCopyBuffer(
-			copyCmd,
+		//vkCmdCopyBuffer(
+		//	copyCmd,
+		//	vertexStaging.buffer,
+		//	meshBuffer->vertices.buf,
+		//	1,
+		//	&copyRegion);
+		copyCmd.copyBuffer(
 			vertexStaging.buffer,
 			meshBuffer->vertices.buf,
 			1,
 			&copyRegion);
 
 		copyRegion.size = meshBuffer->indices.size;
-		vkCmdCopyBuffer(
-			copyCmd,
+		//vkCmdCopyBuffer(
+		//	copyCmd,
+		//	indexStaging.buffer,
+		//	meshBuffer->indices.buf,
+		//	1,
+		//	&copyRegion);
+		copyCmd.copyBuffer(
 			indexStaging.buffer,
 			meshBuffer->indices.buf,
 			1,
 			&copyRegion);
 
-		VK_CHECK_RESULT(vkEndCommandBuffer(copyCmd));
+		//VK_CHECK_RESULT(vkEndCommandBuffer(copyCmd));
+		copyCmd.end();
 
-		VkSubmitInfo submitInfo = {};
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		vk::SubmitInfo submitInfo;
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &copyCmd;
 
-		VK_CHECK_RESULT(vkQueueSubmit(copyQueue, 1, &submitInfo, VK_NULL_HANDLE));
-		VK_CHECK_RESULT(vkQueueWaitIdle(copyQueue));
+		//VK_CHECK_RESULT(vkQueueSubmit(copyQueue, 1, &submitInfo, VK_NULL_HANDLE));
+		copyQueue.submit(1, &submitInfo, VK_NULL_HANDLE);
+		//VK_CHECK_RESULT(vkQueueWaitIdle(copyQueue));
+		copyQueue.waitIdle();
 
-		vkDestroyBuffer(vulkanDevice->logicalDevice, vertexStaging.buffer, nullptr);
-		vkFreeMemory(vulkanDevice->logicalDevice, vertexStaging.memory, nullptr);
-		vkDestroyBuffer(vulkanDevice->logicalDevice, indexStaging.buffer, nullptr);
-		vkFreeMemory(vulkanDevice->logicalDevice, indexStaging.memory, nullptr);
-	} else
-	{
+		//vkDestroyBuffer(vulkanDevice->logicalDevice, vertexStaging.buffer, nullptr);
+		vulkanDevice->logicalDevice.destroyBuffer(vertexStaging.buffer, nullptr);
+		//vkFreeMemory(vulkanDevice->logicalDevice, vertexStaging.memory, nullptr);
+		vulkanDevice->logicalDevice.freeMemory(vertexStaging.memory, nullptr);
+		//vkDestroyBuffer(vulkanDevice->logicalDevice, indexStaging.buffer, nullptr);
+		vulkanDevice->logicalDevice.destroyBuffer(indexStaging.buffer, nullptr);
+		//vkFreeMemory(vulkanDevice->logicalDevice, indexStaging.memory, nullptr);
+		vulkanDevice->logicalDevice.freeMemory(indexStaging.memory, nullptr);
+	} else {
 		// Generate vertex buffer
 		vulkanDevice->createBuffer(
-			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+			vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferSrc,
+			vk::MemoryPropertyFlagBits::eHostVisible,
 			meshBuffer->vertices.size,
 			&meshBuffer->vertices.buf,
 			&meshBuffer->vertices.mem,
@@ -487,8 +510,8 @@ void VulkanMeshLoader::createBuffers(
 
 		// Generate index buffer
 		vulkanDevice->createBuffer(
-			VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+			vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferSrc,
+			vk::MemoryPropertyFlagBits::eHostVisible,
 			meshBuffer->indices.size,
 			&meshBuffer->indices.buf,
 			&meshBuffer->indices.mem,

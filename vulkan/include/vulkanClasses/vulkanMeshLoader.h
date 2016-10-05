@@ -36,7 +36,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <vulkan/vulkan.hpp>
-#include "vulkanDevice.hpp"
+#include "vulkanDevice.h"
 
 
 
@@ -55,8 +55,8 @@ namespace vkMeshLoader
 
 	struct MeshBufferInfo
 	{
-		VkBuffer buf = VK_NULL_HANDLE;
-		VkDeviceMemory mem = VK_NULL_HANDLE;
+		vk::Buffer buf = VK_NULL_HANDLE;
+		vk::DeviceMemory mem = VK_NULL_HANDLE;
 		size_t size = 0;
 	};
 
@@ -107,7 +107,7 @@ namespace vkMeshLoader
 	* @note Always assumes float formats
 	*/
 	// was originally static
-	void getVertexInputAttributeDescriptions(std::vector<vkMeshLoader::VertexLayout> layout, std::vector<VkVertexInputAttributeDescription> &attributeDescriptions, uint32_t binding);
+	void getVertexInputAttributeDescriptions(std::vector<vkMeshLoader::VertexLayout> layout, std::vector<vk::VertexInputAttributeDescription> &attributeDescriptions, uint32_t binding);
 
 	// Stores some additonal info and functions for 
 	// specifying pipelines, vertex bindings, etc.
@@ -116,23 +116,23 @@ namespace vkMeshLoader
 		public:
 			MeshBuffer buffers;
 
-			VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-			VkPipeline pipeline = VK_NULL_HANDLE;
-			VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
+			vk::PipelineLayout pipelineLayout = VK_NULL_HANDLE;
+			vk::Pipeline pipeline = VK_NULL_HANDLE;
+			vk::DescriptorSet descriptorSet = VK_NULL_HANDLE;
 
 			uint32_t vertexBufferBinding = 0;
 
-			VkPipelineVertexInputStateCreateInfo vertexInputState;
-			VkVertexInputBindingDescription bindingDescription;
-			std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
+			vk::PipelineVertexInputStateCreateInfo vertexInputState;
+			vk::VertexInputBindingDescription bindingDescription;
+			std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
 
 			void setupVertexInputState(std::vector<vkMeshLoader::VertexLayout> layout);
 
-			void drawIndexed(VkCommandBuffer cmdBuffer);
+			void drawIndexed(vk::CommandBuffer cmdBuffer);
 	};
 
 	// was static
-	void freeMeshBufferResources(VkDevice device, vkMeshLoader::MeshBuffer *meshBuffer);
+	void freeMeshBufferResources(vk::Device device, vkMeshLoader::MeshBuffer *meshBuffer);
 }
 
 
@@ -238,6 +238,6 @@ class VulkanMeshLoader
 			std::vector<vkMeshLoader::VertexLayout> layout,
 			vkMeshLoader::MeshCreateInfo *createInfo,
 			bool useStaging,
-			VkCommandBuffer copyCmd,
-			VkQueue copyQueue);
+			vk::CommandBuffer copyCmd,
+			vk::Queue copyQueue);
 };

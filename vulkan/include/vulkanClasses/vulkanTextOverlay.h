@@ -19,8 +19,8 @@
 #include <vulkan/vulkan.hpp>
 #include "vulkanTools.h"
 #include "vulkanDebug.h"
-#include "vulkanBuffer.hpp"
-#include "vulkanDevice.hpp"
+#include "vulkanBuffer.h"
+#include "vulkanDevice.h"
 
 #include "../external/stb/stb_font_consolas_24_latin1.inl"
 

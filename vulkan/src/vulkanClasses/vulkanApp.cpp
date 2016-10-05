@@ -52,7 +52,8 @@ vk::Result vulkanApp::createInstance(bool enableValidation)
 		instanceCreateInfo.enabledLayerCount = vkDebug::validationLayerCount;
 		instanceCreateInfo.ppEnabledLayerNames = vkDebug::validationLayerNames;
 	}
-	return vkCreateInstance(&instanceCreateInfo, nullptr, &instance);
+	//return vkCreateInstance(&instanceCreateInfo, nullptr, &instance);
+	return vk::createInstance(&instanceCreateInfo, nullptr, &instance);
 }
 
 std::string vulkanApp::getWindowTitle()
@@ -403,7 +404,8 @@ void vulkanApp::loadMesh(std::string filename, vkMeshLoader::MeshBuffer * meshBu
 		copyCmd,
 		queue);
 
-	vkFreeCommandBuffers(device, cmdPool, 1, &copyCmd);
+	//vkFreeCommandBuffers(device, cmdPool, 1, &copyCmd);
+	device.freeCommandBuffers(cmdPool, 1, &copyCmd);
 
 	meshBuffer->dim = mesh->dim.size;
 
@@ -667,7 +669,8 @@ void vulkanApp::getOverlayText(vkx::VulkanTextOverlay * textOverlay)
 void vulkanApp::prepareFrame()
 {
 	// Acquire the next image from the swap chaing
-	VK_CHECK_RESULT(swapChain.acquireNextImage(semaphores.presentComplete, &currentBuffer));
+	//VK_CHECK_RESULT(swapChain.acquireNextImage(semaphores.presentComplete, &currentBuffer));
+	swapChain.acquireNextImage(semaphores.presentComplete, &currentBuffer);
 }
 
 void vulkanApp::submitFrame()
@@ -676,7 +679,7 @@ void vulkanApp::submitFrame()
 
 	if (submitTextOverlay) {
 		// Wait for color attachment output to finish before rendering the text overlay
-		VkPipelineStageFlags stageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		vk::PipelineStageFlags stageFlags = vk::PipelineStageFlagBits::eColorAttachmentOutput;
 		submitInfo.pWaitDstStageMask = &stageFlags;
 
 		// Set semaphores
@@ -690,7 +693,8 @@ void vulkanApp::submitFrame()
 		// Submit current text overlay command buffer
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &textOverlay->cmdBuffers[currentBuffer];
-		VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE));
+		//VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE));
+		queue.submit(1, &submitInfo, VK_NULL_HANDLE);
 
 		// Reset stage mask
 		submitInfo.pWaitDstStageMask = &submitPipelineStages;
@@ -703,9 +707,11 @@ void vulkanApp::submitFrame()
 		submitInfo.pSignalSemaphores = &semaphores.renderComplete;
 	}
 
-	VK_CHECK_RESULT(swapChain.queuePresent(queue, currentBuffer, submitTextOverlay ? semaphores.textOverlayComplete : semaphores.renderComplete));
+	//VK_CHECK_RESULT(swapChain.queuePresent(queue, currentBuffer, submitTextOverlay ? semaphores.textOverlayComplete : semaphores.renderComplete));
+	swapChain.queuePresent(queue, currentBuffer, submitTextOverlay ? semaphores.textOverlayComplete : semaphores.renderComplete);
 
-	VK_CHECK_RESULT(vkQueueWaitIdle(queue));
+	//VK_CHECK_RESULT(vkQueueWaitIdle(queue));
+	queue.waitIdle();
 }
 
 vulkanApp::vulkanApp(bool enableValidation, PFN_GetEnabledFeatures enabledFeaturesFn)
@@ -825,7 +831,7 @@ void vulkanApp::initVulkan(bool enableValidation)
 
 	// Vulkan instance
 	err = createInstance(enableValidation);
-	if (err) {
+	if ((bool)err) {
 		vkx::exitFatal("Could not create Vulkan instance : \n" + vkx::errorString(err), "Fatal error");
 	}
 
@@ -853,7 +859,7 @@ void vulkanApp::initVulkan(bool enableValidation)
 	std::vector<vk::PhysicalDevice> physicalDevices(gpuCount);
 	//err = vkEnumeratePhysicalDevices(instance, &gpuCount, physicalDevices.data());
 	err = instance.enumeratePhysicalDevices(&gpuCount, physicalDevices.data());
-	if (err) {
+	if ((bool)err) {
 		vkx::exitFatal("Could not enumerate phyiscal devices : \n" + vkx::errorString(err), "Fatal error");
 	}
 
@@ -875,17 +881,22 @@ void vulkanApp::initVulkan(bool enableValidation)
 	// todo: remove
 	// Store properties (including limits) and features of the phyiscal device
 	// So examples can check against them and see if a feature is actually supported
-	vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
-	vkGetPhysicalDeviceFeatures(physicalDevice, &deviceFeatures);
-	// Gather physical device memory properties
-	vkGetPhysicalDeviceMemoryProperties(physicalDevice, &deviceMemoryProperties);
 
+	//vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
+	physicalDevice.getProperties(&deviceProperties);
+
+	//vkGetPhysicalDeviceFeatures(physicalDevice, &deviceFeatures);
+	physicalDevice.getFeatures(&deviceFeatures);
+	// Gather physical device memory properties
+	//vkGetPhysicalDeviceMemoryProperties(physicalDevice, &deviceMemoryProperties);
+	physicalDevice.getMemoryProperties(&deviceMemoryProperties);
 	// Get a graphics queue from the device
-	vkGetDeviceQueue(device, vulkanDevice->queueFamilyIndices.graphics, 0, &queue);
+	//vkGetDeviceQueue(device, vulkanDevice->queueFamilyIndices.graphics, 0, &queue);
+	device.getQueue(vulkanDevice->queueFamilyIndices.graphics, 0, &queue);
 
 	// Find a suitable depth format
-	vk::Bool32 validDepthFormat = vkx::getSupportedDepthFormat(physicalDevice, &depthFormat);
-	assert(validDepthFormat);
+	//vk::Bool32 validDepthFormat = vkx::getSupportedDepthFormat(physicalDevice, &depthFormat);
+	//assert(validDepthFormat);//important
 
 	swapChain.connect(instance, physicalDevice, device);
 
@@ -1749,8 +1760,7 @@ void vulkanApp::setupRenderPass()
 
 void vulkanApp::windowResize()
 {
-	if (!prepared)
-	{
+	if (!prepared) {
 		return;
 	}
 	prepared = false;
@@ -1772,8 +1782,7 @@ void vulkanApp::windowResize()
 
 	setupDepthStencil();
 	
-	for (uint32_t i = 0; i < frameBuffers.size(); i++)
-	{
+	for (uint32_t i = 0; i < frameBuffers.size(); i++) {
 		//vkDestroyFramebuffer(device, frameBuffers[i], nullptr);
 		device.destroyFramebuffer(frameBuffers[i], nullptr);
 	}
