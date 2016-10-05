@@ -624,8 +624,7 @@ void vkx::VulkanTextOverlay::updateCommandBuffers()
 	renderPassBeginInfo.clearValueCount = 1;
 	renderPassBeginInfo.pClearValues = clearValues;
 
-	for (int32_t i = 0; i < cmdBuffers.size(); ++i)
-	{
+	for (int32_t i = 0; i < cmdBuffers.size(); ++i) {
 		renderPassBeginInfo.framebuffer = *frameBuffers[i];
 
 		//VK_CHECK_RESULT(vkBeginCommandBuffer(cmdBuffers[i], &cmdBufInfo));

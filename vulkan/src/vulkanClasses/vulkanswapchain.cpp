@@ -134,7 +134,8 @@
 	// Will be used to present the swap chain images to the windowing system
 	std::vector<vk::Bool32> supportsPresent(queueCount);
 	for (uint32_t i = 0; i < queueCount; i++) {
-		fpGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &supportsPresent[i]);
+		//fpGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &supportsPresent[i]);
+		physicalDevice.getSurfaceSupportKHR(i, surface, &supportsPresent[i]);
 	}
 
 	// Search for a graphics and a present queue in the array of queue

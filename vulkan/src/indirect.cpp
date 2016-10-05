@@ -34,13 +34,13 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan.hpp>
 #include "vulkanApp.h"
 #include "vulkanBuffer.h"
 
 #define VERTEX_BUFFER_BIND_ID 0
 #define INSTANCE_BUFFER_BIND_ID 1
-#define ENABLE_VALIDATION false
+#define ENABLE_VALIDATION true
 
 // Number of instances per object
 #if defined(__ANDROID__)
@@ -523,14 +523,14 @@ public:
 		shaderStages[0] = loadShader(getAssetPath() + "shaders/indirectdraw/indirectdraw.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = loadShader(getAssetPath() + "shaders/indirectdraw/indirectdraw.frag.spv", vk::ShaderStageFlagBits::eFragment);
 		//VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, &pipelineCreateInfo, nullptr, &pipelines.plants));
-		device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		pipelines.plants = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
 
 		// Ground
 		shaderStages[0] = loadShader(getAssetPath() + "shaders/indirectdraw/ground.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = loadShader(getAssetPath() + "shaders/indirectdraw/ground.frag.spv", vk::ShaderStageFlagBits::eFragment);
 		//rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT;
 		//VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, &pipelineCreateInfo, nullptr, &pipelines.ground));
-		device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		pipelines.ground = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
 
 		// Skysphere
 		shaderStages[0] = loadShader(getAssetPath() + "shaders/indirectdraw/skysphere.vert.spv", vk::ShaderStageFlagBits::eVertex);
@@ -538,7 +538,7 @@ public:
 		//rasterizationState.cullMode = VK_CULL_MODE_FRONT_BIT;
 		//VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, &pipelineCreateInfo, nullptr, &pipelines.skysphere));
 		//device.createGraphicsPipeline(pipelineCache, 1, &pipelineCreateInfo, nullptr, &pipelines.skysphere);
-		device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);//what?
+		pipelines.skysphere = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);//what?
 	}
 
 	// Prepare (and stage) a buffer containing the indirect draw commands
@@ -667,6 +667,7 @@ public:
 
 	void prepare()
 	{
+
 		vulkanApp::prepare();
 		loadAssets();
 
@@ -704,4 +705,23 @@ public:
 	}
 };
 
-VULKAN_EXAMPLE_MAIN()
+//VULKAN_EXAMPLE_MAIN()
+
+VulkanExample *vulkanExample;																		
+LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)						
+{																									
+	if (vulkanExample != NULL) {																							
+		vulkanExample->handleMessages(hWnd, uMsg, wParam, lParam);									
+	}
+	return (DefWindowProc(hWnd, uMsg, wParam, lParam));
+}
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow)
+{
+	vulkanExample = new VulkanExample();
+	vulkanExample->setupWindow(hInstance, WndProc);
+	vulkanExample->initSwapchain();
+	vulkanExample->prepare();
+	vulkanExample->renderLoop();
+	delete(vulkanExample);
+	return 0;
+}

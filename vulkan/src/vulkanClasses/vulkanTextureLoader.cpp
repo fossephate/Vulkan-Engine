@@ -130,7 +130,7 @@ void vkTools::VulkanTextureLoader::loadTexture(std::string filename, vk::Format 
 		uint8_t *data;
 
 		//VK_CHECK_RESULT(vkMapMemory(vulkanDevice->logicalDevice, stagingMemory, 0, memReqs.size, 0, (void **)&data));
-		vk::Device(vulkanDevice->logicalDevice).mapMemory(stagingMemory, 0, memReqs.size, vk::MemoryMapFlagBits());//what?
+		data = (uint8_t *)vulkanDevice->logicalDevice.mapMemory(stagingMemory, 0, memReqs.size, vk::MemoryMapFlagBits());//what?
 
 		memcpy(data, tex2D.data(), tex2D.size());
 		//vkUnmapMemory(vulkanDevice->logicalDevice, stagingMemory);
@@ -711,14 +711,16 @@ void vkTools::VulkanTextureLoader::loadTextureArray(std::string filename, vk::Fo
 	memAllocInfo.memoryTypeIndex = vulkanDevice->getMemoryType(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 
 	//VK_CHECK_RESULT(vkAllocateMemory(vulkanDevice->logicalDevice, &memAllocInfo, nullptr, &stagingMemory));
-	vk::Device(vulkanDevice->logicalDevice).allocateMemory(&memAllocInfo, nullptr, &stagingMemory);
+	vulkanDevice->logicalDevice.allocateMemory(&memAllocInfo, nullptr, &stagingMemory);
 	//VK_CHECK_RESULT(vkBindBufferMemory(vulkanDevice->logicalDevice, stagingBuffer, stagingMemory, 0));
-	vk::Device(vulkanDevice->logicalDevice).bindBufferMemory(stagingBuffer, stagingMemory, 0);
+	vulkanDevice->logicalDevice.bindBufferMemory(stagingBuffer, stagingMemory, 0);
 
 	// Copy texture data into staging buffer
 	uint8_t *data;
 	//VK_CHECK_RESULT(vkMapMemory(vulkanDevice->logicalDevice, stagingMemory, 0, memReqs.size, 0, (void **)&data));
-	vk::Device(vulkanDevice->logicalDevice).mapMemory(stagingMemory, 0, memReqs.size, vk::MemoryMapFlags());//what?
+	data = (uint8_t *)vulkanDevice->logicalDevice.mapMemory(stagingMemory, 0, memReqs.size, vk::MemoryMapFlags());//what?
+
+
 	memcpy(data, tex2DArray.data(), static_cast<size_t>(tex2DArray.size()));
 	//vkUnmapMemory(vulkanDevice->logicalDevice, stagingMemory);
 	vk::Device(vulkanDevice->logicalDevice).unmapMemory(stagingMemory);

@@ -231,9 +231,11 @@ void vulkanApp::createPipelineCache()
 
 void vulkanApp::prepare()
 {
+
 	if (enableDebugMarkers) {
 		vkDebug::DebugMarker::setup(device);
 	}
+
 
 	createCommandPool();
 	createSetupCommandBuffer();
@@ -751,6 +753,9 @@ vulkanApp::vulkanApp(bool enableValidation, PFN_GetEnabledFeatures enabledFeatur
 		// Android Vulkan initialization is handled in APP_CMD_INIT_WINDOW event
 		initVulkan(enableValidation);
 	#endif
+
+
+
 }
 
 vulkanApp::~vulkanApp()
@@ -900,7 +905,7 @@ void vulkanApp::initVulkan(bool enableValidation)
 	device.getQueue(vulkanDevice->queueFamilyIndices.graphics, 0, &queue);
 
 	// Find a suitable depth format
-	//vk::Bool32 validDepthFormat = vkx::getSupportedDepthFormat(physicalDevice, &depthFormat);
+	/*vk::Bool32 validDepthFormat = */vkx::getSupportedDepthFormat(physicalDevice, &depthFormat);
 	//assert(validDepthFormat);//important
 
 	swapChain.connect(instance, physicalDevice, device);
@@ -930,6 +935,7 @@ void vulkanApp::initVulkan(bool enableValidation)
 	submitInfo.pWaitSemaphores = &semaphores.presentComplete;
 	submitInfo.signalSemaphoreCount = 1;
 	submitInfo.pSignalSemaphores = &semaphores.renderComplete;
+
 }
 
 
