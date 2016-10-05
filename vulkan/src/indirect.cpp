@@ -36,7 +36,7 @@
 
 #include <vulkan/vulkan.h>
 #include "vulkanApp.h"
-#include "vulkanbuffer.hpp"
+#include "vulkanBuffer.h"
 
 #define VERTEX_BUFFER_BIND_ID 0
 #define INSTANCE_BUFFER_BIND_ID 1
@@ -157,8 +157,7 @@ public:
 
 	void reBuildCommandBuffers()
 	{
-		if (!checkCommandBuffers())
-		{
+		if (!checkCommandBuffers()) {
 			destroyCommandBuffers();
 			createCommandBuffers();
 		}
@@ -170,7 +169,8 @@ public:
 		vk::CommandBufferBeginInfo cmdBufInfo;
 
 		vk::ClearValue clearValues[2];
-		clearValues[0].color = { { 0.18f, 0.27f, 0.5f, 0.0f } };
+		//clearValues[0].color = { { 0.18f, 0.27f, 0.5f, 0.0f } };
+		clearValues[0].color = std::array<float, 4>{0.18f, 0.27f, 0.5f, 0.0f};
 		clearValues[1].depthStencil = { 1.0f, 0 };
 
 		vk::RenderPassBeginInfo renderPassBeginInfo;
@@ -180,65 +180,81 @@ public:
 		renderPassBeginInfo.clearValueCount = 2;
 		renderPassBeginInfo.pClearValues = clearValues;
 
-		for (int32_t i = 0; i < drawCmdBuffers.size(); ++i)
-		{
+		for (int32_t i = 0; i < drawCmdBuffers.size(); ++i) {
 			// Set target frame buffer
 			renderPassBeginInfo.framebuffer = frameBuffers[i];
 
 			//VK_CHECK_RESULT(vkBeginCommandBuffer(drawCmdBuffers[i], &cmdBufInfo));
 			drawCmdBuffers[i].begin(&cmdBufInfo);
 
-			vkCmdBeginRenderPass(drawCmdBuffers[i], &renderPassBeginInfo, vk::SubpassContents::eInline);
+			//vkCmdBeginRenderPass(drawCmdBuffers[i], &renderPassBeginInfo, vk::SubpassContents::eInline);
+			drawCmdBuffers[i].beginRenderPass(&renderPassBeginInfo, vk::SubpassContents::eInline);
 
 			vk::Viewport viewport = vkx::viewport((float)width, (float)height, 0.0f, 1.0f);
-			vkCmdSetViewport(drawCmdBuffers[i], 0, 1, &viewport);
+			//vkCmdSetViewport(drawCmdBuffers[i], 0, 1, &viewport);
+			drawCmdBuffers[i].setViewport(0, 1, &viewport);
 
 			vk::Rect2D scissor = vkx::rect2D(width, height, 0, 0);
-			vkCmdSetScissor(drawCmdBuffers[i], 0, 1, &scissor);
+			//vkCmdSetScissor(drawCmdBuffers[i], 0, 1, &scissor);
+			drawCmdBuffers[i].setScissor(0, 1, &scissor);
 
 			vk::DeviceSize offsets[1] = { 0 };
-			vkCmdBindDescriptorSets(drawCmdBuffers[i], vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, &descriptorSet, 0, NULL);
+			//vkCmdBindDescriptorSets(drawCmdBuffers[i], vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, &descriptorSet, 0, NULL);
+			drawCmdBuffers[i].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, &descriptorSet, 0, NULL);
 
 			// Plants
-			vkCmdBindPipeline(drawCmdBuffers[i], vk::PipelineBindPoint::eGraphics, pipelines.plants);
+			//vkCmdBindPipeline(drawCmdBuffers[i], vk::PipelineBindPoint::eGraphics, pipelines.plants);
+			drawCmdBuffers[i].bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.plants);
 			// Binding point 0 : Mesh vertex buffer
-			vkCmdBindVertexBuffers(drawCmdBuffers[i], VERTEX_BUFFER_BIND_ID, 1, &meshes.plants.vertices.buf, offsets);
-			// Binding point 1 : Instance data buffer
-			vkCmdBindVertexBuffers(drawCmdBuffers[i], INSTANCE_BUFFER_BIND_ID, 1, &instanceBuffer.buffer, offsets);
+			//vkCmdBindVertexBuffers(drawCmdBuffers[i], VERTEX_BUFFER_BIND_ID, 1, &meshes.plants.vertices.buf, offsets);
+			drawCmdBuffers[i].bindVertexBuffers(VERTEX_BUFFER_BIND_ID, 1, &meshes.plants.vertices.buf, offsets);
 
-			vkCmdBindIndexBuffer(drawCmdBuffers[i], meshes.plants.indices.buf, 0, vk::IndexType::eUint32);
+			// Binding point 1 : Instance data buffer
+			//vkCmdBindVertexBuffers(drawCmdBuffers[i], INSTANCE_BUFFER_BIND_ID, 1, &instanceBuffer.buffer, offsets);
+			drawCmdBuffers[i].bindVertexBuffers(INSTANCE_BUFFER_BIND_ID, 1, &instanceBuffer.buffer, offsets);
+
+			//vkCmdBindIndexBuffer(drawCmdBuffers[i], meshes.plants.indices.buf, 0, vk::IndexType::eUint32);
+			drawCmdBuffers[i].bindIndexBuffer(meshes.plants.indices.buf, 0, vk::IndexType::eUint32);
 
 			// If the multi draw feature is supported:
 			// One draw call for an arbitrary number of ojects
 			// Index offsets and instance count are taken from the indirect buffer
-			if (vulkanDevice->features.multiDrawIndirect)
-			{
-				vkCmdDrawIndexedIndirect(drawCmdBuffers[i], indirectCommandsBuffer.buffer, 0, indirectDrawCount, sizeof(vk::DrawIndexedIndirectCommand));
-			}
-			else
-			{
+			if (vulkanDevice->features.multiDrawIndirect) {
+				//vkCmdDrawIndexedIndirect(drawCmdBuffers[i], indirectCommandsBuffer.buffer, 0, indirectDrawCount, sizeof(vk::DrawIndexedIndirectCommand));
+				drawCmdBuffers[i].drawIndexedIndirect(indirectCommandsBuffer.buffer, 0, indirectDrawCount, sizeof(vk::DrawIndexedIndirectCommand));
+			} else {
 				// If multi draw is not available, we must issue separate draw commands
-				for (auto j = 0; j < indirectCommands.size(); j++)
-				{
-					vkCmdDrawIndexedIndirect(drawCmdBuffers[i], indirectCommandsBuffer.buffer, j * sizeof(vk::DrawIndexedIndirectCommand), 1, sizeof(vk::DrawIndexedIndirectCommand));
+				for (auto j = 0; j < indirectCommands.size(); j++) {
+					//vkCmdDrawIndexedIndirect(drawCmdBuffers[i], indirectCommandsBuffer.buffer, j * sizeof(vk::DrawIndexedIndirectCommand), 1, sizeof(vk::DrawIndexedIndirectCommand));
+					drawCmdBuffers[i].drawIndexedIndirect(indirectCommandsBuffer.buffer, j * sizeof(vk::DrawIndexedIndirectCommand), 1, sizeof(vk::DrawIndexedIndirectCommand));
 				}
 			}
 
 			// Ground
-			vkCmdBindPipeline(drawCmdBuffers[i], vk::PipelineBindPoint::eGraphics, pipelines.ground);
-			vkCmdBindVertexBuffers(drawCmdBuffers[i], VERTEX_BUFFER_BIND_ID, 1, &meshes.ground.vertices.buf, offsets);
-			vkCmdBindIndexBuffer(drawCmdBuffers[i], meshes.ground.indices.buf, 0, VK_INDEX_TYPE_UINT32);
-			vkCmdDrawIndexed(drawCmdBuffers[i], meshes.ground.indexCount, 1, 0, 0, 0);
+			//vkCmdBindPipeline(drawCmdBuffers[i], vk::PipelineBindPoint::eGraphics, pipelines.ground);
+			drawCmdBuffers[i].bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.ground);
+			//vkCmdBindVertexBuffers(drawCmdBuffers[i], VERTEX_BUFFER_BIND_ID, 1, &meshes.ground.vertices.buf, offsets);
+			drawCmdBuffers[i].bindVertexBuffers(VERTEX_BUFFER_BIND_ID, 1, &meshes.ground.vertices.buf, offsets);
+			//vkCmdBindIndexBuffer(drawCmdBuffers[i], meshes.ground.indices.buf, 0, vk::IndexType::eUint32);
+			drawCmdBuffers[i].bindIndexBuffer(meshes.ground.indices.buf, 0, vk::IndexType::eUint32);
+			//vkCmdDrawIndexed(drawCmdBuffers[i], meshes.ground.indexCount, 1, 0, 0, 0);
+			drawCmdBuffers[i].drawIndexed(meshes.ground.indexCount, 1, 0, 0, 0);
 
 			// Skysphere
-			vkCmdBindPipeline(drawCmdBuffers[i], vk::PipelineBindPoint::eGraphics, pipelines.skysphere);
-			vkCmdBindVertexBuffers(drawCmdBuffers[i], VERTEX_BUFFER_BIND_ID, 1, &meshes.skysphere.vertices.buf, offsets);
-			vkCmdBindIndexBuffer(drawCmdBuffers[i], meshes.skysphere.indices.buf, 0, VK_INDEX_TYPE_UINT32);
-			vkCmdDrawIndexed(drawCmdBuffers[i], meshes.skysphere.indexCount, 1, 0, 0, 0);
+			//vkCmdBindPipeline(drawCmdBuffers[i], vk::PipelineBindPoint::eGraphics, pipelines.skysphere);
+			drawCmdBuffers[i].bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.skysphere);
+			//vkCmdBindVertexBuffers(drawCmdBuffers[i], VERTEX_BUFFER_BIND_ID, 1, &meshes.skysphere.vertices.buf, offsets);
+			drawCmdBuffers[i].bindVertexBuffers(VERTEX_BUFFER_BIND_ID, 1, &meshes.skysphere.vertices.buf, offsets);
+			//vkCmdBindIndexBuffer(drawCmdBuffers[i], meshes.skysphere.indices.buf, 0, vk::IndexType::eUint32);
+			drawCmdBuffers[i].bindIndexBuffer(meshes.skysphere.indices.buf, 0, vk::IndexType::eUint32);
+			//vkCmdDrawIndexed(drawCmdBuffers[i], meshes.skysphere.indexCount, 1, 0, 0, 0);
+			drawCmdBuffers[i].drawIndexed(meshes.skysphere.indexCount, 1, 0, 0, 0);
 
-			vkCmdEndRenderPass(drawCmdBuffers[i]);
+			//vkCmdEndRenderPass(drawCmdBuffers[i]);
+			drawCmdBuffers[i].endRenderPass();
 
-			VK_CHECK_RESULT(vkEndCommandBuffer(drawCmdBuffers[i]));
+			//VK_CHECK_RESULT(vkEndCommandBuffer(drawCmdBuffers[i]));
+			drawCmdBuffers[i].end();
 		}
 	}
 
@@ -248,8 +264,8 @@ public:
 		loadMesh(getAssetPath() + "models/plane_circle.dae", &meshes.ground, vertexLayout, PLANT_RADIUS + 1.0f);
 		loadMesh(getAssetPath() + "models/skysphere.dae", &meshes.skysphere, vertexLayout, 512.0f / 10.0f);
 
-		textureLoader->loadTextureArray(getAssetPath() + "textures/texturearray_plants_bc3.ktx", VK_FORMAT_BC3_UNORM_BLOCK, &textures.plants);
-		textureLoader->loadTexture(getAssetPath() + "textures/ground_dry_bc3.ktx", VK_FORMAT_BC3_UNORM_BLOCK, &textures.ground);
+		textureLoader->loadTextureArray(getAssetPath() + "textures/texturearray_plants_bc3.ktx", vk::Format::eBc3UnormBlock, &textures.plants);
+		textureLoader->loadTexture(getAssetPath() + "textures/ground_dry_bc3.ktx", vk::Format::eBc3UnormBlock, &textures.ground);
 	}
 
 	void setupVertexDescriptions()
@@ -259,20 +275,20 @@ public:
 
 		// Mesh vertex buffer (description) at binding point 0
 		vertices.bindingDescriptions[0] =
-			vkTools::initializers::vertexInputBindingDescription(
+			vkx::vertexInputBindingDescription(
 				VERTEX_BUFFER_BIND_ID,
 				vkMeshLoader::vertexSize(vertexLayout),
 				// Input rate for the data passed to shader
 				// Step for each vertex rendered
-				VK_VERTEX_INPUT_RATE_VERTEX);
+				vk::VertexInputRate::eVertex);
 
 		vertices.bindingDescriptions[1] =
-			vkTools::initializers::vertexInputBindingDescription(
+			vkx::vertexInputBindingDescription(
 				INSTANCE_BUFFER_BIND_ID,
 				sizeof(InstanceData),
 				// Input rate for the data passed to shader
 				// Step for each instance rendered
-				VK_VERTEX_INPUT_RATE_INSTANCE);
+				vk::VertexInputRate::eInstance);
 
 		// Attribute descriptions
 		// Describes memory layout and shader positions
@@ -281,57 +297,57 @@ public:
 		// Per-Vertex attributes
 		// Location 0 : Position
 		vertices.attributeDescriptions.push_back(
-			vkTools::initializers::vertexInputAttributeDescription(
+			vkx::vertexInputAttributeDescription(
 				VERTEX_BUFFER_BIND_ID,
 				0,
-				VK_FORMAT_R32G32B32_SFLOAT,
+				vk::Format::eR32G32B32Sfloat,
 				0)
 		);
 		// Location 1 : Normal
 		vertices.attributeDescriptions.push_back(
-			vkTools::initializers::vertexInputAttributeDescription(
+			vkx::vertexInputAttributeDescription(
 				VERTEX_BUFFER_BIND_ID,
 				1,
-				VK_FORMAT_R32G32B32_SFLOAT,
+				vk::Format::eR32G32B32Sfloat,
 				sizeof(float) * 3)
 		);
 		// Location 2 : Texture coordinates
 		vertices.attributeDescriptions.push_back(
-			vkTools::initializers::vertexInputAttributeDescription(
+			vkx::vertexInputAttributeDescription(
 				VERTEX_BUFFER_BIND_ID,
 				2,
-				VK_FORMAT_R32G32_SFLOAT,
+				vk::Format::eR32G32Sfloat,
 				sizeof(float) * 6)
 		);
 		// Location 3 : Color
 		vertices.attributeDescriptions.push_back(
-			vkTools::initializers::vertexInputAttributeDescription(
+			vkx::vertexInputAttributeDescription(
 				VERTEX_BUFFER_BIND_ID,
 				3,
-				VK_FORMAT_R32G32B32_SFLOAT,
+				vk::Format::eR32G32B32Sfloat,
 				sizeof(float) * 8)
 		);
 
 		// Instanced attributes
 		// Location 4: Position
 		vertices.attributeDescriptions.push_back(
-			vkTools::initializers::vertexInputAttributeDescription(
-				INSTANCE_BUFFER_BIND_ID, 4, VK_FORMAT_R32G32B32_SFLOAT, offsetof(InstanceData, pos))
+			vkx::vertexInputAttributeDescription(
+				INSTANCE_BUFFER_BIND_ID, 4, vk::Format::eR32G32B32Sfloat, offsetof(InstanceData, pos))
 		);
 		// Location 5: Rotation
 		vertices.attributeDescriptions.push_back(
-			vkTools::initializers::vertexInputAttributeDescription(
-				INSTANCE_BUFFER_BIND_ID, 5, VK_FORMAT_R32G32B32_SFLOAT, offsetof(InstanceData, rot))
+			vkx::vertexInputAttributeDescription(
+				INSTANCE_BUFFER_BIND_ID, 5, vk::Format::eR32G32B32Sfloat, offsetof(InstanceData, rot))
 		);
 		// Location 6: Scale
 		vertices.attributeDescriptions.push_back(
-			vkTools::initializers::vertexInputAttributeDescription(
-				INSTANCE_BUFFER_BIND_ID, 6, VK_FORMAT_R32_SFLOAT, offsetof(InstanceData, scale))
+			vkx::vertexInputAttributeDescription(
+				INSTANCE_BUFFER_BIND_ID, 6, vk::Format::eR32Sfloat, offsetof(InstanceData, scale))
 		);
 		// Location 7: Texture array layer index
 		vertices.attributeDescriptions.push_back(
 			vkx::vertexInputAttributeDescription(
-				INSTANCE_BUFFER_BIND_ID, 7, VK_FORMAT_R32_SINT, offsetof(InstanceData, texIndex))
+				INSTANCE_BUFFER_BIND_ID, 7, vk::Format::eR32Sint, offsetof(InstanceData, texIndex))
 		);
 
 		vertices.inputState = vkx::pipelineVertexInputStateCreateInfo();
@@ -351,12 +367,13 @@ public:
 		};
 
 		vk::DescriptorPoolCreateInfo descriptorPoolInfo =
-			vkTools::initializers::descriptorPoolCreateInfo(
+			vkx::descriptorPoolCreateInfo(
 				static_cast<uint32_t>(poolSizes.size()),
 				poolSizes.data(),
 				2);
 
-		VK_CHECK_RESULT(vkCreateDescriptorPool(device, &descriptorPoolInfo, nullptr, &descriptorPool));
+		//VK_CHECK_RESULT(vkCreateDescriptorPool(device, &descriptorPoolInfo, nullptr, &descriptorPool));
+		device.createDescriptorPool(&descriptorPoolInfo, nullptr, &descriptorPool);
 	}
 
 	void setupDescriptorSetLayout()
@@ -364,126 +381,130 @@ public:
 		std::vector<vk::DescriptorSetLayoutBinding> setLayoutBindings =
 		{
 			// Binding 0: Vertex shader uniform buffer
-			vkTools::initializers::descriptorSetLayoutBinding(
-				VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-				VK_SHADER_STAGE_VERTEX_BIT,
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eUniformBuffer,
+				vk::ShaderStageFlagBits::eVertex,
 				0),
 			// Binding 1: Fragment shader combined sampler (plants texture array)
-			vkTools::initializers::descriptorSetLayoutBinding(
-				VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-				VK_SHADER_STAGE_FRAGMENT_BIT,
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eCombinedImageSampler,
+				vk::ShaderStageFlagBits::eFragment,
 				1),
 			// Binding 1: Fragment shader combined sampler (ground texture)
-			vkTools::initializers::descriptorSetLayoutBinding(
-				VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-				VK_SHADER_STAGE_FRAGMENT_BIT,
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eCombinedImageSampler,
+				vk::ShaderStageFlagBits::eFragment,
 				2),
 		};
 
 		vk::DescriptorSetLayoutCreateInfo descriptorLayout =
-			vkTools::initializers::descriptorSetLayoutCreateInfo(
+			vkx::descriptorSetLayoutCreateInfo(
 				setLayoutBindings.data(),
 				static_cast<uint32_t>(setLayoutBindings.size()));
 
-		VK_CHECK_RESULT(vkCreateDescriptorSetLayout(device, &descriptorLayout, nullptr, &descriptorSetLayout));
+		//VK_CHECK_RESULT(vkCreateDescriptorSetLayout(device, &descriptorLayout, nullptr, &descriptorSetLayout));
+		device.createDescriptorSetLayout(&descriptorLayout, nullptr, &descriptorSetLayout);
 
 		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
-			vkTools::initializers::pipelineLayoutCreateInfo(
+			vkx::pipelineLayoutCreateInfo(
 				&descriptorSetLayout,
 				1);
 
-		VK_CHECK_RESULT(vkCreatePipelineLayout(device, &pPipelineLayoutCreateInfo, nullptr, &pipelineLayout));
+		//VK_CHECK_RESULT(vkCreatePipelineLayout(device, &pPipelineLayoutCreateInfo, nullptr, &pipelineLayout));
+		device.createPipelineLayout(&pPipelineLayoutCreateInfo, nullptr, &pipelineLayout);
 	}
 
 	void setupDescriptorSet()
 	{
 		vk::DescriptorSetAllocateInfo allocInfo =
-			vkTools::initializers::descriptorSetAllocateInfo(
+			vkx::descriptorSetAllocateInfo(
 				descriptorPool,
 				&descriptorSetLayout,
 				1);
 
-		VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet));
+		//VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet));
+		device.allocateDescriptorSets(&allocInfo, &descriptorSet);
 
 		std::vector<vk::WriteDescriptorSet> writeDescriptorSets =
 		{
 			// Binding 0: Vertex shader uniform buffer
-			vkTools::initializers::writeDescriptorSet(
+			vkx::writeDescriptorSet(
 				descriptorSet,
-				VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+				vk::DescriptorType::eUniformBuffer,
 				0,
 				&uniformData.scene.descriptor),
 			// Binding 1: Plants texture array combined 
-			vkTools::initializers::writeDescriptorSet(
+			vkx::writeDescriptorSet(
 				descriptorSet,
-				VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+				vk::DescriptorType::eCombinedImageSampler,
 				1,
 				&textures.plants.descriptor),
 			// Binding 2: Ground texture combined 
-			vkTools::initializers::writeDescriptorSet(
+			vkx::writeDescriptorSet(
 				descriptorSet,
-				VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+				vk::DescriptorType::eCombinedImageSampler,
 				2,
 				&textures.ground.descriptor)
 		};
 
-		vkUpdateDescriptorSets(device, static_cast<uint32_t>(writeDescriptorSets.size()), writeDescriptorSets.data(), 0, NULL);
+		//vkUpdateDescriptorSets(device, static_cast<uint32_t>(writeDescriptorSets.size()), writeDescriptorSets.data(), 0, NULL);
+		device.updateDescriptorSets(static_cast<uint32_t>(writeDescriptorSets.size()), writeDescriptorSets.data(), 0, NULL);
 	}
 
 	void preparePipelines()
 	{
 		vk::PipelineInputAssemblyStateCreateInfo inputAssemblyState =
-			vkTools::initializers::pipelineInputAssemblyStateCreateInfo(
-				VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-				0,
+			vkx::pipelineInputAssemblyStateCreateInfo(
+				vk::PrimitiveTopology::eTriangleList,
+				vk::PipelineInputAssemblyStateCreateFlags(),
 				VK_FALSE);
 
 		vk::PipelineRasterizationStateCreateInfo rasterizationState =
-			vkTools::initializers::pipelineRasterizationStateCreateInfo(
-				VK_POLYGON_MODE_FILL,
-				VK_CULL_MODE_NONE,
-				VK_FRONT_FACE_CLOCKWISE,
-				0);
+			vkx::pipelineRasterizationStateCreateInfo(
+				vk::PolygonMode::eFill,
+				vk::CullModeFlagBits::eNone,
+				vk::FrontFace::eClockwise,
+				vk::PipelineRasterizationStateCreateFlags());
 
 		vk::PipelineColorBlendAttachmentState blendAttachmentState =
-			vkTools::initializers::pipelineColorBlendAttachmentState(
-				0xf,
+			vkx::pipelineColorBlendAttachmentState(
+				vk::ColorComponentFlagBits::eA,//0xf,//important
 				VK_FALSE);
 
 		vk::PipelineColorBlendStateCreateInfo colorBlendState =
-			vkTools::initializers::pipelineColorBlendStateCreateInfo(
+			vkx::pipelineColorBlendStateCreateInfo(
 				1,
 				&blendAttachmentState);
 
 		vk::PipelineDepthStencilStateCreateInfo depthStencilState =
-			vkTools::initializers::pipelineDepthStencilStateCreateInfo(
+			vkx::pipelineDepthStencilStateCreateInfo(
 				VK_TRUE,
 				VK_TRUE,
-				VK_COMPARE_OP_LESS_OR_EQUAL);
+				vk::CompareOp::eLessOrEqual);
 
 		vk::PipelineViewportStateCreateInfo viewportState =
-			vkTools::initializers::pipelineViewportStateCreateInfo(1, 1, 0);
+			vkx::pipelineViewportStateCreateInfo(1, 1, vk::PipelineViewportStateCreateFlags());
 
 		vk::PipelineMultisampleStateCreateInfo multisampleState =
-			vkTools::initializers::pipelineMultisampleStateCreateInfo(
-				VK_SAMPLE_COUNT_1_BIT,
-				0);
+			vkx::pipelineMultisampleStateCreateInfo(
+				vk::SampleCountFlagBits::e1,
+				vk::PipelineMultisampleStateCreateFlags());
 
 		std::vector<vk::DynamicState> dynamicStateEnables = {
-			VK_DYNAMIC_STATE_VIEWPORT,
-			VK_DYNAMIC_STATE_SCISSOR
+			vk::DynamicState::eViewport,
+			vk::DynamicState::eScissor
 		};
 		vk::PipelineDynamicStateCreateInfo dynamicState =
-			vkTools::initializers::pipelineDynamicStateCreateInfo(
+			vkx::pipelineDynamicStateCreateInfo(
 				dynamicStateEnables.data(),
 				static_cast<uint32_t>(dynamicStateEnables.size()),
-				0);
+				vk::PipelineDynamicStateCreateFlags());
 
 		vk::GraphicsPipelineCreateInfo pipelineCreateInfo =
-			vkTools::initializers::pipelineCreateInfo(
+			vkx::pipelineCreateInfo(
 				pipelineLayout,
 				renderPass,
-				0);
+				vk::PipelineCreateFlags());
 
 		std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStages;
 
@@ -499,21 +520,25 @@ public:
 		pipelineCreateInfo.pStages = shaderStages.data();
 
 		// Indirect (and instanced) pipeline for the plants
-		shaderStages[0] = loadShader(getAssetPath() + "shaders/indirectdraw/indirectdraw.vert.spv", VK_SHADER_STAGE_VERTEX_BIT);
-		shaderStages[1] = loadShader(getAssetPath() + "shaders/indirectdraw/indirectdraw.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
-		VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, &pipelineCreateInfo, nullptr, &pipelines.plants));
+		shaderStages[0] = loadShader(getAssetPath() + "shaders/indirectdraw/indirectdraw.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		shaderStages[1] = loadShader(getAssetPath() + "shaders/indirectdraw/indirectdraw.frag.spv", vk::ShaderStageFlagBits::eFragment);
+		//VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, &pipelineCreateInfo, nullptr, &pipelines.plants));
+		device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
 
 		// Ground
-		shaderStages[0] = loadShader(getAssetPath() + "shaders/indirectdraw/ground.vert.spv", VK_SHADER_STAGE_VERTEX_BIT);
-		shaderStages[1] = loadShader(getAssetPath() + "shaders/indirectdraw/ground.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
+		shaderStages[0] = loadShader(getAssetPath() + "shaders/indirectdraw/ground.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		shaderStages[1] = loadShader(getAssetPath() + "shaders/indirectdraw/ground.frag.spv", vk::ShaderStageFlagBits::eFragment);
 		//rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT;
-		VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, &pipelineCreateInfo, nullptr, &pipelines.ground));
+		//VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, &pipelineCreateInfo, nullptr, &pipelines.ground));
+		device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
 
 		// Skysphere
-		shaderStages[0] = loadShader(getAssetPath() + "shaders/indirectdraw/skysphere.vert.spv", VK_SHADER_STAGE_VERTEX_BIT);
-		shaderStages[1] = loadShader(getAssetPath() + "shaders/indirectdraw/skysphere.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
+		shaderStages[0] = loadShader(getAssetPath() + "shaders/indirectdraw/skysphere.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		shaderStages[1] = loadShader(getAssetPath() + "shaders/indirectdraw/skysphere.frag.spv", vk::ShaderStageFlagBits::eFragment);
 		//rasterizationState.cullMode = VK_CULL_MODE_FRONT_BIT;
-		VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, &pipelineCreateInfo, nullptr, &pipelines.skysphere));
+		//VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, &pipelineCreateInfo, nullptr, &pipelines.skysphere));
+		//device.createGraphicsPipeline(pipelineCache, 1, &pipelineCreateInfo, nullptr, &pipelines.skysphere);
+		device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);//what?
 	}
 
 	// Prepare (and stage) a buffer containing the indirect draw commands
@@ -545,18 +570,18 @@ public:
 		}
 
 		vkx::Buffer stagingBuffer;
-		VK_CHECK_RESULT(vulkanDevice->createBuffer(
+		/*VK_CHECK_RESULT(*/vulkanDevice->createBuffer(
 			vk::BufferUsageFlagBits::eTransferSrc,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
 			&stagingBuffer,
 			indirectCommands.size() * sizeof(vk::DrawIndexedIndirectCommand),
-			indirectCommands.data()));
+			indirectCommands.data())/*)*/;
 
-		VK_CHECK_RESULT(vulkanDevice->createBuffer(
+		/*VK_CHECK_RESULT(*/vulkanDevice->createBuffer(
 			vk::BufferUsageFlagBits::eIndirectBuffer | vk::BufferUsageFlagBits::eTransferDst,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			vk::MemoryPropertyFlagBits::eDeviceLocal,
 			&indirectCommandsBuffer,
-			stagingBuffer.size));
+			stagingBuffer.size)/*)*/;
 
 		vulkanDevice->copyBuffer(&stagingBuffer, &indirectCommandsBuffer, queue);
 
@@ -583,18 +608,18 @@ public:
 		}
 
 		vkx::Buffer stagingBuffer;
-		VK_CHECK_RESULT(vulkanDevice->createBuffer(
+		/*VK_CHECK_RESULT(*/vulkanDevice->createBuffer(
 			vk::BufferUsageFlagBits::eTransferSrc,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
 			&stagingBuffer,
 			instanceData.size() * sizeof(InstanceData),
-			instanceData.data()));
+			instanceData.data())/*)*/;
 
-		VK_CHECK_RESULT(vulkanDevice->createBuffer(
+		/*VK_CHECK_RESULT(*/vulkanDevice->createBuffer(
 			vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst,
 			vk::MemoryPropertyFlagBits::eDeviceLocal,
 			&instanceBuffer,
-			stagingBuffer.size));
+			stagingBuffer.size)/*)*/;
 
 		vulkanDevice->copyBuffer(&stagingBuffer, &instanceBuffer, queue);
 
@@ -603,11 +628,11 @@ public:
 
 	void prepareUniformBuffers()
 	{
-		VK_CHECK_RESULT(vulkanDevice->createBuffer(
+		/*VK_CHECK_RESULT(*/vulkanDevice->createBuffer(
 			vk::BufferUsageFlagBits::eUniformBuffer ,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
 			&uniformData.scene,
-			sizeof(uboVS)));
+			sizeof(uboVS))/*)*/;
 
 		//VK_CHECK_RESULT(uniformData.scene.map());
 		uniformData.scene.map();
@@ -644,6 +669,7 @@ public:
 	{
 		vulkanApp::prepare();
 		loadAssets();
+
 		prepareIndirectData();
 		prepareInstanceData();
 		setupVertexDescriptions();

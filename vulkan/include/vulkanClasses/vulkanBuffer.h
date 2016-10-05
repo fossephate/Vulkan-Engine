@@ -44,7 +44,7 @@ namespace vkx
 		* @param size (Optional) Size of the memory range to map. Pass VK_WHOLE_SIZE to map the complete buffer range.
 		* @param offset (Optional) Byte offset from beginning
 		*
-		* @return VkResult of the buffer mapping call
+		* @return vk::Result of the buffer mapping call
 		*/
 		//vk::Result map(vk::DeviceSize size = VK_WHOLE_SIZE, vk::DeviceSize offset = 0, vk::MemoryMapFlags flags = vk::MemoryMapFlags())
 		void map(vk::DeviceSize size = VK_WHOLE_SIZE, vk::DeviceSize offset = 0, vk::MemoryMapFlags flags = vk::MemoryMapFlags());
@@ -61,7 +61,7 @@ namespace vkx
 		*
 		* @param offset (Optional) Byte offset (from the beginning) for the memory region to bind
 		*
-		* @return VkResult of the bindBufferMemory call
+		* @return vk::Result of the bindBufferMemory call
 		*/
 		vk::Result bind(vk::DeviceSize offset = 0);
 
@@ -82,7 +82,7 @@ namespace vkx
 		* @param size (Optional) Size of the memory range to flush. Pass VK_WHOLE_SIZE to flush the complete buffer range.
 		* @param offset (Optional) Byte offset from beginning
 		*
-		* @return VkResult of the flush call
+		* @return vk::Result of the flush call
 		*/
 		vk::Result flush(vk::DeviceSize size = VK_WHOLE_SIZE, vk::DeviceSize offset = 0);
 
@@ -94,7 +94,7 @@ namespace vkx
 		* @param size (Optional) Size of the memory range to invalidate. Pass VK_WHOLE_SIZE to invalidate the complete buffer range.
 		* @param offset (Optional) Byte offset from beginning
 		*
-		* @return VkResult of the invalidate call
+		* @return vk::Result of the invalidate call
 		*/
 		vk::Result invalidate(vk::DeviceSize size = VK_WHOLE_SIZE, vk::DeviceSize offset = 0);
 

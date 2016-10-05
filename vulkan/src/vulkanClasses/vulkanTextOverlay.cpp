@@ -417,7 +417,7 @@ void vkx::VulkanTextOverlay::preparePipeline()
 * Prepare a separate render pass for rendering the text as an overlay
 */
 
-inline void vkx::VulkanTextOverlay::prepareRenderPass()
+void vkx::VulkanTextOverlay::prepareRenderPass()
 {
 	vk::AttachmentDescription attachments[2];
 

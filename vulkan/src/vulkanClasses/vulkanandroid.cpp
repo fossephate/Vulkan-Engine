@@ -142,7 +142,7 @@ bool loadVulkanLibrary()
 }
 
 // Load instance based Vulkan function pointers
-void loadVulkanFunctions(VkInstance instance)
+void loadVulkanFunctions(vk::Instance instance)
 {
     __android_log_print(ANDROID_LOG_INFO, "vulkanandroid", "Loading instance based function pointers...\n");
 

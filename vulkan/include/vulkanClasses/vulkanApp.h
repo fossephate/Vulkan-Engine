@@ -69,7 +69,7 @@ class vulkanApp
 
 		// Device features enabled by the example
 		// If not set, no additional features are enabled (may result in validation layer errors)
-		vk::PhysicalDeviceFeatures enabledFeatures = {};
+		vk::PhysicalDeviceFeatures enabledFeatures;
 
 		// fps timer (one second interval)
 		float fpsTimer = 0.0f;
@@ -184,8 +184,7 @@ class vulkanApp
 		uint32_t width = 1280;
 		uint32_t height = 720;
 
-		VkClearColorValue defaultClearColor = { { 0.025f, 0.025f, 0.025f, 1.0f } };
-		//vk::ClearColorValue defaultClearColor2 = { { 0.025f, 0.025f, 0.025f, 1.0f } };// replaces ^
+		vk::ClearColorValue defaultClearColor = std::array<float, 4>{0.025f, 0.025f, 0.025f, 1.0f};
 
 		float zoom = 0;
 
@@ -219,12 +218,6 @@ class vulkanApp
 			vk::DeviceMemory mem;
 			vk::ImageView view;
 		} depthStencil;
-
-		struct {
-			vk::Image image;
-			vk::DeviceMemory mem;
-			vk::ImageView view;
-		} depthStencil2;// replaces ^
 
 
 
@@ -392,7 +385,7 @@ class vulkanApp
 		virtual void prepare();
 
 		// Load a SPIR-V shader
-		vk::PipelineShaderStageCreateInfo loadShader(std::string fileName, vk::ShaderStageFlagBits stage);// replaces ^
+		vk::PipelineShaderStageCreateInfo loadShader(std::string fileName, vk::ShaderStageFlagBits stage);
 
 		// C++ WRAPPER
 		// Create a buffer, fill it with data (if != NULL) and bind buffer memory

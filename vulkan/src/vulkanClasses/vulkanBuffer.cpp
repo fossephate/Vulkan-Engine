@@ -49,8 +49,8 @@ namespace vkx
 
 	vk::Result Buffer::bind(vk::DeviceSize offset)
 	{
-		//return vkBindBufferMemory(device, buffer, memory, offset);
-		device.bindBufferMemory(buffer, memory, offset);
+		return (vk::Result)vkBindBufferMemory(device, buffer, memory, offset);
+		//return device.bindBufferMemory(buffer, memory, offset);// why does this return void when the unwrapped function doesn't?
 	}
 
 	/**

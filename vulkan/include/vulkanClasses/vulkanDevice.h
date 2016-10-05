@@ -66,7 +66,7 @@ namespace vkx
 		/**
 		* Get the index of a memory type that has all the requested property bits set
 		*
-		* @param typeBits Bitmask with bits set for each memory type supported by the resource to request for (from VkMemoryRequirements)
+		* @param typeBits Bitmask with bits set for each memory type supported by the resource to request for (from vk::MemoryRequirements)
 		* @param properties Bitmask of properties for the memory type to request
 		* @param (Optional) memTypeFound Pointer to a bool that is set to true if a matching memory type has been found
 		*
@@ -85,7 +85,7 @@ namespace vkx
 		*
 		* @throw Throws an exception if no queue family index could be found that supports the requested flags
 		*/
-		uint32_t getQueueFamiliyIndex(vk::QueueFlagBits queueFlags);
+		uint32_t getQueueFamiliyIndex(vk::QueueFlags queueFlags);
 
 		/**
 		* Create the logical device based on the assigned physical device, also gets default queue family indices
@@ -94,7 +94,7 @@ namespace vkx
 		* @param useSwapChain Set to false for headless rendering to omit the swapchain device extensions
 		* @param requestedQueueTypes Bit flags specifying the queue types to be requested from the device
 		*
-		* @return VkResult of the device creation call
+		* @return vk::Result of the device creation call
 		*/
 		vk::Result createLogicalDevice(vk::PhysicalDeviceFeatures enabledFeatures, bool useSwapChain = true, vk::QueueFlags requestedQueueTypes = vk::QueueFlagBits::eGraphics | vk::QueueFlagBits::eCompute);
 
@@ -126,7 +126,7 @@ namespace vkx
 		vk::Result createBuffer(vk::BufferUsageFlags usageFlags, vk::MemoryPropertyFlags memoryPropertyFlags, vkx::Buffer *buffer, vk::DeviceSize size, void *data = nullptr);
 
 		/**
-		* Copy buffer data from src to dst using VkCmdCopyBuffer
+		* Copy buffer data from src to dst using vk::CmdCopyBuffer
 		*
 		* @param src Pointer to the source buffer to copy from
 		* @param dst Pointer to the destination buffer to copy tp

@@ -68,8 +68,8 @@
 }
 
 typedef struct _SwapChainBuffers {
-	VkImage image;
-	VkImageView view;
+	vk::Image image;
+	vk::ImageView view;
 } SwapChainBuffer;
 
 class VulkanSwapChain
@@ -161,7 +161,7 @@ class VulkanSwapChain
 		*
 		* @note The function will always wait until the next image has been acquired by setting timeout to UINT64_MAX
 		*
-		* @return VkResult of the image acquisition
+		* @return vk::Result of the image acquisition
 		*/
 		vk::Result acquireNextImage(vk::Semaphore presentCompleteSemaphore, uint32_t *imageIndex);
 
@@ -172,7 +172,7 @@ class VulkanSwapChain
 		* @param imageIndex Index of the swapchain image to queue for presentation
 		* @param waitSemaphore (Optional) Semaphore that is waited on before the image is presented (only used if != VK_NULL_HANDLE)
 		*
-		* @return VkResult of the queue presentation
+		* @return vk::Result of the queue presentation
 		*/
 		vk::Result queuePresent(vk::Queue queue, uint32_t imageIndex, vk::Semaphore waitSemaphore);
 

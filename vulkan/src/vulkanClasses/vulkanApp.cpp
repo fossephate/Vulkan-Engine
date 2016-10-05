@@ -18,7 +18,7 @@ vk::Result vulkanApp::createInstance(bool enableValidation)
 	vk::ApplicationInfo appInfo;
 	appInfo.pApplicationName = name.c_str();
 	appInfo.pEngineName = name.c_str();
-	appInfo.apiVersion = VK_MAKE_VERSION(1, 0, 13);// VK_API_VERSION_1_0;
+	appInfo.apiVersion = VK_MAKE_VERSION(1, 0, 26);// VK_API_VERSION_1_0;
 
 	std::vector<const char*> enabledExtensions = { VK_KHR_SURFACE_EXTENSION_NAME };
 
@@ -79,7 +79,7 @@ const std::string vulkanApp::getAssetPath()
 bool vulkanApp::checkCommandBuffers()
 {
 	for (auto& cmdBuffer : drawCmdBuffers) {
-		if (cmdBuffer == VK_NULL_HANDLE) {
+		if ((bool)cmdBuffer == VK_NULL_HANDLE) {
 			return false;
 		}
 	}
@@ -102,12 +102,13 @@ void vulkanApp::createCommandBuffers() {
 
 void vulkanApp::destroyCommandBuffers()
 {
-	vkFreeCommandBuffers(device, cmdPool, static_cast<uint32_t>(drawCmdBuffers.size()), drawCmdBuffers.data());
+	//vkFreeCommandBuffers(device, cmdPool, static_cast<uint32_t>(drawCmdBuffers.size()), drawCmdBuffers.data());
+	device.freeCommandBuffers(cmdPool, static_cast<uint32_t>(drawCmdBuffers.size()), drawCmdBuffers.data());
 }
 
 void vulkanApp::createSetupCommandBuffer()
 {
-	if (setupCmdBuffer != VK_NULL_HANDLE) {
+	if ((bool)setupCmdBuffer != VK_NULL_HANDLE) {
 		//vkFreeCommandBuffers(device, cmdPool, 1, &setupCmdBuffer);
 		device.freeCommandBuffers(cmdPool, 1, &setupCmdBuffer);
 		setupCmdBuffer = VK_NULL_HANDLE; // todo : check if still necessary
@@ -130,7 +131,7 @@ void vulkanApp::createSetupCommandBuffer()
 
 void vulkanApp::flushSetupCommandBuffer()
 {
-	if (setupCmdBuffer == VK_NULL_HANDLE) {
+	if ((bool)setupCmdBuffer == VK_NULL_HANDLE) {
 		return;
 	}
 
@@ -193,7 +194,7 @@ vk::CommandBuffer vulkanApp::createCommandBuffer(vk::CommandBufferLevel level, b
 
 void vulkanApp::flushCommandBuffer(vk::CommandBuffer commandBuffer, vk::Queue queue, bool free)
 {
-	if (commandBuffer == VK_NULL_HANDLE) {
+	if ((bool)commandBuffer == VK_NULL_HANDLE) {
 		return;
 	}
 	
@@ -287,7 +288,7 @@ vk::PipelineShaderStageCreateInfo vulkanApp::loadShader(std::string fileName, vk
 	#endif
 
 	shaderStage.pName = "main"; // todo : make param
-	assert(shaderStage.module != NULL);
+	assert((bool)shaderStage.module != NULL);
 	shaderModules.push_back(shaderStage.module);
 	return shaderStage;
 }
@@ -317,7 +318,7 @@ vk::Bool32 vulkanApp::createBuffer(vk::BufferUsageFlags usageFlags, vk::MemoryPr
 	if (data != nullptr) {
 		void *mapped;
 		//VK_CHECK_RESULT(vkMapMemory(device, *memory, 0, size, 0, &mapped));
-		device.mapMemory(*memory, 0, size, 0, &mapped);
+		mapped = device.mapMemory(*memory, 0, size, vk::MemoryMapFlags());
 
 		memcpy(mapped, data, size);
 		//vkUnmapMemory(device, *memory);
@@ -756,11 +757,11 @@ vulkanApp::~vulkanApp()
 {
 	// Clean up Vulkan resources
 	swapChain.cleanup();
-	if (descriptorPool != VK_NULL_HANDLE) {
+	if ((bool)descriptorPool != VK_NULL_HANDLE) {
 		//vkDestroyDescriptorPool(device, descriptorPool, nullptr);
 		device.destroyDescriptorPool(descriptorPool, nullptr);
 	}
-	if (setupCmdBuffer != VK_NULL_HANDLE) {
+	if ((bool)setupCmdBuffer != VK_NULL_HANDLE) {
 		//vkFreeCommandBuffers(device, cmdPool, 1, &setupCmdBuffer);
 		device.freeCommandBuffers(cmdPool, 1, &setupCmdBuffer);
 	}
@@ -831,7 +832,7 @@ void vulkanApp::initVulkan(bool enableValidation)
 
 	// Vulkan instance
 	err = createInstance(enableValidation);
-	if ((bool)err) {
+	if ((VkResult)err) {
 		vkx::exitFatal("Could not create Vulkan instance : \n" + vkx::errorString(err), "Fatal error");
 	}
 
@@ -841,11 +842,15 @@ void vulkanApp::initVulkan(bool enableValidation)
 
 	// If requested, we enable the default validation layers for debugging
 	if (enableValidation) {
+
+		std::cout << "test" << std::endl;
+
 		// The report flags determine what type of messages for the layers will be displayed
 		// For validating (debugging) an appplication the error and warning bits should suffice
 		vk::DebugReportFlagsEXT debugReportFlags = vk::DebugReportFlagBitsEXT::eError; // | vk::DebugReportFlagBitsEXT::eWarning | vk::DebugReportFlagBitsEXT::ePerformanceWarning;
 		// Additional flags include performance info, loader and layer debug messages, etc.
-		vkDebug::setupDebugging(instance, debugReportFlags, VK_NULL_HANDLE);
+		//vkDebug::setupDebugging(instance, debugReportFlags, VK_NULL_HANDLE);
+		vkDebug::setupDebugging(instance, vk::DebugReportFlagsEXT(), VK_NULL_HANDLE);
 	}
 
 	// Physical device
@@ -859,7 +864,7 @@ void vulkanApp::initVulkan(bool enableValidation)
 	std::vector<vk::PhysicalDevice> physicalDevices(gpuCount);
 	//err = vkEnumeratePhysicalDevices(instance, &gpuCount, physicalDevices.data());
 	err = instance.enumeratePhysicalDevices(&gpuCount, physicalDevices.data());
-	if ((bool)err) {
+	if ((VkResult)err) {
 		vkx::exitFatal("Could not enumerate phyiscal devices : \n" + vkx::errorString(err), "Fatal error");
 	}
 

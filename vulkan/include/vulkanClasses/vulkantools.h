@@ -45,7 +45,7 @@
 	vk::Result res = (f);																					\
 	if (res != vk::Result::eSuccess)																				\
 	{																									\
-		std::cout << "Fatal : VkResult is \"" << vkTools::errorString(res) << "\" in " << __FILE__ << " at line " << __LINE__ << std::endl; \
+		std::cout << "Fatal : vk::Result is \"" << vkTools::errorString(res) << "\" in " << __FILE__ << " at line " << __LINE__ << std::endl; \
 		assert(res == vk::Result::eSuccess);																		\
 	}																									\
 }																										\
@@ -97,7 +97,7 @@ namespace vkx
 	#if defined(__ANDROID__)
 		vk::ShaderModule loadShader(AAssetManager* assetManager, const char *fileName, vk::Device device, vk::ShaderStageFlagBits stage);
 	#else
-		vk::ShaderModule loadShader(const char *fileName, vk::Device device, vk::ShaderStageFlagBits stage);
+		vk::ShaderModule loadShader(const std::string& filename, vk::Device device, vk::ShaderStageFlagBits stage);
 	#endif
 
 	// Load a GLSL shader
@@ -115,7 +115,7 @@ namespace vkx
 
 	// Contains all vulkan objects
 	// required for a uniform data object
-	struct UniformData2
+	struct UniformData
 	{
 		vk::Buffer buffer;
 		vk::DeviceMemory memory;
@@ -126,7 +126,7 @@ namespace vkx
 
 
 	// Destroy (and free) Vulkan resources used by a uniform data structure
-	void destroyUniformData(vk::Device device, vkx::UniformData2 *uniformData);
+	void destroyUniformData(vk::Device device, vkx::UniformData *uniformData);
 
 
 

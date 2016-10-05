@@ -194,7 +194,7 @@ void vkTools::VulkanTextureLoader::loadTexture(std::string filename, vk::Format 
 
 		// Image barrier for optimal image (target)
 		// Optimal image will be used as destination for the copy
-		setImageLayout(
+		vkx::setImageLayout(
 			cmdBuffer,
 			texture->image,
 			vk::ImageAspectFlagBits::eColor,
@@ -222,7 +222,7 @@ void vkTools::VulkanTextureLoader::loadTexture(std::string filename, vk::Format 
 
 		// Change texture image layout to shader read after all mip levels have been copied
 		texture->imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-		setImageLayout(
+		vkx::setImageLayout(
 			cmdBuffer,
 			texture->image,
 			vk::ImageAspectFlagBits::eColor,
@@ -316,11 +316,12 @@ void vkTools::VulkanTextureLoader::loadTexture(std::string filename, vk::Format 
 		// Get sub resources layout 
 		// Includes row pitch, size offsets, etc.
 		//vkGetImageSubresourceLayout(vulkanDevice->logicalDevice, mappableImage, &subRes, &subResLayout);
-		vk::Device(vulkanDevice->logicalDevice).getImageSubresourceLayout(mappableImage, &subRes, &subResLayout);
+		vulkanDevice->logicalDevice.getImageSubresourceLayout(mappableImage, &subRes, &subResLayout);
 
 		// Map image memory
 		//VK_CHECK_RESULT(vkMapMemory(vulkanDevice->logicalDevice, mappableMemory, 0, memReqs.size, 0, &data));
-		vk::Device(vulkanDevice->logicalDevice).mapMemory(mappableMemory, 0, memReqs.size, 0, &data);
+		//vulkanDevice->logicalDevice.mapMemory(mappableMemory, 0, memReqs.size, vk::MemoryMapFlags(), &data);
+		data = vulkanDevice->logicalDevice.mapMemory(mappableMemory, 0, memReqs.size, vk::MemoryMapFlags());
 
 		// Copy image data into memory
 		memcpy(data, tex2D[subRes.mipLevel].data(), tex2D[subRes.mipLevel].size());
@@ -335,7 +336,7 @@ void vkTools::VulkanTextureLoader::loadTexture(std::string filename, vk::Format 
 		texture->imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 
 		// Setup image memory barrier
-		setImageLayout(
+		vkx::setImageLayout(
 			cmdBuffer,
 			texture->image,
 			vk::ImageAspectFlagBits::eColor,
@@ -473,7 +474,8 @@ void vkTools::VulkanTextureLoader::loadCubemap(std::string filename, vk::Format 
 	// Copy texture data into staging buffer
 	uint8_t *data;
 	//VK_CHECK_RESULT(vkMapMemory(vulkanDevice->logicalDevice, stagingMemory, 0, memReqs.size, 0, (void **)&data));
-	vk::Device(vulkanDevice->logicalDevice).mapMemory(stagingMemory, 0, memReqs.size, 0);//what?
+	//vulkanDevice->logicalDevice.mapMemory(stagingMemory, 0, memReqs.size, vk::MemoryMapFlags());//what?
+	(uint8_t *)data = (uint8_t *)vulkanDevice->logicalDevice.mapMemory(stagingMemory, 0, memReqs.size, vk::MemoryMapFlags());
 
 	memcpy(data, texCube.data(), texCube.size());
 	//vkUnmapMemory(vulkanDevice->logicalDevice, stagingMemory);
@@ -530,7 +532,7 @@ void vkTools::VulkanTextureLoader::loadCubemap(std::string filename, vk::Format 
 	vk::Device(vulkanDevice->logicalDevice).getImageMemoryRequirements(texture->image, &memReqs);
 
 	memAllocInfo.allocationSize = memReqs.size;
-	memAllocInfo.memoryTypeIndex = vulkanDevice->getMemoryType(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	memAllocInfo.memoryTypeIndex = vulkanDevice->getMemoryType(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
 
 	//VK_CHECK_RESULT(vkAllocateMemory(vulkanDevice->logicalDevice, &memAllocInfo, nullptr, &texture->deviceMemory));
 	vk::Device(vulkanDevice->logicalDevice).allocateMemory(&memAllocInfo, nullptr, &texture->deviceMemory);
@@ -549,7 +551,7 @@ void vkTools::VulkanTextureLoader::loadCubemap(std::string filename, vk::Format 
 	subresourceRange.levelCount = texture->mipLevels;
 	subresourceRange.layerCount = 6;
 
-	vkTools::setImageLayout(
+	vkx::setImageLayout(
 		cmdBuffer,
 		texture->image,
 		vk::ImageAspectFlagBits::eColor,
@@ -575,7 +577,7 @@ void vkTools::VulkanTextureLoader::loadCubemap(std::string filename, vk::Format 
 
 	// Change texture image layout to shader read after all faces have been copied
 	texture->imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-	vkTools::setImageLayout(
+	vkx::setImageLayout(
 		cmdBuffer,
 		texture->image,
 		vk::ImageAspectFlagBits::eColor,
@@ -609,16 +611,16 @@ void vkTools::VulkanTextureLoader::loadCubemap(std::string filename, vk::Format 
 	vk::SamplerCreateInfo sampler;
 	sampler.magFilter = vk::Filter::eLinear;
 	sampler.minFilter = vk::Filter::eLinear;
-	sampler.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-	sampler.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+	sampler.mipmapMode = vk::SamplerMipmapMode::eLinear;
+	sampler.addressModeU = vk::SamplerAddressMode::eClampToEdge;
 	sampler.addressModeV = sampler.addressModeU;
 	sampler.addressModeW = sampler.addressModeU;
 	sampler.mipLodBias = 0.0f;
 	sampler.maxAnisotropy = 8;
-	sampler.compareOp = VK_COMPARE_OP_NEVER;
+	sampler.compareOp = vk::CompareOp::eNever;
 	sampler.minLod = 0.0f;
 	sampler.maxLod = (float)texture->mipLevels;
-	sampler.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+	sampler.borderColor = vk::BorderColor::eFloatOpaqueWhite;
 	//VK_CHECK_RESULT(vkCreateSampler(vulkanDevice->logicalDevice, &sampler, nullptr, &texture->sampler));
 	vk::Device(vulkanDevice->logicalDevice).createSampler(&sampler, nullptr, &texture->sampler);
 
@@ -812,7 +814,7 @@ void vkTools::VulkanTextureLoader::loadTextureArray(std::string filename, vk::Fo
 
 	// Change texture image layout to shader read after all faces have been copied
 	texture->imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-	vkTools::setImageLayout(
+	vkx::setImageLayout(
 		cmdBuffer,
 		texture->image,
 		vk::ImageAspectFlagBits::eColor,
@@ -825,9 +827,9 @@ void vkTools::VulkanTextureLoader::loadTextureArray(std::string filename, vk::Fo
 
 	// Create a fence to make sure that the copies have finished before continuing
 	vk::Fence copyFence;
-	vk::FenceCreateInfo fenceCreateInfo;//= vkTools::initializers::fenceCreateInfo(VK_FLAGS_NONE);
+	vk::FenceCreateInfo fenceCreateInfo;//= vkx::fenceCreateInfo(VK_FLAGS_NONE);
 	//VK_CHECK_RESULT(vkCreateFence(vulkanDevice->logicalDevice, &fenceCreateInfo, nullptr, &copyFence));
-	vk::Device(vulkanDevice->logicalDevice).createFence(&fenceCreateInfo, nullptr, &copyFence);
+	vulkanDevice->logicalDevice.createFence(&fenceCreateInfo, nullptr, &copyFence);
 
 	vk::SubmitInfo submitInfo;
 	submitInfo.commandBufferCount = 1;
@@ -837,10 +839,10 @@ void vkTools::VulkanTextureLoader::loadTextureArray(std::string filename, vk::Fo
 	queue.submit(1, &submitInfo, copyFence);
 
 	//VK_CHECK_RESULT(vkWaitForFences(vulkanDevice->logicalDevice, 1, &copyFence, VK_TRUE, DEFAULT_FENCE_TIMEOUT));
-	vk::Device(vulkanDevice->logicalDevice).waitForFences(1, &copyFence, VK_TRUE, DEFAULT_FENCE_TIMEOUT)
+	vulkanDevice->logicalDevice.waitForFences(1, &copyFence, VK_TRUE, DEFAULT_FENCE_TIMEOUT);
 
 	//vkDestroyFence(vulkanDevice->logicalDevice, copyFence, nullptr);
-	vk::Device(vulkanDevice->logicalDevice).destroyFence(copyFence, nullptr);
+	vulkanDevice->logicalDevice.destroyFence(copyFence, nullptr);
 
 	// Create sampler
 	vk::SamplerCreateInfo sampler;

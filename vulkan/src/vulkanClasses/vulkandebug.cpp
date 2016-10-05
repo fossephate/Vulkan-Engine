@@ -12,6 +12,7 @@ namespace vkDebug
 	};
 
 	PFN_vkCreateDebugReportCallbackEXT CreateDebugReportCallback = VK_NULL_HANDLE;
+	//vk::AllocationCallbacks
 	PFN_vkDestroyDebugReportCallbackEXT DestroyDebugReportCallback = VK_NULL_HANDLE;
 	PFN_vkDebugReportMessageEXT dbgBreakCallback = VK_NULL_HANDLE;
 
@@ -66,7 +67,7 @@ namespace vkDebug
 		// The return value of this callback controls wether the Vulkan call that caused
 		// the validation message will be aborted or not
 		// We return VK_FALSE as we DON'T want Vulkan calls that cause a validation message 
-		// (and return a VkResult) to abort
+		// (and return a vk::Result) to abort
 		// If you instead want to have calls abort, pass in VK_TRUE and the function will 
 		// return VK_ERROR_VALIDATION_FAILED_EXT 
 		return VK_FALSE;
@@ -75,34 +76,36 @@ namespace vkDebug
 	void setupDebugging(vk::Instance instance, vk::DebugReportFlagsEXT flags, vk::DebugReportCallbackEXT callBack)
 	{
 		
-		//CreateDebugReportCallback = reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT"));
-		CreateDebugReportCallback = reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT>(instance.getProcAddr("vkCreateDebugReportCallbackEXT"));
+		CreateDebugReportCallback = reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT"));
+		//CreateDebugReportCallback = reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT>(instance.getProcAddr("vkCreateDebugReportCallbackEXT"));
 		
-		//DestroyDebugReportCallback = reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>(vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT"));
-		DestroyDebugReportCallback = reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>(instance.getProcAddr("vkDestroyDebugReportCallbackEXT"));
+		DestroyDebugReportCallback = reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>(vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT"));
+		//DestroyDebugReportCallback = reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>(instance.getProcAddr("vkDestroyDebugReportCallbackEXT"));
 
-		//dbgBreakCallback = reinterpret_cast<PFN_vkDebugReportMessageEXT>(vkGetInstanceProcAddr(instance, "vkDebugReportMessageEXT"));
-		dbgBreakCallback = reinterpret_cast<PFN_vkDebugReportMessageEXT>(instance.getProcAddr("vkDebugReportMessageEXT"));
+		dbgBreakCallback = reinterpret_cast<PFN_vkDebugReportMessageEXT>(vkGetInstanceProcAddr(instance, "vkDebugReportMessageEXT"));
+		//dbgBreakCallback = reinterpret_cast<PFN_vkDebugReportMessageEXT>(instance.getProcAddr("vkDebugReportMessageEXT"));
 
 
 		vk::DebugReportCallbackCreateInfoEXT dbgCreateInfo;
 		dbgCreateInfo.pfnCallback = (PFN_vkDebugReportCallbackEXT)messageCallback;
 		dbgCreateInfo.flags = flags;
 
-		vk::Result err = CreateDebugReportCallback(
+		vk::Result err = (vk::Result)CreateDebugReportCallback(
 			instance,
-			&dbgCreateInfo,
+			(VkDebugReportCallbackCreateInfoEXT *)&dbgCreateInfo,
 			nullptr,
-			(callBack != VK_NULL_HANDLE) ? &callBack : &msgCallback);
-		assert(!err);
+			((bool)callBack != VK_NULL_HANDLE) ? (VkDebugReportCallbackEXT *)&callBack : (VkDebugReportCallbackEXT *)&msgCallback);
+
+
+		assert(!(bool)err);
 	}
 	
 	void freeDebugCallback(vk::Instance instance)
 	{
-		if (msgCallback != VK_NULL_HANDLE)
-		{
+		if ((bool)msgCallback != VK_NULL_HANDLE) {
 			//DestroyDebugReportCallback(instance, msgCallback, nullptr);
-			instance.destroyDebugReportCallbackEXT(msgCallback, nullptr);
+			DestroyDebugReportCallback(instance, msgCallback, nullptr);
+			//instance.destroyDebugReportCallbackEXT(msgCallback, nullptr);
 		}
 	}
 
@@ -118,6 +121,7 @@ namespace vkDebug
 
 		void setup(vk::Device device)
 		{
+			
 			//pfnDebugMarkerSetObjectTag = reinterpret_cast<PFN_vkDebugMarkerSetObjectTagEXT>(vkGetDeviceProcAddr(device, "vkDebugMarkerSetObjectTagEXT"));
 			pfnDebugMarkerSetObjectTag = reinterpret_cast<PFN_vkDebugMarkerSetObjectTagEXT>(device.getProcAddr("vkDebugMarkerSetObjectTagEXT"));
 
@@ -140,6 +144,7 @@ namespace vkDebug
 
 		void setObjectName(vk::Device device, uint64_t object, vk::DebugReportObjectTypeEXT objectType, const char *name)
 		{
+			
 			// Check for valid function pointer (may not be present if not running in a debugging application)
 			if (pfnDebugMarkerSetObjectName)
 			{
@@ -148,12 +153,14 @@ namespace vkDebug
 				nameInfo.object = object;
 				nameInfo.pObjectName = name;
 				//pfnDebugMarkerSetObjectName(device, &nameInfo);
-				device.debugMarkerSetObjectNameEXT(&nameInfo);
+				pfnDebugMarkerSetObjectName(device, (VkDebugMarkerObjectNameInfoEXT *)&nameInfo);
+				//device.debugMarkerSetObjectNameEXT(&nameInfo);
 			}
 		}
 
 		void setObjectTag(vk::Device device, uint64_t object, vk::DebugReportObjectTypeEXT objectType, uint64_t name, size_t tagSize, const void* tag)
 		{
+
 			// Check for valid function pointer (may not be present if not running in a debugging application)
 			if (pfnDebugMarkerSetObjectTag)
 			{
@@ -164,8 +171,10 @@ namespace vkDebug
 				tagInfo.tagSize = tagSize;
 				tagInfo.pTag = tag;
 				//pfnDebugMarkerSetObjectTag(device, &tagInfo);
-				device.debugMarkerSetObjectTagEXT(&tagInfo);
+				pfnDebugMarkerSetObjectTag(device, (VkDebugMarkerObjectTagInfoEXT *)&tagInfo);
+				//device.debugMarkerSetObjectTagEXT(&tagInfo);
 			}
+			//vkDebugMarkerSetObjectTagEXT;
 		}
 
 		void beginRegion(vk::CommandBuffer cmdbuffer, const char* pMarkerName, glm::vec4 color)
@@ -177,7 +186,8 @@ namespace vkDebug
 				memcpy(markerInfo.color, &color[0], sizeof(float) * 4);
 				markerInfo.pMarkerName = pMarkerName;
 				//pfnCmdDebugMarkerBegin(cmdbuffer, &markerInfo);
-				cmdbuffer.debugMarkerBeginEXT(&markerInfo);
+				pfnCmdDebugMarkerBegin(cmdbuffer, (VkDebugMarkerMarkerInfoEXT *)&markerInfo);
+				//cmdbuffer.debugMarkerBeginEXT(&markerInfo);
 			}
 		}
 
@@ -190,99 +200,100 @@ namespace vkDebug
 				memcpy(markerInfo.color, &color[0], sizeof(float) * 4);
 				markerInfo.pMarkerName = markerName.c_str();
 				//pfnCmdDebugMarkerInsert(cmdbuffer, &markerInfo);
-				cmdbuffer.debugMarkerInsertEXT(&markerInfo);
+				pfnCmdDebugMarkerInsert(cmdbuffer, (VkDebugMarkerMarkerInfoEXT *)&markerInfo);
+				//cmdbuffer.debugMarkerInsertEXT(&markerInfo);
 			}
 		}
 
 		void endRegion(vk::CommandBuffer cmdBuffer)
 		{
 			// Check for valid function (may not be present if not runnin in a debugging application)
-			if (pfnCmdDebugMarkerEnd)
-			{
+			if (pfnCmdDebugMarkerEnd) {
 				//pfnCmdDebugMarkerEnd(cmdBuffer);
-				cmdBuffer.debugMarkerEndEXT();
+				pfnCmdDebugMarkerEnd(cmdBuffer);
+				//cmdBuffer.debugMarkerEndEXT();
 			}
 		}
 
 		void setCommandBufferName(vk::Device device, vk::CommandBuffer cmdBuffer, const char * name)
 		{
-			setObjectName(device, (uint64_t)cmdBuffer, vk::DebugReportObjectTypeEXT::eCommandBuffer, name);
-
+			//setObjectName(device, (uint64_t)cmdBuffer, vk::DebugReportObjectTypeEXT::eCommandBuffer, name);
 		}
 
 		void setQueueName(vk::Device device, vk::Queue queue, const char * name)
 		{
-			setObjectName(device, (uint64_t)queue, vk::DebugReportObjectTypeEXT::eQueue, name);
+			//setObjectName(device, (uint64_t)queue, vk::DebugReportObjectTypeEXT::eQueue, name);
 		}
 
 		void setImageName(vk::Device device, vk::Image image, const char * name)
 		{
-			setObjectName(device, (uint64_t)image, vk::DebugReportObjectTypeEXT::eImage, name);
+			//setObjectName(device, (uint64_t)image, vk::DebugReportObjectTypeEXT::eImage, name);
+			//device.debugMarkerSetObjectNameEXT()
 		}
 
 		void setSamplerName(vk::Device device, vk::Sampler sampler, const char * name)
 		{
-			setObjectName(device, (uint64_t)sampler, vk::DebugReportObjectTypeEXT::eSampler, name);
+			//setObjectName(device, (uint64_t)sampler, vk::DebugReportObjectTypeEXT::eSampler, name);
 		}
 
 		void setBufferName(vk::Device device, vk::Buffer buffer, const char * name)
 		{
-			setObjectName(device, (uint64_t)buffer, vk::DebugReportObjectTypeEXT::eBuffer, name);
+			//setObjectName(device, (uint64_t)buffer, vk::DebugReportObjectTypeEXT::eBuffer, name);
 		}
 
 		void setDeviceMemoryName(vk::Device device, vk::DeviceMemory memory, const char * name)
 		{
-			setObjectName(device, (uint64_t)memory, vk::DebugReportObjectTypeEXT::eDeviceMemory, name);
+			//setObjectName(device, (uint64_t)memory, vk::DebugReportObjectTypeEXT::eDeviceMemory, name);
 		}
 
 		void setShaderModuleName(vk::Device device, vk::ShaderModule shaderModule, const char * name)
 		{
-			setObjectName(device, (uint64_t)shaderModule, vk::DebugReportObjectTypeEXT::eShaderModule, name);
+			//setObjectName(device, (uint64_t)shaderModule, vk::DebugReportObjectTypeEXT::eShaderModule, name);
 		}
 
 		void setPipelineName(vk::Device device, vk::Pipeline pipeline, const char * name)
 		{
-			setObjectName(device, (uint64_t)pipeline, vk::DebugReportObjectTypeEXT::ePipeline, name);
+			//setObjectName(device, (uint64_t)pipeline, vk::DebugReportObjectTypeEXT::ePipeline, name);
 		}
 
 		void setPipelineLayoutName(vk::Device device, vk::PipelineLayout pipelineLayout, const char * name)
 		{
-			setObjectName(device, (uint64_t)pipelineLayout, vk::DebugReportObjectTypeEXT::ePipelineLayout, name);
+			//setObjectName(device, (uint64_t)pipelineLayout, vk::DebugReportObjectTypeEXT::ePipelineLayout, name);
 		}
 
 		void setRenderPassName(vk::Device device, vk::RenderPass renderPass, const char * name)
 		{
-			setObjectName(device, (uint64_t)renderPass, vk::DebugReportObjectTypeEXT::eRenderPass, name);
+			//setObjectName(device, (uint64_t)renderPass, vk::DebugReportObjectTypeEXT::eRenderPass, name);
 		}
 
 		void setFramebufferName(vk::Device device, vk::Framebuffer framebuffer, const char * name)
 		{
-			setObjectName(device, (uint64_t)framebuffer, vk::DebugReportObjectTypeEXT::eFramebuffer, name);
+			//setObjectName(device, (uint64_t)framebuffer, vk::DebugReportObjectTypeEXT::eFramebuffer, name);
 		}
 
 		void setDescriptorSetLayoutName(vk::Device device, vk::DescriptorSetLayout descriptorSetLayout, const char * name)
 		{
-			setObjectName(device, (uint64_t)descriptorSetLayout, vk::DebugReportObjectTypeEXT::eDescriptorSetLayout, name);
+			//setObjectName(device, (uint64_t)descriptorSetLayout, vk::DebugReportObjectTypeEXT::eDescriptorSetLayout, name);
 		}
 
 		void setDescriptorSetName(vk::Device device, vk::DescriptorSet descriptorSet, const char * name)
 		{
-			setObjectName(device, (uint64_t)descriptorSet, vk::DebugReportObjectTypeEXT::eDescriptorSet, name);
+			//setObjectName(device, (uint64_t)descriptorSet, vk::DebugReportObjectTypeEXT::eDescriptorSet, name);
 		}
 
 		void setSemaphoreName(vk::Device device, vk::Semaphore semaphore, const char * name)
 		{
-			setObjectName(device, (uint64_t)semaphore, vk::DebugReportObjectTypeEXT::eSemaphore, name);
+			//setObjectName(device, (uint64_t)semaphore, vk::DebugReportObjectTypeEXT::eSemaphore, name);
 		}
 
 		void setFenceName(vk::Device device, vk::Fence fence, const char * name)
 		{
-			setObjectName(device, (uint64_t)fence, vk::DebugReportObjectTypeEXT::eFence, name);
+			//setObjectName(device, (uint64_t)fence, vk::DebugReportObjectTypeEXT::eFence, name);
 		}
 
 		void setEventName(vk::Device device, vk::Event _event, const char * name)
 		{
-			setObjectName(device, (uint64_t)_event, vk::DebugReportObjectTypeEXT::eEvent, name);
+			//setObjectName(device, (uint64_t)_event, vk::DebugReportObjectTypeEXT::eEvent, name);
 		}
 	};
 

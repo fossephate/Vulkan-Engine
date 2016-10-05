@@ -146,7 +146,7 @@ uint32_t vkx::Framebuffer::addAttachment(vkx::AttachmentCreateInfo createinfo)
 	vk::Device(vulkanDevice->logicalDevice).getImageMemoryRequirements(attachment.image, &memReqs);
 
 	memAlloc.allocationSize = memReqs.size;
-	memAlloc.memoryTypeIndex = vulkanDevice->getMemoryType(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	memAlloc.memoryTypeIndex = vulkanDevice->getMemoryType(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
 	//VK_CHECK_RESULT(vkAllocateMemory(vulkanDevice->logicalDevice, &memAlloc, nullptr, &attachment.memory));
 	vk::Device(vulkanDevice->logicalDevice).allocateMemory(&memAlloc, nullptr, &attachment.memory);
 	//VK_CHECK_RESULT(vkBindImageMemory(vulkanDevice->logicalDevice, attachment.image, attachment.memory, 0));
@@ -206,7 +206,7 @@ uint32_t vkx::Framebuffer::addAttachment(vkx::AttachmentCreateInfo createinfo)
 * @param minFilter Minification filter for lookups
 * @param adressMode Adressing mode for the U,V and W coordinates
 *
-* @return VkResult for the sampler creation
+* @return vk::Result for the sampler creation
 */
 
 vk::Result vkx::Framebuffer::createSampler(vk::Filter magFilter, vk::Filter minFilter, vk::SamplerAddressMode adressMode)

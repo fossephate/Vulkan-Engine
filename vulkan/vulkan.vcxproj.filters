@@ -101,13 +101,13 @@
     <ClCompile Include="src\vulkanClasses\vulkanFrameBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\indirect.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\vulkanClasses\vulkanDevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\vulkanClasses\vulkanBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\indirect.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

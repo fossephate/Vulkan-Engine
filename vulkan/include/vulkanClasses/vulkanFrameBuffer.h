@@ -101,7 +101,7 @@ namespace vkx
 			* @param minFilter Minification filter for lookups
 			* @param adressMode Adressing mode for the U,V and W coordinates
 			*
-			* @return VkResult for the sampler creation
+			* @return vk::Result for the sampler creation
 			*/
 			vk::Result createSampler(vk::Filter magFilter, vk::Filter minFilter, vk::SamplerAddressMode adressMode);
 

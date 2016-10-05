@@ -98,11 +98,11 @@ void vkMeshLoader::Mesh::setupVertexInputState(std::vector<vkMeshLoader::VertexL
 void vkMeshLoader::Mesh::drawIndexed(vk::CommandBuffer cmdBuffer)
 {
 	vk::DeviceSize offsets[1] = { 0 };
-	if (pipeline != VK_NULL_HANDLE) {
+	if ((bool)pipeline != VK_NULL_HANDLE) {
 		//vkCmdBindPipeline(cmdBuffer, vk::PipelineBindPoint::eGraphics, pipeline);
 		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
 	}
-	if ((pipelineLayout != VK_NULL_HANDLE) && (descriptorSet != VK_NULL_HANDLE)) {
+	if (((bool)pipelineLayout != VK_NULL_HANDLE) && ((bool)descriptorSet != VK_NULL_HANDLE)) {
 		//vkCmdBindDescriptorSets(cmdBuffer, vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, &descriptorSet, 0, NULL);
 		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, &descriptorSet, 0, NULL);
 	}
@@ -123,7 +123,7 @@ void vkMeshLoader::freeMeshBufferResources(vk::Device device, vkMeshLoader::Mesh
 	//vkFreeMemory(device, meshBuffer->vertices.mem, nullptr);
 	device.freeMemory(meshBuffer->vertices.mem, nullptr);
 	
-	if (meshBuffer->indices.buf != VK_NULL_HANDLE) {
+	if ((bool)meshBuffer->indices.buf != VK_NULL_HANDLE) {
 		//vkDestroyBuffer(device, meshBuffer->indices.buf, nullptr);
 		device.destroyBuffer(meshBuffer->indices.buf, nullptr);
 		//vkFreeMemory(device, meshBuffer->indices.mem, nullptr);
@@ -162,7 +162,7 @@ void vkMeshLoader::freeMeshBufferResources(vk::Device device, vkMeshLoader::Mesh
 
 //VulkanMeshLoader
 
-inline VulkanMeshLoader::Vertex::Vertex(const glm::vec3 & pos, const glm::vec2 & tex, const glm::vec3 & normal, const glm::vec3 & tangent, const glm::vec3 & bitangent, const glm::vec3 & color)
+VulkanMeshLoader::Vertex::Vertex(const glm::vec3 & pos, const glm::vec2 & tex, const glm::vec3 & normal, const glm::vec3 & tangent, const glm::vec3 & bitangent, const glm::vec3 & color)
 {
 	m_pos = pos;
 	m_tex = tex;
@@ -402,7 +402,7 @@ void VulkanMeshLoader::createBuffers(
 	meshBuffer->indexCount = static_cast<uint32_t>(indexBuffer.size());
 
 	// Use staging buffer to move vertex and index buffer to device local memory
-	if (useStaging && copyQueue != VK_NULL_HANDLE && copyCmd != VK_NULL_HANDLE)
+	if ((bool)useStaging && (bool)copyQueue != VK_NULL_HANDLE && (bool)copyCmd != VK_NULL_HANDLE)
 	{
 		// Create staging buffers
 		struct {

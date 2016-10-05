@@ -87,7 +87,7 @@ namespace vkx
 	{
 
 		// Create an image barrier object
-		vk::ImageMemoryBarrier imageMemoryBarrier = imageMemoryBarrier();
+		vk::ImageMemoryBarrier imageMemoryBarrier;
 		imageMemoryBarrier.oldLayout = oldImageLayout;
 		imageMemoryBarrier.newLayout = newImageLayout;
 		imageMemoryBarrier.image = image;
@@ -188,6 +188,7 @@ namespace vkx
 
 
 	#if defined(__ANDROID__)
+
 		// Android shaders are stored as assets in the apk
 		// So they need to be loaded via the asset manager
 		vk::ShaderModule loadShader(AAssetManager* assetManager, const char *fileName, vk::Device device, vk::ShaderStageFlagBits stage) {
@@ -215,6 +216,7 @@ namespace vkx
 		}
 
 	#else
+
 		vk::ShaderModule loadShader(const std::string& filename, vk::Device device, vk::ShaderStageFlagBits stage) {
 			std::vector<uint8_t> binaryData = readBinaryFile(filename);
 			vk::ShaderModuleCreateInfo moduleCreateInfo;
@@ -298,7 +300,7 @@ namespace vkx
 		return imageMemoryBarrier;
 	}
 
-	void destroyUniformData(vk::Device device, UniformData2 * uniformData)
+	void destroyUniformData(vk::Device device, UniformData * uniformData)
 	{
 		if (uniformData->mapped != nullptr)
 		{

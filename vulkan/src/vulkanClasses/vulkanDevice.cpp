@@ -40,7 +40,7 @@ namespace vkx
 	/**
 	* Get the index of a memory type that has all the requested property bits set
 	*
-	* @param typeBits Bitmask with bits set for each memory type supported by the resource to request for (from VkMemoryRequirements)
+	* @param typeBits Bitmask with bits set for each memory type supported by the resource to request for (from vk::MemoryRequirements)
 	* @param properties Bitmask of properties for the memory type to request
 	* @param (Optional) memTypeFound Pointer to a bool that is set to true if a matching memory type has been found
 	*
@@ -89,12 +89,12 @@ namespace vkx
 	* @throw Throws an exception if no queue family index could be found that supports the requested flags
 	*/
 
-	inline uint32_t VulkanDevice::getQueueFamiliyIndex(vk::QueueFlagBits queueFlags)
+	uint32_t VulkanDevice::getQueueFamiliyIndex(vk::QueueFlags queueFlags)
 	{
 		// If a compute queue is requested, try to find a separate compute queue family from graphics first
 		if (queueFlags & vk::QueueFlagBits::eCompute) {
 			for (uint32_t i = 0; i < static_cast<uint32_t>(queueFamilyProperties.size()); i++) {
-				if ((queueFamilyProperties[i].queueFlags & queueFlags) && ((queueFamilyProperties[i].queueFlags & vk::QueueFlagBits::eGraphics) == 0)) {
+				if ((queueFamilyProperties[i].queueFlags & queueFlags) && ((queueFamilyProperties[i].queueFlags & vk::QueueFlagBits::eGraphics) == vk::QueueFlags())) {
 					return i;
 					break;
 				}
@@ -124,10 +124,10 @@ namespace vkx
 	* @param useSwapChain Set to false for headless rendering to omit the swapchain device extensions
 	* @param requestedQueueTypes Bit flags specifying the queue types to be requested from the device
 	*
-	* @return VkResult of the device creation call
+	* @return vk::Result of the device creation call
 	*/
 
-	inline vk::Result VulkanDevice::createLogicalDevice(vk::PhysicalDeviceFeatures enabledFeatures, bool useSwapChain, vk::QueueFlags requestedQueueTypes)
+	vk::Result VulkanDevice::createLogicalDevice(vk::PhysicalDeviceFeatures enabledFeatures, bool useSwapChain, vk::QueueFlags requestedQueueTypes)
 	{
 		// Desired queues need to be requested upon logical device creation
 		// Due to differing queue family configurations of Vulkan implementations this can be a bit tricky, especially if the application
@@ -316,7 +316,7 @@ namespace vkx
 	}
 
 	/**
-	* Copy buffer data from src to dst using VkCmdCopyBuffer
+	* Copy buffer data from src to dst using vk::CmdCopyBuffer
 	*
 	* @param src Pointer to the source buffer to copy from
 	* @param dst Pointer to the destination buffer to copy tp
@@ -326,7 +326,7 @@ namespace vkx
 	* @note Source and destionation pointers must have the approriate transfer usage flags set (TRANSFER_SRC / TRANSFER_DST)
 	*/
 
-	inline void VulkanDevice::copyBuffer(vkx::Buffer * src, vkx::Buffer * dst, vk::Queue queue, vk::BufferCopy * copyRegion)
+	void VulkanDevice::copyBuffer(vkx::Buffer * src, vkx::Buffer * dst, vk::Queue queue, vk::BufferCopy * copyRegion)
 	{
 		assert(dst->size <= src->size);
 		assert(src->buffer && src->buffer);
@@ -404,9 +404,9 @@ namespace vkx
 	* @note Uses a fence to ensure command buffer has finished executing
 	*/
 
-	inline void VulkanDevice::flushCommandBuffer(vk::CommandBuffer commandBuffer, vk::Queue queue, bool free)
+	void VulkanDevice::flushCommandBuffer(vk::CommandBuffer commandBuffer, vk::Queue queue, bool free)
 	{
-		if (commandBuffer == VK_NULL_HANDLE) {
+		if ((bool)commandBuffer == VK_NULL_HANDLE) {
 			return;
 		}
 
@@ -445,7 +445,7 @@ namespace vkx
 	* @note Frees the logical device
 	*/
 
-	inline VulkanDevice::~VulkanDevice()
+	VulkanDevice::~VulkanDevice()
 	{
 		if (commandPool) {
 			//vkDestroyCommandPool(logicalDevice, commandPool, nullptr);
