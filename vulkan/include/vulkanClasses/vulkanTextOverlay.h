@@ -16,11 +16,11 @@
 #include <sstream>
 #include <iomanip>
 
+#include <glm/glm.hpp>
 #include <vulkan/vulkan.hpp>
 #include "vulkanTools.h"
-#include "vulkanDebug.h"
-#include "vulkanBuffer.h"
-#include "vulkanDevice.h"
+#include "vulkanDebug2.h"
+#include "vulkanContext.h"
 
 #include "../external/stb/stb_font_consolas_24_latin1.inl"
 
@@ -35,126 +35,65 @@
 // Max. number of chars the text overlay buffer can hold
 #define MAX_CHAR_COUNT 1024
 
-/**
-* @brief Mostly self-contained text overlay class
-* @note Will only work with compatible render passes
-*/
-namespace vkx
-{
-	class VulkanTextOverlay
-	{
-		private:
-			vkx::VulkanDevice * vulkanDevice;
+namespace vkx {
+	// Mostly self-contained text overlay class
+	// todo : comment
+	class TextOverlay {
+	private:
+		Context context;
 
-			vk::Queue queue;
-			vk::Format colorFormat;
-			vk::Format depthFormat;
+		uint32_t& framebufferWidth;
+		uint32_t& framebufferHeight;
 
-			uint32_t *frameBufferWidth;
-			uint32_t *frameBufferHeight;
+		CreateImageResult texture;
+		CreateBufferResult vertexBuffer;
 
-			vk::Sampler sampler;
-			vk::Image image;
-			vk::ImageView view;
-			vkx::Buffer vertexBuffer;
-			vk::DeviceMemory imageMemory;
-			vk::DescriptorPool descriptorPool;
-			vk::DescriptorSetLayout descriptorSetLayout;
-			vk::DescriptorSet descriptorSet;
-			vk::PipelineLayout pipelineLayout;
-			vk::PipelineCache pipelineCache;
-			vk::Pipeline pipeline;
-			vk::RenderPass renderPass;
-			vk::CommandPool commandPool;
-			std::vector<vk::Framebuffer*> frameBuffers;
-			std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
-			vk::Fence fence;
+		vk::DescriptorPool descriptorPool;
+		vk::DescriptorSetLayout descriptorSetLayout;
+		vk::DescriptorSet descriptorSet;
+		vk::PipelineLayout pipelineLayout;
+		vk::Pipeline pipeline;
 
-			// Used during text updates
-			glm::vec4 *mappedLocal = nullptr;
+		// Pointer to mapped vertex buffer
+		glm::vec4 *mapped = nullptr;
 
-			stb_fontchar stbFontData[STB_NUM_CHARS];
-			uint32_t numLetters;
+		stb_fontchar stbFontData[STB_NUM_CHARS];
+		uint32_t numLetters;
 
-		public:
+	public:
 
-			enum TextAlign { alignLeft, alignCenter, alignRight };
+		enum TextAlign { alignLeft, alignCenter, alignRight };
+		std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
 
-			bool visible = true;
-			bool invalidated = false;
+		bool visible = true;
+		bool invalidated = false;
 
-			std::vector<vk::CommandBuffer> cmdBuffers;
+		TextOverlay(
+			Context context,
+			uint32_t& framebufferwidth,
+			uint32_t& framebufferheight,
+			vk::RenderPass renderPass);
 
-			/**
-			* Default constructor
-			*
-			* @param vulkanDevice Pointer to a valid VulkanDevice
-			*/
-			VulkanTextOverlay(
-				vkx::VulkanDevice * vulkanDevice,
-				vk::Queue queue,
-				std::vector<vk::Framebuffer> & framebuffers,
-				vk::Format colorformat,
-				vk::Format depthformat,
-				uint32_t *framebufferwidth,
-				uint32_t *framebufferheight,
-				std::vector<vk::PipelineShaderStageCreateInfo> shaderstages);
+		~TextOverlay();
 
-			/**
-			* Default destructor, frees up all Vulkan resources acquired by the text overlay
-			*/
-			~VulkanTextOverlay();
+		// Prepare all vulkan resources required to render the font
+		// The text overlay uses separate resources for descriptors (pool, sets, layouts), pipelines and command buffers
+		void prepareResources();
 
-			/**
-			* Prepare all vulkan resources required to render the font
-			* The text overlay uses separate resources for descriptors (pool, sets, layouts), pipelines and command buffers
-			*/
-			void prepareResources();
+		// Prepare a separate pipeline for the font rendering decoupled from the main application
+		void preparePipeline(vk::RenderPass renderPass);
 
-			/**
-			* Prepare a separate pipeline for the font rendering decoupled from the main application
-			*/
-			void preparePipeline();
+		// Map buffer 
+		void beginTextUpdate();
 
-			/**
-			* Prepare a separate render pass for rendering the text as an overlay
-			*/
-			void prepareRenderPass();
+		// Add text to the current buffer
+		// todo : drop shadow? color attribute?
+		void addText(std::string text, float x, float y, TextAlign align);
 
-			/**
-			* Maps the buffer, resets letter count
-			*/
-			void beginTextUpdate();
+		// Unmap buffer and update command buffers
+		void endTextUpdate();
 
-			/**
-			* Add text to the current buffer
-			*
-			* @param text Text to add
-			* @param x x position of the text to add in window coordinate space
-			* @param y y position of the text to add in window coordinate space
-			* @param align Alignment for the new text (left, right, center)
-			*/
-			void addText(std::string text, float x, float y, TextAlign align);
-
-			/**
-			* Unmap buffer and update command buffers
-			*/
-			void endTextUpdate();
-
-			/**
-			* Update the command buffers to reflect text changes
-			*/
-			void updateCommandBuffers();
-
-			/**
-			* Submit the text command buffers to a queue
-			*/
-			void submit(vk::Queue queue, uint32_t bufferindex, vk::SubmitInfo submitInfo);
-
-			/**
-			* Reallocate command buffers for the text overlay
-			* @note Frees the existing command buffers
-			*/
-			void reallocateCommandBuffers();
-		};
+		// Needs to be called by the application
+		void writeCommandBuffer(const vk::CommandBuffer& cmdBuffer);
+	};
 }

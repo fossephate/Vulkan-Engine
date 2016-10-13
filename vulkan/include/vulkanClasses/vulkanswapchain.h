@@ -35,11 +35,9 @@
 #endif
 
 
-
-
-
 #include <vulkan/vulkan.hpp>
 #include "vulkanTools.h"
+#include "vulkanContext.h"
 
 
 
@@ -67,21 +65,40 @@
 	}                                                                   \
 }
 
-typedef struct _SwapChainBuffers {
-	vk::Image image;
-	vk::ImageView view;
-} SwapChainBuffer;
 
-class VulkanSwapChain
+
+namespace vkx
 {
+
+	/*typedef struct _SwapChainBuffers {
+		vk::Image image;
+		vk::ImageView view;
+	} SwapChainBuffer;*/
+
+	struct SwapChainImage {//better
+		vk::Image image;
+		vk::ImageView view;
+		vk::Fence fence;
+	};
+
+	class VulkanSwapChain
+	{
 	private:
-		vk::Instance instance;
-		vk::Device device;
-		vk::PhysicalDevice physicalDevice;
+
+		vkx::Context SCContext;
+
+		vk::Instance &instance = SCContext.instance;
+		vk::Device &device = SCContext.device;
+		vk::PhysicalDevice &physicalDevice = SCContext.physicalDevice;
+		vk::Queue &queue = SCContext.queue;
+
 		vk::SurfaceKHR surface;
+		vk::SwapchainKHR swapChain;
+		vk::PresentInfoKHR presentInfo;
+
 		// Function pointers
 		PFN_vkGetPhysicalDeviceSurfaceSupportKHR fpGetPhysicalDeviceSurfaceSupportKHR;
-		PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR fpGetPhysicalDeviceSurfaceCapabilitiesKHR; 
+		PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR fpGetPhysicalDeviceSurfaceCapabilitiesKHR;
 		PFN_vkGetPhysicalDeviceSurfaceFormatsKHR fpGetPhysicalDeviceSurfaceFormatsKHR;
 		PFN_vkGetPhysicalDeviceSurfacePresentModesKHR fpGetPhysicalDeviceSurfacePresentModesKHR;
 		PFN_vkCreateSwapchainKHR fpCreateSwapchainKHR;
@@ -91,17 +108,25 @@ class VulkanSwapChain
 		PFN_vkQueuePresentKHR fpQueuePresentKHR;
 
 	public:
+		std::vector<SwapChainImage> scimages;
+		//std::vector<SwapChainBuffer> buffers;
+
+		std::vector<vk::Image> images;
+		
+
 		vk::Format colorFormat;
 		vk::ColorSpaceKHR colorSpace;
 
-		vk::SwapchainKHR swapChain = VK_NULL_HANDLE;
+		uint32_t imageCount{ 0 };
+		uint32_t currentImage{ 0 };
 
-		uint32_t imageCount;
-		std::vector<vk::Image> images;
-		std::vector<SwapChainBuffer> buffers;
 
 		// Index of the deteced graphics and presenting device queue
 		uint32_t queueNodeIndex = UINT32_MAX;
+
+
+
+		void setContext(vkx::Context ctx);
 
 		// Creates an os specific surface
 		/**
@@ -111,7 +136,7 @@ class VulkanSwapChain
 		* @param platformHandle HINSTANCE of the window to create the surface for
 		* @param platformWindow HWND of the window to create the surface for
 		*
-		* @pre Android 
+		* @pre Android
 		* @param window A native platform window
 		*
 		* @pre Linux (XCB)
@@ -120,23 +145,23 @@ class VulkanSwapChain
 		* @note Targets other than XCB ar not yet supported
 		*/
 		// define params for this function based on os and settings
-		#if USE_SDL2
-			#if defined(_WIN32)
-				void initSurface(void * platformHandle, void * platformWindow);// this is the same as it is without use sdl2
-			#elif defined(__linux__)
-				// TODO
-			#endif
-		#elif defined(_WIN32)
-			void initSurface(void * platformHandle, void * platformWindow);// this is the same as it is with use sdl2
+		#if defined(_WIN32)
+			void createSurface(SDL_Window * SDLWindow, SDL_SysWMinfo windowInfo);
 		#elif defined(__linux__)
-			void initSurface(xcb_connection_t* connection, xcb_window_t window);
+			void createSurface(xcb_connection_t* connection, xcb_window_t window);
 		#elif defined(__ANDROID__)
-			ANativeWindow* window
+			void vkx::VulkanSwapChain::initSurface(ANativeWindow * window)
 		#endif
 
+		//#if defined(__linux__)
+		//	void initSurface(xcb_connection_t* connection, xcb_window_t window);
+		//#elif defined(__ANDROID__)
+		//	ANativeWindow* window
+		//#endif
+		
 		/**
 		* Set instance, physical and logical device to use for the swpachain and get all required function pointers
-		* 
+		*
 		* @param instance Vulkan instance to use
 		* @param physicalDevice Physical device used to query properties and formats relevant to the swapchain
 		* @param device Logical representation of the device to create the swapchain for
@@ -144,16 +169,20 @@ class VulkanSwapChain
 		*/
 		void connect(vk::Instance instance, vk::PhysicalDevice physicalDevice, vk::Device device);
 
-		/** 
+		/**
 		* Create the swapchain and get it's images with given width and height
-		* 
+		*
 		* @param width Pointer to the width of the swapchain (may be adjusted to fit the requirements of the swapchain)
 		* @param height Pointer to the height of the swapchain (may be adjusted to fit the requirements of the swapchain)
 		* @param vsync (Optional) Can be used to force vsync'd rendering (by using VK_PRESENT_MODE_FIFO_KHR as presentation mode)
 		*/
-		void create(uint32_t *width, uint32_t *height, bool vsync);
+		void create(vk::Extent2D size, bool vsync);
 
-		/** 
+
+
+		std::vector<vk::Framebuffer> createFramebuffers(vk::FramebufferCreateInfo framebufferCreateInfo);
+
+		/**
 		* Acquires the next image in the swap chain
 		*
 		* @param presentCompleteSemaphore (Optional) Semaphore that is signaled when the image is ready for use
@@ -164,6 +193,16 @@ class VulkanSwapChain
 		* @return vk::Result of the image acquisition
 		*/
 		vk::Result acquireNextImage(vk::Semaphore presentCompleteSemaphore, uint32_t *imageIndex);
+
+
+		uint32_t acquireNextImage(vk::Semaphore presentCompleteSemaphore);
+
+
+
+		void clearSubmitFence(uint32_t index);
+
+		vk::Fence getSubmitFence(bool destroy = false);
+
 
 		/**
 		* Queue an image for presentation
@@ -176,10 +215,13 @@ class VulkanSwapChain
 		*/
 		vk::Result queuePresent(vk::Queue queue, uint32_t imageIndex, vk::Semaphore waitSemaphore);
 
+		vk::Result queuePresent(vk::Queue queue, vk::Semaphore waitSemaphore);
+
 
 		/**
 		* Destroy and free Vulkan resources used for the swapchain
 		*/
 		void cleanup();
 
-};
+	};
+}

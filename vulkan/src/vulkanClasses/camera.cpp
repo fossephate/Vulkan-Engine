@@ -44,7 +44,7 @@ void Camera::setProjection(float fov, float aspect, float znear, float zfar)
 	this->matrices.projection = glm::perspective(glm::radians(fov), aspect, znear, zfar);
 }
 
-void Camera::updateAspectRatio(float aspect)
+void Camera::setAspectRatio(float aspect)
 {
 	this->matrices.projection = glm::perspective(glm::radians(fov), aspect, znear, zfar);
 }

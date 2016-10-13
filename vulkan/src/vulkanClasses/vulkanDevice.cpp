@@ -252,7 +252,8 @@ namespace vkx
 			//VK_CHECK_RESULT(vkMapMemory(logicalDevice, *memory, 0, size, 0, &mapped));
 			mapped = logicalDevice.mapMemory(*memory, 0, size, vk::MemoryMapFlags());//what?
 			memcpy(mapped, data, size);
-			vkUnmapMemory(logicalDevice, *memory);
+			//vkUnmapMemory(logicalDevice, *memory);
+			logicalDevice.unmapMemory(*memory);
 		}
 
 		// Attach the memory to the buffer object

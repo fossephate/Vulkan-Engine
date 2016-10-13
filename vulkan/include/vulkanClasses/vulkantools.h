@@ -34,37 +34,63 @@
 
 #include <vulkan/vulkan.hpp>
 
+#include "common.h"
+
 // Custom define for better code readability
 #define VK_FLAGS_NONE 0
 // Default fence timeout in nanoseconds
-#define DEFAULT_FENCE_TIMEOUT 100000000000																									\
+#define DEFAULT_FENCE_TIMEOUT 100000000000
 
 // Macro to check and display Vulkan return results
 #define VK_CHECK_RESULT(f)																				\
 {																										\
-	vk::Result res = (f);																					\
-	if (res != vk::Result::eSuccess)																				\
-	{																									\
-		std::cout << "Fatal : vk::Result is \"" << vkTools::errorString(res) << "\" in " << __FILE__ << " at line " << __LINE__ << std::endl; \
-		assert(res == vk::Result::eSuccess);																		\
+	vk::Result res = (f);																				\
+	if (res != vk::Result::eSuccess) {																	\
+		std::cout << "Fatal : vk::Result is \"" << vkx::errorString(res) << "\" in " << __FILE__ << " at line " << __LINE__ << std::endl;\
+		assert(res == vk::Result::eSuccess);															\
 	}																									\
 }																										\
 
-namespace vkx
-{
+namespace vkx {
+
+	// Version information for Vulkan is stored in a single 32 bit integer
+	// with individual bits representing the major, minor and patch versions.
+	// The maximum possible major and minor version is 512 (look out nVidia)
+	// while the maximum possible patch version is 2048
+	struct Version {
+		Version() : major(0), minor(0), patch(0) {}
+		Version(uint32_t version) : Version() { *this = version; }
+
+		Version& operator =(uint32_t version) {
+			memcpy(this, &version, sizeof(uint32_t));
+			return *this;
+		}
+
+		operator uint32_t() const {
+			uint32_t result;
+			memcpy(&result, this, sizeof(uint32_t));
+		}
+
+		std::string toString() const {
+			std::stringstream buffer;
+			buffer << major << "." << minor << "." << patch;
+			return buffer.str();
+		}
+
+		const uint32_t patch : 12;
+		const uint32_t minor : 10;
+		const uint32_t major : 10;
+
+	};
+
 
 	// Check if extension is globally available
 	vk::Bool32 checkGlobalExtensionPresent(const char* extensionName);
-
 	// Check if extension is present on the given device
 	vk::Bool32 checkDeviceExtensionPresent(vk::PhysicalDevice physicalDevice, const char* extensionName);
-	// Return string representation of a vulkan error string
-	std::string errorString(vk::Result errorCode);
-
 	// Selected a suitable supported depth format starting with 32 bit down to 16 bit
 	// Returns false if none of the depth formats in the list is supported by the device
-	vk::Format getSupportedDepthFormat(vk::PhysicalDevice physicalDevice, vk::Format *depthFormat);
-
+	vk::Format getSupportedDepthFormat(vk::PhysicalDevice physicalDevice);
 	vk::AccessFlags accessFlagsForLayout(vk::ImageLayout layout);
 
 	// Put an image memory barrier for setting an image layout on the sub resource into the given command buffer
@@ -83,104 +109,175 @@ namespace vkx
 		vk::ImageLayout oldImageLayout,
 		vk::ImageLayout newImageLayout);
 
-
-
-
-	// Display error message and exit on fatal error
-	void exitFatal(std::string message, std::string caption);
 	// Load a text file (e.g. GLGL shader) into a std::string
-	std::string readTextFile(const char *fileName);
+	std::string readTextFile(const std::string& filename);
+
 	// Load a binary file into a buffer (e.g. SPIR-V)
 	std::vector<uint8_t> readBinaryFile(const std::string& filename);
 
 	// Load a SPIR-V shader
 	#if defined(__ANDROID__)
-		vk::ShaderModule loadShader(AAssetManager* assetManager, const char *fileName, vk::Device device, vk::ShaderStageFlagBits stage);
+	vk::ShaderModule loadShader(AAssetManager* assetManager, const char *fileName, vk::Device device, vk::ShaderStageFlagBits stage);
 	#else
-		vk::ShaderModule loadShader(const std::string& filename, vk::Device device, vk::ShaderStageFlagBits stage);
+	vk::ShaderModule loadShader(const std::string& filename, vk::Device device, vk::ShaderStageFlagBits stage);
 	#endif
 
 	// Load a GLSL shader
-	// Note : Only for testing psdl2rposes, support for directly feeding GLSL shaders into Vulkan
-	// may be dropped at some point	
-	vk::ShaderModule loadShaderGLSL(const char *fileName, vk::Device device, vk::ShaderStageFlagBits stage);
+	// Note : Only for testing purposes, support for directly feeding GLSL shaders into Vulkan
+	// may be dropped at some point    
+	vk::ShaderModule loadShaderGLSL(const std::string& filename, vk::Device device, vk::ShaderStageFlagBits stage);
 
-	// Returns a pre-present image memory barrier
-	// Transforms the image's layout from color attachment to present khr
-	vk::ImageMemoryBarrier prePresentBarrier(vk::Image presentImage);
+	// A wrapper class for an allocation, either an Image or Buffer.  Not intended to be used used directly
+	// but only as a base class providing common functionality for the classes below.
+	//
+	// Provides easy to use mechanisms for mapping, unmapping and copying host data to the device memory
+	struct AllocatedResult {
+		vk::Device device;
+		vk::DeviceMemory memory;
+		vk::DeviceSize size{ 0 };
+		vk::DeviceSize alignment{ 0 };
+		vk::DeviceSize allocSize{ 0 };
+		void* mapped{ nullptr };
 
-	// Returns a post-present image memory barrier
-	// Transforms the image's layout back from present khr to color attachment
-	vk::ImageMemoryBarrier postPresentBarrier(vk::Image presentImage);
+		template <typename T = void>
+		inline T* map(size_t offset = 0, size_t size = VK_WHOLE_SIZE) {
+			mapped = device.mapMemory(memory, offset, size, vk::MemoryMapFlags());
+			return (T*)mapped;
+		}
+
+		inline void unmap() {
+			device.unmapMemory(memory);
+			mapped = nullptr;
+		}
+
+		inline void copy(size_t size, const void* data, size_t offset = 0) const {
+			memcpy((uint8_t*)mapped + offset, data, size);
+		}
+
+		template<typename T>
+		inline void copy(const T& data, size_t offset = 0) const {
+			copy(sizeof(T), &data, offset);
+		}
+
+		template<typename T>
+		inline void copy(const std::vector<T>& data, size_t offset = 0) const {
+			copy(sizeof(T) * data.size(), data.data(), offset);
+		}
+
+		virtual void destroy() {
+			if (mapped) {
+				unmap();
+			}
+			if (memory) {
+				device.freeMemory(memory);
+				memory = vk::DeviceMemory();
+			}
+		}
+	};
+
+	// Encaspulates an image, the memory for that image, a view of the image,
+	// as well as a sampler and the image format.
+	//
+	// The sampler is not populated by the allocation code, but is provided
+	// for convenience and easy cleanup if it is populated.
+	struct CreateImageResult : public AllocatedResult {
+	private:
+		using Parent = AllocatedResult;
+	public:
+		vk::Image image;
+		vk::ImageView view;
+		vk::Sampler sampler;
+		vk::Format format{ vk::Format::eUndefined };
+
+		void destroy() override {
+			Parent::destroy();
+			if (mapped) {
+				unmap();
+			}
+			if (sampler) {
+				device.destroySampler(sampler);
+				sampler = vk::Sampler();
+			}
+			if (view) {
+				device.destroyImageView(view);
+				view = vk::ImageView();
+			}
+			if (image) {
+				device.destroyImage(image);
+				image = vk::Image();
+			}
+			Parent::destroy();
+		}
+	};
+
+	struct CreateBufferResult : public AllocatedResult {
+	private:
+		using Parent = AllocatedResult;
+	public:
+		vk::Buffer buffer;
+		vk::DescriptorBufferInfo descriptor;
+
+		void destroy() override {
+			if (mapped) {
+				unmap();
+			}
+			if (buffer) {
+				device.destroyBuffer(buffer);
+				buffer = vk::Buffer();
+			}
+			Parent::destroy();
+		}
+	};
 
 	// Contains all vulkan objects
 	// required for a uniform data object
-	struct UniformData
-	{
-		vk::Buffer buffer;
-		vk::DeviceMemory memory;
-		vk::DescriptorBufferInfo descriptor;
-		uint32_t allocSize;
-		void* mapped = nullptr;
-	};
+	using UniformData = vkx::CreateBufferResult;
 
-
-	// Destroy (and free) Vulkan resources used by a uniform data structure
-	void destroyUniformData(vk::Device device, vkx::UniformData *uniformData);
-
-
-
-
-
-
-
-
-
-
-
-
+	//////////////////////////////////////////////////////////////////////////////
+	//
+	// Helper functions to create commonly used types while taking 
+	// only a subset of the total possible number of structure members
+	// (leaving the remaining at reasonable defaults)
+	//
 
 	// Contains often used vulkan object initializers
 	// Save lot of VK_STRUCTURE_TYPE assignments
 	// Some initializers are parameterized for convenience
+	vk::ClearColorValue clearColor(const glm::vec4& v);
 
+	vk::CommandBufferAllocateInfo commandBufferAllocateInfo(vk::CommandPool commandPool, vk::CommandBufferLevel level, uint32_t bufferCount);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	// initializers
-
-	vk::CommandBufferAllocateInfo commandBufferAllocateInfo(
-		vk::CommandPool commandPool,
-		vk::CommandBufferLevel level,
-		uint32_t bufferCount);
-
-
-	vk::FenceCreateInfo fenceCreateInfo(vk::FenceCreateFlags flags/* = VK_FLAGS_NONE*/);
+	vk::FenceCreateInfo fenceCreateInfo(vk::FenceCreateFlags flags);
 
 	vk::Viewport viewport(
 		float width,
 		float height,
-		float minDepth,
-		float maxDepth);
+		float minDepth = 0,
+		float maxDepth = 1);
+
+	vk::Viewport viewport(
+		const glm::uvec2& size,
+		float minDepth = 0,
+		float maxDepth = 1);
+
+	vk::Viewport viewport(
+		const vk::Extent2D& size,
+		float minDepth = 0,
+		float maxDepth = 1);
 
 	vk::Rect2D rect2D(
-		int32_t width,
-		int32_t height,
-		int32_t offsetX,
-		int32_t offsetY);
+		uint32_t width,
+		uint32_t height,
+		int32_t offsetX = 0,
+		int32_t offsetY = 0);
+
+	vk::Rect2D rect2D(
+		const glm::uvec2& size,
+		const glm::ivec2& offset = glm::ivec2(0));
+
+	vk::Rect2D rect2D(
+		const vk::Extent2D& size,
+		const vk::Offset2D& offset = vk::Offset2D());
 
 	vk::BufferCreateInfo bufferCreateInfo(
 		vk::BufferUsageFlags usage,
@@ -198,8 +295,7 @@ namespace vkx
 	vk::DescriptorSetLayoutBinding descriptorSetLayoutBinding(
 		vk::DescriptorType type,
 		vk::ShaderStageFlags stageFlags,
-		uint32_t binding,
-		uint32_t count = 1);
+		uint32_t binding);
 
 	vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo(
 		const vk::DescriptorSetLayoutBinding* pBindings,
@@ -242,22 +338,22 @@ namespace vkx
 		vk::Format format,
 		uint32_t offset);
 
-	vk::PipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo();
-
 	vk::PipelineInputAssemblyStateCreateInfo pipelineInputAssemblyStateCreateInfo(
 		vk::PrimitiveTopology topology,
-		vk::PipelineInputAssemblyStateCreateFlags flags,
-		vk::Bool32 primitiveRestartEnable);
+		vk::PipelineInputAssemblyStateCreateFlags flags = vk::PipelineInputAssemblyStateCreateFlags(),
+		vk::Bool32 primitiveRestartEnable = VK_FALSE);
 
 	vk::PipelineRasterizationStateCreateInfo pipelineRasterizationStateCreateInfo(
 		vk::PolygonMode polygonMode,
 		vk::CullModeFlags cullMode,
 		vk::FrontFace frontFace,
-		vk::PipelineRasterizationStateCreateFlags flags);
+		vk::PipelineRasterizationStateCreateFlags flags = vk::PipelineRasterizationStateCreateFlags());
+
+	vk::ColorComponentFlags fullColorWriteMask();
 
 	vk::PipelineColorBlendAttachmentState pipelineColorBlendAttachmentState(
-		vk::ColorComponentFlags colorWriteMask,
-		vk::Bool32 blendEnable);
+		vk::ColorComponentFlags colorWriteMask = fullColorWriteMask(),
+		vk::Bool32 blendEnable = VK_FALSE);
 
 	vk::PipelineColorBlendStateCreateInfo pipelineColorBlendStateCreateInfo(
 		uint32_t attachmentCount,
@@ -271,16 +367,16 @@ namespace vkx
 	vk::PipelineViewportStateCreateInfo pipelineViewportStateCreateInfo(
 		uint32_t viewportCount,
 		uint32_t scissorCount,
-		vk::PipelineViewportStateCreateFlags flags);
+		vk::PipelineViewportStateCreateFlags flags = vk::PipelineViewportStateCreateFlags());
 
 	vk::PipelineMultisampleStateCreateInfo pipelineMultisampleStateCreateInfo(
 		vk::SampleCountFlagBits rasterizationSamples,
-		vk::PipelineMultisampleStateCreateFlags flags);
+		vk::PipelineMultisampleStateCreateFlags flags = vk::PipelineMultisampleStateCreateFlags());
 
 	vk::PipelineDynamicStateCreateInfo pipelineDynamicStateCreateInfo(
 		const vk::DynamicState *pDynamicStates,
 		uint32_t dynamicStateCount,
-		vk::PipelineDynamicStateCreateFlags flags);
+		vk::PipelineDynamicStateCreateFlags flags = vk::PipelineDynamicStateCreateFlags());
 
 	vk::PipelineTessellationStateCreateInfo pipelineTessellationStateCreateInfo(
 		uint32_t patchControlPoints);
@@ -288,15 +384,16 @@ namespace vkx
 	vk::GraphicsPipelineCreateInfo pipelineCreateInfo(
 		vk::PipelineLayout layout,
 		vk::RenderPass renderPass,
-		vk::PipelineCreateFlags flags);
+		vk::PipelineCreateFlags flags = vk::PipelineCreateFlags());
 
 	vk::ComputePipelineCreateInfo computePipelineCreateInfo(
 		vk::PipelineLayout layout,
-		vk::PipelineCreateFlags flags);
+		vk::PipelineCreateFlags flags = vk::PipelineCreateFlags());
 
 	vk::PushConstantRange pushConstantRange(
 		vk::ShaderStageFlags stageFlags,
 		uint32_t size,
 		uint32_t offset);
 
+	const std::string& getAssetPath();
 }

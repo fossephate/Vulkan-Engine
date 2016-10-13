@@ -45,135 +45,141 @@
 
 #include "keycodes.hpp"
 #include "vulkanTools.h"
-#include "vulkanDebug.h"
+#include "vulkanDebug2.h"
 
-#include "vulkanDevice.h"
+//#include "vulkanDevice.h"
+#include "vulkanContext.h"
 #include "vulkanSwapChain.h"
 #include "vulkanTextureLoader.h"
 #include "vulkanMeshLoader.h"
 #include "vulkanTextOverlay.h"
 #include "camera.h"
 
-// Function pointer for getting physical device fetures to be enabled
-typedef vk::PhysicalDeviceFeatures (*PFN_GetEnabledFeatures)();
+#define VERTEX_BUFFER_BIND_ID 0
+#define INSTANCE_BUFFER_BIND_ID 1
+#define ENABLE_VALIDATION true
 
-class vulkanApp
+// Function pointer for getting physical device fetures to be enabled
+//typedef vk::PhysicalDeviceFeatures (*PFN_GetEnabledFeatures)();
+
+namespace vkx
 {
+
+	struct UpdateOperation {
+		const vk::Buffer buffer;
+		const vk::DeviceSize size;
+		const vk::DeviceSize offset;
+		const uint32_t* data;
+
+		template <typename T>
+		UpdateOperation(const vk::Buffer& buffer, const T& data, vk::DeviceSize offset = 0) : buffer(buffer), size(sizeof(T)), offset(offset), data((uint32_t*)&data) {
+			assert(0 == (sizeof(T) % 4));
+			assert(0 == (offset % 4));
+		}
+	};
+
+	class vulkanApp
+	{
 	private:
 		// Set to true when example is created with enabled validation layers
-		bool enableValidation = false;
+		bool enableValidation{ false };
 		// Set to true when the debug marker extension is detected
-		bool enableDebugMarkers = false;
-		// Set to true if v-sync will be forced for the swapchain
-		bool enableVSync = false;
-
-		// Device features enabled by the example
-		// If not set, no additional features are enabled (may result in validation layer errors)
-		vk::PhysicalDeviceFeatures enabledFeatures;
+		bool enableDebugMarkers{ false };
 
 		// fps timer (one second interval)
 		float fpsTimer = 0.0f;
 
-		// Create application wide Vulkan instance
-		vk::Result createInstance(bool enableValidation);
+		//// Create application wide Vulkan instance
+		//vk::Result createInstance(bool enableValidation);
 
-		// Get window title with example name, device, et.
+		//// Get window title with example name, device, et.
 		std::string getWindowTitle();
 
-		/** brief Indicates that the view (position, rotation) has changed and */
-		bool viewUpdated = false;
+		///** brief Indicates that the view (position, rotation) has changed and */
+		//bool viewUpdated = false;
 
-		// Destination dimensions for resizing the window
-		uint32_t destWidth;
-		uint32_t destHeight;
+		//// Destination dimensions for resizing the window
+		//vk::Extent2D destSize{ 1280, 720 };
 
-		// Called if the window is resized and some resources have to be recreatesd
-		void windowResize();
+		//// Called if the window is resized and some resources have to be recreatesd
+		//void windowResize(const glm::uvec2& newSize);
 
 
 
 	protected:
+		bool enableVsync{ false };
+		// Command buffers used for rendering
+		std::vector<vk::CommandBuffer> primaryCmdBuffers;
+		std::vector<vk::CommandBuffer> textCmdBuffers;
+		std::vector<vk::CommandBuffer> drawCmdBuffers;
+		bool primaryCmdBuffersDirty{ true };
+		std::vector<vk::ClearValue> clearValues;
+		vk::RenderPassBeginInfo renderPassBeginInfo;
 
+
+	protected:
 		// Last frame time, measured using a high performance timer (if available)
-		float frameTimer = 1.0f;
-
+		float frameTimer{ 1.0f };
 		// Frame counter to display fps
-		uint32_t frameCounter = 0;
-		uint32_t lastFPS = 0;
+		uint32_t frameCounter{ 0 };
+		uint32_t lastFPS{ 0 };
+		std::list<UpdateOperation> pendingUpdates;
 
-		// Vulkan instance, stores all per-application states
-		vk::Instance instance;
-		// Physical device (GPU) that Vulkan will ise
-		vk::PhysicalDevice physicalDevice;
-		// Stores physical device properties (for e.g. checking device limits)
-		vk::PhysicalDeviceProperties deviceProperties;
-		// Stores phyiscal device features (for e.g. checking if a feature is available)
-		vk::PhysicalDeviceFeatures deviceFeatures;
-		// Stores all available memory (type) properties for the physical device
-		vk::PhysicalDeviceMemoryProperties deviceMemoryProperties;
-		/** @brief Logical device, application's view of the physical device (GPU) */
-		// todo: getter? should always point to VulkanDevice->device
-		vk::Device device;
-		/** @brief Encapsulated physical and logical vulkan device */
-		vkx::VulkanDevice * vulkanDevice;
-		// Handle to the device graphics queue that command buffers are submitted to
-		vk::Queue queue;
 		// Color buffer format
-		vk::Format colorformat = vk::Format::eB8G8R8A8Unorm;
-		// Depth buffer format
-		// Depth format is selected during Vulkan initialization
-		vk::Format depthFormat;
-		// Command buffer pool
-		vk::CommandPool cmdPool;
-		// Command buffer used for setup
-		vk::CommandBuffer setupCmdBuffer = VK_NULL_HANDLE;
-		/** @brief Pipeline stages used to wait at for graphics queue submissions */
+		vk::Format colorformat{ vk::Format::eB8G8R8A8Unorm };
+
+		// Depth buffer format...  selected during Vulkan initialization
+		vk::Format depthFormat{ vk::Format::eUndefined };
+
 		vk::PipelineStageFlags submitPipelineStages = vk::PipelineStageFlagBits::eColorAttachmentOutput;
 		// Contains command buffers and semaphores to be presented to the queue
 		vk::SubmitInfo submitInfo;
-		// Command buffers used for rendering
-		std::vector<vk::CommandBuffer> drawCmdBuffers;
 		// Global render pass for frame buffer writes
 		vk::RenderPass renderPass;
 		// List of available frame buffers (same as number of swap chain images)
-		std::vector<vk::Framebuffer>frameBuffers;
+		std::vector<vk::Framebuffer>framebuffers;
 		// Active frame buffer index
 		uint32_t currentBuffer = 0;
 		// Descriptor set pool
-		vk::DescriptorPool descriptorPool = VK_NULL_HANDLE;
-		// List of shader modules created (stored for cleanup)
-		std::vector<vk::ShaderModule> shaderModules;
-		// Pipeline cache object
-		vk::PipelineCache pipelineCache;
+		vk::DescriptorPool descriptorPool;
 		// Wraps the swap chain to present images (framebuffers) to the windowing system
-		VulkanSwapChain swapChain;
+		vkx::VulkanSwapChain swapChain;
 
+		// Command buffer pool
+		vk::CommandPool cmdPool;
+
+		// set references to context
+		vkx::Context context{};
+		vk::Device &device = context.device;
+		vk::PhysicalDevice &physicalDevice = context.physicalDevice;
+		vk::Queue &queue = context.queue;
+		std::vector<vk::ShaderModule> &shaderModules = context.shaderModules;
+		vk::PipelineCache &pipelineCache = context.pipelineCache;
+		vk::Instance &instance = context.instance;
+		std::vector<vk::PhysicalDevice> &physicalDevices = context.physicalDevices;
+		
+		vk::PhysicalDeviceProperties &deviceProperties = context.deviceProperties;
+		vk::PhysicalDeviceFeatures &deviceFeatures = context.deviceFeatures;
+		vk::PhysicalDeviceMemoryProperties &deviceMemoryProperties = context.deviceMemoryProperties;
+
+		//trashCommandBuffers = context.trashCommandBuffers;
+		//void(&trashCommandBuffers)(std::vector<vk::CommandBuffer>& cmdBuffers) = context.trashCommandBuffers;
 
 
 		// Synchronization semaphores
 		struct {
 			// Swap chain image presentation
-			vk::Semaphore presentComplete;
+			vk::Semaphore acquireComplete;
 			// Command buffer submission and execution
 			vk::Semaphore renderComplete;
-			// Text overlay submission and execution
-			vk::Semaphore textOverlayComplete;
+			vk::Semaphore transferComplete;
 		} semaphores;
 
-
-
-
-
-
-
 		// Simple texture loader
-		vkTools::VulkanTextureLoader *textureLoader = nullptr;
+		vkx::TextureLoader *textureLoader{ nullptr };
 
 		// Returns the base asset path (for shaders, models, textures) depending on the os
-		const std::string getAssetPath();
-
-
-
+		const std::string& getAssetPath();
 
 
 
@@ -181,8 +187,7 @@ class vulkanApp
 	public:
 
 		bool prepared = false;
-		uint32_t width = 1280;
-		uint32_t height = 720;
+		vk::Extent2D size{ 1280, 720 };
 
 		vk::ClearColorValue defaultClearColor = std::array<float, 4>{0.025f, 0.025f, 0.025f, 1.0f};
 
@@ -193,11 +198,11 @@ class vulkanApp
 		float timer = 0.0f;
 		// Multiplier for speeding up (or slowing down) the global timer
 		float timerSpeed = 0.25f;
-	
+
 		bool paused = false;
 
-		bool enableTextOverlay = false;
-		vkx::VulkanTextOverlay *textOverlay;
+		bool enableTextOverlay = true;
+		vkx::TextOverlay *textOverlay;
 
 		// Use to adjust mouse rotation speed
 		float rotationSpeed = 1.0f;
@@ -213,11 +218,7 @@ class vulkanApp
 		std::string title = "Vulkan Application";
 		std::string name = "vulkanApplication";
 
-		struct {
-			vk::Image image;
-			vk::DeviceMemory mem;
-			vk::ImageView view;
-		} depthStencil;
+		CreateImageResult depthStencil;
 
 
 
@@ -227,226 +228,105 @@ class vulkanApp
 			glm::vec2 axisRight = glm::vec2(0.0f);
 		} gamePadState;
 
+		#if USE_SDL2
+		SDL_Window * SDLWindow;
+		SDL_SysWMinfo windowInfo;
+		#endif
+
 
 		// Default constructor
-		vulkanApp(bool enableValidation, PFN_GetEnabledFeatures enabledFeaturesFn = nullptr);
+		vulkanApp(bool enableValidation);
 		// destructor
 		~vulkanApp();
+
+		void run();
+
 		// Setup the vulkan instance, enable required extensions and connect to the physical device (GPU)
 		void initVulkan(bool enableValidation);
 
 
+		virtual void setupWindow();
 
-		struct {
-			#if defined(_WIN32)
-				struct {
-					HWND windowHandle;
-					HINSTANCE windowInstance;
-				} windows;
-			#endif
-			
-		} platformSpecific;
-
-
-
-
-
-		
-
-		
-		#if USE_SDL2
-			SDL_Window * SDLWindow;
-		#endif
-
-
-
-		// OS specific
-		/* WINDOWS */
-		#if defined(_WIN32)
-			HWND windowHandle;
-			HINSTANCE windowInstance;
-
-		/* LINUX */
-		#elif defined(__linux__)
-			struct {
-				bool left = false;
-				bool right = false;
-				bool middle = false;
-			} mouseButtons;
-			bool quit = false;
-			xcb_connection_t * connection;
-			xcb_screen_t * screen;
-			xcb_window_t window;
-			xcb_intern_atom_reply_t * atom_wm_delete_window;
-		/* ANDROID */
-		#elif defined(__ANDROID__)
-			android_app * androidApp;
-			// true if application has focused, false if moved to background
-			bool focused = false;
-		#endif
-
-
-
-		#if USE_SDL2
-
-			/* WINDOWS */
-			#if defined(_WIN32)
-				void setupConsole(std::string title);
-				void setupWindow();
-				virtual void handleInput();
-				//void handleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-			/* LINUX */
-			#elif defined(__linux__)
-				// TODO
-			/* ANDROID */
-			#elif defined(__ANDROID__)
-				// TODO
-			#endif
-
-		/* WINDOWS */
-		#elif defined(_WIN32)
-			void setupConsole(std::string title);
-			HWND setupWindow(HINSTANCE hinstance, WNDPROC wndproc);
-			void handleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-		/* LINUX */
-		#elif defined(__linux__)
-			xcb_window_t setupWindow();
-			void initxcbConnection();
-			void handleEvent(const xcb_generic_event_t *event);
-
-		/* ANDROID */
-		#elif defined(__ANDROID__)
-			static int32_t handleAppInput(struct android_app* app, AInputEvent* event);
-			static void handleAppCommand(android_app* app, int32_t cmd);
-
-		#endif
-
+		// A default draw implementation
+		virtual void draw();
 
 		// Pure virtual render function (override in derived class)
-		virtual void render() = 0;
+		virtual void render();
+
+		virtual void update(float deltaTime);
+
 		// Called when view change occurs
 		// Can be overriden in derived class to e.g. update uniform buffers 
 		// Containing view dependant matrices
 		virtual void viewChanged();
-		// Called if a key is pressed
-		// Can be overriden in derived class to do custom key handling
-		virtual void keyPressed(uint32_t keyCode);
 
 		// Called when the window has been resized
 		// Can be overriden in derived class to recreate or rebuild resources attached to the frame buffer / swapchain
 		virtual void windowResized();
-		// Pure virtual function to be overriden by the dervice class
-		// Called in case of an event where e.g. the framebuffer has to be rebuild and thus
-		// all command buffers that may reference this
-		virtual void buildCommandBuffers();
 
-		// Creates a new (graphics) command pool object storing command buffers
-		void createCommandPool();
 		// Setup default depth and stencil views
-		virtual void setupDepthStencil();
+		void setupDepthStencil();
 		// Create framebuffers for all requested swap chain images
 		// Can be overriden in derived class to setup a custom framebuffer (e.g. for MSAA)
 		virtual void setupFrameBuffer();
+
 		// Setup a default render pass
 		// Can be overriden in derived class to setup a custom render pass (e.g. for MSAA)
 		virtual void setupRenderPass();
 
-		// Connect and prepare the swap chain
-		void initSwapchain();
-		// Create swap chain images
-		void setupSwapChain();
+		void populateSubCommandBuffers(std::vector<vk::CommandBuffer>& cmdBuffers, std::function<void(const vk::CommandBuffer& commandBuffer)> f);
 
-		// Check if command buffers are valid (!= VK_NULL_HANDLE)
-		bool checkCommandBuffers();
-		// Create command buffers for drawing commands
-		void createCommandBuffers();
-		// Destroy all command buffers and set their handles to VK_NULL_HANDLE
-		// May be necessary during runtime if options are toggled 
-		void destroyCommandBuffers();
-		// Create command buffer for setup commands
-		void createSetupCommandBuffer();
-		// Finalize setup command bufferm submit it to the queue and remove it
-		void flushSetupCommandBuffer();
+		virtual void updatePrimaryCommandBuffer(const vk::CommandBuffer& cmdBuffer);
 
-		// Command buffer creation
-		// Creates and returns a new command buffer
-		vk::CommandBuffer createCommandBuffer(vk::CommandBufferLevel level, bool begin);// replaces ^
+		virtual void updateDrawCommandBuffers() final;
 
-		// End the command buffer, submit it to the queue and free (if requested)
-		// Note : Waits for the queue to become idle
-		void flushCommandBuffer(vk::CommandBuffer commandBuffer, vk::Queue queue, bool free);// replaces ^
 
-		// Create a cache pool for rendering pipelines
-		void createPipelineCache();
+		// Pure virtual function to be overriden by the dervice class
+		// Called in case of an event where e.g. the framebuffer has to be rebuild and thus
+		// all command buffers that may reference this
+		virtual void updateDrawCommandBuffer(const vk::CommandBuffer& drawCommand) = 0;
+
+
+
+		void drawCurrentCommandBuffer(const vk::Semaphore& semaphore = vk::Semaphore());
+
+
+
+		void executePendingTransfers(vk::Semaphore transferPending);
+
+		virtual void setupRenderPassBeginInfo();
+
+		virtual void buildCommandBuffers();
+
+
+		
+
 
 		// Prepare commonly used Vulkan functions
 		virtual void prepare();
 
-		// Load a SPIR-V shader
-		vk::PipelineShaderStageCreateInfo loadShader(std::string fileName, vk::ShaderStageFlagBits stage);
-
-		// C++ WRAPPER
-		// Create a buffer, fill it with data (if != NULL) and bind buffer memory
-		vk::Bool32 createBuffer(
-			vk::BufferUsageFlags usageFlags,
-			vk::MemoryPropertyFlags memoryPropertyFlags,
-			vk::DeviceSize size,
-			void *data,
-			vk::Buffer *buffer,
-			vk::DeviceMemory *memory);
-		// This version always uses HOST_VISIBLE memory
-		vk::Bool32 createBuffer(
-			vk::BufferUsageFlags usage,
-			vk::DeviceSize size,
-			void *data,
-			vk::Buffer *buffer,
-			vk::DeviceMemory *memory);
-		// Overload that assigns buffer info to descriptor
-		vk::Bool32 createBuffer(
-			vk::BufferUsageFlags usage,
-			vk::DeviceSize size,
-			void *data,
-			vk::Buffer *buffer,
-			vk::DeviceMemory *memory,
-			vk::DescriptorBufferInfo *descriptor);
-		// Overload to pass memory property flags
-		vk::Bool32 createBuffer(
-			vk::BufferUsageFlags usage,
-			vk::MemoryPropertyFlags memoryPropertyFlags,
-			vk::DeviceSize size,
-			void *data,
-			vk::Buffer *buffer,
-			vk::DeviceMemory *memory,
-			vk::DescriptorBufferInfo *descriptor);
-
-
-
-
-
 		// Load a mesh (using ASSIMP) and create vulkan vertex and index buffers with given vertex layout
-		void loadMesh(
-			std::string fiename, 
-			vkMeshLoader::MeshBuffer *meshBuffer, 
-			std::vector<vkMeshLoader::VertexLayout> vertexLayout, 
-			float scale);
+		vkx::MeshBuffer loadMesh(
+			const std::string& filename,
+			const vkx::MeshLayout& vertexLayout,
+			float scale = 1.0f);
 
-		void loadMesh(
-			std::string filename, 
-			vkMeshLoader::MeshBuffer *meshBuffer, 
-			std::vector<vkMeshLoader::VertexLayout> 
-			vertexLayout, 
-			vkMeshLoader::MeshCreateInfo *meshCreateInfo);
 
 		// Start the main render loop
 		void renderLoop();
 
+		// Prepare a submit info structure containing
+		// semaphores and submit buffer info for vkQueueSubmit
+		vk::SubmitInfo prepareSubmitInfo(
+			const std::vector<vk::CommandBuffer>& commandBuffers,
+			vk::PipelineStageFlags *pipelineStages);
+
 		void updateTextOverlay();
+
 
 		// Called when the text overlay is updating
 		// Can be overriden in derived class to add custom text to the overlay
-		virtual void getOverlayText(vkx::VulkanTextOverlay * textOverlay);
+		virtual void getOverlayText(vkx::TextOverlay * textOverlay);
 
 		// Prepare the frame for workload submission
 		// - Acquires the next image from the swap chain 
@@ -457,18 +337,21 @@ class vulkanApp
 		// - Submits the text overlay (if enabled)
 		void submitFrame();
 
-};
+
+		
+
+	};
 
 
 
 
-// OS specific macros for the example main entry points
-#if USE_SDL2
-	// Cross platform entry point
-	
-	/* WINDOWS */
+	// OS specific macros for the example main entry points
+	#if USE_SDL2
+		// Cross platform entry point
+
+		/* WINDOWS */
 	#if defined(_WIN32)
-		#define VULKAN_EXAMPLE_MAIN()																		\
+	#define VULKAN_EXAMPLE_MAIN()																		\
 		VulkanExample *vulkanExample;																		\
 																											\
 																											\
@@ -494,8 +377,8 @@ class vulkanApp
 	#endif
 
 /* WINDOWS */
-#elif defined(_WIN32)
-	// Windows entry point
+	#elif defined(_WIN32)
+		// Windows entry point
 	#define VULKAN_EXAMPLE_MAIN()																		\
 	VulkanExample *vulkanExample;																		\
 	LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)						\
@@ -518,9 +401,9 @@ class vulkanApp
 	}
 
 /* LINUX */
-#elif defined(__linux__)
-	// Linux entry point
-	// todo: extract command line arguments
+	#elif defined(__linux__)
+		// Linux entry point
+		// todo: extract command line arguments
 	#define VULKAN_EXAMPLE_MAIN()																		\
 	VulkanExample *vulkanExample;																		\
 	static void handleEvent(const xcb_generic_event_t *event)											\
@@ -542,9 +425,9 @@ class vulkanApp
 	}
 
 /* ANDROID */
-#elif defined(__ANDROID__)
-	// Android entry point
-	// A note on app_dummy(): This is required as the compiler may otherwise remove the main entry point of the application
+	#elif defined(__ANDROID__)
+		// Android entry point
+		// A note on app_dummy(): This is required as the compiler may otherwise remove the main entry point of the application
 	#define VULKAN_EXAMPLE_MAIN()																		\
 	VulkanExample *vulkanExample;																		\
 	void android_main(android_app* state)																\
@@ -558,4 +441,8 @@ class vulkanApp
 		vulkanExample->renderLoop();																	\
 		delete(vulkanExample);																			\
 	}
-#endif
+	#endif
+
+}
+
+//MessageBox(NULL, filename.c_str(), NULL, NULL);

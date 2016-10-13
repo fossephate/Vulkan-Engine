@@ -19,39 +19,42 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\main\global.h" />
-    <ClInclude Include="include\vulkanClasses\camera.h" />
-    <ClInclude Include="include\vulkanClasses\frustum.hpp" />
-    <ClInclude Include="include\vulkanClasses\keycodes.hpp" />
-    <ClInclude Include="include\vulkanClasses\threadPool.hpp" />
-    <ClInclude Include="include\vulkanClasses\vulkanandroid.h" />
-    <ClInclude Include="include\vulkanClasses\vulkanApp.h" />
-    <ClInclude Include="include\vulkanClasses\vulkanBuffer.h" />
-    <ClInclude Include="include\vulkanClasses\vulkanDebug.h" />
-    <ClInclude Include="include\vulkanClasses\vulkanDevice.h" />
-    <ClInclude Include="include\vulkanClasses\vulkanFrameBuffer.h" />
-    <ClInclude Include="include\vulkanClasses\vulkanMeshLoader.h" />
-    <ClInclude Include="include\vulkanClasses\vulkanSwapChain.h" />
-    <ClInclude Include="include\vulkanClasses\vulkanTextOverlay.h" />
-    <ClInclude Include="include\vulkanClasses\vulkanTextureLoader.h" />
-    <ClInclude Include="include\vulkanClasses\vulkanTools.h" />
-    <ClInclude Include="src\vulkanClasses\gltf\forward.hpp" />
-    <ClInclude Include="src\vulkanClasses\gltf\gltf.hpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="src\indirect.cpp" />
+    <ClCompile Include="src\instancing2.cpp" />
     <ClCompile Include="src\vulkanClasses\camera.cpp" />
+    <ClCompile Include="src\vulkanClasses\shapes.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanAndroid.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanApp.cpp" />
-    <ClCompile Include="src\vulkanClasses\vulkanBuffer.cpp" />
-    <ClCompile Include="src\vulkanClasses\vulkanDebug.cpp" />
-    <ClCompile Include="src\vulkanClasses\vulkanDevice.cpp" />
+    <ClCompile Include="src\vulkanClasses\vulkanContext.cpp" />
+    <ClCompile Include="src\vulkanClasses\vulkanDebug2.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanFrameBuffer.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanMeshLoader.cpp" />
+    <ClCompile Include="src\vulkanClasses\vulkanOffscreen.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanSwapChain.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTextOverlay.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTextureLoader.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTools.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\vulkanClasses\camera.h" />
+    <ClInclude Include="include\vulkanClasses\common.h" />
+    <ClInclude Include="include\vulkanClasses\easings.h" />
+    <ClInclude Include="include\vulkanClasses\frustum.hpp" />
+    <ClInclude Include="include\vulkanClasses\json.h" />
+    <ClInclude Include="include\vulkanClasses\keycodes.hpp" />
+    <ClInclude Include="include\vulkanClasses\shapes.h" />
+    <ClInclude Include="include\vulkanClasses\vulkanandroid.h" />
+    <ClInclude Include="include\vulkanClasses\vulkanApp.h" />
+    <ClInclude Include="include\vulkanClasses\vulkanContext.h" />
+    <ClInclude Include="include\vulkanClasses\vulkanDebug2.h" />
+    <ClInclude Include="include\vulkanClasses\vulkanFrameBuffer.h" />
+    <ClInclude Include="include\vulkanClasses\vulkanMeshLoader.h" />
+    <ClInclude Include="include\vulkanClasses\vulkanOffscreen.h" />
+    <ClInclude Include="include\vulkanClasses\vulkanShaders.h" />
+    <ClInclude Include="include\vulkanClasses\vulkanShapes.h" />
+    <ClInclude Include="include\vulkanClasses\vulkanSwapChain.h" />
+    <ClInclude Include="include\vulkanClasses\vulkanTextOverlay.h" />
+    <ClInclude Include="include\vulkanClasses\vulkanTextureLoader.h" />
+    <ClInclude Include="include\vulkanClasses\vulkanTools.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{373EB2F7-130F-4269-B461-700E4BCD1E67}</ProjectGuid>
@@ -135,7 +138,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\include\vulkanClasses</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>vulkan/$(Platform)/vulkan-1.lib;SDL2/$(Platform)/SDL2.lib;assimp/assimp.lib;//glfw/$(Platform)/glfw3.lib;//glslang/$(Platform)/$(Configuration)/glslang.lib;//glslang/$(Platform)/$(Configuration)/glslang-default-resource-limits.lib;//SPIRV/$(Platform)/$(Configuration)/SPIRV.lib;//HLSL/$(Platform)/$(Configuration)/HLSL.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan/$(Platform)/vulkan-1.lib;SDL2/$(Platform)/SDL2.lib;assimp/assimp.lib;//glfw/$(Platform)/glfw3.lib;glslang/$(Platform)/$(Configuration)/glslang.lib;glslang/$(Platform)/$(Configuration)/glslang-default-resource-limits.lib;SPIRV/$(Platform)/$(Configuration)/SPIRV.lib;HLSL/$(Platform)/$(Configuration)/HLSL.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
@@ -148,7 +151,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\include\vulkanClasses</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>vulkan/$(Platform)/vulkan-1.lib;SDL2/$(Platform)/SDL2.lib;assimp/assimp.lib;//glfw/$(Platform)/glfw3.lib;//glslang/$(Platform)/$(Configuration)/glslang.lib;//glslang/$(Platform)/$(Configuration)/glslang-default-resource-limits.lib;//SPIRV/$(Platform)/$(Configuration)/SPIRV.lib;//HLSL/$(Platform)/$(Configuration)/HLSL.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan/$(Platform)/vulkan-1.lib;SDL2/$(Platform)/SDL2.lib;assimp/assimp.lib;//glfw/$(Platform)/glfw3.lib;glslang/$(Platform)/$(Configuration)/glslang.lib;glslang/$(Platform)/$(Configuration)/glslang-default-resource-limits.lib;SPIRV/$(Platform)/$(Configuration)/SPIRV.lib;HLSL/$(Platform)/$(Configuration)/HLSL.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
@@ -164,7 +167,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>vulkan/$(Platform)/vulkan-1.lib;SDL2/$(Platform)/SDL2.lib;assimp/assimp.lib;//glfw/$(Platform)/glfw3.lib;//glslang/$(Platform)/$(Configuration)/glslang.lib;//glslang/$(Platform)/$(Configuration)/glslang-default-resource-limits.lib;//SPIRV/$(Platform)/$(Configuration)/SPIRV.lib;//HLSL/$(Platform)/$(Configuration)/HLSL.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan/$(Platform)/vulkan-1.lib;SDL2/$(Platform)/SDL2.lib;assimp/assimp.lib;//glfw/$(Platform)/glfw3.lib;glslang/$(Platform)/$(Configuration)/glslang.lib;glslang/$(Platform)/$(Configuration)/glslang-default-resource-limits.lib;SPIRV/$(Platform)/$(Configuration)/SPIRV.lib;HLSL/$(Platform)/$(Configuration)/HLSL.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
@@ -178,7 +181,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>vulkan/$(Platform)/vulkan-1.lib;SDL2/$(Platform)/SDL2.lib;assimp/assimp.lib;//glfw/$(Platform)/glfw3.lib;//glslang/$(Platform)/$(Configuration)/glslang.lib;//glslang/$(Platform)/$(Configuration)/glslang-default-resource-limits.lib;//SPIRV/$(Platform)/$(Configuration)/SPIRV.lib;//HLSL/$(Platform)/$(Configuration)/HLSL.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan/$(Platform)/vulkan-1.lib;SDL2/$(Platform)/SDL2.lib;assimp/assimp.lib;//glfw/$(Platform)/glfw3.lib;glslang/$(Platform)/$(Configuration)/glslang.lib;glslang/$(Platform)/$(Configuration)/glslang-default-resource-limits.lib;SPIRV/$(Platform)/$(Configuration)/SPIRV.lib;HLSL/$(Platform)/$(Configuration)/HLSL.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>

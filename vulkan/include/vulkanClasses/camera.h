@@ -73,7 +73,7 @@ public:
 	void setProjection(float fov, float aspect, float znear, float zfar);
 
 
-	void updateAspectRatio(float aspect);
+	void setAspectRatio(float aspect);
 
 
 	// translate

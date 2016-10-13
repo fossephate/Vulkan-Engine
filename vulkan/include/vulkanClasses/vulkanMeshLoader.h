@@ -1,5 +1,5 @@
 /*
-* Mesh loader for creating Vulkan resources from models loaded with ASSIMP
+* Simple wrapper for getting an index buffer and vertices out of an assimp mesh
 *
 * Copyright (C) 2016 by Sascha Willems - www.saschawillems.de
 *
@@ -15,16 +15,14 @@
 #include <stdio.h>
 #include <vector>
 #include <map>
-
-#if defined(_WIN32)
-	#include <windows.h>
-	#include <fcntl.h>
-	#include <io.h>
+#ifdef _WIN32
+#include <windows.h>
+#include <fcntl.h>
+#include <io.h>
+#else
 #endif
 
-#if defined(__ANDROID__)
-	#include <android/asset_manager.h>
-#endif
+#include <vulkan/vulkan.hpp>
 
 #include <assimp/Importer.hpp> 
 #include <assimp/scene.h>     
@@ -33,15 +31,15 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
-#include <vulkan/vulkan.hpp>
-#include "vulkanDevice.h"
+#if defined(__ANDROID__)
+#include <android/asset_manager.h>
+#endif
 
+#include "vulkanTools.h"
+#include "vulkanContext.h"
 
-
-namespace vkMeshLoader
-{
+namespace vkx {
 	typedef enum VertexLayout {
 		VERTEX_LAYOUT_POSITION = 0x0,
 		VERTEX_LAYOUT_NORMAL = 0x1,
@@ -53,102 +51,104 @@ namespace vkMeshLoader
 		VERTEX_LAYOUT_DUMMY_VEC4 = 0x7
 	} VertexLayout;
 
-	struct MeshBufferInfo
-	{
-		vk::Buffer buf = VK_NULL_HANDLE;
-		vk::DeviceMemory mem = VK_NULL_HANDLE;
-		size_t size = 0;
-	};
+	using MeshLayout = std::vector<VertexLayout>;
 
-	/** @brief Stores a mesh's vertex and index descriptions */
-	struct MeshDescriptor
-	{
-		uint32_t vertexCount;
-		uint32_t indexBase;
-		uint32_t indexCount;
-	};
+	using MeshBufferInfo = CreateBufferResult;
 
-	/** @brief Mesh representation storing all data required to generate buffers */
-	struct MeshBuffer
-	{
-		std::vector<MeshDescriptor> meshDescriptors;
+	struct MeshBuffer {
 		MeshBufferInfo vertices;
 		MeshBufferInfo indices;
-		uint32_t indexCount;
+		uint32_t indexCount{ 0 };
 		glm::vec3 dim;
+
+		void destroy() {
+			vertices.destroy();
+			indices.destroy();
+		}
 	};
 
-	/** @brief Holds parameters for mesh creation */
-	struct MeshCreateInfo
-	{
-		glm::vec3 center;
-		glm::vec3 scale;
-		glm::vec2 uvscale;
-	};
-
-	/**
-	* Get the size of a vertex layout
-	*
-	* @param layout VertexLayout to get the size for
-	*
-	* @return Size of the vertex layout in bytes
-	*/
-	// was static
-	uint32_t vertexSize(std::vector<vkMeshLoader::VertexLayout> layout);
-
-	// Note: Always assumes float formats
-	/**
-	* Generate vertex attribute descriptions for a layout at the given binding point
-	*
-	* @param layout VertexLayout from which to generate the descriptions
-	* @param attributeDescriptions Refernce to a vector of the descriptions to generate
-	* @param binding Index of the attribute description binding point
-	*
-	* @note Always assumes float formats
-	*/
-	// was originally static
-	void getVertexInputAttributeDescriptions(std::vector<vkMeshLoader::VertexLayout> layout, std::vector<vk::VertexInputAttributeDescription> &attributeDescriptions, uint32_t binding);
+	// Get vertex size from vertex layout
+	static uint32_t vertexSize(const MeshLayout& layout) {
+		uint32_t vSize = 0;
+		for (auto& layoutDetail : layout) {
+			switch (layoutDetail) {
+				// UV only has two components
+			case VERTEX_LAYOUT_UV:
+				vSize += 2 * sizeof(float);
+				break;
+			default:
+				vSize += 3 * sizeof(float);
+			}
+		}
+		return vSize;
+	}
 
 	// Stores some additonal info and functions for 
 	// specifying pipelines, vertex bindings, etc.
-	class Mesh
-	{
-		public:
-			MeshBuffer buffers;
+	class Mesh {
+	public:
+		MeshBuffer buffers;
 
-			vk::PipelineLayout pipelineLayout = VK_NULL_HANDLE;
-			vk::Pipeline pipeline = VK_NULL_HANDLE;
-			vk::DescriptorSet descriptorSet = VK_NULL_HANDLE;
+		vk::PipelineLayout pipelineLayout;
+		vk::Pipeline pipeline;
+		vk::DescriptorSet descriptorSet;
 
-			uint32_t vertexBufferBinding = 0;
+		uint32_t vertexBufferBinding = 0;
 
-			vk::PipelineVertexInputStateCreateInfo vertexInputState;
-			vk::VertexInputBindingDescription bindingDescription;
-			std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
+		vk::PipelineVertexInputStateCreateInfo vertexInputState;
+		vk::VertexInputBindingDescription bindingDescription;
+		std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
 
-			void setupVertexInputState(std::vector<vkMeshLoader::VertexLayout> layout);
+		void setupVertexInputState(const std::vector<VertexLayout>& layout) {
+			bindingDescription = vertexInputBindingDescription(
+				vertexBufferBinding,
+				vertexSize(layout),
+				vk::VertexInputRate::eVertex);
 
-			void drawIndexed(vk::CommandBuffer cmdBuffer);
+			attributeDescriptions.clear();
+			uint32_t offset = 0;
+			uint32_t binding = 0;
+			for (auto& layoutDetail : layout) {
+				// vk::Format (layout)
+				vk::Format format = (layoutDetail == VERTEX_LAYOUT_UV) ? vk::Format::eR32G32Sfloat : vk::Format::eR32G32B32Sfloat;
+
+				attributeDescriptions.push_back(
+					vertexInputAttributeDescription(
+						vertexBufferBinding,
+						binding,
+						format,
+						offset));
+
+				// Offset
+				offset += (layoutDetail == VERTEX_LAYOUT_UV) ? (2 * sizeof(float)) : (3 * sizeof(float));
+				binding++;
+			}
+
+			vertexInputState = vk::PipelineVertexInputStateCreateInfo();
+			vertexInputState.vertexBindingDescriptionCount = 1;
+			vertexInputState.pVertexBindingDescriptions = &bindingDescription;
+			vertexInputState.vertexAttributeDescriptionCount = attributeDescriptions.size();
+			vertexInputState.pVertexAttributeDescriptions = attributeDescriptions.data();
+		}
+
+		void drawIndexed(const vk::CommandBuffer& cmdBuffer) {
+			if (pipeline) {
+				cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
+			}
+			if ((pipelineLayout) && (descriptorSet)) {
+				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSet, nullptr);
+			}
+			cmdBuffer.bindVertexBuffers(vertexBufferBinding, buffers.vertices.buffer, vk::DeviceSize());
+			cmdBuffer.bindIndexBuffer(buffers.indices.buffer, 0, vk::IndexType::eUint32);
+			cmdBuffer.drawIndexed(buffers.indexCount, 1, 0, 0, 0);
+		}
 	};
 
-	// was static
-	void freeMeshBufferResources(vk::Device device, vkMeshLoader::MeshBuffer *meshBuffer);
-}
 
-
-
-
-
-// Simple mesh class for getting all the necessary stuff from models loaded via ASSIMP
-class VulkanMeshLoader
-{
+	// Simple mesh class for getting all the necessary stuff from models loaded via ASSIMP
+	class MeshLoader {
 	private:
-		vkx::VulkanDevice *vulkanDevice;
-
-		static const int defaultFlags = aiProcess_FlipWindingOrder | aiProcess_Triangulate | aiProcess_PreTransformVertices | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals;
-
-		struct Vertex
-		{
+		struct Vertex {
 			glm::vec3 m_pos;
 			glm::vec2 m_tex;
 			glm::vec3 m_normal;
@@ -156,9 +156,16 @@ class VulkanMeshLoader
 			glm::vec3 m_tangent;
 			glm::vec3 m_binormal;
 
-			Vertex() {};
+			Vertex() {}
 
-			Vertex(const glm::vec3& pos, const glm::vec2& tex, const glm::vec3& normal, const glm::vec3& tangent, const glm::vec3& bitangent, const glm::vec3& color);
+			Vertex(const glm::vec3& pos, const glm::vec2& tex, const glm::vec3& normal, const glm::vec3& tangent, const glm::vec3& bitangent, const glm::vec3& color) {
+				m_pos = pos;
+				m_tex = tex;
+				m_normal = normal;
+				m_color = color;
+				m_tangent = tangent;
+				m_binormal = bitangent;
+			}
 		};
 
 		struct MeshEntry {
@@ -171,73 +178,229 @@ class VulkanMeshLoader
 
 	public:
 		#if defined(__ANDROID__)
-			AAssetManager* assetManager = nullptr;
+		AAssetManager* assetManager = nullptr;
 		#endif
 
 		std::vector<MeshEntry> m_Entries;
 
-		struct Dimension
-		{
+		struct Dimension {
 			glm::vec3 min = glm::vec3(FLT_MAX);
 			glm::vec3 max = glm::vec3(-FLT_MAX);
 			glm::vec3 size;
 		} dim;
 
-		uint32_t numVertices = 0;
+		uint32_t numVertices{ 0 };
+
+		// Optional
+		struct {
+			vk::Buffer buf;
+			vk::DeviceMemory mem;
+		} vertexBuffer;
+
+		struct {
+			vk::Buffer buf;
+			vk::DeviceMemory mem;
+			uint32_t count;
+		} indexBuffer;
+
+		vk::PipelineVertexInputStateCreateInfo vi;
+		std::vector<vk::VertexInputBindingDescription> bindingDescriptions;
+		std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
+		vk::Pipeline pipeline;
 
 		Assimp::Importer Importer;
-		const aiScene* pScene;
+		const aiScene* pScene{ nullptr };
 
-		/**
-		* Default constructor
-		*
-		* @param vulkanDevice Pointer to a valid VulkanDevice
-		*/
-		VulkanMeshLoader(vkx::VulkanDevice * vulkanDevice);
+		~MeshLoader() {
+			m_Entries.clear();
+		}
 
-		/**
-		* Default destructor
-		*
-		* @note Does not free any Vulkan resources
-		*/
-		~VulkanMeshLoader();
+		// Loads the mesh with some default flags
+		bool load(const std::string& filename) {
+			int flags = aiProcess_FlipWindingOrder | aiProcess_Triangulate | aiProcess_PreTransformVertices | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals;
 
-		/**
-		* Load a scene from a supported 3D file format
-		*
-		* @param filename Name of the file (or asset) to load
-		* @param flags (Optional) Set of ASSIMP processing flags
-		*
-		* @return Returns true if the scene has been loaded
-		*/
-		bool LoadMesh(const std::string& filename, int flags = defaultFlags);
+			return load(filename, flags);
+		}
 
-		/**
-		* Read mesh data from ASSIMP mesh to an internal mesh representation that can be used to generate Vulkan buffers
-		*
-		* @param meshEntry Pointer to the target MeshEntry strucutre for the mesh data
-		* @param paiMesh ASSIMP mesh to get the data from
-		* @param pScene Scene file of the ASSIMP mesh
-		*/
-		void InitMesh(MeshEntry *meshEntry, const aiMesh* paiMesh, const aiScene* pScene);
+		// Load the mesh with custom flags
+		bool load(const std::string& filename, int flags) {
+			#if defined(__ANDROID__)
+			// Meshes are stored inside the apk on Android (compressed)
+			// So they need to be loaded via the asset manager
 
-		/**
-		* Create Vulkan buffers for the index and vertex buffer using a vertex layout
-		*
-		* @note Only does staging if a valid command buffer and transfer queue are passed
-		*
-		* @param meshBuffer Pointer to the mesh buffer containing buffer handles and memory
-		* @param layout Vertex layout for the vertex buffer
-		* @param createInfo Structure containing information for mesh creation time (center, scaling, etc.)
-		* @param useStaging If true, buffers are staged to device local memory
-		* @param copyCmd (Required for staging) Command buffer to put the copy commands into
-		* @param copyQueue (Required for staging) Queue to put copys into
-		*/
-		void createBuffers(
-			vkMeshLoader::MeshBuffer *meshBuffer,
-			std::vector<vkMeshLoader::VertexLayout> layout,
-			vkMeshLoader::MeshCreateInfo *createInfo,
-			bool useStaging,
-			vk::CommandBuffer copyCmd,
-			vk::Queue copyQueue);
-};
+			AAsset* asset = AAssetManager_open(assetManager, filename.c_str(), AASSET_MODE_STREAMING);
+			assert(asset);
+			size_t size = AAsset_getLength(asset);
+
+			assert(size > 0);
+
+			void *meshData = malloc(size);
+			AAsset_read(asset, meshData, size);
+			AAsset_close(asset);
+
+			pScene = Importer.ReadFileFromMemory(meshData, size, flags);
+
+			free(meshData);
+			#else
+			pScene = Importer.ReadFile(filename.c_str(), flags);
+			#endif
+			if (!pScene) {
+				throw std::runtime_error("Unable to parse " + filename);
+			}
+			return parse(pScene, filename);
+		}
+
+	private:
+		bool parse(const aiScene* pScene, const std::string& Filename) {
+			m_Entries.resize(pScene->mNumMeshes);
+
+			// Counters
+			for (unsigned int i = 0; i < m_Entries.size(); i++) {
+				m_Entries[i].vertexBase = numVertices;
+				numVertices += pScene->mMeshes[i]->mNumVertices;
+			}
+
+			// Initialize the meshes in the scene one by one
+			for (unsigned int i = 0; i < m_Entries.size(); i++) {
+				const aiMesh* paiMesh = pScene->mMeshes[i];
+				InitMesh(i, paiMesh, pScene);
+			}
+
+			return true;
+		}
+
+		void InitMesh(unsigned int index, const aiMesh* paiMesh, const aiScene* pScene) {
+			m_Entries[index].MaterialIndex = paiMesh->mMaterialIndex;
+
+			aiColor3D pColor(0.f, 0.f, 0.f);
+			pScene->mMaterials[paiMesh->mMaterialIndex]->Get(AI_MATKEY_COLOR_DIFFUSE, pColor);
+
+			aiVector3D Zero3D(0.0f, 0.0f, 0.0f);
+
+			for (unsigned int i = 0; i < paiMesh->mNumVertices; i++) {
+				aiVector3D* pPos = &(paiMesh->mVertices[i]);
+				aiVector3D* pNormal = &(paiMesh->mNormals[i]);
+				aiVector3D *pTexCoord;
+				if (paiMesh->HasTextureCoords(0)) {
+					pTexCoord = &(paiMesh->mTextureCoords[0][i]);
+				} else {
+					pTexCoord = &Zero3D;
+				}
+				aiVector3D* pTangent = (paiMesh->HasTangentsAndBitangents()) ? &(paiMesh->mTangents[i]) : &Zero3D;
+				aiVector3D* pBiTangent = (paiMesh->HasTangentsAndBitangents()) ? &(paiMesh->mBitangents[i]) : &Zero3D;
+
+				Vertex v(glm::vec3(pPos->x, -pPos->y, pPos->z),
+					glm::vec2(pTexCoord->x, pTexCoord->y),
+					glm::vec3(pNormal->x, pNormal->y, pNormal->z),
+					glm::vec3(pTangent->x, pTangent->y, pTangent->z),
+					glm::vec3(pBiTangent->x, pBiTangent->y, pBiTangent->z),
+					glm::vec3(pColor.r, pColor.g, pColor.b)
+				);
+
+				dim.max.x = fmax(pPos->x, dim.max.x);
+				dim.max.y = fmax(pPos->y, dim.max.y);
+				dim.max.z = fmax(pPos->z, dim.max.z);
+
+				dim.min.x = fmin(pPos->x, dim.min.x);
+				dim.min.y = fmin(pPos->y, dim.min.y);
+				dim.min.z = fmin(pPos->z, dim.min.z);
+
+				m_Entries[index].Vertices.push_back(v);
+			}
+
+			dim.size = dim.max - dim.min;
+
+			for (unsigned int i = 0; i < paiMesh->mNumFaces; i++) {
+				const aiFace& Face = paiMesh->mFaces[i];
+				if (Face.mNumIndices != 3)
+					continue;
+				m_Entries[index].Indices.push_back(Face.mIndices[0]);
+				m_Entries[index].Indices.push_back(Face.mIndices[1]);
+				m_Entries[index].Indices.push_back(Face.mIndices[2]);
+			}
+		}
+
+	public:
+		// Create vertex and index buffer with given layout
+		// Note : Only does staging if a valid command buffer and transfer queue are passed
+		MeshBuffer createBuffers(const Context& context, const std::vector<VertexLayout>& layout, float scale) {
+
+			std::vector<float> vertexBuffer;
+			for (int m = 0; m < m_Entries.size(); m++) {
+				for (int i = 0; i < m_Entries[m].Vertices.size(); i++) {
+					// Push vertex data depending on layout
+					for (auto& layoutDetail : layout) {
+						// Position
+						if (layoutDetail == VERTEX_LAYOUT_POSITION) {
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.x * scale);
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.y * scale);
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.z * scale);
+						}
+						// Normal
+						if (layoutDetail == VERTEX_LAYOUT_NORMAL) {
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.x);
+							vertexBuffer.push_back(-m_Entries[m].Vertices[i].m_normal.y);
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.z);
+						}
+						// Texture coordinates
+						if (layoutDetail == VERTEX_LAYOUT_UV) {
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tex.s);
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tex.t);
+						}
+						// Color
+						if (layoutDetail == VERTEX_LAYOUT_COLOR) {
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.r);
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.g);
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.b);
+						}
+						// Tangent
+						if (layoutDetail == VERTEX_LAYOUT_TANGENT) {
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.x);
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.y);
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.z);
+						}
+						// Bitangent
+						if (layoutDetail == VERTEX_LAYOUT_BITANGENT) {
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.x);
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.y);
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.z);
+						}
+						// Dummy layout components for padding
+						if (layoutDetail == VERTEX_LAYOUT_DUMMY_FLOAT) {
+							vertexBuffer.push_back(0.0f);
+						}
+						if (layoutDetail == VERTEX_LAYOUT_DUMMY_VEC4) {
+							vertexBuffer.push_back(0.0f);
+							vertexBuffer.push_back(0.0f);
+							vertexBuffer.push_back(0.0f);
+							vertexBuffer.push_back(0.0f);
+						}
+					}
+				}
+			}
+			MeshBuffer meshBuffer;
+			meshBuffer.vertices.size = vertexBuffer.size() * sizeof(float);
+
+			dim.min *= scale;
+			dim.max *= scale;
+			dim.size *= scale;
+
+			std::vector<uint32_t> indexBuffer;
+			for (uint32_t m = 0; m < m_Entries.size(); m++) {
+				uint32_t indexBase = (uint32_t)indexBuffer.size();
+				for (uint32_t i = 0; i < m_Entries[m].Indices.size(); i++) {
+					indexBuffer.push_back(m_Entries[m].Indices[i] + indexBase);
+				}
+			}
+
+			meshBuffer.indexCount = (uint32_t)indexBuffer.size();
+			// Use staging buffer to move vertex and index buffer to device local memory
+			// Vertex buffer
+			meshBuffer.vertices = context.stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
+			// Index buffer
+			meshBuffer.indices = context.stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);
+			meshBuffer.dim = dim.size;
+			return meshBuffer;
+		}
+	};
+}

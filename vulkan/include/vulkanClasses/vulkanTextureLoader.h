@@ -8,107 +8,63 @@
 
 #pragma once
 
+#include <vulkan/vulkan.hpp>
+#pragma warning(disable: 4996 4244 4267)
+#include <gli/gli.hpp>
+#include "vulkanTools.h"
+#include "vulkanContext.h"
+
 #if defined(__ANDROID__)
-	#include <android/asset_manager.h>
+#include <android/asset_manager.h>
 #endif
 
-#include <vulkan/vulkan.hpp>
-#include "vulkanDevice.h"
-#include <gli/gli.hpp>
+namespace vkx {
 
-
-
-
-
-namespace vkTools
-{
-	/**
-	* @brief Encapsulates a Vulkan texture object (including view, sampler, descriptor, etc.)
-	*/
-	struct VulkanTexture
-	{
-		vk::Sampler sampler;
+	struct Texture {
+		vk::Device device;
 		vk::Image image;
-		vk::ImageLayout imageLayout;
-		vk::DeviceMemory deviceMemory;
+		vk::DeviceMemory memory;
+		vk::Sampler sampler;
+		vk::ImageLayout imageLayout{ vk::ImageLayout::eShaderReadOnlyOptimal };
 		vk::ImageView view;
-		uint32_t width, height;
-		uint32_t mipLevels;
-		uint32_t layerCount;
+		vk::Extent3D extent{ 0, 0, 1 };
 		vk::DescriptorImageInfo descriptor;
+
+		uint32_t mipLevels{ 1 };
+		uint32_t layerCount{ 1 };
+
+		Texture& operator=(const vkx::CreateImageResult& created) {
+			device = created.device;
+			image = created.image;
+			memory = created.memory;
+			return *this;
+		}
+
+		void destroy();
 	};
 
-	/**
-	* @brief A simple Vulkan texture uploader for getting images into GPU memory
-	*/
-	class VulkanTextureLoader
-	{
-		private:
-			vkx::VulkanDevice *vulkanDevice;
-			vk::Queue queue;
-			vk::CommandBuffer cmdBuffer;
-			vk::CommandPool cmdPool;
-		public:
-			#if defined(__ANDROID__)
-				AAssetManager* assetManager = nullptr;
-			#endif
+	class TextureLoader {
+	private:
+		Context context;
+		vk::CommandBuffer cmdBuffer;
 
-			/**
-			* Default constructor
-			*
-			* @param vulkanDevice Pointer to a valid VulkanDevice
-			* @param queue Queue for the copy commands when using staging (queue must support transfers)
-			* @param cmdPool Commandpool used to get command buffers for copies and layout transitions
-			*/
-			VulkanTextureLoader(vkx::VulkanDevice * vulkanDevice, vk::Queue queue, vk::CommandPool cmdPool);
+	public:
 
-			/**
-			* Default destructor
-			*
-			* @note Does not free texture resources
-			*/
-			~VulkanTextureLoader();
+		TextureLoader(const Context& context);
 
-			/**
-			* Load a 2D texture including all mip levels
-			*
-			* @param filename File to load
-			* @param format Vulkan format of the image data stored in the file
-			* @param texture Pointer to the texture object to load the image into
-			* @param (Optional) forceLinear Force linear tiling (not advised, defaults to false)
-			* @param (Optional) imageUsageFlags Usage flags for the texture's image (defaults to VK_IMAGE_USAGE_SAMPLED_BIT)
-			*
-			* @note Only supports .ktx and .dds
-			*/
-			void loadTexture(std::string filename, vk::Format format, VulkanTexture *texture, bool forceLinear = false, vk::ImageUsageFlags imageUsageFlags = vk::ImageUsageFlagBits::eSampled);
+		~TextureLoader();
 
-			/**
-			* Load a cubemap texture including all mip levels from a single file
-			*
-			* @param filename File to load
-			* @param format Vulkan format of the image data stored in the file
-			* @param texture Pointer to the texture object to load the image into
-			*
-			* @note Only supports .ktx and .dds
-			*/
-			void loadCubemap(std::string filename, vk::Format format, VulkanTexture *texture, vk::ImageUsageFlags imageUsageFlags = vk::ImageUsageFlagBits::eSampled);
+		#if defined(__ANDROID__)
+		AAssetManager* assetManager = nullptr;
+		#endif
 
-			/**
-			* Load a texture array including all mip levels from a single file
-			*
-			* @param filename File to load
-			* @param format Vulkan format of the image data stored in the file
-			* @param texture Pointer to the texture object to load the image into
-			*
-			* @note Only supports .ktx and .dds
-			*/
-			void loadTextureArray(std::string filename, vk::Format format, VulkanTexture *texture, vk::ImageUsageFlags imageUsageFlags = vk::ImageUsageFlagBits::eSampled);
+		// Load a 2D texture
+		Texture loadTexture(const std::string& filename, vk::Format format, bool forceLinear = false, vk::ImageUsageFlags imageUsageFlags = vk::ImageUsageFlagBits::eSampled);
 
-			/**
-			* Free all Vulkan resources used by a texture object
-			*
-			* @param texture Texture object whose resources are to be freed
-			*/
-			void destroyTexture(VulkanTexture texture);
+		// Load a cubemap texture (single file)
+		Texture loadCubemap(const std::string& filename, vk::Format format);
+
+		// Load an array texture (single file)
+		Texture loadTextureArray(const std::string& filename, vk::Format format);
 	};
-};
+}

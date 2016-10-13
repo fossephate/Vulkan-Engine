@@ -623,71 +623,31 @@ public:
 
 	virtual void getOverlayText(VulkanTextOverlay *textOverlay)
 	{
-#if defined(__ANDROID__)
+		#if defined(__ANDROID__)
 		textOverlay->addText("Press \"Button A\" to toggle wireframe", 5.0f, 85.0f, VulkanTextOverlay::alignLeft);
-#else
+		#else
 		textOverlay->addText("Press \"w\" to toggle wireframe", 5.0f, 85.0f, VulkanTextOverlay::alignLeft);
-#endif
+		#endif
 	}
 };
 
-VulkanExample *vulkanExample;
+//VULKAN_EXAMPLE_MAIN()
 
-#if defined(_WIN32)
+VulkanExample *vulkanExample;
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (vulkanExample != NULL)
-	{
+	if (vulkanExample != NULL) {
 		vulkanExample->handleMessages(hWnd, uMsg, wParam, lParam);
 	}
 	return (DefWindowProc(hWnd, uMsg, wParam, lParam));
 }
-#elif defined(__linux__) && !defined(__ANDROID__)
-static void handleEvent(const xcb_generic_event_t *event)
-{
-	if (vulkanExample != NULL)
-	{
-		vulkanExample->handleEvent(event);
-	}
-}
-#endif
-
-// Main entry point
-#if defined(_WIN32)
-// Windows entry point
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow)
-#elif defined(__ANDROID__)
-// Android entry point
-void android_main(android_app* state)
-#elif defined(__linux__)
-// Linux entry point
-int main(const int argc, const char *argv[])
-#endif
 {
-#if defined(__ANDROID__)
-	// Removing this may cause the compiler to omit the main entry point 
-	// which would make the application crash at start
-	app_dummy();
-#endif
 	vulkanExample = new VulkanExample();
-#if defined(_WIN32)
 	vulkanExample->setupWindow(hInstance, WndProc);
-#elif defined(__ANDROID__)
-	// Attach vulkan example to global android application state
-	state->userData = vulkanExample;
-	state->onAppCmd = VulkanExample::handleAppCommand;
-	state->onInputEvent = VulkanExample::handleAppInput;
-	vulkanExample->androidApp = state;
-#elif defined(__linux__)
-	vulkanExample->setupWindow();
-#endif
-#if !defined(__ANDROID__)
 	vulkanExample->initSwapchain();
 	vulkanExample->prepare();
-#endif
 	vulkanExample->renderLoop();
 	delete(vulkanExample);
-#if !defined(__ANDROID__)
 	return 0;
-#endif
 }
