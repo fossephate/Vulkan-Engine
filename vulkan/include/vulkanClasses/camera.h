@@ -22,16 +22,20 @@ private:
 
 	void updateViewMatrix();
 
+	void updateViewMatrixFromVals();
+
 public:
 	enum CameraType { lookat, firstperson };
-	CameraType type = CameraType::lookat;
+	CameraType type = CameraType::firstperson;
+
+	bool changed = false;
 
 	//glm::vec3 rotation = glm::vec3();// remove this
 	//glm::quat rotation = glm::quat();
 	//glm::vec3 position = glm::vec3();
 
 	float rotationSpeed = 1.0f;
-	float movementSpeed = 1.0f;
+	float movementSpeed = 0.05f;
 
 
 	struct {
@@ -78,6 +82,7 @@ public:
 
 	// translate
 	void translate(glm::vec3 delta);
+	void strafe(glm::vec3 delta);
 	void setTranslation(glm::vec3 translation);
 
 	glm::vec3 getTranslation();
@@ -86,6 +91,10 @@ public:
 	void rotate(glm::quat delta);
 	void rotate(glm::vec3 delta);
 	void setRotation(glm::quat rotation);
+	void rotateWorld(glm::vec3 delta);
+	void rotateWorldX(float r);
+	void rotateWorldY(float r);
+	void rotateWorldZ(float r);
 
 	glm::quat getRotation();
 

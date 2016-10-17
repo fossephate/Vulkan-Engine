@@ -26,9 +26,11 @@
 #include <iostream>
 #include <chrono>
 
+
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <string>
 #include <array>
 
@@ -220,6 +222,43 @@ namespace vkx
 
 		CreateImageResult depthStencil;
 
+		enum keyState {down, up};
+
+		struct {
+			bool w = false;
+			bool s = false;
+			bool a = false;
+			bool d = false;
+			bool q = false;
+			bool e = false;
+			bool up_arrow = false;
+			bool down_arrow = false;
+			bool left_arrow = false;
+			bool right_arrow = false;
+		} keyStates;
+
+		struct {
+			glm::vec2 current;
+			glm::vec2 delta;
+			bool movedThisFrame = false;
+			struct {
+				bool state = false;
+				glm::vec2 pressedCoords;
+				glm::vec2 releasedCoords;
+			} leftMouseButton;
+
+			struct {
+				bool state = false;
+				glm::vec2 pressedCoords;
+				glm::vec2 releasedCoords;
+			} middleMouseButton;
+
+			struct {
+				bool state = false;
+				glm::vec2 pressedCoords;
+				glm::vec2 releasedCoords;
+			} rightMouseButton;
+		} mouse;
 
 
 		// Gamepad state (only one pad supported)

@@ -67,7 +67,17 @@ public:
 
     VulkanExample() : vkx::vulkanApp(ENABLE_VALIDATION) {
         //camera.setZoom(-12.0f);
-        rotationSpeed = 0.25f;
+
+		//camera.rotationSpeed = 0.01f;
+
+
+		//camera.setTranslation({ 12.0f, 12.0f, 0.0f });
+		camera.setTranslation({ 0.0f, 0.0f, -12.0f });
+		camera.matrices.projection = glm::perspective(glm::radians(60.0f), (float)size.width / (float)size.height, 0.001f, 256.0f);
+		//glm::perspective();
+		
+        
+		rotationSpeed = 0.25f;
         title = "Vulkan Example - Instanced mesh rendering";
         srand(time(NULL));
     }
@@ -264,8 +274,6 @@ public:
         // Load shaders
         std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStages;
 
-		vk::PipelineShaderStageCreateInfo a;
-
         shaderStages[0] = context.loadShader(getAssetPath() + "shaders/instancing/instancing.vert.spv", vk::ShaderStageFlagBits::eVertex);
         shaderStages[1] = context.loadShader(getAssetPath() + "shaders/instancing/instancing.frag.spv", vk::ShaderStageFlagBits::eFragment);
 
@@ -358,8 +366,27 @@ public:
     }
 
     virtual void viewChanged() {
+		updateTextOverlay(); //disable this
         updateUniformBuffer(true);
     }
+
+	virtual void getOverlayText(vkx::TextOverlay *textOverlay)
+	{
+
+		//textOverlay->addText("Mouse delta x: " + std::to_string(mouse.delta.x), 5.0f, 85.0f, vkx::TextOverlay::alignLeft);
+		textOverlay->addText("camera stats:", 5.0f, 70.0f, vkx::TextOverlay::alignLeft);
+		textOverlay->addText("rotation(q) w: " + std::to_string(camera.rotation.w), 5.0f, 90.0f, vkx::TextOverlay::alignLeft);
+		textOverlay->addText("rotation(q) x: " + std::to_string(camera.rotation.x), 5.0f, 110.0f, vkx::TextOverlay::alignLeft);
+		textOverlay->addText("rotation(q) y: " + std::to_string(camera.rotation.y), 5.0f, 130.0f, vkx::TextOverlay::alignLeft);
+		textOverlay->addText("rotation(q) z: " + std::to_string(camera.rotation.z), 5.0f, 150.0f, vkx::TextOverlay::alignLeft);
+
+		textOverlay->addText("position(q) x: " + std::to_string(camera.translation.x), 5.0f, 170.0f, vkx::TextOverlay::alignLeft);
+		textOverlay->addText("position(q) y: " + std::to_string(camera.translation.y), 5.0f, 190.0f, vkx::TextOverlay::alignLeft);
+		//textOverlay->addText("position(q) z: " + std::to_string(camera.translation.z), 5.0f, 210.0f, vkx::TextOverlay::alignLeft);
+
+		//textOverlay->addText("Current Time: " + std::to_string(msT), 5.0f, 105.0f, VulkanTextOverlay::alignLeft);
+	}
+
 };
 
 //RUN_EXAMPLE(VulkanExample)

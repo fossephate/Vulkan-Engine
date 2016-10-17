@@ -956,8 +956,8 @@ void vulkanApp::setupWindow()
 		windowTitle.c_str(),
 		SDL_WINDOWPOS_UNDEFINED,
 		SDL_WINDOWPOS_UNDEFINED,
-		800,// width
-		600,// height
+		size.width,// width
+		size.height,// height
 		SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE
 	);
 
@@ -1028,7 +1028,6 @@ void vulkanApp::update(float deltaTime) {
 		if (!enableTextOverlay) {
 			std::string windowTitle = getWindowTitle();
 			SetWindowText(this->windowInfo.info.win.window, windowTitle.c_str());
-			//glfwSetWindowTitle(window, windowTitle.c_str());
 		}
 		lastFPS = frameCounter;
 		updateTextOverlay();
@@ -1040,7 +1039,7 @@ void vulkanApp::update(float deltaTime) {
 	//const float deadZone = 0.0015f;
 	//// todo : check if gamepad is present
 	//// todo : time based and relative axis positions
-	bool updateView = false;
+	bool updateView = true;
 	
 	//// Rotate
 	//if (std::abs(gamePadState.axes.x) > deadZone) {
@@ -1056,6 +1055,65 @@ void vulkanApp::update(float deltaTime) {
 	//	camera.dolly(gamePadState.axes.rz * 0.01f * zoomSpeed);
 	//	updateView = true;
 	//}
+
+	//camera.rotateWorldX(10.0f);
+	//camera.translate(glm::vec3(0.0f, 0.1f, 0.0f));
+
+	
+
+	if (keyStates.w) {
+		//camera.translate(glm::vec3(0.0f, 0.1f, 0.0f));
+		camera.strafe(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
+	}
+	if (keyStates.s) {
+		//camera.translate(glm::vec3(0.0f, -0.1f, 0.0f));
+		camera.strafe(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
+	}
+	if (keyStates.a) {
+		//camera.translate(glm::vec3(0.1f, 0.0f, 0.0f));
+		camera.strafe(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
+	}
+	if (keyStates.d) {
+		//camera.translate(glm::vec3(-0.1f, 0.0f, 0.0f));
+		camera.strafe(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
+	}
+	if (keyStates.q) {
+		//camera.translate(glm::vec3(0.0f, 0.0f, -0.1f));
+		camera.strafe(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
+	}
+	if (keyStates.e) {
+		//camera.translate(glm::vec3(0.0f, 0.0f, 0.1f));
+		camera.strafe(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
+	}
+
+	float rotationSpeed = -0.005f;
+
+
+	if (mouse.leftMouseButton.state) {
+
+		//camera.rotateWorldX(mouse.delta.x*rotationSpeed);
+		//camera.rotateWorldY(mouse.delta.y*rotationSpeed);
+		camera.rotateWorld(glm::vec3(mouse.delta.y*rotationSpeed, -mouse.delta.x*rotationSpeed, 0));
+	}
+
+	if (keyStates.up_arrow) {
+		camera.rotateWorldX(rotationSpeed);
+	}
+	if (keyStates.down_arrow) {
+		camera.rotateWorldX(-rotationSpeed);
+	}
+
+	if (keyStates.left_arrow) {
+		camera.rotateWorldY(-rotationSpeed);
+	}
+	if (keyStates.right_arrow) {
+		camera.rotateWorldY(rotationSpeed);
+	}
+
+
+	/*if (camera.changed) {
+		camera.update();
+	}*/
 	
 	if (updateView) {
 		viewChanged();
@@ -1438,26 +1496,116 @@ void vulkanApp::renderLoop() {
 
 	auto tStart = std::chrono::high_resolution_clock::now();
 
+	bool quit = false;
+	SDL_Event e;
 
-	while (true) {
+	while (!quit) {
 		auto tEnd = std::chrono::high_resolution_clock::now();
 		auto tDiff = std::chrono::duration<float, std::milli>(tEnd - tStart).count();
 		auto tDiffSeconds = tDiff / 1000.0f;
 		tStart = tEnd;
 
+		float FPS = 60.0f;
+		float numOfMS = (1000.0f / FPS)*2.0f;// this doesn't seem to work properly
+		if (tDiff < numOfMS) {
+			float extraTime = numOfMS - tDiff;
+			std::this_thread::sleep_for(std::chrono::milliseconds((int)extraTime));
+		}
+
+		// poll events
+		
+		while (SDL_PollEvent(&e)) {
+
+			if (e.type == SDL_QUIT) {
+				quit = true;
+				//SDL_DestroyWindow(this->SDLWindow);
+				//SDL_Quit();
+			}
+
+			if (e.type == SDL_KEYDOWN || e.type == SDL_KEYUP) {
+				bool state = (e.type == SDL_KEYDOWN) ? true : false;
+				switch (e.key.keysym.sym) {
+					case SDLK_ESCAPE:
+						quit = true;
+						break;
+					case SDLK_w:
+						keyStates.w = state;
+						break;
+					case SDLK_s:
+						keyStates.s = state;
+						break;
+					case SDLK_a:
+						keyStates.a = state;
+						break;
+					case SDLK_d:
+						keyStates.d = state;
+						break;
+					case SDLK_q:
+						keyStates.q = state;
+						break;
+					case SDLK_e:
+						keyStates.e = state;
+						break;
+					case SDLK_UP:
+						keyStates.up_arrow = state;
+						break;
+					case SDLK_DOWN:
+						keyStates.down_arrow = state;
+						break;
+					case SDLK_LEFT:
+						keyStates.left_arrow = state;
+						break;
+					case SDLK_RIGHT:
+						keyStates.right_arrow = state;
+						break;
+					default:
+						break;
+				}
+			}
+
+			if (e.type == SDL_MOUSEMOTION) {
+				mouse.delta.x = e.motion.xrel;
+				mouse.delta.y = e.motion.yrel;
+				mouse.current.x = e.motion.x;
+				mouse.current.y = e.motion.y;
+				mouse.movedThisFrame = true;// why does sdl2 not report no movement?
+			}
+
+			// should be if else's / switch case
+
+			if (e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP) {
+				bool state = (e.type == SDL_MOUSEBUTTONDOWN) ? true : false;
+
+				// todo: implement pressed and released coords
+				if (e.button.button == SDL_BUTTON_LEFT) {
+					mouse.leftMouseButton.state = state;
+				} else if (e.button.button == SDL_BUTTON_MIDDLE) {
+					mouse.middleMouseButton.state = state;
+				} else if (e.button.button == SDL_BUTTON_RIGHT) {
+					mouse.rightMouseButton.state = state;
+				}
+				//mouse.delta.x = e.motion.xrel;
+				//mouse.delta.y = e.motion.yrel;
+				//mouse.current.x = e.motion.x;
+				//mouse.current.y = e.motion.y;
+			}
+		}
+		if (!mouse.movedThisFrame) {
+			mouse.delta.x = 0;
+			mouse.delta.y = 0;
+		}
+		mouse.movedThisFrame = false;
+
+		//updateTextOverlay();
+
 
 		render();
 		update(tDiffSeconds);
 	}
+	SDL_DestroyWindow(this->SDLWindow);
+	SDL_Quit();
 
-	SDL_Event test_event;
-	while (SDL_PollEvent(&test_event)) {
-		if (test_event.type == SDL_QUIT) {
-			SDL_DestroyWindow(this->SDLWindow);
-			SDL_Quit();
-		}
-	}
-	render();
+	//render();
 
 
 	#endif

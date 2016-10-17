@@ -51,10 +51,10 @@
     <ClCompile Include="src\vulkanClasses\vulkanOffscreen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\instancing2.cpp">
+    <ClCompile Include="src\vulkanClasses\shapes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\vulkanClasses\shapes.cpp">
+    <ClCompile Include="src\instancing2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
