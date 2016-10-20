@@ -1060,31 +1060,89 @@ void vulkanApp::update(float deltaTime) {
 	//camera.translate(glm::vec3(0.0f, 0.1f, 0.0f));
 
 	
+	// z-up translations
+	if (!keyStates.shift) {
+		if (keyStates.w) {
+			camera.strafe(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
+		}
+		if (keyStates.s) {
+			camera.strafe(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
+		}
+		if (keyStates.a) {
+			camera.strafe(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
+		}
+		if (keyStates.d) {
+			camera.strafe(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
+		}
+		if (keyStates.q) {
+			camera.strafe(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
+		}
+		if (keyStates.e) {
+			camera.strafe(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
+		}
+	} else {
+		if (keyStates.w) {
+			camera.translate(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
+		}
+		if (keyStates.s) {
+			camera.translate(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
+		}
+		if (keyStates.a) {
+			camera.translate(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
+		}
+		if (keyStates.d) {
+			camera.translate(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
+		}
+		if (keyStates.q) {
+			camera.translate(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
+		}
+		if (keyStates.e) {
+			camera.translate(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
+		}
+	}
 
-	if (keyStates.w) {
-		//camera.translate(glm::vec3(0.0f, 0.1f, 0.0f));
-		camera.strafe(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
-	}
-	if (keyStates.s) {
-		//camera.translate(glm::vec3(0.0f, -0.1f, 0.0f));
-		camera.strafe(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
-	}
-	if (keyStates.a) {
-		//camera.translate(glm::vec3(0.1f, 0.0f, 0.0f));
-		camera.strafe(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
-	}
-	if (keyStates.d) {
-		//camera.translate(glm::vec3(-0.1f, 0.0f, 0.0f));
-		camera.strafe(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
-	}
-	if (keyStates.q) {
-		//camera.translate(glm::vec3(0.0f, 0.0f, -0.1f));
-		camera.strafe(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
-	}
-	if (keyStates.e) {
-		//camera.translate(glm::vec3(0.0f, 0.0f, 0.1f));
-		camera.strafe(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
-	}
+	// y-up translations
+	//if (!keyStates.shift) {
+	//	if (keyStates.w) {
+	//		camera.strafe(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
+	//	}
+	//	if (keyStates.s) {
+	//		camera.strafe(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
+	//	}
+	//	if (keyStates.a) {
+	//		camera.strafe(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
+	//	}
+	//	if (keyStates.d) {
+	//		camera.strafe(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
+	//	}
+	//	if (keyStates.q) {
+	//		camera.strafe(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
+	//	}
+	//	if (keyStates.e) {
+	//		camera.strafe(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
+	//	}
+	//} else {
+	//	/*
+	//	if (keyStates.w) {
+	//		camera.strafe(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
+	//	}
+	//	if (keyStates.s) {
+	//		camera.strafe(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
+	//	}
+	//	if (keyStates.a) {
+	//		camera.strafe(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
+	//	}
+	//	if (keyStates.d) {
+	//		camera.strafe(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
+	//	}
+	//	if (keyStates.q) {
+	//		camera.strafe(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
+	//	}
+	//	if (keyStates.e) {
+	//		camera.strafe(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
+	//	}*/
+	//}
+
 
 	float rotationSpeed = -0.005f;
 
@@ -1093,8 +1151,10 @@ void vulkanApp::update(float deltaTime) {
 
 		//camera.rotateWorldX(mouse.delta.x*rotationSpeed);
 		//camera.rotateWorldY(mouse.delta.y*rotationSpeed);
-		camera.rotateWorld(glm::vec3(mouse.delta.y*rotationSpeed, -mouse.delta.x*rotationSpeed, 0));
+		camera.rotateWorld(glm::vec3(mouse.delta.y*rotationSpeed, 0, mouse.delta.x*rotationSpeed));
 	}
+	
+	rotationSpeed = -0.02f;
 
 	if (keyStates.up_arrow) {
 		camera.rotateWorldX(rotationSpeed);
@@ -1103,11 +1163,20 @@ void vulkanApp::update(float deltaTime) {
 		camera.rotateWorldX(-rotationSpeed);
 	}
 
-	if (keyStates.left_arrow) {
-		camera.rotateWorldY(-rotationSpeed);
-	}
-	if (keyStates.right_arrow) {
-		camera.rotateWorldY(rotationSpeed);
+	if (!keyStates.shift) {
+		if (keyStates.left_arrow) {
+			camera.rotateWorldZ(-rotationSpeed);
+		}
+		if (keyStates.right_arrow) {
+			camera.rotateWorldZ(rotationSpeed);
+		}
+	} else {
+		if (keyStates.left_arrow) {
+			camera.rotateWorldY(-rotationSpeed);
+		}
+		if (keyStates.right_arrow) {
+			camera.rotateWorldY(rotationSpeed);
+		}
 	}
 
 
@@ -1558,6 +1627,29 @@ void vulkanApp::renderLoop() {
 					case SDLK_RIGHT:
 						keyStates.right_arrow = state;
 						break;
+					case SDLK_LSHIFT:
+						keyStates.shift = state;
+						break;
+					// another wsadqe
+					case SDLK_i:
+						keyStates.i = state;
+						break;
+					case SDLK_k:
+						keyStates.k = state;
+						break;
+					case SDLK_j:
+						keyStates.j = state;
+						break;
+					case SDLK_l:
+						keyStates.l = state;
+						break;
+					case SDLK_u:
+						keyStates.u = state;
+						break;
+					case SDLK_o:
+						keyStates.o = state;
+						break;
+
 					default:
 						break;
 				}

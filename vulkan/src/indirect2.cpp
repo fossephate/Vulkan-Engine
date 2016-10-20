@@ -6,7 +6,7 @@
 
 #include "vulkanApp.h"
 #include "shapes.h"
-//#include "easings.h"
+#include "easings.h"
 #include <glm/gtc/quaternion.hpp>
 
 #define SHAPES_COUNT 5

@@ -54,7 +54,7 @@
     <ClCompile Include="src\vulkanClasses\shapes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\instancing2.cpp">
+    <ClCompile Include="src\vulkanscene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

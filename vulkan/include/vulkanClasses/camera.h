@@ -13,6 +13,7 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtx/rotate_vector.hpp>
 
 class Camera
 {
@@ -39,45 +40,47 @@ public:
 
 
 	struct {
-		glm::quat rotation = glm::quat();
+		glm::quat orientation = glm::quat();
+		glm::quat &rotation = orientation;
+
 		glm::vec3 translation = glm::vec3();
-		glm::vec3 scale = glm::vec3(1.0, 1.0, 1.0);
+		glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
+
+		
 		//glm::mat4 transfMatrix = glm::mat4();
 	} transform;
 
 	// set refs for convenience
-	glm::quat & rotation = transform.rotation;
+	glm::quat & orientation = transform.orientation;
+	glm::quat &rotation = orientation;
+
 	glm::vec3 & translation = transform.translation;
 	glm::vec3 & scale = transform.scale;
+
+	
 
 	struct
 	{
 		glm::mat4 view;
-		//glm::mat4 transfMatrix;
-		glm::mat4 & transfMatrix = view;
+		glm::mat4 transform;
+		//glm::mat4 & transfMatrix = view;
 		glm::mat4 projection;
 
 	} matrices;
 
-	glm::mat4 & transfMatrix = matrices.transfMatrix;
-
+	//glm::mat4 & transfMatrix = matrices.transfMatrix;
 	glm::mat4 & projection = matrices.projection;
 
 
-	struct
-	{
-		bool left = false;
-		bool right = false;
-		bool up = false;
-		bool down = false;
-	} keys;
+	Camera();
 
-	bool moving();
 
 	void setProjection(float fov, float aspect, float znear, float zfar);
 
 
 	void setAspectRatio(float aspect);
+
+	glm::mat4 getViewMatrix();
 
 
 	// translate

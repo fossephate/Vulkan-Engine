@@ -72,12 +72,14 @@ public:
 
 
 		//camera.setTranslation({ 12.0f, 12.0f, 0.0f });
-		camera.setTranslation({ 0.0f, 0.0f, -12.0f });
+		camera.setTranslation({ 10.0f, 0.0f, 0.0f });
 		camera.matrices.projection = glm::perspective(glm::radians(60.0f), (float)size.width / (float)size.height, 0.001f, 256.0f);
+
+
+
 		//glm::perspective();
-		
-        
-		rotationSpeed = 0.25f;
+
+		//rotationSpeed = 0.25f;
         title = "Vulkan Example - Instanced mesh rendering";
         srand(time(NULL));
     }
@@ -380,8 +382,9 @@ public:
 		textOverlay->addText("rotation(q) y: " + std::to_string(camera.rotation.y), 5.0f, 130.0f, vkx::TextOverlay::alignLeft);
 		textOverlay->addText("rotation(q) z: " + std::to_string(camera.rotation.z), 5.0f, 150.0f, vkx::TextOverlay::alignLeft);
 
-		textOverlay->addText("position(q) x: " + std::to_string(camera.translation.x), 5.0f, 170.0f, vkx::TextOverlay::alignLeft);
-		textOverlay->addText("position(q) y: " + std::to_string(camera.translation.y), 5.0f, 190.0f, vkx::TextOverlay::alignLeft);
+		textOverlay->addText("pos x: " + std::to_string(camera.translation.x), 5.0f, 170.0f, vkx::TextOverlay::alignLeft);
+		textOverlay->addText("pos y: " + std::to_string(camera.translation.y), 5.0f, 190.0f, vkx::TextOverlay::alignLeft);
+		textOverlay->addText("pos z: " + std::to_string(camera.translation.z), 5.0f, 210.0f, vkx::TextOverlay::alignLeft);
 		//textOverlay->addText("position(q) z: " + std::to_string(camera.translation.z), 5.0f, 210.0f, vkx::TextOverlay::alignLeft);
 
 		//textOverlay->addText("Current Time: " + std::to_string(msT), 5.0f, 105.0f, VulkanTextOverlay::alignLeft);

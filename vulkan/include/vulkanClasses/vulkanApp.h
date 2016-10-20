@@ -235,7 +235,16 @@ namespace vkx
 			bool down_arrow = false;
 			bool left_arrow = false;
 			bool right_arrow = false;
+			bool shift = false;
+			bool i = false;
+			bool k = false;
+			bool j = false;
+			bool l = false;
+			bool u = false;
+			bool o = false;
 		} keyStates;
+
+		glm::vec3 lookAtPoint = glm::vec3(0.0f, 0.0f, 0.0f);
 
 		struct {
 			glm::vec2 current;
