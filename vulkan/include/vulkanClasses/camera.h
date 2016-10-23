@@ -14,16 +14,16 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/rotate_vector.hpp>
+#include <algorithm>
 
 class Camera
 {
 private:
+	const float MAX_PITCH{ (float)M_PI_2 * 0.95f };
 	float fov;
 	float znear, zfar;
 
 	void updateViewMatrix();
-
-	void updateViewMatrixFromVals();
 
 public:
 	enum CameraType { lookat, firstperson };
@@ -42,6 +42,7 @@ public:
 	struct {
 		glm::quat orientation = glm::quat();
 		glm::quat &rotation = orientation;
+		glm::vec3 euler;
 
 		glm::vec3 translation = glm::vec3();
 		glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -94,6 +95,7 @@ public:
 	void rotate(glm::quat delta);
 	void rotate(glm::vec3 delta);
 	void setRotation(glm::quat rotation);
+	void rotateLocal(glm::vec3 delta);
 	void rotateWorld(glm::vec3 delta);
 	void rotateWorldX(float r);
 	void rotateWorldY(float r);
@@ -107,9 +109,5 @@ public:
 
 
 	void update(float deltaTime);
-
-	// Update camera passing separate axis data (gamepad)
-	// Returns true if view or position has been changed
-	bool updatePad(glm::vec2 axisLeft, glm::vec2 axisRight, float deltaTime);
 
 };

@@ -72,8 +72,8 @@ public:
 
 
 		//camera.setTranslation({ 12.0f, 12.0f, 0.0f });
-		camera.setTranslation({ 10.0f, 0.0f, 0.0f });
-		camera.matrices.projection = glm::perspective(glm::radians(60.0f), (float)size.width / (float)size.height, 0.001f, 256.0f);
+		camera.setTranslation({ 0.0f, 0.0f, 0.0f });
+		//camera.matrices.projection = glm::perspectiveRH(glm::radians(60.0f), (float)size.width / (float)size.height, 0.001f, 256.0f);
 
 
 

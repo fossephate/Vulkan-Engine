@@ -1035,29 +1035,7 @@ void vulkanApp::update(float deltaTime) {
 		frameCounter = 0;
 	}
 
-	// Check gamepad state
-	//const float deadZone = 0.0015f;
-	//// todo : check if gamepad is present
-	//// todo : time based and relative axis positions
 	bool updateView = true;
-	
-	//// Rotate
-	//if (std::abs(gamePadState.axes.x) > deadZone) {
-	//	camera.yawPitch.x += gamePadState.axes.x * 0.5f * rotationSpeed;
-	//	updateView = true;
-	//}
-	//if (std::abs(gamePadState.axes.y) > deadZone) {
-	//	camera.yawPitch.x += gamePadState.axes.y * 0.5f * rotationSpeed;
-	//	updateView = true;
-	//}
-	//// Zoom
-	//if (std::abs(gamePadState.axes.rz) > deadZone) {
-	//	camera.dolly(gamePadState.axes.rz * 0.01f * zoomSpeed);
-	//	updateView = true;
-	//}
-
-	//camera.rotateWorldX(10.0f);
-	//camera.translate(glm::vec3(0.0f, 0.1f, 0.0f));
 
 	
 	// z-up translations
@@ -1122,40 +1100,39 @@ void vulkanApp::update(float deltaTime) {
 	//		camera.strafe(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
 	//	}
 	//} else {
-	//	/*
+	//	
 	//	if (keyStates.w) {
-	//		camera.strafe(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
+	//		camera.translate(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
 	//	}
 	//	if (keyStates.s) {
-	//		camera.strafe(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
+	//		camera.translate(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
 	//	}
 	//	if (keyStates.a) {
-	//		camera.strafe(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
+	//		camera.translate(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
 	//	}
 	//	if (keyStates.d) {
-	//		camera.strafe(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
+	//		camera.translate(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
 	//	}
 	//	if (keyStates.q) {
-	//		camera.strafe(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
+	//		camera.translate(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
 	//	}
 	//	if (keyStates.e) {
-	//		camera.strafe(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
-	//	}*/
+	//		camera.translate(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
+	//	}
 	//}
 
 
+
+	// z-up rotations
 	float rotationSpeed = -0.005f;
 
-
 	if (mouse.leftMouseButton.state) {
-
-		//camera.rotateWorldX(mouse.delta.x*rotationSpeed);
-		//camera.rotateWorldY(mouse.delta.y*rotationSpeed);
 		camera.rotateWorld(glm::vec3(mouse.delta.y*rotationSpeed, 0, mouse.delta.x*rotationSpeed));
 	}
 	
 	rotationSpeed = -0.02f;
 
+	
 	if (keyStates.up_arrow) {
 		camera.rotateWorldX(rotationSpeed);
 	}
@@ -1178,6 +1155,42 @@ void vulkanApp::update(float deltaTime) {
 			camera.rotateWorldY(rotationSpeed);
 		}
 	}
+
+
+
+	// y-up rotations
+
+	//float rotationSpeed = -0.005f;
+
+	//if (mouse.leftMouseButton.state) {
+	//	camera.rotateWorld(glm::vec3(mouse.delta.y*rotationSpeed, mouse.delta.x*rotationSpeed, 0.0f));
+	//}
+	//
+	//rotationSpeed = -0.02f;
+
+	//if (keyStates.up_arrow) {
+	//	camera.rotateWorldX(rotationSpeed);
+	//}
+	//if (keyStates.down_arrow) {
+	//	camera.rotateWorldX(-rotationSpeed);
+	//}
+
+	//if (!keyStates.shift) {
+	//	if (keyStates.left_arrow) {
+	//		camera.rotateWorldY(-rotationSpeed);
+	//	}
+	//	if (keyStates.right_arrow) {
+	//		camera.rotateWorldY(rotationSpeed);
+	//	}
+	//} else {
+	//	if (keyStates.left_arrow) {
+	//		camera.rotateWorldZ(-rotationSpeed);
+	//	}
+	//	if (keyStates.right_arrow) {
+	//		camera.rotateWorldZ(rotationSpeed);
+	//	}
+	//}
+
 
 
 	/*if (camera.changed) {
