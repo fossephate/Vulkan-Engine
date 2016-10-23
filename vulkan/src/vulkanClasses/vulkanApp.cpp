@@ -1127,7 +1127,7 @@ void vulkanApp::update(float deltaTime) {
 	float rotationSpeed = -0.005f;
 
 	if (mouse.leftMouseButton.state) {
-		camera.rotateWorld(glm::vec3(mouse.delta.y*rotationSpeed, 0, mouse.delta.x*rotationSpeed));
+		camera.rotateWorld(glm::vec3(-mouse.delta.y*rotationSpeed, 0, -mouse.delta.x*rotationSpeed));
 	}
 	
 	rotationSpeed = -0.02f;

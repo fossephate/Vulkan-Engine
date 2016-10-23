@@ -81,27 +81,33 @@ public:
 
 	void setAspectRatio(float aspect);
 
-	glm::mat4 getViewMatrix();
+	//glm::mat4 getViewMatrix();
 
 
-	// translate
+	/* translate */
 	void translate(glm::vec3 delta);
-	void strafe(glm::vec3 delta);
+
+	void translateWorld(glm::vec3 delta);
+	void translateLocal(glm::vec3 delta);
 	void setTranslation(glm::vec3 translation);
 
-	glm::vec3 getTranslation();
 
-	// rotate
-	void rotate(glm::quat delta);
-	void rotate(glm::vec3 delta);
+	/* rotate */
 	void setRotation(glm::quat rotation);
-	void rotateLocal(glm::vec3 delta);
+
+	/* Rotate around world axes */
 	void rotateWorld(glm::vec3 delta);
+
+	/* Convienience functions */
 	void rotateWorldX(float r);
 	void rotateWorldY(float r);
 	void rotateWorldZ(float r);
 
-	glm::quat getRotation();
+	/* Rotate around local axes */
+	void rotateLocal(glm::vec3 delta);
+
+
+
 
 	void decompMatrix();
 	
