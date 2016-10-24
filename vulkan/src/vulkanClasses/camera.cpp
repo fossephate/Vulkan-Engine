@@ -75,20 +75,43 @@ void Camera::updateViewMatrix() {
 	glm::vec3 right = glm::vec3(1.0f, 0.0f, 0.0f);
 
 	glm::mat4 rotationMatrix = glm::mat4_cast(glm::normalize(this->transform.rotation));
+	//glm::mat4 rotationMatrix = glm::mat4();
+	//glm::mat4 rotationMatrix = glm::rotate(glm::mat4(), glm::angle(this->transform.rotation), glm::axis(this->transform.rotation));
 
-	glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), this->transform.translation);
+	//rotationMatrix = rotationMatrix * glm::mat4_cast(glm::angleAxis(glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
+	//rotationMatrix = glm::scale(rotationMatrix, glm::vec3(-1.0f, 1.0f, -1.0f));
+
+	glm::mat4 translationMatrix = glm::translate(glm::mat4(), this->transform.translation);
 
 	this->matrices.view = (rotationMatrix) * (translationMatrix);
+
+	//glm::vec3 dir = this->transform.euler;
+
+	//glm::vec3 direction(
+	//	cos(dir.x) * sin(dir.z),
+	//	cos(dir.x) * cos(dir.z),
+	//	sin(dir.x)
+	//);
+
+	//this->matrices.view = glm::lookAtRH(
+	//	this->transform.translation,
+	//	this->transform.translation + direction,//glm::vec3(0.0f, 0.0f, 0.0f),//this->transform.translation + glm::normalize(this->transform.euler),//this->transform.translation + (glm::vec3(1.0f, 0.0f, 0.0f)*this->transform.rotation),
+	//	glm::vec3(0.0f, 0.0f, 1.0f)
+	//);
+
+	//this->matrices.view = glm::mat4_cast(glm::angleAxis(glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f))) * this->matrices.view;
+	//this->matrices.view = glm::scale(this->matrices.view, glm::vec3(1.0f, 1.0f, -1.0f));
+
 }
 
 
 Camera::Camera() {
-	glm::vec2 size = glm::vec2(1280, 720);
+	glm::vec2 size = glm::vec2(1280, 720);// remove this
 
 	this->matrices.projection = glm::perspectiveRH(glm::radians(60.0f), (float)size.x / (float)size.y, 0.001f, 256.0f);
 	
-	this->matrices.projection = this->matrices.projection * glm::mat4_cast(glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
-	this->matrices.projection = glm::scale(this->matrices.projection, glm::vec3(-1.0f, 1.0f, -1.0f));
+	//this->matrices.projection = this->matrices.projection * glm::mat4_cast(glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
+	//this->matrices.projection = glm::scale(this->matrices.projection, glm::vec3(-1.0f, 1.0f, -1.0f));
 	
 }
 
@@ -100,20 +123,15 @@ void Camera::setProjection(float fov, float aspect, float znear, float zfar)
 	this->znear = znear;
 	this->zfar = zfar;
 
-	this->matrices.projection = glm::perspective(glm::radians(fov), aspect, znear, zfar);
+	this->matrices.projection = glm::perspectiveRH(glm::radians(fov), aspect, znear, zfar);
 }
 
 void Camera::setAspectRatio(float aspect)
 {
-	this->matrices.projection = glm::perspective(glm::radians(fov), aspect, znear, zfar);
+	this->matrices.projection = glm::perspectiveRH(glm::radians(fov), aspect, znear, zfar);
 }
 
 /* translation */
-//void Camera::translate(glm::vec3 delta)
-//{
-//	this->translation += delta;
-//	updateViewMatrix();
-//}
 void Camera::setTranslation(glm::vec3 point)
 {
 	this->translation = point;
@@ -149,7 +167,8 @@ void Camera::setRotation(glm::quat rotation)
 void Camera::rotateWorld(glm::vec3 delta)
 {
 	this->rotation = glm::normalize(glm::quat(delta) * this->rotation);
-	//this->transform.euler += delta;
+	//this->transform.euler = glm::normalize(this->transform.euler + delta);// remove
+	this->transform.euler += delta;// remove
 	updateViewMatrix();
 }
 

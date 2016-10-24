@@ -1,5 +1,13 @@
 #include "vulkanMeshLoader.h"
 
+// initialization
+vkx::Mesh::Mesh(vkx::MeshBuffer mBuffer, uint32_t binding, const std::vector<VertexLayout>& layout)
+{
+	this->buffers = mBuffer;
+	this->vertexBufferBinding = binding;
+	this->setupVertexInputState(layout);
+}
+
 void vkx::Mesh::setupVertexInputState(const std::vector<VertexLayout>& layout) {
 	bindingDescription = vertexInputBindingDescription(
 		vertexBufferBinding,
@@ -212,6 +220,7 @@ vkx::MeshBuffer vkx::MeshLoader::createBuffers(const Context & context, const st
 			}
 		}
 	}
+
 	MeshBuffer meshBuffer;
 	meshBuffer.vertices.size = vertexBuffer.size() * sizeof(float);
 
@@ -236,3 +245,17 @@ vkx::MeshBuffer vkx::MeshLoader::createBuffers(const Context & context, const st
 	meshBuffer.dim = dim.size;
 	return meshBuffer;
 }
+
+vkx::Mesh vkx::MeshLoader::createMeshFromBuffers(const Context & context, const std::vector<VertexLayout>& layout, float scale, uint32_t binding)
+{
+	vkx::MeshBuffer mBuffer = createBuffers(context, layout, scale);
+	vkx::Mesh mesh = vkx::Mesh(mBuffer, binding, layout);
+	mesh.attributeDescriptions = this->attributeDescriptions;
+	mesh.vertexBufferBinding = binding;
+	//mesh.bindingDescription = this->bindingDescriptions[0];
+	mesh.pipeline = this->pipeline;
+	
+	return mesh;
+}
+
+

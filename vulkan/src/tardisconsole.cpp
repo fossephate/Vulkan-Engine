@@ -53,10 +53,9 @@ public:
 	VulkanExample() : vkx::vulkanApp(ENABLE_VALIDATION) {
 		size.width = 1280;
 		size.height = 720;
-		//camera.setTranslation({ 0.0, -0.5f, -2.75f });
+		camera.setTranslation({ -5.0, -5.0f, 3.0f });
 		//camera.setRotation({ 0.0f, 30.0f, 0.0f });
 
-		camera.setTranslation({ 10.0f, 0.0f, 0.0f });
 		camera.matrices.projection = glm::perspective(glm::radians(60.0f), (float)size.width / (float)size.height, 0.001f, 256.0f);
 
 		rotationSpeed = 0.5f;

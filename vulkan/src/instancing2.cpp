@@ -69,9 +69,6 @@ public:
         //camera.setZoom(-12.0f);
 
 		//camera.rotationSpeed = 0.01f;
-
-
-		//camera.setTranslation({ 12.0f, 12.0f, 0.0f });
 		camera.setTranslation({ 0.0f, 0.0f, 0.0f });
 		//camera.matrices.projection = glm::perspectiveRH(glm::radians(60.0f), (float)size.width / (float)size.height, 0.001f, 256.0f);
 

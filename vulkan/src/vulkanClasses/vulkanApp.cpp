@@ -1041,85 +1041,43 @@ void vulkanApp::update(float deltaTime) {
 	// z-up translations
 	if (!keyStates.shift) {
 		if (keyStates.w) {
-			camera.strafe(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
+			camera.translateLocal(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
 		}
 		if (keyStates.s) {
-			camera.strafe(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
+			camera.translateLocal(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
 		}
 		if (keyStates.a) {
-			camera.strafe(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
+			camera.translateLocal(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
 		}
 		if (keyStates.d) {
-			camera.strafe(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
+			camera.translateLocal(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
 		}
 		if (keyStates.q) {
-			camera.strafe(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
+			camera.translateLocal(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
 		}
 		if (keyStates.e) {
-			camera.strafe(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
+			camera.translateLocal(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
 		}
 	} else {
 		if (keyStates.w) {
-			camera.translate(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
+			camera.translateWorld(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
 		}
 		if (keyStates.s) {
-			camera.translate(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
+			camera.translateWorld(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
 		}
 		if (keyStates.a) {
-			camera.translate(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
+			camera.translateWorld(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
 		}
 		if (keyStates.d) {
-			camera.translate(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
+			camera.translateWorld(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
 		}
 		if (keyStates.q) {
-			camera.translate(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
+			camera.translateWorld(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
 		}
 		if (keyStates.e) {
-			camera.translate(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
+			camera.translateWorld(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
 		}
 	}
-
-	// y-up translations
-	//if (!keyStates.shift) {
-	//	if (keyStates.w) {
-	//		camera.strafe(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
-	//	}
-	//	if (keyStates.s) {
-	//		camera.strafe(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
-	//	}
-	//	if (keyStates.a) {
-	//		camera.strafe(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
-	//	}
-	//	if (keyStates.d) {
-	//		camera.strafe(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
-	//	}
-	//	if (keyStates.q) {
-	//		camera.strafe(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
-	//	}
-	//	if (keyStates.e) {
-	//		camera.strafe(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
-	//	}
-	//} else {
-	//	
-	//	if (keyStates.w) {
-	//		camera.translate(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
-	//	}
-	//	if (keyStates.s) {
-	//		camera.translate(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
-	//	}
-	//	if (keyStates.a) {
-	//		camera.translate(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
-	//	}
-	//	if (keyStates.d) {
-	//		camera.translate(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
-	//	}
-	//	if (keyStates.q) {
-	//		camera.translate(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
-	//	}
-	//	if (keyStates.e) {
-	//		camera.translate(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
-	//	}
-	//}
 
 
 
@@ -1155,41 +1113,6 @@ void vulkanApp::update(float deltaTime) {
 			camera.rotateWorldY(rotationSpeed);
 		}
 	}
-
-
-
-	// y-up rotations
-
-	//float rotationSpeed = -0.005f;
-
-	//if (mouse.leftMouseButton.state) {
-	//	camera.rotateWorld(glm::vec3(mouse.delta.y*rotationSpeed, mouse.delta.x*rotationSpeed, 0.0f));
-	//}
-	//
-	//rotationSpeed = -0.02f;
-
-	//if (keyStates.up_arrow) {
-	//	camera.rotateWorldX(rotationSpeed);
-	//}
-	//if (keyStates.down_arrow) {
-	//	camera.rotateWorldX(-rotationSpeed);
-	//}
-
-	//if (!keyStates.shift) {
-	//	if (keyStates.left_arrow) {
-	//		camera.rotateWorldY(-rotationSpeed);
-	//	}
-	//	if (keyStates.right_arrow) {
-	//		camera.rotateWorldY(rotationSpeed);
-	//	}
-	//} else {
-	//	if (keyStates.left_arrow) {
-	//		camera.rotateWorldZ(-rotationSpeed);
-	//	}
-	//	if (keyStates.right_arrow) {
-	//		camera.rotateWorldZ(rotationSpeed);
-	//	}
-	//}
 
 
 
@@ -1627,6 +1550,9 @@ void vulkanApp::renderLoop() {
 						break;
 					case SDLK_e:
 						keyStates.e = state;
+						break;
+					case SDLK_SPACE:
+						keyStates.space = state;
 						break;
 					case SDLK_UP:
 						keyStates.up_arrow = state;

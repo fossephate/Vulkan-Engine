@@ -54,21 +54,12 @@
     <ClCompile Include="src\vulkanClasses\shapes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\instancing2.cpp">
+    <ClCompile Include="src\vulkanscene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\vulkanClasses\camera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\vulkanClasses\frustum.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\vulkanClasses\keycodes.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\vulkanClasses\vulkanandroid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\vulkanClasses\vulkanApp.h">
@@ -116,7 +107,10 @@
     <ClInclude Include="include\vulkanClasses\easings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\vulkanClasses\json.h">
+    <ClInclude Include="include\vulkanClasses\vulkanMesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vulkanClasses\vulkanModel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

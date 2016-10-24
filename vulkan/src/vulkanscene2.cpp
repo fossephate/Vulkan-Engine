@@ -14,43 +14,20 @@
 
 static std::vector<std::string> names{ "logos", "background", "models", "skybox" };
 
-std::vector<vkx::VertexLayout> vertexLayout =
-{
-	vkx::VertexLayout::VERTEX_LAYOUT_POSITION,
-	vkx::VertexLayout::VERTEX_LAYOUT_NORMAL,
-	vkx::VertexLayout::VERTEX_LAYOUT_UV,
-	vkx::VertexLayout::VERTEX_LAYOUT_COLOR
-};
-
 class VulkanExample : public vkx::vulkanApp {
 public:
 
-	/*struct DemoMeshes {
+	struct DemoMeshes {
 		vk::PipelineVertexInputStateCreateInfo inputState;
 		std::vector<vk::VertexInputBindingDescription> bindingDescriptions;
 		std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
-		//vk::Pipeline pipeline;
+		vk::Pipeline pipeline;
 		vkx::MeshLoader* logos;
 		vkx::MeshLoader* background;
 		vkx::MeshLoader* models;
 		vkx::MeshLoader* skybox;
-	} demoMeshes;*/
-
-
-
-	vk::PipelineVertexInputStateCreateInfo inputState;
-	std::vector<vk::VertexInputBindingDescription> bindingDescriptions;
-	std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
-	
-	vkx::MeshLoader* logos;
-	vkx::MeshLoader* background;
-	vkx::MeshLoader* models;
-	vkx::MeshLoader* skybox;
-	vkx::MeshLoader* plane;
-
-	std::vector<vkx::MeshLoader*> meshLoaders;
-	std::vector<vkx::MeshBuffer> meshBuffers;
-	std::vector<vkx::Mesh> meshes;
+	} demoMeshes;
+	std::vector<vkx::MeshLoader*> meshes;
 
 	struct {
 		vkx::UniformData meshVS;
@@ -83,12 +60,14 @@ public:
 	VulkanExample() : vkx::vulkanApp(ENABLE_VALIDATION) {
 		size.width = 1280;
 		size.height = 720;
+		//camera.setZoom(-3.75f);
+		//rotationSpeed = 0.5f;
+		//camera.setRotation({ 15.0f, 0.f, 0.0f });
 
+		camera.setTranslation({ 0.0f, 0.0f, -5.0f });
+		camera.matrices.projection = glm::perspective(glm::radians(60.0f), (float)size.width / (float)size.height, 0.001f, 256.0f);
 
-		camera.setTranslation({ -1.0f, -1.0f, -3.0f });
-		//camera.matrices.projection = glm::perspectiveRH(glm::radians(60.0f), (float)size.width / (float)size.height, 0.001f, 256.0f);
-
-		title = "Vulkan Demo Scene";
+		title = "Vulkan Demo Scene - 2016 by Sascha Willems";
 	}
 
 	~VulkanExample() {
@@ -104,20 +83,19 @@ public:
 		uniformData.meshVS.destroy();
 
 		for (auto& mesh : meshes) {
-			//mesh.buffers.vertices.buffer
-			device.destroyBuffer(mesh.buffers.vertices.buffer);
-			device.freeMemory(mesh.buffers.vertices.memory);
+			device.destroyBuffer(mesh->vertexBuffer.buf);
+			device.freeMemory(mesh->vertexBuffer.mem);
 
-			device.destroyBuffer(mesh.buffers.indices.buffer);
-			device.freeMemory(mesh.buffers.indices.memory);
+			device.destroyBuffer(mesh->indexBuffer.buf);
+			device.freeMemory(mesh->indexBuffer.mem);
 		}
 
 		textures.skybox.destroy();
 
-		delete(logos);
-		delete(background);
-		delete(models);
-		delete(skybox);
+		delete(demoMeshes.logos);
+		delete(demoMeshes.background);
+		delete(demoMeshes.models);
+		delete(demoMeshes.skybox);
 	}
 
 	void loadTextures() {
@@ -128,20 +106,11 @@ public:
 		cmdBuffer.setViewport(0, vkx::viewport(size));
 		cmdBuffer.setScissor(0, vkx::rect2D(size));
 		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSet, nullptr);
-		
-		for (auto& mesh : meshLoaders) {
+		for (auto& mesh : meshes) {
 			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, mesh->pipeline);
 			cmdBuffer.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, mesh->vertexBuffer.buf, { 0 });
 			cmdBuffer.bindIndexBuffer(mesh->indexBuffer.buf, 0, vk::IndexType::eUint32);
 			cmdBuffer.drawIndexed(mesh->indexBuffer.count, 1, 0, 0, 0);
-		}
-
-		for (auto& mesh : meshes) {
-			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, mesh.pipeline);
-			cmdBuffer.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, mesh.buffers.vertices.buffer, vk::DeviceSize()/*{ 0 }*/);
-			cmdBuffer.bindIndexBuffer(mesh.buffers.indices.buffer, 0, vk::IndexType::eUint32);
-			cmdBuffer.drawIndexed(mesh.buffers.indexCount, 1, 0, 0, 0);
-			/*mesh.drawIndexed(cmdBuffer);*/
 		}
 	}
 
@@ -154,55 +123,40 @@ public:
 		};
 
 		// Load meshes for demos scene
-		logos = new vkx::MeshLoader();
-		background = new vkx::MeshLoader();
-		models = new vkx::MeshLoader();
-		skybox = new vkx::MeshLoader();
+		demoMeshes.logos = new vkx::MeshLoader();
+		demoMeshes.background = new vkx::MeshLoader();
+		demoMeshes.models = new vkx::MeshLoader();
+		demoMeshes.skybox = new vkx::MeshLoader();
 
+		#if defined(__ANDROID__)
+		demoMeshes.logos->assetManager = androidApp->activity->assetManager;
+		demoMeshes.background->assetManager = androidApp->activity->assetManager;
+		demoMeshes.models->assetManager = androidApp->activity->assetManager;
+		demoMeshes.skybox->assetManager = androidApp->activity->assetManager;
+		#endif
 
-		logos->load(getAssetPath() + "models/vulkanscenelogos.dae");
-		background->load(getAssetPath() + "models/vulkanscenebackground.dae");
-		models->load(getAssetPath() + "models/vulkanscenemodels.dae");
-		skybox->load(getAssetPath() + "models/cube.obj");
+		demoMeshes.logos->load(getAssetPath() + "models/vulkanscenelogos.dae");
+		demoMeshes.background->load(getAssetPath() + "models/vulkanscenebackground.dae");
+		demoMeshes.models->load(getAssetPath() + "models/vulkanscenemodels.dae");
+		demoMeshes.skybox->load(getAssetPath() + "models/cube.obj");
 
-		// re-usable? meshloader class// definitely not reusable// important
-		vkx::MeshLoader* loader = new vkx::MeshLoader();
-
-		loader/*.*/->load(getAssetPath() + "models/plane.obj");
-		vkx::Mesh planeMesh = loader/*.*/->createMeshFromBuffers(context, vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
-
-		loader = new vkx::MeshLoader();
-
-		loader/*.*/->load(getAssetPath() + "models/vulkanscenelogos.dae");
-		vkx::Mesh logoMesh = loader/*.*/->createMeshFromBuffers(context, vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
-
-		meshes.push_back(planeMesh);
-		meshes.push_back(logoMesh);
-
-
-
-
-
-
-		std::vector<vkx::MeshLoader*> meshLoaderList;
-		meshLoaderList.push_back(skybox); // skybox first because of depth writes
-		meshLoaderList.push_back(logos);
-		meshLoaderList.push_back(background);
-		meshLoaderList.push_back(models);
-		//meshLoaderList.push_back(plane);
+		std::vector<vkx::MeshLoader*> meshList;
+		meshList.push_back(demoMeshes.skybox); // skybox first because of depth writes
+		meshList.push_back(demoMeshes.logos);
+		meshList.push_back(demoMeshes.background);
+		meshList.push_back(demoMeshes.models);
 
 		// todo : Use mesh function for loading
-		/*float scale = 1.0f;
-		for (auto& meshLoader : meshLoaderList) {
+		float scale = 1.0f;
+		for (auto& mesh : meshList) {
 			// Generate vertex buffer (pos, normal, uv, color)
 			std::vector<Vertex> vertexBuffer;
-			for (int m = 0; m < meshLoader->m_Entries.size(); m++) {
-				for (int i = 0; i < meshLoader->m_Entries[m].Vertices.size(); i++) {
-
-					glm::vec3 pos = meshLoader->m_Entries[m].Vertices[i].m_pos * scale;
-					glm::vec3 normal = meshLoader->m_Entries[m].Vertices[i].m_normal;
-					glm::vec2 uv = meshLoader->m_Entries[m].Vertices[i].m_tex;
-					glm::vec3 col = meshLoader->m_Entries[m].Vertices[i].m_color;
+			for (int m = 0; m < mesh->m_Entries.size(); m++) {
+				for (int i = 0; i < mesh->m_Entries[m].Vertices.size(); i++) {
+					glm::vec3 pos = mesh->m_Entries[m].Vertices[i].m_pos * scale;
+					glm::vec3 normal = mesh->m_Entries[m].Vertices[i].m_normal;
+					glm::vec2 uv = mesh->m_Entries[m].Vertices[i].m_tex;
+					glm::vec3 col = mesh->m_Entries[m].Vertices[i].m_color;
 					Vertex vert = {
 						{ pos.x, pos.y, pos.z },
 						{ normal.x, -normal.y, normal.z },
@@ -212,61 +166,55 @@ public:
 
 					// Offset Vulkan meshes
 					// todo : center before export
-					//if (mesh != demoMeshes.skybox) {
-						//vert.pos[1] += 1.15f;
-					//}
+					if (mesh != demoMeshes.skybox) {
+						vert.pos[1] += 1.15f;
+					}
 
 					vertexBuffer.push_back(vert);
 				}
 			}
 			auto result = context.createBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
-			meshLoader->vertexBuffer.buf = result.buffer;
-			meshLoader->vertexBuffer.mem = result.memory;
+			mesh->vertexBuffer.buf = result.buffer;
+			mesh->vertexBuffer.mem = result.memory;
 			std::vector<uint32_t> indexBuffer;
-			for (int m = 0; m < meshLoader->m_Entries.size(); m++) {
+			for (int m = 0; m < mesh->m_Entries.size(); m++) {
 				int indexBase = indexBuffer.size();
-				for (int i = 0; i < meshLoader->m_Entries[m].Indices.size(); i++) {
-					indexBuffer.push_back(meshLoader->m_Entries[m].Indices[i] + indexBase);
+				for (int i = 0; i < mesh->m_Entries[m].Indices.size(); i++) {
+					indexBuffer.push_back(mesh->m_Entries[m].Indices[i] + indexBase);
 				}
 			}
 			result = context.createBuffer(vk::BufferUsageFlagBits::eVertexBuffer, indexBuffer);
-			meshLoader->indexBuffer.buf = result.buffer;
-			meshLoader->indexBuffer.mem = result.memory;
-			meshLoader->indexBuffer.count = indexBuffer.size();
+			mesh->indexBuffer.buf = result.buffer;
+			mesh->indexBuffer.mem = result.memory;
+			mesh->indexBuffer.count = indexBuffer.size();
 
-			meshLoaders.push_back(meshLoader);
-		}*/
-
-
-
-
-
+			meshes.push_back(mesh);
+		}
 
 		// Binding description
-		bindingDescriptions.resize(1);
-		bindingDescriptions[0] =
+		demoMeshes.bindingDescriptions.resize(1);
+		demoMeshes.bindingDescriptions[0] =
 			vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, sizeof(Vertex), vk::VertexInputRate::eVertex);
 
 		// Attribute descriptions
-		attributeDescriptions.resize(4);
 		// Location 0 : Position
-		attributeDescriptions[0] =
+		demoMeshes.attributeDescriptions.resize(4);
+		demoMeshes.attributeDescriptions[0] =
 			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 0, vk::Format::eR32G32B32Sfloat, 0);
 		// Location 1 : Normal
-		attributeDescriptions[1] =
+		demoMeshes.attributeDescriptions[1] =
 			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 1, vk::Format::eR32G32B32Sfloat, sizeof(float) * 3);
 		// Location 2 : Texture coordinates
-		attributeDescriptions[2] =
+		demoMeshes.attributeDescriptions[2] =
 			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 2, vk::Format::eR32G32Sfloat, sizeof(float) * 6);
 		// Location 3 : Color
-		attributeDescriptions[3] =
+		demoMeshes.attributeDescriptions[3] =
 			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 3, vk::Format::eR32G32B32Sfloat, sizeof(float) * 8);
 
-		inputState.vertexBindingDescriptionCount = bindingDescriptions.size();
-		inputState.pVertexBindingDescriptions = bindingDescriptions.data();
-
-		inputState.vertexAttributeDescriptionCount = attributeDescriptions.size();
-		inputState.pVertexAttributeDescriptions = attributeDescriptions.data();
+		demoMeshes.inputState.vertexBindingDescriptionCount = demoMeshes.bindingDescriptions.size();
+		demoMeshes.inputState.pVertexBindingDescriptions = demoMeshes.bindingDescriptions.data();
+		demoMeshes.inputState.vertexAttributeDescriptionCount = demoMeshes.attributeDescriptions.size();
+		demoMeshes.inputState.pVertexAttributeDescriptions = demoMeshes.attributeDescriptions.data();
 	}
 
 	void setupDescriptorPool() {
@@ -384,7 +332,7 @@ public:
 		vk::GraphicsPipelineCreateInfo pipelineCreateInfo =
 			vkx::pipelineCreateInfo(pipelineLayout, renderPass);
 
-		pipelineCreateInfo.pVertexInputState = &inputState;
+		pipelineCreateInfo.pVertexInputState = &demoMeshes.inputState;
 		pipelineCreateInfo.pInputAssemblyState = &inputAssemblyState;
 		pipelineCreateInfo.pRasterizationState = &rasterizationState;
 		pipelineCreateInfo.pColorBlendState = &colorBlendState;
@@ -413,13 +361,10 @@ public:
 
 
 		// Assign pipelines
-		logos->pipeline = pipelines.logos;
-		models->pipeline = pipelines.models;
-		background->pipeline = pipelines.models;
-		skybox->pipeline = pipelines.skybox;
-
-		meshes[0].pipeline = pipelines.models;
-		meshes[1].pipeline = pipelines.logos;
+		demoMeshes.logos->pipeline = pipelines.logos;
+		demoMeshes.models->pipeline = pipelines.models;
+		demoMeshes.background->pipeline = pipelines.models;
+		demoMeshes.skybox->pipeline = pipelines.skybox;
 	}
 
 	// Prepare and initialize uniform buffer containing shader uniforms
@@ -431,6 +376,7 @@ public:
 
 	void updateUniformBuffers() {
 		uboVS.projection = camera.matrices.projection;
+		//uboVS.view = glm::translate(glm::mat4(), glm::vec3(0, 0, camera.translation.z));
 		uboVS.view = camera.matrices.view;
 		//uboVS.model = camera.matrices.skyboxView;
 		uboVS.normal = glm::inverseTranspose(uboVS.view * uboVS.model);

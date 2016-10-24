@@ -100,6 +100,8 @@ namespace vkx {
 		vk::VertexInputBindingDescription bindingDescription;
 		std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
 
+		Mesh(vkx::MeshBuffer mBuffer, uint32_t binding, const std::vector<VertexLayout>& layout);
+
 		void setupVertexInputState(const std::vector<VertexLayout>& layout);
 
 		void drawIndexed(const vk::CommandBuffer& cmdBuffer);
@@ -189,5 +191,8 @@ namespace vkx {
 		// Create vertex and index buffer with given layout
 		// Note : Only does staging if a valid command buffer and transfer queue are passed
 		MeshBuffer createBuffers(const Context& context, const std::vector<VertexLayout>& layout, float scale);
+
+		// convienience// just calls above function and then creates mesh class
+		vkx::Mesh createMeshFromBuffers(const Context & context, const std::vector<VertexLayout>& layout, float scale, uint32_t binding);
 	};
 }
