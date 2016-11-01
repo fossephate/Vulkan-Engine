@@ -1,486 +1,553 @@
 /*
-* Vulkan Demo Scene
-*
-* Don't take this a an example, it's more of a personal playground
+* Vulkan Example -  Rendering a scene with multiple meshes and materials
 *
 * Copyright (C) 2016 by Sascha Willems - www.saschawillems.de
 *
-* Note : Different license than the other examples!
-*
-* This code is licensed under the Mozilla Public License Version 2.0 (http://opensource.org/licenses/MPL-2.0)
+* This code is licensed under the MIT license (MIT) (http://opensource.org/licenses/MIT)
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-#include <vector>
-
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/matrix_inverse.hpp>
-
-#include <vulkan/vulkan.h>
 #include "vulkanApp.h"
 
 #define VERTEX_BUFFER_BIND_ID 0
-#define ENABLE_VALIDATION false
 
-class VulkanExample : public vulkanApp
-{
-public:
+// Vertex layout used in this example
+struct Vertex {
+	glm::vec3 pos;
+	glm::vec3 normal;
+	glm::vec2 uv;
+	glm::vec3 color;
+};
 
-	struct DemoMesh
-	{
-		vk::Buffer vertexBuffer;
-		vk::Buffer indexBuffer;
-		uint32_t indexCount;
-		VkPipeline *pipeline;
+// Scene related structs
 
-		void draw(VkCommandBuffer cmdBuffer)
-		{
-			VkDeviceSize offsets[1] = { 0 };
-			vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline);
-			vkCmdBindVertexBuffers(cmdBuffer, VERTEX_BUFFER_BIND_ID, 1, &vertexBuffer.buffer, offsets);
-			vkCmdBindIndexBuffer(cmdBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-			vkCmdDrawIndexed(cmdBuffer, indexCount, 1, 0, 0, 0);
-		}
-	};
+// Shader properites for a material
+// Will be passed to the shaders using push constant
+struct SceneMaterialProperites {
+	glm::vec4 ambient;
+	glm::vec4 diffuse;
+	glm::vec4 specular;
+	float opacity;
+};
 
-	struct DemoMeshes
-	{
-		std::vector<std::string> names{ "logos", "background", "models", "skybox" };
-		VkPipelineVertexInputStateCreateInfo inputState;
-		std::vector<VkVertexInputBindingDescription> bindingDescriptions;
-		std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
-		DemoMesh logos;
-		DemoMesh background;
-		DemoMesh models;
-		DemoMesh skybox;
-	} demoMeshes;
-	std::vector<DemoMesh> meshes;
+// Stores info on the materials used in the scene
+struct SceneMaterial {
+	std::string name;
+	// Material properties
+	SceneMaterialProperites properties;
+	// The example only uses a diffuse channel
+	vkx::Texture diffuse;
+	// The material's descriptor contains the material descriptors
+	vk::DescriptorSet descriptorSet;
+	// Pointer to the pipeline used by this material
+	vk::Pipeline *pipeline;
+};
 
+// Stores per-mesh Vulkan resources
+struct SceneMesh {
+	vkx::CreateBufferResult vertices;
+	vkx::CreateBufferResult indices;
+	uint32_t indexCount;
+
+	// Pointer to the material used by this mesh
+	SceneMaterial *material;
+};
+
+// Class for loading the scene and generating all Vulkan resources
+class Scene {
+private:
+	const vkx::Context& context;
+	vk::Device device;
+	vk::Queue queue;
+
+	vk::DescriptorPool descriptorPool;
+
+	// We will be using separate descriptor sets (and bindings)
+	// for material and scene related uniforms
 	struct {
-		vk::Buffer meshVS;
-	} uniformData;
+		vk::DescriptorSetLayout material;
+		vk::DescriptorSetLayout scene;
+	} descriptorSetLayouts;
 
+	vk::DescriptorSet descriptorSetScene;
+
+	vkx::TextureLoader *textureLoader;
+
+	const aiScene* aScene;
+
+	// Get materials from the assimp scene and map to our scene structures
+	void loadMaterials() {
+		materials.resize(aScene->mNumMaterials);
+
+		for (size_t i = 0; i < materials.size(); i++) {
+			materials[i] = {};
+
+			aiString name;
+			aScene->mMaterials[i]->Get(AI_MATKEY_NAME, name);
+
+			// Properties
+			aiColor4D color;
+			aScene->mMaterials[i]->Get(AI_MATKEY_COLOR_AMBIENT, color);
+			materials[i].properties.ambient = glm::make_vec4(&color.r) + glm::vec4(0.1f);
+			aScene->mMaterials[i]->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+			materials[i].properties.diffuse = glm::make_vec4(&color.r);
+			aScene->mMaterials[i]->Get(AI_MATKEY_COLOR_SPECULAR, color);
+			materials[i].properties.specular = glm::make_vec4(&color.r);
+			aScene->mMaterials[i]->Get(AI_MATKEY_OPACITY, materials[i].properties.opacity);
+
+			if ((materials[i].properties.opacity) > 0.0f)
+				materials[i].properties.specular = glm::vec4(0.0f);
+
+			materials[i].name = name.C_Str();
+			std::cout << "Material \"" << materials[i].name << "\"" << std::endl;
+
+			// Textures
+			aiString texturefile;
+			// Diffuse
+			aScene->mMaterials[i]->GetTexture(aiTextureType_DIFFUSE, 0, &texturefile);
+			if (aScene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
+				std::cout << "  Diffuse: \"" << texturefile.C_Str() << "\"" << std::endl;
+				std::string fileName = std::string(texturefile.C_Str());
+				std::replace(fileName.begin(), fileName.end(), '\\', '/');
+				materials[i].diffuse = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc3UnormBlock);
+			} else {
+				std::cout << "  Material has no diffuse, using dummy texture!" << std::endl;
+				// todo : separate pipeline and layout
+				materials[i].diffuse = textureLoader->loadTexture(assetPath + "dummy.ktx", vk::Format::eBc2UnormBlock);
+			}
+
+			// For scenes with multiple textures per material we would need to check for additional texture types, e.g.:
+			// aiTextureType_HEIGHT, aiTextureType_OPACITY, aiTextureType_SPECULAR, etc.
+
+			// Assign pipeline
+			materials[i].pipeline = (materials[i].properties.opacity == 0.0f) ? &pipelines.solid : &pipelines.blending;
+		}
+
+		// Generate descriptor sets for the materials
+
+		// Descriptor pool
+		std::vector<vk::DescriptorPoolSize> poolSizes;
+		poolSizes.push_back(vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, static_cast<uint32_t>(materials.size())));
+		poolSizes.push_back(vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, static_cast<uint32_t>(materials.size())));
+
+		vk::DescriptorPoolCreateInfo descriptorPoolInfo =
+			vkx::descriptorPoolCreateInfo(
+				static_cast<uint32_t>(poolSizes.size()),
+				poolSizes.data(),
+				static_cast<uint32_t>(materials.size()) + 1);
+
+		descriptorPool = device.createDescriptorPool(descriptorPoolInfo);
+
+		// Descriptor set and pipeline layouts
+		std::vector<vk::DescriptorSetLayoutBinding> setLayoutBindings;
+		vk::DescriptorSetLayoutCreateInfo descriptorLayout;
+
+		// Set 0: Scene matrices
+		setLayoutBindings.push_back(vkx::descriptorSetLayoutBinding(
+			vk::DescriptorType::eUniformBuffer,
+			vk::ShaderStageFlagBits::eVertex,
+			0));
+		descriptorLayout = vkx::descriptorSetLayoutCreateInfo(
+			setLayoutBindings.data(),
+			static_cast<uint32_t>(setLayoutBindings.size()));
+		descriptorSetLayouts.scene = device.createDescriptorSetLayout(descriptorLayout);
+
+		// Set 1: Material data
+		setLayoutBindings.clear();
+		setLayoutBindings.push_back(vkx::descriptorSetLayoutBinding(
+			vk::DescriptorType::eCombinedImageSampler,
+			vk::ShaderStageFlagBits::eFragment,
+			0));
+		descriptorSetLayouts.material = device.createDescriptorSetLayout(descriptorLayout);
+
+		// Setup pipeline layout
+		std::array<vk::DescriptorSetLayout, 2> setLayouts = { descriptorSetLayouts.scene, descriptorSetLayouts.material };
+		vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo = vkx::pipelineLayoutCreateInfo(setLayouts.data(), static_cast<uint32_t>(setLayouts.size()));
+
+		// We will be using a push constant block to pass material properties to the fragment shaders
+		vk::PushConstantRange pushConstantRange = vkx::pushConstantRange(
+			vk::ShaderStageFlagBits::eFragment,
+			sizeof(SceneMaterialProperites),
+			0);
+		pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+		pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
+
+		pipelineLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
+
+		// Material descriptor sets
+		for (size_t i = 0; i < materials.size(); i++) {
+			// Descriptor set
+			vk::DescriptorSetAllocateInfo allocInfo =
+				vkx::descriptorSetAllocateInfo(
+					descriptorPool,
+					&descriptorSetLayouts.material,
+					1);
+
+			materials[i].descriptorSet = device.allocateDescriptorSets(allocInfo)[0];
+
+			vk::DescriptorImageInfo texDescriptor =
+				vkx::descriptorImageInfo(
+					materials[i].diffuse.sampler,
+					materials[i].diffuse.view,
+					vk::ImageLayout::eGeneral);
+
+			std::vector<vk::WriteDescriptorSet> writeDescriptorSets;
+
+			// todo : only use image sampler descriptor set and use one scene ubo for matrices
+
+			// Binding 0: Diffuse texture
+			writeDescriptorSets.push_back(vkx::writeDescriptorSet(
+				materials[i].descriptorSet,
+				vk::DescriptorType::eCombinedImageSampler,
+				0,
+				&texDescriptor));
+
+			device.updateDescriptorSets(writeDescriptorSets, {});
+		}
+
+		// Scene descriptor set
+		vk::DescriptorSetAllocateInfo allocInfo =
+			vkx::descriptorSetAllocateInfo(
+				descriptorPool,
+				&descriptorSetLayouts.scene,
+				1);
+		descriptorSetScene = device.allocateDescriptorSets(allocInfo)[0];
+
+		std::vector<vk::WriteDescriptorSet> writeDescriptorSets;
+		// Binding 0 : Vertex shader uniform buffer
+		writeDescriptorSets.push_back(vkx::writeDescriptorSet(
+			descriptorSetScene,
+			vk::DescriptorType::eUniformBuffer,
+			0,
+			&uniformBuffer.descriptor));
+
+		device.updateDescriptorSets(writeDescriptorSets, {});
+	}
+
+	// Load all meshes from the scene and generate the Vulkan resources
+	// for rendering them
+	void loadMeshes(vk::CommandBuffer copyCmd) {
+		meshes.resize(aScene->mNumMeshes);
+		for (uint32_t i = 0; i < meshes.size(); i++) {
+			aiMesh *aMesh = aScene->mMeshes[i];
+
+			std::cout << "Mesh \"" << aMesh->mName.C_Str() << "\"" << std::endl;
+			std::cout << "	Material: \"" << materials[aMesh->mMaterialIndex].name << "\"" << std::endl;
+			std::cout << "	Faces: " << aMesh->mNumFaces << std::endl;
+
+			meshes[i].material = &materials[aMesh->mMaterialIndex];
+
+			// Vertices
+			std::vector<Vertex> vertices;
+			vertices.resize(aMesh->mNumVertices);
+
+			bool hasUV = aMesh->HasTextureCoords(0);
+			bool hasColor = aMesh->HasVertexColors(0);
+			bool hasNormals = aMesh->HasNormals();
+
+			for (uint32_t v = 0; v < aMesh->mNumVertices; v++) {
+				vertices[v].pos = glm::make_vec3(&aMesh->mVertices[v].x);
+				//vertices[v].pos.y = vertices[v].pos.y;// was negative// important
+
+				vertices[v].uv = hasUV ? glm::make_vec2(&aMesh->mTextureCoords[0][v].x) : glm::vec2(0.0f);
+				vertices[v].normal = hasNormals ? glm::make_vec3(&aMesh->mNormals[v].x) : glm::vec3(0.0f);
+				//vertices[v].normal.y = vertices[v].normal.y;// was negative// important
+
+				vertices[v].color = hasColor ? glm::make_vec3(&aMesh->mColors[0][v].r) : glm::vec3(1.0f);
+			}
+			meshes[i].vertices = context.stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertices);
+
+			// Indices
+			std::vector<uint32_t> indices;
+			meshes[i].indexCount = aMesh->mNumFaces * 3;
+			indices.resize(aMesh->mNumFaces * 3);
+			for (uint32_t f = 0; f < aMesh->mNumFaces; f++) {
+				memcpy(&indices[f * 3], &aMesh->mFaces[f].mIndices[0], sizeof(uint32_t) * 3);
+			}
+			meshes[i].indices = context.stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indices);
+		}
+	}
+
+public:
+	#if defined(__ANDROID__)
+	AAssetManager* assetManager = nullptr;
+	#endif
+
+	std::string assetPath = "";
+
+	std::vector<SceneMaterial> materials;
+	std::vector<SceneMesh> meshes;
+
+	// Shared ubo containing matrices used by all
+	// materials and meshes
+	vkx::UniformData uniformBuffer;
 	struct {
 		glm::mat4 projection;
-		glm::mat4 model;
-		glm::mat4 normal;
 		glm::mat4 view;
-		glm::vec4 lightPos;
-	} uboVS;
+		glm::mat4 model;
+		glm::vec4 lightPos = glm::vec4(1.25f, 8.35f, 0.0f, 0.0f);
+	} uniformData;
 
-	struct
-	{
-		vkTools::VulkanTexture skybox;
-	} textures;
-
+	// Scene uses multiple pipelines
 	struct {
-		VkPipeline logos;
-		VkPipeline models;
-		VkPipeline skybox;
+		vk::Pipeline solid;
+		vk::Pipeline blending;
+		vk::Pipeline wireframe;
 	} pipelines;
 
-	VkPipelineLayout pipelineLayout;
-	VkDescriptorSet descriptorSet;
-	VkDescriptorSetLayout descriptorSetLayout;
+	// Shared pipeline layout
+	vk::PipelineLayout pipelineLayout;
 
-	glm::vec4 lightPos = glm::vec4(1.0f, 2.0f, 0.0f, 0.0f);
+	// For displaying only a single part of the scene
+	bool renderSingleScenePart = false;
+	uint32_t scenePartIndex = 0;
 
-	VulkanExample() : vulkanApp(ENABLE_VALIDATION)
-	{
-		width = 1280;
-		height = 720;
-		zoom = -3.75f;
-		rotationSpeed = 0.5f;
-		rotation = glm::vec3(15.0f, 0.f, 0.0f);
-		enableTextOverlay = true;
-		title = "Vulkan Demo Scene - (c) 2016 by Sascha Willems";
+	Scene(const vkx::Context& context, vkx::TextureLoader *textureloader) : context(context) {
+		this->device = context.device;
+		this->queue = context.queue;
+		this->textureLoader = textureloader;
+		uniformBuffer = context.createUniformBuffer(uniformData);
 	}
 
-	~VulkanExample()
-	{
-		// Clean up used Vulkan resources 
-		// Note : Inherited destructor cleans up resources stored in base class
-		vkDestroyPipeline(device, pipelines.logos, nullptr);
-		vkDestroyPipeline(device, pipelines.models, nullptr);
-		vkDestroyPipeline(device, pipelines.skybox, nullptr);
-
+	~Scene() {
+		for (auto mesh : meshes) {
+			mesh.vertices.destroy();
+			mesh.indices.destroy();
+		}
+		for (auto material : materials) {
+			material.diffuse.destroy();
+		}
 		vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-		vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
-
-		uniformData.meshVS.destroy();
-
-		for (auto mesh : meshes)
-		{
-			mesh.vertexBuffer.destroy();
-			mesh.indexBuffer.destroy();
-		}
-
-		textureLoader->destroyTexture(textures.skybox);
+		vkDestroyDescriptorSetLayout(device, descriptorSetLayouts.material, nullptr);
+		vkDestroyDescriptorSetLayout(device, descriptorSetLayouts.scene, nullptr);
+		vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+		vkDestroyPipeline(device, pipelines.solid, nullptr);
+		vkDestroyPipeline(device, pipelines.blending, nullptr);
+		vkDestroyPipeline(device, pipelines.wireframe, nullptr);
+		uniformBuffer.destroy();
 	}
 
-	void loadTextures()
-	{
-		textureLoader->loadCubemap(
-			getAssetPath() + "textures/cubemap_vulkan.ktx",
-			VK_FORMAT_R8G8B8A8_UNORM,
-			&textures.skybox);
-	}
+	void load(std::string filename, vk::CommandBuffer copyCmd) {
+		Assimp::Importer Importer;
 
-	void buildCommandBuffers()
-	{
-		VkCommandBufferBeginInfo cmdBufInfo = vkTools::initializers::commandBufferBeginInfo();
+		int flags = aiProcess_PreTransformVertices | aiProcess_Triangulate | aiProcess_GenNormals;
 
-		VkClearValue clearValues[2];
-		clearValues[0].color = defaultClearColor;
-		clearValues[1].depthStencil = { 1.0f, 0 };
+		#if defined(__ANDROID__)
+		AAsset* asset = AAssetManager_open(assetManager, filename.c_str(), AASSET_MODE_STREAMING);
+		assert(asset);
+		size_t size = AAsset_getLength(asset);
+		assert(size > 0);
+		void *meshData = malloc(size);
+		AAsset_read(asset, meshData, size);
+		AAsset_close(asset);
+		aScene = Importer.ReadFileFromMemory(meshData, size, flags);
+		free(meshData);
+		#else
+		aScene = Importer.ReadFile(filename.c_str(), flags);
+		#endif
 
-		VkRenderPassBeginInfo renderPassBeginInfo = vkTools::initializers::renderPassBeginInfo();
-		renderPassBeginInfo.renderPass = renderPass;
-		renderPassBeginInfo.renderArea.offset.x = 0;
-		renderPassBeginInfo.renderArea.offset.y = 0;
-		renderPassBeginInfo.renderArea.extent.width = width;
-		renderPassBeginInfo.renderArea.extent.height = height;
-		renderPassBeginInfo.clearValueCount = 2;
-		renderPassBeginInfo.pClearValues = clearValues;
+		//aiMatrix4x4 rot;
+		//rot.FromEulerAnglesXYZ(aiVector3D(-90.0f, 45.0f, 10.0f));
+		////aScene->mRootNode->mTransformation = rot * aScene->mRootNode->mTransformation;// change collada model back to z up// important
+		//aScene->mRootNode->mTransformation = aScene->mRootNode->mTransformation * rot;
+		
 
-		for (int32_t i = 0; i < drawCmdBuffers.size(); ++i)
-		{
-			renderPassBeginInfo.framebuffer = frameBuffers[i];
 
-			VK_CHECK_RESULT(vkBeginCommandBuffer(drawCmdBuffers[i], &cmdBufInfo));
 
-			vkCmdBeginRenderPass(drawCmdBuffers[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-			VkViewport viewport = vkTools::initializers::viewport((float)width, (float)height, 0.0f, 1.0f);
-			vkCmdSetViewport(drawCmdBuffers[i], 0, 1, &viewport);
-
-			VkRect2D scissor = vkTools::initializers::rect2D(width, height, 0, 0);
-			vkCmdSetScissor(drawCmdBuffers[i], 0, 1, &scissor);
-
-			vkCmdBindDescriptorSets(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, NULL);
-
-			VkDeviceSize offsets[1] = { 0 };
-			for (auto mesh : meshes)
-			{
-				mesh.draw(drawCmdBuffers[i]);
-			}
-
-			vkCmdEndRenderPass(drawCmdBuffers[i]);
-
-			VK_CHECK_RESULT(vkEndCommandBuffer(drawCmdBuffers[i]));
-		}
-	}
-
-	void prepareVertices()
-	{
-		struct Vertex
-		{
-			float pos[3];
-			float normal[3];
-			float uv[2];
-			float color[3];
-		};
-
-		std::vector<std::string> meshFiles = { "vulkanscenelogos.dae", "vulkanscenebackground.dae", "vulkanscenemodels.dae", "cube.obj" };
-		std::vector<VkPipeline*> meshPipelines = { &pipelines.logos, &pipelines.models, &pipelines.models, &pipelines.skybox };
-
-		// todo : Use mesh function for loading
-		float scale = 1.0f;
-		for (auto i = 0; i < meshFiles.size(); i++)
-		{
-			VulkanMeshLoader scene(vulkanDevice);
-
-#if defined(__ANDROID__)
-			scene.assetManager = androidApp->activity->assetManager;
-#endif
-			scene.LoadMesh(getAssetPath() + "models/" + meshFiles[i]);
-
-			// Generate vertex buffer (pos, normal, uv, color)
-			std::vector<Vertex> vertexBuffer;
-			glm::vec3 offset(0.0f);
-			// Offset on Y (except skypbox)
-			if (meshFiles[i] != "cube.obj")
-			{
-				offset.y += 1.15f;
-			}
-			for (size_t m = 0; m < scene.m_Entries.size(); m++)
-			{
-				for (size_t v = 0; v < scene.m_Entries[m].Vertices.size(); v++)
-				{
-					glm::vec3 pos = (scene.m_Entries[m].Vertices[v].m_pos + offset) * scale;
-					glm::vec3 normal = scene.m_Entries[m].Vertices[v].m_normal;
-					glm::vec2 uv = scene.m_Entries[m].Vertices[v].m_tex;
-					glm::vec3 col = scene.m_Entries[m].Vertices[v].m_color;
-					Vertex vert =
-					{
-						{ pos.x, pos.y, pos.z },
-						{ normal.x, -normal.y, normal.z },
-						{ uv.s, uv.t },
-						{ col.r, col.g, col.b }
-					};
-
-					vertexBuffer.push_back(vert);
-				}
-			}
-
-			std::vector<uint32_t> indexBuffer;
-			for (size_t m = 0; m < scene.m_Entries.size(); m++)
-			{
-				int indexBase = indexBuffer.size();
-				for (size_t i = 0; i < scene.m_Entries[m].Indices.size(); i++) {
-					indexBuffer.push_back(scene.m_Entries[m].Indices[i] + indexBase);
-				}
-			}
-
-			DemoMesh mesh;
-
-			mesh.indexCount = static_cast<uint32_t>(indexBuffer.size());
-			mesh.pipeline = meshPipelines[i];
-
-			uint32_t vertexBufferSize = static_cast<uint32_t>(vertexBuffer.size()) * sizeof(Vertex);
-			uint32_t indexBufferSize = static_cast<uint32_t>(indexBuffer.size()) * sizeof(uint32_t);
-
-			vk::Buffer vertexStaging, indexStaging;
-
-			// Create staging buffers
-			// Vertex data
-			vulkanDevice->createBuffer(
-				VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-				&vertexStaging,
-				vertexBufferSize,
-				vertexBuffer.data());
-			// Index data
-			vulkanDevice->createBuffer(
-				VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-				&indexStaging,
-				indexBufferSize,
-				indexBuffer.data());
-
-			// Create device local buffers
-			// Vertex buffer
-			vulkanDevice->createBuffer(
-				VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-				&mesh.vertexBuffer,
-				vertexBufferSize);
-			// Index buffer
-			vulkanDevice->createBuffer(
-				VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-				&mesh.indexBuffer,
-				indexBufferSize);
-
-			// Copy from staging buffers
-			vulkanDevice->copyBuffer(&vertexStaging, &mesh.vertexBuffer, queue);
-			vulkanDevice->copyBuffer(&indexStaging, &mesh.indexBuffer, queue);
-
-			vertexStaging.destroy();
-			indexStaging.destroy();
-
-			meshes.push_back(mesh);
+		if (aScene) {
+			loadMaterials();
+			loadMeshes(copyCmd);
+		} else {
+			printf("Error parsing '%s': '%s'\n", filename.c_str(), Importer.GetErrorString());
+			#if defined(__ANDROID__)
+			LOGE("Error parsing '%s': '%s'", filename.c_str(), Importer.GetErrorString());
+			#endif
 		}
 
+	}
+
+	// Renders the scene into an active command buffer
+	// In a real world application we would do some visibility culling in here
+	void render(vk::CommandBuffer cmdBuffer, bool wireframe) {
+		vk::DeviceSize offsets[1] = { 0 };
+		for (size_t i = 0; i < meshes.size(); i++) {
+			if ((renderSingleScenePart) && (i != scenePartIndex))
+				continue;
+
+			//if (meshes[i].material->opacity == 0.0f)
+			//	continue;
+
+			// todo : per material pipelines
+			//			vkCmdBindPipeline(cmdBuffer, vk::PipelineBindPoint::eGraphics, *mesh.material->pipeline);
+
+			// We will be using multiple descriptor sets for rendering
+			// In GLSL the selection is done via the set and binding keywords
+			// VS: layout (set = 0, binding = 0) uniform UBO;
+			// FS: layout (set = 1, binding = 0) uniform sampler2D samplerColorMap;
+
+			std::array<vk::DescriptorSet, 2> descriptorSets;
+			// Set 0: Scene descriptor set containing global matrices
+			descriptorSets[0] = descriptorSetScene;
+			// Set 1: Per-Material descriptor set containing bound images
+			descriptorSets[1] = meshes[i].material->descriptorSet;
+
+			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, wireframe ? pipelines.wireframe : *meshes[i].material->pipeline);
+			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSets, {});
+
+			// Pass material properies via push constants
+			vkCmdPushConstants(
+				cmdBuffer,
+				pipelineLayout,
+				VK_SHADER_STAGE_FRAGMENT_BIT,
+				0,
+				sizeof(SceneMaterialProperites),
+				&meshes[i].material->properties);
+
+			cmdBuffer.bindVertexBuffers(0, meshes[i].vertices.buffer, { 0 });
+			cmdBuffer.bindIndexBuffer(meshes[i].indices.buffer, 0, vk::IndexType::eUint32);
+			cmdBuffer.drawIndexed(meshes[i].indexCount, 1, 0, 0, 0);
+		}
+
+		// Render transparent objects last
+
+	}
+};
+
+class VulkanExample : public vkx::vulkanApp {
+	using Parent = vulkanApp;
+public:
+	bool wireframe = false;
+	bool attachLight = false;
+
+	Scene *scene = nullptr;
+
+	struct {
+		vk::PipelineVertexInputStateCreateInfo inputState;
+		std::vector<vk::VertexInputBindingDescription> bindingDescriptions;
+		std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
+	} vertices;
+
+	VulkanExample() : Parent(ENABLE_VALIDATION) {
+		rotationSpeed = 0.5f;
+		enableTextOverlay = true;
+		//camera.type = Camera::CameraType::firstperson;
+		
+		//camera.movementSpeed = 7.5f;
+		camera.setTranslation({ -15.0f, 13.5f, 0.0f });
+		
+		//camera.setRotation(glm::vec3(5.0f, 90.0f, 0.0f));
+		//camera.setPerspective(60.0f, size, 0.1f, 256.0f);
+
+		title = "Vulkan Example - Scene rendering";
+	}
+
+	~VulkanExample() {
+		delete(scene);
+	}
+
+	void updateDrawCommandBuffer(const vk::CommandBuffer& cmdBuffer) override {
+		cmdBuffer.setViewport(0, vkx::viewport(size));
+		cmdBuffer.setScissor(0, vkx::rect2D(size));
+		scene->render(cmdBuffer, wireframe);
+	}
+
+	void setupVertexDescriptions() {
 		// Binding description
-		demoMeshes.bindingDescriptions.resize(1);
-		demoMeshes.bindingDescriptions[0] =
-			vkTools::initializers::vertexInputBindingDescription(
+		vertices.bindingDescriptions.resize(1);
+		vertices.bindingDescriptions[0] =
+			vkx::vertexInputBindingDescription(
 				VERTEX_BUFFER_BIND_ID,
 				sizeof(Vertex),
-				VK_VERTEX_INPUT_RATE_VERTEX);
+				vk::VertexInputRate::eVertex);
 
 		// Attribute descriptions
+		// Describes memory layout and shader positions
+		vertices.attributeDescriptions.resize(4);
 		// Location 0 : Position
-		demoMeshes.attributeDescriptions.resize(4);
-		demoMeshes.attributeDescriptions[0] =
-			vkTools::initializers::vertexInputAttributeDescription(
+		vertices.attributeDescriptions[0] =
+			vkx::vertexInputAttributeDescription(
 				VERTEX_BUFFER_BIND_ID,
 				0,
-				VK_FORMAT_R32G32B32_SFLOAT,
-				offsetof(Vertex, pos));
+				vk::Format::eR32G32B32Sfloat,
+				0);
 		// Location 1 : Normal
-		demoMeshes.attributeDescriptions[1] =
-			vkTools::initializers::vertexInputAttributeDescription(
+		vertices.attributeDescriptions[1] =
+			vkx::vertexInputAttributeDescription(
 				VERTEX_BUFFER_BIND_ID,
 				1,
-				VK_FORMAT_R32G32B32_SFLOAT,
-				offsetof(Vertex, normal));
+				vk::Format::eR32G32B32Sfloat,
+				sizeof(float) * 3);
 		// Location 2 : Texture coordinates
-		demoMeshes.attributeDescriptions[2] =
-			vkTools::initializers::vertexInputAttributeDescription(
+		vertices.attributeDescriptions[2] =
+			vkx::vertexInputAttributeDescription(
 				VERTEX_BUFFER_BIND_ID,
 				2,
-				VK_FORMAT_R32G32_SFLOAT,
-				offsetof(Vertex, uv));
+				vk::Format::eR32G32Sfloat,
+				sizeof(float) * 6);
 		// Location 3 : Color
-		demoMeshes.attributeDescriptions[3] =
-			vkTools::initializers::vertexInputAttributeDescription(
+		vertices.attributeDescriptions[3] =
+			vkx::vertexInputAttributeDescription(
 				VERTEX_BUFFER_BIND_ID,
 				3,
-				VK_FORMAT_R32G32B32_SFLOAT,
-				offsetof(Vertex, color));
+				vk::Format::eR32G32B32Sfloat,
+				sizeof(float) * 8);
 
-		demoMeshes.inputState = vkTools::initializers::pipelineVertexInputStateCreateInfo();
-		demoMeshes.inputState.vertexBindingDescriptionCount = demoMeshes.bindingDescriptions.size();
-		demoMeshes.inputState.pVertexBindingDescriptions = demoMeshes.bindingDescriptions.data();
-		demoMeshes.inputState.vertexAttributeDescriptionCount = demoMeshes.attributeDescriptions.size();
-		demoMeshes.inputState.pVertexAttributeDescriptions = demoMeshes.attributeDescriptions.data();
+		vertices.inputState.vertexBindingDescriptionCount = vertices.bindingDescriptions.size();
+		vertices.inputState.pVertexBindingDescriptions = vertices.bindingDescriptions.data();
+		vertices.inputState.vertexAttributeDescriptionCount = vertices.attributeDescriptions.size();
+		vertices.inputState.pVertexAttributeDescriptions = vertices.attributeDescriptions.data();
 	}
 
-	void setupDescriptorPool()
-	{
-		// Example uses one ubo and one image sampler
-		std::vector<VkDescriptorPoolSize> poolSizes =
-		{
-			vkTools::initializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 2),
-			vkTools::initializers::descriptorPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1)
-		};
+	void preparePipelines() {
+		vk::PipelineInputAssemblyStateCreateInfo inputAssemblyState =
+			vkx::pipelineInputAssemblyStateCreateInfo(vk::PrimitiveTopology::eTriangleList);
 
-		VkDescriptorPoolCreateInfo descriptorPoolInfo =
-			vkTools::initializers::descriptorPoolCreateInfo(
-				poolSizes.size(),
-				poolSizes.data(),
-				2);
+		vk::PipelineRasterizationStateCreateInfo rasterizationState =
+			vkx::pipelineRasterizationStateCreateInfo(
+				vk::PolygonMode::eFill,
+				vk::CullModeFlagBits::eBack,
+				vk::FrontFace::eCounterClockwise);
 
-		VK_CHECK_RESULT(vkCreateDescriptorPool(device, &descriptorPoolInfo, nullptr, &descriptorPool));
-	}
+		vk::PipelineColorBlendAttachmentState blendAttachmentState =
+			vkx::pipelineColorBlendAttachmentState();
 
-	void setupDescriptorSetLayout()
-	{
-		std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings =
-		{
-			// Binding 0 : Vertex shader uniform buffer
-			vkTools::initializers::descriptorSetLayoutBinding(
-				VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-				VK_SHADER_STAGE_VERTEX_BIT,
-				0),
-			// Binding 1 : Fragment shader color map image sampler
-			vkTools::initializers::descriptorSetLayoutBinding(
-				VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-				VK_SHADER_STAGE_FRAGMENT_BIT,
-				1)
-		};
-
-		VkDescriptorSetLayoutCreateInfo descriptorLayout =
-			vkTools::initializers::descriptorSetLayoutCreateInfo(
-				setLayoutBindings.data(),
-				setLayoutBindings.size());
-
-		VK_CHECK_RESULT(vkCreateDescriptorSetLayout(device, &descriptorLayout, nullptr, &descriptorSetLayout));
-
-		VkPipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
-			vkTools::initializers::pipelineLayoutCreateInfo(
-				&descriptorSetLayout,
-				1);
-
-		VK_CHECK_RESULT(vkCreatePipelineLayout(device, &pPipelineLayoutCreateInfo, nullptr, &pipelineLayout));
-	}
-
-	void setupDescriptorSet()
-	{
-		VkDescriptorSetAllocateInfo allocInfo =
-			vkTools::initializers::descriptorSetAllocateInfo(
-				descriptorPool,
-				&descriptorSetLayout,
-				1);
-
-		VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet));
-
-		// Cube map image descriptor
-		VkDescriptorImageInfo texDescriptorCubeMap =
-			vkTools::initializers::descriptorImageInfo(
-				textures.skybox.sampler,
-				textures.skybox.view,
-				VK_IMAGE_LAYOUT_GENERAL);
-
-		std::vector<VkWriteDescriptorSet> writeDescriptorSets =
-		{
-			// Binding 0 : Vertex shader uniform buffer
-			vkTools::initializers::writeDescriptorSet(
-				descriptorSet,
-				VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-				0,
-				&uniformData.meshVS.descriptor),
-			// Binding 1 : Fragment shader image sampler
-			vkTools::initializers::writeDescriptorSet(
-				descriptorSet,
-				VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-				1,
-				&texDescriptorCubeMap)
-		};
-
-		vkUpdateDescriptorSets(device, writeDescriptorSets.size(), writeDescriptorSets.data(), 0, NULL);
-	}
-
-	void preparePipelines()
-	{
-		VkPipelineInputAssemblyStateCreateInfo inputAssemblyState =
-			vkTools::initializers::pipelineInputAssemblyStateCreateInfo(
-				VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-				0,
-				VK_FALSE);
-
-		VkPipelineRasterizationStateCreateInfo rasterizationState =
-			vkTools::initializers::pipelineRasterizationStateCreateInfo(
-				VK_POLYGON_MODE_FILL,
-				VK_CULL_MODE_BACK_BIT,
-				VK_FRONT_FACE_CLOCKWISE,
-				0);
-
-		VkPipelineColorBlendAttachmentState blendAttachmentState =
-			vkTools::initializers::pipelineColorBlendAttachmentState(
-				0xf,
-				VK_FALSE);
-
-		VkPipelineColorBlendStateCreateInfo colorBlendState =
-			vkTools::initializers::pipelineColorBlendStateCreateInfo(
+		vk::PipelineColorBlendStateCreateInfo colorBlendState =
+			vkx::pipelineColorBlendStateCreateInfo(
 				1,
 				&blendAttachmentState);
 
-		VkPipelineDepthStencilStateCreateInfo depthStencilState =
-			vkTools::initializers::pipelineDepthStencilStateCreateInfo(
+		vk::PipelineDepthStencilStateCreateInfo depthStencilState =
+			vkx::pipelineDepthStencilStateCreateInfo(
 				VK_TRUE,
 				VK_TRUE,
-				VK_COMPARE_OP_LESS_OR_EQUAL);
+				vk::CompareOp::eLessOrEqual);
 
-		VkPipelineViewportStateCreateInfo viewportState =
-			vkTools::initializers::pipelineViewportStateCreateInfo(1, 1, 0);
+		vk::PipelineViewportStateCreateInfo viewportState =
+			vkx::pipelineViewportStateCreateInfo(1, 1);
 
-		VkPipelineMultisampleStateCreateInfo multisampleState =
-			vkTools::initializers::pipelineMultisampleStateCreateInfo(
-				VK_SAMPLE_COUNT_1_BIT,
-				0);
+		vk::PipelineMultisampleStateCreateInfo multisampleState =
+			vkx::pipelineMultisampleStateCreateInfo(vk::SampleCountFlagBits::e1);
 
-		std::vector<VkDynamicState> dynamicStateEnables = {
-			VK_DYNAMIC_STATE_VIEWPORT,
-			VK_DYNAMIC_STATE_SCISSOR
+		std::vector<vk::DynamicState> dynamicStateEnables = {
+			vk::DynamicState::eViewport,
+			vk::DynamicState::eScissor
 		};
-		VkPipelineDynamicStateCreateInfo dynamicState =
-			vkTools::initializers::pipelineDynamicStateCreateInfo(
+		vk::PipelineDynamicStateCreateInfo dynamicState =
+			vkx::pipelineDynamicStateCreateInfo(
 				dynamicStateEnables.data(),
-				dynamicStateEnables.size(),
-				0);
+				dynamicStateEnables.size());
 
-		// Pipeline for the meshes (armadillo, bunny, etc.)
-		// Load shaders
-		std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages;
-		shaderStages[0] = loadShader(getAssetPath() + "shaders/vulkanscene/mesh.vert.spv", VK_SHADER_STAGE_VERTEX_BIT);
-		shaderStages[1] = loadShader(getAssetPath() + "shaders/vulkanscene/mesh.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
+		std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStages;
 
-		VkGraphicsPipelineCreateInfo pipelineCreateInfo =
-			vkTools::initializers::pipelineCreateInfo(
-				pipelineLayout,
-				renderPass,
-				0);
+		// Solid rendering pipeline
+		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/scenerendering/scene.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/scenerendering/scene.frag.spv", vk::ShaderStageFlagBits::eFragment);
 
-		pipelineCreateInfo.pVertexInputState = &demoMeshes.inputState;
+		vk::GraphicsPipelineCreateInfo pipelineCreateInfo =
+			vkx::pipelineCreateInfo(
+				scene->pipelineLayout,
+				renderPass);
+
+		pipelineCreateInfo.pVertexInputState = &vertices.inputState;
 		pipelineCreateInfo.pInputAssemblyState = &inputAssemblyState;
 		pipelineCreateInfo.pRasterizationState = &rasterizationState;
 		pipelineCreateInfo.pColorBlendState = &colorBlendState;
@@ -491,94 +558,130 @@ public:
 		pipelineCreateInfo.stageCount = shaderStages.size();
 		pipelineCreateInfo.pStages = shaderStages.data();
 
-		VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, &pipelineCreateInfo, nullptr, &pipelines.models));
+		scene->pipelines.solid = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)[0];
 
-		// Pipeline for the logos
-		shaderStages[0] = loadShader(getAssetPath() + "shaders/vulkanscene/logo.vert.spv", VK_SHADER_STAGE_VERTEX_BIT);
-		shaderStages[1] = loadShader(getAssetPath() + "shaders/vulkanscene/logo.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
-		VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, &pipelineCreateInfo, nullptr, &pipelines.logos));
+		// Alpha blended pipeline
+		rasterizationState.cullMode = vk::CullModeFlagBits::eNone;
+		blendAttachmentState.blendEnable = VK_TRUE;
+		blendAttachmentState.colorBlendOp = vk::BlendOp::eAdd;
+		blendAttachmentState.srcColorBlendFactor = vk::BlendFactor::eSrcColor;
+		blendAttachmentState.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcColor;
 
-		// Pipeline for the sky sphere (todo)
-		rasterizationState.cullMode = VK_CULL_MODE_FRONT_BIT; // Inverted culling
-		depthStencilState.depthWriteEnable = VK_FALSE; // No depth writes
-		shaderStages[0] = loadShader(getAssetPath() + "shaders/vulkanscene/skybox.vert.spv", VK_SHADER_STAGE_VERTEX_BIT);
-		shaderStages[1] = loadShader(getAssetPath() + "shaders/vulkanscene/skybox.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
-		VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, &pipelineCreateInfo, nullptr, &pipelines.skybox));
+		scene->pipelines.blending = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)[0];
+
+		// Wire frame rendering pipeline
+		rasterizationState.cullMode = vk::CullModeFlagBits::eBack;
+		blendAttachmentState.blendEnable = VK_FALSE;
+		rasterizationState.polygonMode = vk::PolygonMode::eLine;
+		rasterizationState.lineWidth = 1.0f;
+		scene->pipelines.wireframe = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)[0];
 	}
 
-	// Prepare and initialize uniform buffer containing shader uniforms
-	void prepareUniformBuffers()
-	{
-		vulkanDevice->createBuffer(
-			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			&uniformData.meshVS,
-			sizeof(uboVS));
+	void updateUniformBuffers() {
+		if (attachLight) {
+			scene->uniformData.lightPos = glm::vec4(-camera.transform.translation, 1.0f);
+		}
+
+		scene->uniformData.projection = camera.matrices.projection;
+		scene->uniformData.view = camera.matrices.view;
+		scene->uniformData.model = glm::mat4();
+
+		memcpy(scene->uniformBuffer.mapped, &scene->uniformData, sizeof(scene->uniformData));
+	}
+
+	void loadScene() {
+		context.withPrimaryCommandBuffer([&](const vk::CommandBuffer& cmdBuffer) {
+			scene = new Scene(context, textureLoader);
+			#if defined(__ANDROID__)
+			scene->assetManager = androidApp->activity->assetManager;
+			#endif
+			scene->assetPath = getAssetPath() + "models/sibenik/";
+			scene->load(getAssetPath() + "models/sibenik/sibenik.dae", cmdBuffer);
+		});
 
 		updateUniformBuffers();
 	}
 
-	void updateUniformBuffers()
-	{
-		uboVS.projection = glm::perspective(glm::radians(60.0f), (float)width / (float)height, 0.1f, 256.0f);
-
-		uboVS.view = glm::lookAt(
-			glm::vec3(0, 0, -zoom),
-			cameraPos,
-			glm::vec3(0, 1, 0)
-		);
-
-		uboVS.model = glm::mat4();
-		uboVS.model = glm::rotate(uboVS.model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-		uboVS.model = glm::rotate(uboVS.model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-		uboVS.model = glm::rotate(uboVS.model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-
-		uboVS.normal = glm::inverseTranspose(uboVS.view * uboVS.model);
-
-		uboVS.lightPos = lightPos;
-
-		VK_CHECK_RESULT(uniformData.meshVS.map());
-		memcpy(uniformData.meshVS.mapped, &uboVS, sizeof(uboVS));
-		uniformData.meshVS.unmap();
-	}
-
-	void draw()
-	{
-		vulkanApp::prepareFrame();
-
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &drawCmdBuffers[currentBuffer];
-		VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE));
-
-		vulkanApp::submitFrame();
-	}
-
-	void prepare()
-	{
-		vulkanApp::prepare();
-		loadTextures();
-		prepareVertices();
-		prepareUniformBuffers();
-		setupDescriptorSetLayout();
+	void prepare() {
+		Parent::prepare();
+		setupVertexDescriptions();
+		loadScene();
 		preparePipelines();
-		setupDescriptorPool();
-		setupDescriptorSet();
-		buildCommandBuffers();
+		updateDrawCommandBuffers();
 		prepared = true;
 	}
 
-	virtual void render()
-	{
+	virtual void render() {
 		if (!prepared)
 			return;
 		draw();
 	}
 
-	virtual void viewChanged()
-	{
+	//void keyPressed(uint32_t keyCode) override {
+	//	Parent::keyPressed(keyCode);
+	//	switch (keyCode) {
+	//	case GLFW_KEY_W:
+	//	case GAMEPAD_BUTTON_A:
+	//		wireframe = !wireframe;
+	//		updateDrawCommandBuffers();
+	//		break;
+	//	case GLFW_KEY_P:
+	//		scene->renderSingleScenePart = !scene->renderSingleScenePart;
+	//		updateDrawCommandBuffers();
+	//		updateTextOverlay();
+	//		break;
+	//	case GLFW_KEY_KP_ADD:
+	//		scene->scenePartIndex = (scene->scenePartIndex < static_cast<uint32_t>(scene->meshes.size())) ? scene->scenePartIndex + 1 : 0;
+	//		updateDrawCommandBuffers();
+	//		updateTextOverlay();
+	//		break;
+	//	case GLFW_KEY_KP_SUBTRACT:
+	//		scene->scenePartIndex = (scene->scenePartIndex > 0) ? scene->scenePartIndex - 1 : static_cast<uint32_t>(scene->meshes.size()) - 1;
+	//		updateTextOverlay();
+	//		updateDrawCommandBuffers();
+	//		break;
+	//	case GLFW_KEY_L:
+	//		attachLight = !attachLight;
+	//		updateUniformBuffers();
+	//		break;
+	//	}
+	//}
+
+	virtual void viewChanged() {
+		updateTextOverlay(); //disable this
 		updateUniformBuffers();
 	}
 
+	virtual void getOverlayText(vkx::TextOverlay *textOverlay) {
+		//#if defined(__ANDROID__)
+		//textOverlay->addText("Press \"Button A\" to toggle wireframe", 5.0f, 85.0f, vkx::TextOverlay::alignLeft);
+		//#else
+		//textOverlay->addText("Press \"w\" to toggle wireframe", 5.0f, 85.0f, vkx::TextOverlay::alignLeft);
+		//if ((scene) && (scene->renderSingleScenePart)) {
+		//	textOverlay->addText("Rendering mesh " + std::to_string(scene->scenePartIndex + 1) + " of " + std::to_string(static_cast<uint32_t>(scene->meshes.size())) + "(\"p\" to toggle)", 5.0f, 100.0f, vkx::TextOverlay::alignLeft);
+		//} else {
+		//	textOverlay->addText("Rendering whole scene (\"p\" to toggle)", 5.0f, 100.0f, vkx::TextOverlay::alignLeft);
+		//}
+		//#endif
+
+		textOverlay->addText("camera stats:", 5.0f, 70.0f, vkx::TextOverlay::alignLeft);
+		textOverlay->addText("rotation(q) w: " + std::to_string(camera.rotation.w), 5.0f, 90.0f, vkx::TextOverlay::alignLeft);
+		textOverlay->addText("rotation(q) x: " + std::to_string(camera.rotation.x), 5.0f, 110.0f, vkx::TextOverlay::alignLeft);
+		textOverlay->addText("rotation(q) y: " + std::to_string(camera.rotation.y), 5.0f, 130.0f, vkx::TextOverlay::alignLeft);
+		textOverlay->addText("rotation(q) z: " + std::to_string(camera.rotation.z), 5.0f, 150.0f, vkx::TextOverlay::alignLeft);
+
+		textOverlay->addText("pos x: " + std::to_string(camera.translation.x), 5.0f, 170.0f, vkx::TextOverlay::alignLeft);
+		textOverlay->addText("pos y: " + std::to_string(camera.translation.y), 5.0f, 190.0f, vkx::TextOverlay::alignLeft);
+		textOverlay->addText("pos z: " + std::to_string(camera.translation.z), 5.0f, 210.0f, vkx::TextOverlay::alignLeft);
+
+	}
 };
 
-VULKAN_EXAMPLE_MAIN()
+VulkanExample *vulkanExample;
+
+int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow) {
+	VulkanExample* example = new VulkanExample();
+	example->run();
+	delete(example);
+	return 0;
+}

@@ -12,7 +12,7 @@
 
 #include "vulkanApp.h"
 
-static std::vector<std::string> names{ "logos", "background", "models", "skybox" };
+//static std::vector<std::string> names{ "logos", "background", "models", "skybox" };
 
 std::vector<vkx::VertexLayout> vertexLayout =
 {
@@ -22,45 +22,33 @@ std::vector<vkx::VertexLayout> vertexLayout =
 	vkx::VertexLayout::VERTEX_LAYOUT_COLOR
 };
 
-class VulkanExample : public vkx::vulkanApp {
-public:
+float test;
 
-	/*struct DemoMeshes {
-		vk::PipelineVertexInputStateCreateInfo inputState;
-		std::vector<vk::VertexInputBindingDescription> bindingDescriptions;
-		std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
-		//vk::Pipeline pipeline;
-		vkx::MeshLoader* logos;
-		vkx::MeshLoader* background;
-		vkx::MeshLoader* models;
-		vkx::MeshLoader* skybox;
-	} demoMeshes;*/
+class VulkanExample : public vkx::vulkanApp {
+
+public:
 
 
 
 	vk::PipelineVertexInputStateCreateInfo inputState;
 	std::vector<vk::VertexInputBindingDescription> bindingDescriptions;
 	std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
-	
-	vkx::MeshLoader* logos;
-	vkx::MeshLoader* background;
-	vkx::MeshLoader* models;
-	vkx::MeshLoader* skybox;
-	vkx::MeshLoader* plane;
 
-	std::vector<vkx::MeshLoader*> meshLoaders;
-	std::vector<vkx::MeshBuffer> meshBuffers;
 	std::vector<vkx::Mesh> meshes;
+
+	vkx::Mesh skyboxMesh;
 
 	struct {
 		vkx::UniformData meshVS;
 	} uniformData;
 
 	struct {
-		glm::mat4 projection;
 		glm::mat4 model;
-		glm::mat4 normal;
 		glm::mat4 view;
+		glm::mat4 projection;
+
+		glm::mat4 normal;
+
 		glm::vec4 lightPos;
 	} uboVS;
 
@@ -69,15 +57,21 @@ public:
 	} textures;
 
 	struct {
-		vk::Pipeline logos;
-		vk::Pipeline models;
+		vk::Pipeline meshes;
 		vk::Pipeline skybox;
 	} pipelines;
 
 	vk::PipelineLayout pipelineLayout;
-	vk::DescriptorSet descriptorSet;
-	vk::DescriptorSetLayout descriptorSetLayout;
+	//vk::DescriptorSet descriptorSet;
+	//vk::DescriptorSetLayout descriptorSetLayout;
 
+	std::vector<vk::DescriptorSetLayout> descriptorSetLayouts;
+	std::vector<vk::DescriptorSet> descriptorSets;
+	std::vector<vk::DescriptorPool> descriptorPools;
+	
+
+
+	//glm::vec4 lightPos = glm::vec4(2.0f, 2.0f, 5.0f, 0.0f);
 	glm::vec4 lightPos = glm::vec4(1.0f, 2.0f, 0.0f, 0.0f);
 
 	VulkanExample() : vkx::vulkanApp(ENABLE_VALIDATION) {
@@ -85,8 +79,11 @@ public:
 		size.height = 720;
 
 
-		camera.setTranslation({ -1.0f, -1.0f, -3.0f });
-		//camera.matrices.projection = glm::perspectiveRH(glm::radians(60.0f), (float)size.width / (float)size.height, 0.001f, 256.0f);
+		camera.setTranslation({ -1.0f, 1.0f, 3.0f });
+
+		
+
+		//camera.matrices.projection = glm::perspectiveRH(glm::radians(60.0f), (float)size.width / (float)size.height, 0.0001f, 256.0f);
 
 		title = "Vulkan Demo Scene";
 	}
@@ -94,8 +91,9 @@ public:
 	~VulkanExample() {
 		// Clean up used Vulkan resources 
 		// Note : Inherited destructor cleans up resources stored in base class
-		device.destroyPipeline(pipelines.logos);
-		device.destroyPipeline(pipelines.models);
+
+		// destroy pipelines
+		device.destroyPipeline(pipelines.meshes);
 		device.destroyPipeline(pipelines.skybox);
 
 		device.destroyPipelineLayout(pipelineLayout);
@@ -104,20 +102,15 @@ public:
 		uniformData.meshVS.destroy();
 
 		for (auto& mesh : meshes) {
-			//mesh.buffers.vertices.buffer
-			device.destroyBuffer(mesh.buffers.vertices.buffer);
-			device.freeMemory(mesh.buffers.vertices.memory);
+			device.destroyBuffer(mesh.meshBuffer.vertices.buffer);
+			device.freeMemory(mesh.meshBuffer.vertices.memory);
 
-			device.destroyBuffer(mesh.buffers.indices.buffer);
-			device.freeMemory(mesh.buffers.indices.memory);
+			device.destroyBuffer(mesh.meshBuffer.indices.buffer);
+			device.freeMemory(mesh.meshBuffer.indices.memory);
 		}
 
 		textures.skybox.destroy();
 
-		delete(logos);
-		delete(background);
-		delete(models);
-		delete(skybox);
 	}
 
 	void loadTextures() {
@@ -127,25 +120,62 @@ public:
 	void updateDrawCommandBuffer(const vk::CommandBuffer& cmdBuffer) {
 		cmdBuffer.setViewport(0, vkx::viewport(size));
 		cmdBuffer.setScissor(0, vkx::rect2D(size));
+
+
 		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSet, nullptr);
+
+		//https://github.com/nvpro-samples/gl_vk_threaded_cadscene/blob/master/doc/vulkan_uniforms.md
+
+
+		// left:
+		//vk::Viewport viewport = vkx::viewport((float)size.width / 3, (float)size.height, 0.0f, 1.0f);
+		//cmdBuffer.setViewport(0, viewport);
+		// center
+		//viewport.x += viewport.width;
+		//cmdBuffer.setViewport(0, viewport);
+
+		//uboVS.model = glm::translate(uboVS.model, glm::vec3(0.0f, 5.0f, 0.0f));
+
 		
-		for (auto& mesh : meshLoaders) {
-			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, mesh->pipeline);
-			cmdBuffer.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, mesh->vertexBuffer.buf, { 0 });
-			cmdBuffer.bindIndexBuffer(mesh->indexBuffer.buf, 0, vk::IndexType::eUint32);
-			cmdBuffer.drawIndexed(mesh->indexBuffer.count, 1, 0, 0, 0);
+
+		//meshes[1].model = glm::translate(glm::mat4(), glm::vec3(0.0f, 10.0f, 0.0f));
+
+		meshes[1].model = glm::translate(glm::mat4(), glm::vec3(5.0f, 0.0f, 0.0f));
+		//uboVS.model = meshes[1].model;
+
+		//meshes[1].orientation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+
+		for (auto &mesh : meshes) {
+
+
+			uboVS.model = mesh.model;
+			//uboVS.model = glm::mat4_cast(mesh.orientation);
+			//updateUniformBuffers();
+
+			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, mesh.pipeline);
+			cmdBuffer.bindVertexBuffers(mesh.vertexBufferBinding, mesh.meshBuffer.vertices.buffer, vk::DeviceSize());
+			cmdBuffer.bindIndexBuffer(mesh.meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
+
+			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSet, nullptr);
+
+
+
+
+
+
+			cmdBuffer.drawIndexed(mesh.meshBuffer.indexCount, 1, 0, 0, 0);
+
+
+			mesh.drawIndexed(cmdBuffer);
 		}
 
-		for (auto& mesh : meshes) {
-			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, mesh.pipeline);
-			cmdBuffer.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, mesh.buffers.vertices.buffer, vk::DeviceSize()/*{ 0 }*/);
-			cmdBuffer.bindIndexBuffer(mesh.buffers.indices.buffer, 0, vk::IndexType::eUint32);
-			cmdBuffer.drawIndexed(mesh.buffers.indexCount, 1, 0, 0, 0);
-			/*mesh.drawIndexed(cmdBuffer);*/
-		}
+		uboVS.model = glm::mat4();
+
 	}
 
 	void prepareVertices() {
+
 		struct Vertex {
 			float pos[3];
 			float normal[3];
@@ -153,93 +183,43 @@ public:
 			float color[3];
 		};
 
-		// Load meshes for demos scene
-		logos = new vkx::MeshLoader();
-		background = new vkx::MeshLoader();
-		models = new vkx::MeshLoader();
-		skybox = new vkx::MeshLoader();
-
-
-		logos->load(getAssetPath() + "models/vulkanscenelogos.dae");
-		background->load(getAssetPath() + "models/vulkanscenebackground.dae");
-		models->load(getAssetPath() + "models/vulkanscenemodels.dae");
-		skybox->load(getAssetPath() + "models/cube.obj");
-
 		// re-usable? meshloader class// definitely not reusable// important
 		vkx::MeshLoader* loader = new vkx::MeshLoader();
 
-		loader/*.*/->load(getAssetPath() + "models/plane.obj");
-		vkx::Mesh planeMesh = loader/*.*/->createMeshFromBuffers(context, vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		loader->load(getAssetPath() + "models/xyplane.dae");
+		vkx::Mesh planeMesh = loader->createMeshFromBuffers(context, vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+
 
 		loader = new vkx::MeshLoader();
 
-		loader/*.*/->load(getAssetPath() + "models/vulkanscenelogos.dae");
-		vkx::Mesh logoMesh = loader/*.*/->createMeshFromBuffers(context, vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		loader->load(getAssetPath() + "models/vulkanscenemodels.dae");
+		vkx::Mesh otherMesh1 = loader->createMeshFromBuffers(context, vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
+		//loader = new vkx::MeshLoader();
+
+		//loader->load(getAssetPath() + "models/cube.obj");
+		//vkx::Mesh otherMesh2 = loader->createMeshFromBuffers(context, vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+
+		//loader->load(getAssetPath() + "models/cube.obj");
+		//skyboxMesh = loader->createMeshFromBuffers(context, vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+
+
+		// better:
+		//vkx::Mesh planeMesh;
+		//planeMesh.load(getAssetPath() + "models/xyplane.dae");
+		//planeMesh.createBuffers(context, vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+
+		//vkx::Mesh otherMesh1;
+		//otherMesh1.load(getAssetPath() + "models/vulkanscenemodels.dae");
+		//otherMesh1.createBuffers(context, vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+
+
+
+
+		//meshes.push_back(skyboxMesh);
 		meshes.push_back(planeMesh);
-		meshes.push_back(logoMesh);
-
-
-
-
-
-
-		std::vector<vkx::MeshLoader*> meshLoaderList;
-		meshLoaderList.push_back(skybox); // skybox first because of depth writes
-		meshLoaderList.push_back(logos);
-		meshLoaderList.push_back(background);
-		meshLoaderList.push_back(models);
-		//meshLoaderList.push_back(plane);
-
-		// todo : Use mesh function for loading
-		/*float scale = 1.0f;
-		for (auto& meshLoader : meshLoaderList) {
-			// Generate vertex buffer (pos, normal, uv, color)
-			std::vector<Vertex> vertexBuffer;
-			for (int m = 0; m < meshLoader->m_Entries.size(); m++) {
-				for (int i = 0; i < meshLoader->m_Entries[m].Vertices.size(); i++) {
-
-					glm::vec3 pos = meshLoader->m_Entries[m].Vertices[i].m_pos * scale;
-					glm::vec3 normal = meshLoader->m_Entries[m].Vertices[i].m_normal;
-					glm::vec2 uv = meshLoader->m_Entries[m].Vertices[i].m_tex;
-					glm::vec3 col = meshLoader->m_Entries[m].Vertices[i].m_color;
-					Vertex vert = {
-						{ pos.x, pos.y, pos.z },
-						{ normal.x, -normal.y, normal.z },
-						{ uv.s, uv.t },
-						{ col.r, col.g, col.b }
-					};
-
-					// Offset Vulkan meshes
-					// todo : center before export
-					//if (mesh != demoMeshes.skybox) {
-						//vert.pos[1] += 1.15f;
-					//}
-
-					vertexBuffer.push_back(vert);
-				}
-			}
-			auto result = context.createBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
-			meshLoader->vertexBuffer.buf = result.buffer;
-			meshLoader->vertexBuffer.mem = result.memory;
-			std::vector<uint32_t> indexBuffer;
-			for (int m = 0; m < meshLoader->m_Entries.size(); m++) {
-				int indexBase = indexBuffer.size();
-				for (int i = 0; i < meshLoader->m_Entries[m].Indices.size(); i++) {
-					indexBuffer.push_back(meshLoader->m_Entries[m].Indices[i] + indexBase);
-				}
-			}
-			result = context.createBuffer(vk::BufferUsageFlagBits::eVertexBuffer, indexBuffer);
-			meshLoader->indexBuffer.buf = result.buffer;
-			meshLoader->indexBuffer.mem = result.memory;
-			meshLoader->indexBuffer.count = indexBuffer.size();
-
-			meshLoaders.push_back(meshLoader);
-		}*/
-
-
-
-
+		meshes.push_back(otherMesh1);
+		//meshes.push_back(otherMesh2);
 
 
 		// Binding description
@@ -269,76 +249,215 @@ public:
 		inputState.pVertexAttributeDescriptions = attributeDescriptions.data();
 	}
 
+
+
+
 	void setupDescriptorPool() {
+
+
+
 		// Example uses one ubo and one image sampler
 		std::vector<vk::DescriptorPoolSize> poolSizes =
 		{
-			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 2),
-			vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 1)
+			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 1),
+			vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 1),
+			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1)
 		};
 
 		vk::DescriptorPoolCreateInfo descriptorPoolInfo =
 			vkx::descriptorPoolCreateInfo(poolSizes.size(), poolSizes.data(), 2);
 
 		descriptorPool = device.createDescriptorPool(descriptorPoolInfo);
+
+
+		vk::DescriptorPool descPool;
+		descriptorSets.push_back(vk::DescriptorSet());
+		descriptorSets.push_back(vk::DescriptorSet());
+		descriptorSets.push_back(vk::DescriptorSet());
+
+		uint32_t maxcounts[2];
+		maxcounts[0] = 1;
+		maxcounts[1] = 1;
+
+
+		for (int i = 0; i < 2; i++) {
+			
+			vk::DescriptorPool descrPool;// where the descriptor pool will be stored
+
+			vk::DescriptorPoolCreateInfo descrPoolInfo;
+			descrPoolInfo.maxSets = maxcounts[i];
+			//descrPoolInfo.maxSets = 1;
+			descrPoolInfo.poolSizeCount = 1;
+			
+			descrPoolInfo.pPoolSizes = &poolSizes[i];
+
+			// scene pool
+			device.createDescriptorPool(&descrPoolInfo, NULL, &descrPool);
+
+			descriptorPools[i] = descrPool;
+
+			vk::DescriptorSetLayout setLayouts[] = { descriptorSetLayouts[0], descriptorSetLayouts[1] };
+
+			for (uint32_t n = 0; n < maxcounts[i]; n++) {
+
+				vk::DescriptorSetAllocateInfo allocInfo;
+				allocInfo.descriptorPool = descrPool;
+				allocInfo.descriptorSetCount = 1;
+				allocInfo.pSetLayouts = setLayouts + i;
+
+				//vkx::descriptorSetAllocateInfo(descriptorPool, setLayout
+
+				// do one at a time, as we don't have layouts in maxcounts-many pointer array
+				//result = vkAllocateDescriptorSets(m_device, &allocInfo, setstores[i] + n);
+				device.allocateDescriptorSets(&allocInfo, (&descriptorSets[i] + n));
+				//assert(result == VK_SUCCESS);
+
+			}
+		}
+
+
+
 	}
 
+
+
+
+
+
 	void setupDescriptorSetLayout() {
-		std::vector<vk::DescriptorSetLayoutBinding> setLayoutBindings =
+		//std::vector<vk::DescriptorSetLayoutBinding> setLayoutBindings =
+		//{
+		//	// Binding 0 : Vertex shader uniform buffer
+		//	vkx::descriptorSetLayoutBinding(
+		//		vk::DescriptorType::eUniformBuffer,
+		//		vk::ShaderStageFlagBits::eVertex,
+		//		0),
+		//	// Binding 1 : Fragment shader color map image sampler
+		//	vkx::descriptorSetLayoutBinding(
+		//		vk::DescriptorType::eCombinedImageSampler,
+		//		vk::ShaderStageFlagBits::eFragment,
+		//		1),
+		//	//// Binding 2 : vertex test uniform
+		//	//vkx::descriptorSetLayoutBinding(
+		//	//	vk::DescriptorType::eUniformBufferDynamic,
+		//	//	vk::ShaderStageFlagBits::eVertex,
+		//	//	1),
+
+
+		//};
+
+		//vk::DescriptorSetLayoutCreateInfo descriptorSetEntry =
+		//	vkx::descriptorSetLayoutCreateInfo(setLayoutBindings.data(), setLayoutBindings.size());
+
+		//descriptorSetLayout = device.createDescriptorSetLayout(descriptorSetEntry);
+
+
+		//vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
+		//	vkx::pipelineLayoutCreateInfo(&descriptorSetLayout, 1);
+
+		//pipelineLayout = device.createPipelineLayout(pPipelineLayoutCreateInfo);
+
+
+		// bindings for descriptor set layout 1
+		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayout1Bindings =// rename to descriptorSetLayout1Bindings?
 		{
-			// Binding 0 : Vertex shader uniform buffer
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBuffer,
 				vk::ShaderStageFlagBits::eVertex,
-				0),
-			// Binding 1 : Fragment shader color map image sampler
+				0),// binding 0
+
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
-				1)
+				1)// binding 1
 		};
 
-		vk::DescriptorSetLayoutCreateInfo descriptorLayout =
-			vkx::descriptorSetLayoutCreateInfo(setLayoutBindings.data(), setLayoutBindings.size());
 
-		descriptorSetLayout = device.createDescriptorSetLayout(descriptorLayout);
+		// bindings for descriptor set layout 2
+		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayout2Bindings =
+		{
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eUniformBufferDynamic,// dynamic
+				vk::ShaderStageFlagBits::eVertex,// only vertex
+				0)// binding 0
+		};
 
 
-		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
-			vkx::pipelineLayoutCreateInfo(&descriptorSetLayout, 1);
+		// create a descriptorSetLayout for each set of layout bindings
+		std::vector<vk::DescriptorSetLayout> descriptorSetLayouts;
+
+		// create info
+		vk::DescriptorSetLayoutCreateInfo descriptorSetLayout1Info =
+			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayout1Bindings.data()+0, descriptorSetLayout1Bindings.size());
+
+		vk::DescriptorSetLayout descriptorSetLayout1 = device.createDescriptorSetLayout(descriptorSetLayout1Info);
+		descriptorSetLayouts.push_back(descriptorSetLayout1);
+
+		
+
+		// create info
+		vk::DescriptorSetLayoutCreateInfo descriptorSetLayout2Info =
+			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayout2Bindings.data()+1, descriptorSetLayout2Bindings.size());
+
+		vk::DescriptorSetLayout descriptorSetLayout2 = device.createDescriptorSetLayout(descriptorSetLayout2Info);
+		descriptorSetLayouts.push_back(descriptorSetLayout2);
+
+
+		vk::DescriptorSetLayout setLayouts[] = { descriptorSetLayouts[0], descriptorSetLayouts[1] };
+
+		#define NV_ARRAYSIZE(arr) (sizeof(arr)/sizeof(arr[0]))
+
+
+		//vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
+		//	vkx::pipelineLayoutCreateInfo(&descriptorSetLayout, 1);
+
+		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfo;
+		pPipelineLayoutCreateInfo.setLayoutCount = NV_ARRAYSIZE(setLayouts);
+		pPipelineLayoutCreateInfo.pSetLayouts = setLayouts;
 
 		pipelineLayout = device.createPipelineLayout(pPipelineLayoutCreateInfo);
 
+
+
+
 	}
+
+
+
 
 	void setupDescriptorSet() {
-		vk::DescriptorSetAllocateInfo allocInfo =
+
+
+		/*vk::DescriptorSetAllocateInfo allocInfo =
 			vkx::descriptorSetAllocateInfo(descriptorPool, &descriptorSetLayout, 1);
 
-		descriptorSet = device.allocateDescriptorSets(allocInfo)[0];
+		descriptorSet = device.allocateDescriptorSets(allocInfo)[0];*/
 
-		// Cube map image descriptor
-		vk::DescriptorImageInfo texDescriptorCubeMap =
-			vkx::descriptorImageInfo(textures.skybox.sampler, textures.skybox.view, vk::ImageLayout::eGeneral);
 
-		std::vector<vk::WriteDescriptorSet> writeDescriptorSets =
-		{
-			// Binding 0 : Vertex shader uniform buffer
-			vkx::writeDescriptorSet(
-				descriptorSet,
-				vk::DescriptorType::eUniformBuffer,
-				0,
-				&uniformData.meshVS.descriptor),
-			// Binding 1 : Fragment shader image sampler
-			vkx::writeDescriptorSet(
-				descriptorSet,
-				vk::DescriptorType::eCombinedImageSampler,
-				1,
-				&texDescriptorCubeMap)
-		};
+		//// Cube map image descriptor
+		//vk::DescriptorImageInfo texDescriptorCubeMap =
+		//	vkx::descriptorImageInfo(textures.skybox.sampler, textures.skybox.view, vk::ImageLayout::eGeneral);
 
-		device.updateDescriptorSets(writeDescriptorSets, nullptr);
+		//std::vector<vk::WriteDescriptorSet> writeDescriptorSets =
+		//{
+		//	// Binding 0 : Vertex shader uniform buffer
+		//	vkx::writeDescriptorSet(
+		//		descriptorSet,
+		//		vk::DescriptorType::eUniformBuffer,
+		//		0,
+		//		&uniformData.meshVS.descriptor),
+		//	// Binding 1 : Fragment shader image sampler
+		//	vkx::writeDescriptorSet(
+		//		descriptorSet,
+		//		vk::DescriptorType::eCombinedImageSampler,
+		//		1,
+		//		&texDescriptorCubeMap)
+		//};
+
+		//device.updateDescriptorSets(writeDescriptorSets, nullptr);
 	}
+
+
 
 	void preparePipelines() {
 		vk::PipelineInputAssemblyStateCreateInfo inputAssemblyState;
@@ -375,6 +494,9 @@ public:
 		vk::PipelineDynamicStateCreateInfo dynamicState =
 			vkx::pipelineDynamicStateCreateInfo(dynamicStateEnables.data(), dynamicStateEnables.size());
 
+
+
+
 		// vk::Pipeline for the meshes (armadillo, bunny, etc.)
 		// Load shaders
 		std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStages;
@@ -395,31 +517,33 @@ public:
 		pipelineCreateInfo.stageCount = shaderStages.size();
 		pipelineCreateInfo.pStages = shaderStages.data();
 
-		pipelines.models = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo, nullptr)[0];
+		pipelines.meshes = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo, nullptr)[0];
 
 
 		// vk::Pipeline for the logos
-		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/logo.vert.spv", vk::ShaderStageFlagBits::eVertex);
-		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/logo.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		pipelines.logos = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo, nullptr)[0];
+		//shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/logo.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		//shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/logo.frag.spv", vk::ShaderStageFlagBits::eFragment);
+		//pipelines.logos = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo, nullptr)[0];
 
 
-		// vk::Pipeline for the sky sphere (todo)
-		rasterizationState.cullMode = vk::CullModeFlagBits::eFront; // Inverted culling
-		depthStencilState.depthWriteEnable = VK_FALSE; // No depth writes
-		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/skybox.vert.spv", vk::ShaderStageFlagBits::eVertex);
-		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/skybox.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		pipelines.skybox = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo, nullptr)[0];
+		// vk::Pipeline for the sky box
+		//rasterizationState.cullMode = vk::CullModeFlagBits::eFront; // Inverted culling
+		//depthStencilState.depthWriteEnable = VK_FALSE; // No depth writes
+		//shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/skybox.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		//shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/skybox.frag.spv", vk::ShaderStageFlagBits::eFragment);
+		//pipelines.skybox = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo, nullptr)[0];
 
 
 		// Assign pipelines
-		logos->pipeline = pipelines.logos;
-		models->pipeline = pipelines.models;
-		background->pipeline = pipelines.models;
-		skybox->pipeline = pipelines.skybox;
 
-		meshes[0].pipeline = pipelines.models;
-		meshes[1].pipeline = pipelines.logos;
+		for (auto &mesh : meshes) {
+			mesh.pipeline = pipelines.meshes;
+		}
+		//meshes[0].pipeline = pipelines.meshes;
+		//meshes[1].pipeline = pipelines.meshes;
+		//meshes[2].pipeline = pipelines.meshes;
+
+		//skyboxMesh.pipeline = pipelines.skybox;
 	}
 
 	// Prepare and initialize uniform buffer containing shader uniforms
@@ -432,8 +556,11 @@ public:
 	void updateUniformBuffers() {
 		uboVS.projection = camera.matrices.projection;
 		uboVS.view = camera.matrices.view;
+
 		//uboVS.model = camera.matrices.skyboxView;
+
 		uboVS.normal = glm::inverseTranspose(uboVS.view * uboVS.model);
+
 		uboVS.lightPos = lightPos;
 		uniformData.meshVS.copy(uboVS);
 	}
@@ -452,8 +579,9 @@ public:
 	}
 
 	virtual void render() {
-		if (!prepared)
+		if (!prepared) {
 			return;
+		}
 		draw();
 	}
 
@@ -476,6 +604,8 @@ public:
 	}
 
 };
+
+
 
 VulkanExample *vulkanExample;
 

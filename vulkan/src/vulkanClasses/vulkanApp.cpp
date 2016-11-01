@@ -1082,35 +1082,35 @@ void vulkanApp::update(float deltaTime) {
 
 
 	// z-up rotations
-	float rotationSpeed = -0.005f;
+	camera.rotationSpeed = -0.005f;
 
 	if (mouse.leftMouseButton.state) {
-		camera.rotateWorld(glm::vec3(-mouse.delta.y*rotationSpeed, 0, -mouse.delta.x*rotationSpeed));
+		camera.rotateWorld(glm::vec3(-mouse.delta.y*camera.rotationSpeed, 0, -mouse.delta.x*camera.rotationSpeed));
 	}
-	
-	rotationSpeed = -0.02f;
+
+	camera.rotationSpeed = -0.02f;
 
 	
 	if (keyStates.up_arrow) {
-		camera.rotateWorldX(rotationSpeed);
+		camera.rotateWorldX(camera.rotationSpeed);
 	}
 	if (keyStates.down_arrow) {
-		camera.rotateWorldX(-rotationSpeed);
+		camera.rotateWorldX(-camera.rotationSpeed);
 	}
 
 	if (!keyStates.shift) {
 		if (keyStates.left_arrow) {
-			camera.rotateWorldZ(-rotationSpeed);
+			camera.rotateWorldZ(-camera.rotationSpeed);
 		}
 		if (keyStates.right_arrow) {
-			camera.rotateWorldZ(rotationSpeed);
+			camera.rotateWorldZ(camera.rotationSpeed);
 		}
 	} else {
 		if (keyStates.left_arrow) {
-			camera.rotateWorldY(-rotationSpeed);
+			camera.rotateWorldY(-camera.rotationSpeed);
 		}
 		if (keyStates.right_arrow) {
-			camera.rotateWorldY(rotationSpeed);
+			camera.rotateWorldY(camera.rotationSpeed);
 		}
 	}
 
@@ -1676,8 +1676,9 @@ vk::SubmitInfo vulkanApp::prepareSubmitInfo(
 }
 
 void vulkanApp::updateTextOverlay() {
-	if (!enableTextOverlay)
+	if (!enableTextOverlay) {
 		return;
+	}
 
 	textOverlay->beginTextUpdate();
 	textOverlay->addText(title, 5.0f, 5.0f, TextOverlay::alignLeft);
@@ -1704,7 +1705,7 @@ void vulkanApp::prepareFrame() {
 	if (primaryCmdBuffersDirty) {
 		buildCommandBuffers();
 	}
-	// Acquire the next image from the swap chaing
+	// Acquire the next image from the swap chain
 	currentBuffer = swapChain.acquireNextImage(semaphores.acquireComplete);
 }
 

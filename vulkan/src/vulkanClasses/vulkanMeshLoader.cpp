@@ -1,63 +1,31 @@
 #include "vulkanMeshLoader.h"
 
-// initialization
-vkx::Mesh::Mesh(vkx::MeshBuffer mBuffer, uint32_t binding, const std::vector<VertexLayout>& layout)
-{
-	this->buffers = mBuffer;
-	this->vertexBufferBinding = binding;
-	this->setupVertexInputState(layout);
-}
 
-void vkx::Mesh::setupVertexInputState(const std::vector<VertexLayout>& layout) {
-	bindingDescription = vertexInputBindingDescription(
-		vertexBufferBinding,
-		vertexSize(layout),
-		vk::VertexInputRate::eVertex);
 
-	attributeDescriptions.clear();
-	uint32_t offset = 0;
-	uint32_t binding = 0;
-	for (auto& layoutDetail : layout) {
-		// vk::Format (layout)
-		vk::Format format = (layoutDetail == VERTEX_LAYOUT_UV) ? vk::Format::eR32G32Sfloat : vk::Format::eR32G32B32Sfloat;
 
-		attributeDescriptions.push_back(
-			vertexInputAttributeDescription(
-				vertexBufferBinding,
-				binding,
-				format,
-				offset));
 
-		// Offset
-		offset += (layoutDetail == VERTEX_LAYOUT_UV) ? (2 * sizeof(float)) : (3 * sizeof(float));
-		binding++;
-	}
 
-	vertexInputState = vk::PipelineVertexInputStateCreateInfo();
-	vertexInputState.vertexBindingDescriptionCount = 1;
-	vertexInputState.pVertexBindingDescriptions = &bindingDescription;
-	vertexInputState.vertexAttributeDescriptionCount = attributeDescriptions.size();
-	vertexInputState.pVertexAttributeDescriptions = attributeDescriptions.data();
-}
 
-void vkx::Mesh::drawIndexed(const vk::CommandBuffer & cmdBuffer) {
-	if (pipeline) {
-		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
-	}
-	if ((pipelineLayout) && (descriptorSet)) {
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSet, nullptr);
-	}
-	cmdBuffer.bindVertexBuffers(vertexBufferBinding, buffers.vertices.buffer, vk::DeviceSize());
-	cmdBuffer.bindIndexBuffer(buffers.indices.buffer, 0, vk::IndexType::eUint32);
-	cmdBuffer.drawIndexed(buffers.indexCount, 1, 0, 0, 0);
-}
 
+
+
+
+
+
+
+
+
+
+
+
+// deconstructor
 vkx::MeshLoader::~MeshLoader() {
 	m_Entries.clear();
 }
 
-// Loads the mesh with some default flags
 
+
+// Loads the mesh with some default flags
 bool vkx::MeshLoader::load(const std::string & filename) {
 	int flags = aiProcess_FlipWindingOrder | aiProcess_Triangulate | aiProcess_PreTransformVertices | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals;
 
@@ -65,7 +33,6 @@ bool vkx::MeshLoader::load(const std::string & filename) {
 }
 
 // Load the mesh with custom flags
-
 bool vkx::MeshLoader::load(const std::string & filename, int flags) {
 	#if defined(__ANDROID__)
 	// Meshes are stored inside the apk on Android (compressed)
@@ -87,6 +54,32 @@ bool vkx::MeshLoader::load(const std::string & filename, int flags) {
 	#else
 	pScene = Importer.ReadFile(filename.c_str(), flags);
 	#endif
+
+	//pScene->mRootNode->mTransformation = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(1.0f, 0.0f, 0.0f)) * pScene->mRootNode->mTransformation;
+
+	//pScene->mRootNode->mTransformation
+
+	//aiMatrix4x4 &r = pScene->mRootNode->mTransformation;
+
+	//aiMatrix4x4 rot;
+	//rot.FromEulerAnglesXYZ(aiVector3D(-90.0f, 0.0f, 0.0f));
+	//pScene->mRootNode->mTransformation = rot * pScene->mRootNode->mTransformation;// change collada model back to z up// important
+	////pScene->mRootNode->mTransformation = pScene->mRootNode->mTransformation * rot;
+
+	//glm::mat4 r2 = glm::mat4(\
+	//	r.a1, r.a2, r.a3, r.a4,
+	//	r.b1, r.b2, r.b3, r.b4,
+	//	r.c1, r.c2, r.c3, r.c4, 
+	//	r.d1, r.d2, r.d3, r.d4);
+
+	//r2 = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(1.0f, 0.0f, 0.0f)) * r2;
+
+	
+
+	//glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+
+	//RootNodeMatrix = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(1.0f, 0.0f, 0.0f)) * RootNodeMatrix;
+
 	if (!pScene) {
 		throw std::runtime_error("Unable to parse " + filename);
 	}
@@ -131,7 +124,7 @@ void vkx::MeshLoader::InitMesh(unsigned int index, const aiMesh * paiMesh, const
 		aiVector3D* pTangent = (paiMesh->HasTangentsAndBitangents()) ? &(paiMesh->mTangents[i]) : &Zero3D;
 		aiVector3D* pBiTangent = (paiMesh->HasTangentsAndBitangents()) ? &(paiMesh->mBitangents[i]) : &Zero3D;
 
-		Vertex v(glm::vec3(pPos->x, -pPos->y, pPos->z),
+		Vertex v(glm::vec3(pPos->x, pPos->y, pPos->z),// y was negative// important
 			glm::vec2(pTexCoord->x, pTexCoord->y),
 			glm::vec3(pNormal->x, pNormal->y, pNormal->z),
 			glm::vec3(pTangent->x, pTangent->y, pTangent->z),
@@ -154,8 +147,9 @@ void vkx::MeshLoader::InitMesh(unsigned int index, const aiMesh * paiMesh, const
 
 	for (unsigned int i = 0; i < paiMesh->mNumFaces; i++) {
 		const aiFace& Face = paiMesh->mFaces[i];
-		if (Face.mNumIndices != 3)
+		if (Face.mNumIndices != 3) {
 			continue;
+		}
 		m_Entries[index].Indices.push_back(Face.mIndices[0]);
 		m_Entries[index].Indices.push_back(Face.mIndices[1]);
 		m_Entries[index].Indices.push_back(Face.mIndices[2]);
@@ -181,7 +175,7 @@ vkx::MeshBuffer vkx::MeshLoader::createBuffers(const Context & context, const st
 				// Normal
 				if (layoutDetail == VERTEX_LAYOUT_NORMAL) {
 					vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.x);
-					vertexBuffer.push_back(-m_Entries[m].Vertices[i].m_normal.y);
+					vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.y);// y was negative// important
 					vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.z);
 				}
 				// Texture coordinates
@@ -246,16 +240,125 @@ vkx::MeshBuffer vkx::MeshLoader::createBuffers(const Context & context, const st
 	return meshBuffer;
 }
 
-vkx::Mesh vkx::MeshLoader::createMeshFromBuffers(const Context & context, const std::vector<VertexLayout>& layout, float scale, uint32_t binding)
-{
+vkx::Mesh vkx::MeshLoader::createMeshFromBuffers(const Context & context, const std::vector<VertexLayout>& layout, float scale, uint32_t binding) {
 	vkx::MeshBuffer mBuffer = createBuffers(context, layout, scale);
-	vkx::Mesh mesh = vkx::Mesh(mBuffer, binding, layout);
-	mesh.attributeDescriptions = this->attributeDescriptions;
+
+	vkx::Mesh mesh;// = vkx::Mesh(mBuffer, binding, layout);
+	mesh.meshBuffer = mBuffer;
 	mesh.vertexBufferBinding = binding;
+	mesh.setupVertexInputState(layout);
+
+	mesh.attributeDescriptions = this->attributeDescriptions;
+
 	//mesh.bindingDescription = this->bindingDescriptions[0];
-	mesh.pipeline = this->pipeline;
-	
+	//mesh.pipeline = this->pipeline;
+
 	return mesh;
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+namespace vkx {
+
+	
+
+	Mesh::Mesh() {
+		this->meshLoader = new vkx::MeshLoader();
+	}
+
+	void Mesh::load(const std::string & filename) {
+		this->meshLoader->load(filename);
+	}
+
+	void Mesh::load(const std::string & filename, int flags) {
+		this->meshLoader->load(filename, flags);
+	}
+
+	void Mesh::createBuffers(const Context & context, const std::vector<VertexLayout>& layout, float scale, uint32_t binding) {
+		this->meshBuffer = this->meshLoader->createBuffers(context, layout, scale);
+
+		this->attributeDescriptions = this->meshLoader->attributeDescriptions;
+
+		this->vertexBufferBinding = binding;// important
+		this->setupVertexInputState(layout);// doesn't seem to be necessary/used
+
+		//this->bindingDescription = this->meshLoader->bindingDescriptions[0];// ?
+		//this->pipeline = this->meshLoader->pipeline;// not needed?
+	}
+
+
+
+	void Mesh::setupVertexInputState(const MeshLayout& layout) {
+		bindingDescription = vertexInputBindingDescription(
+			vertexBufferBinding,
+			vertexSize(layout),
+			vk::VertexInputRate::eVertex);
+
+		attributeDescriptions.clear();
+		uint32_t offset = 0;
+		uint32_t binding = 0;
+		for (auto& layoutDetail : layout) {
+			// vk::Format (layout)
+			vk::Format format = (layoutDetail == VERTEX_LAYOUT_UV) ? vk::Format::eR32G32Sfloat : vk::Format::eR32G32B32Sfloat;
+
+			attributeDescriptions.push_back(
+				vertexInputAttributeDescription(
+					vertexBufferBinding,
+					binding,
+					format,
+					offset));
+
+			// Offset
+			offset += (layoutDetail == VERTEX_LAYOUT_UV) ? (2 * sizeof(float)) : (3 * sizeof(float));
+			binding++;
+		}
+
+		vertexInputState = vk::PipelineVertexInputStateCreateInfo();
+		vertexInputState.vertexBindingDescriptionCount = 1;
+		vertexInputState.pVertexBindingDescriptions = &bindingDescription;
+		vertexInputState.vertexAttributeDescriptionCount = attributeDescriptions.size();
+		vertexInputState.pVertexAttributeDescriptions = attributeDescriptions.data();
+	}
+
+	void Mesh::drawIndexed(const vk::CommandBuffer & cmdBuffer) {
+
+		// todo: add more
+		if (pipeline) {
+			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
+		}
+		if ((pipelineLayout) && (descriptorSet)) {
+			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSet, nullptr);
+		}
+
+		cmdBuffer.bindVertexBuffers(vertexBufferBinding, meshBuffer.vertices.buffer, vk::DeviceSize());
+		cmdBuffer.bindIndexBuffer(meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
+		cmdBuffer.drawIndexed(meshBuffer.indexCount, 1, 0, 0, 0);
+	}
+
+}

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "common.h"
-#include "vulkanDebug2.h"
+#include "vulkanDebug.h"
 #include "vulkanTools.h"
 #include "vulkanShaders.h"
 

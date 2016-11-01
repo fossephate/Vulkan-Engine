@@ -2,7 +2,7 @@
 
 
 #include "camera.h"
-
+//#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 
 glm::quat RotationBetweenVectors(glm::vec3 start, glm::vec3 dest) {
 	start = glm::normalize(start);
@@ -16,14 +16,15 @@ glm::quat RotationBetweenVectors(glm::vec3 start, glm::vec3 dest) {
 		// there is no "ideal" rotation axis
 		// So guess one; any will do as long as it's perpendicular to start
 		rotationAxis = glm::cross(glm::vec3(0.0f, 0.0f, 1.0f), start);
-		if (glm::length2(rotationAxis) < 0.01) // bad luck, they were parallel, try again!
+		if (glm::length2(rotationAxis) < 0.01) { // bad luck, they were parallel, try again!
 			rotationAxis = glm::cross(glm::vec3(1.0f, 0.0f, 0.0f), start);
+		}
 
 		rotationAxis = normalize(rotationAxis);
 		return glm::angleAxis(180.0f, rotationAxis);
 	}
 
-	rotationAxis = cross(start, dest);
+	rotationAxis = glm::cross(start, dest);
 
 	float s = sqrt((1 + cosTheta) * 2);
 	float invs = 1 / s;
@@ -74,7 +75,35 @@ void Camera::updateViewMatrix() {
 	glm::vec3 forward = glm::vec3(0.0f, 1.0f, 0.0f);
 	glm::vec3 right = glm::vec3(1.0f, 0.0f, 0.0f);
 
-	glm::mat4 rotationMatrix = glm::mat4_cast(glm::normalize(this->transform.rotation));
+	//glm::vec3 dir = glm::vec3(0.0f, 0.0f, 1.0f) * this->transform.rotation;
+	glm::vec3 dir = this->transform.euler;
+	glm::vec3 &euler = this->transform.euler;
+
+	// Constrain pitch to ~-PI/2 to ~PI/2
+	if (abs(euler.x) > MAX_PITCH) {
+		euler.x = std::max(std::min(euler.x, MAX_PITCH), -MAX_PITCH);
+	}
+	while (abs(euler.z) > M_PI) {
+		euler.z += 2.0f * (float)((euler.z > 0) ? -M_PI : M_PI);
+	}
+
+	//if (abs(euler.x) > MAX_PITCH) {
+	//	euler.x = std::max(std::min(euler.x, MAX_PITCH), -MAX_PITCH);
+	//}
+	//while (abs(euler.z) > M_PI) {
+	//	euler.z += 2.0f * (float)((euler.z > 0) ? -M_PI : M_PI);
+	//}
+
+
+
+
+
+	// rotate around up axis and then right axis
+	glm::quat rot = glm::angleAxis(dir.x, glm::vec3(1.0f, 0.0f, 0.0f)) * glm::angleAxis(dir.z, glm::vec3(0.0f, 1.0f, 0.0f));
+	//glm::quat rot = glm::angleAxis(dir.x, glm::vec3(1.0f, 0.0f, 0.0f)) * glm::angleAxis(dir.z, glm::vec3(0.0f, 0.0f, 1.0f));
+	glm::mat4 rotationMatrix = glm::mat4_cast(glm::normalize(rot));
+
+	//glm::mat4 rotationMatrix = glm::mat4_cast(glm::normalize(this->transform.rotation));
 	//glm::mat4 rotationMatrix = glm::mat4();
 	//glm::mat4 rotationMatrix = glm::rotate(glm::mat4(), glm::angle(this->transform.rotation), glm::axis(this->transform.rotation));
 
@@ -82,10 +111,34 @@ void Camera::updateViewMatrix() {
 	//rotationMatrix = glm::scale(rotationMatrix, glm::vec3(-1.0f, 1.0f, -1.0f));
 
 	glm::mat4 translationMatrix = glm::translate(glm::mat4(), this->transform.translation);
+	//glm::mat4 inverseTranslationMatrix = glm::translate(glm::mat4(), -this->transform.translation);
+	//glm::mat4 inverseTrans = glm::inverse(translationMatrix);
 
-	this->matrices.view = (rotationMatrix) * (translationMatrix);
+	//this->matrices.transform = (translationMatrix) * (rotationMatrix);
+	//this->matrices.view = glm::inverse(this->matrices.transform);
 
-	//glm::vec3 dir = this->transform.euler;
+	//glm::mat4 rotationMatrix2 = glm::mat4_cast(glm::normalize(glm::conjugate(rot)));
+
+	
+	this->matrices.transform = (translationMatrix) * (rotationMatrix);
+	
+
+
+
+	//this->matrices.view = glm::inverse(this->matrices.transform);
+	
+	this->matrices.view = (rotationMatrix) * (glm::inverse(translationMatrix));
+
+
+
+	//this->matrices.view = glm::inverse((translationMatrix) * (rotationMatrix) /* * (scaleMatrix) */);
+	
+	//this->matrices.view = glm::inverse(translationMatrix) * glm::inverse(rotationMatrix);
+
+	
+	
+
+	//this->matrices.view = glm::translate(glm::mat4(), this->transform.translation);
 
 	//glm::vec3 direction(
 	//	cos(dir.x) * sin(dir.z),
@@ -93,11 +146,20 @@ void Camera::updateViewMatrix() {
 	//	sin(dir.x)
 	//);
 
-	//this->matrices.view = glm::lookAtRH(
-	//	this->transform.translation,
-	//	this->transform.translation + direction,//glm::vec3(0.0f, 0.0f, 0.0f),//this->transform.translation + glm::normalize(this->transform.euler),//this->transform.translation + (glm::vec3(1.0f, 0.0f, 0.0f)*this->transform.rotation),
-	//	glm::vec3(0.0f, 0.0f, 1.0f)
+
+	//glm::vec3 direction(
+	//	cos(dir.x) * sin(dir.z),
+	//	sin(dir.x),
+	//	cos(dir.x) * cos(dir.z)
 	//);
+
+	//this->matrices.view = glm::inverse(glm::lookAtRH(
+	//	this->transform.translation,
+	//	this->transform.translation+direction,
+	//	glm::vec3(0.0f, 1.0f, 0.0f)
+	//));
+
+
 
 	//this->matrices.view = glm::mat4_cast(glm::angleAxis(glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f))) * this->matrices.view;
 	//this->matrices.view = glm::scale(this->matrices.view, glm::vec3(1.0f, 1.0f, -1.0f));
@@ -108,10 +170,27 @@ void Camera::updateViewMatrix() {
 Camera::Camera() {
 	glm::vec2 size = glm::vec2(1280, 720);// remove this
 
-	this->matrices.projection = glm::perspectiveRH(glm::radians(60.0f), (float)size.x / (float)size.y, 0.001f, 256.0f);
+	this->matrices.projection = glm::perspectiveRH(glm::radians(60.0f), (float)size.x / (float)size.y, 0.0001f, 256.0f);
+	/*
+	// //not// fixed by GLM_FORCE_DEPTH_ZERO_TO_ONE
+	https://vulkan-tutorial.com/Uniform_buffers
+	ubo.proj[1][1] *= -1;
+	GLM was originally designed for OpenGL, where the Y coordinate of the clip coordinates is inverted.
+	The easiest way to compensate for that is to flip the sign on the scaling factor of the Y axis in the projection matrix.
+	If you don't do this, then the image will be rendered upside down.
+	*/
+
+	//this->matrices.projection = glm::scale(this->matrices.projection, glm::vec3(1.0f, -1.0f, 1.0f));
+	this->matrices.projection[1][1] *= -1;// faster
 	
-	//this->matrices.projection = this->matrices.projection * glm::mat4_cast(glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
+	//this->matrices.projection = glm::mat4_cast(glm::angleAxis(glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f))) * this->matrices.projection;
+	//this->matrices.projection = glm::rotate(this->matrices.projection, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	//this->matrices.projection = glm::scale(this->matrices.projection, glm::vec3(-1.0f, 1.0f, -1.0f));
+
+
+
+
+
 	
 }
 
@@ -166,11 +245,29 @@ void Camera::setRotation(glm::quat rotation)
 
 void Camera::rotateWorld(glm::vec3 delta)
 {
+	
+	
 	this->rotation = glm::normalize(glm::quat(delta) * this->rotation);
-	//this->transform.euler = glm::normalize(this->transform.euler + delta);// remove
+
+	//glm::vec3 up = glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f) * this->rotation);
+
+	//glm::quat rotate = RotationBetweenVectors(glm::vec3(0.0f, 1.0f, 0.0f), up);
+	//glm::quat unrotate = RotationBetweenVectors(up, glm::vec3(0.0f, 1.0f, 0.0f));
+
+	//glm::quat unrotated = glm::normalize(unrotate * this->rotation);
+	//glm::quat temp = glm::normalize(glm::quat(delta) * unrotated);
+
+	//glm::quat rerotate = glm::normalize(rotate * temp);
+
+	//this->transform.rotation = rerotate;
+	
+	//glm::quat temp = glm::quat(delta) * this->rotation;
+
 	this->transform.euler += delta;// remove
 	updateViewMatrix();
 }
+
+
 
 void Camera::rotateWorldX(float r)
 {

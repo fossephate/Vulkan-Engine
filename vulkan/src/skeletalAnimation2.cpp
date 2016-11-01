@@ -78,7 +78,7 @@ public:
 	std::vector<BoneInfo> boneInfo;
 	// Number of bones present
 	uint32_t numBones = 0;
-	// Root inverese transform matrix
+	// Root inverse transform matrix
 	aiMatrix4x4 globalInverseTransform;
 	// Per-vertex bone info
 	std::vector<VertexBoneData> bones;
@@ -92,6 +92,7 @@ public:
 
 	// Vulkan buffers
 	vkx::MeshBuffer meshBuffer;
+
 	// Reference to assimp mesh
 	// Required for animation
 	vkx::MeshLoader* meshLoader;
@@ -419,7 +420,7 @@ public:
 				Vertex vertex;
 
 				vertex.pos = skinnedMesh->meshLoader->m_Entries[m].Vertices[i].m_pos;
-				vertex.pos.y = -vertex.pos.y;
+				//vertex.pos.y = -vertex.pos.y;// y was negative// important
 				vertex.normal = skinnedMesh->meshLoader->m_Entries[m].Vertices[i].m_normal;
 				vertex.uv = skinnedMesh->meshLoader->m_Entries[m].Vertices[i].m_tex;
 				vertex.color = skinnedMesh->meshLoader->m_Entries[m].Vertices[i].m_color;
@@ -446,8 +447,8 @@ public:
 		uint32_t indexBufferSize = indexBuffer.size() * sizeof(uint32_t);
 		skinnedMesh->meshBuffer.indexCount = indexBuffer.size();
 		skinnedMesh->meshBuffer.vertices = context.stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
-		//skinnedMesh->meshBuffer.indices = context.stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, indexBuffer);//typo?//important
-		skinnedMesh->meshBuffer.indices = context.stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);//typo?//important
+		//skinnedMesh->meshBuffer.indices = context.stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, indexBuffer);// typo?// important
+		skinnedMesh->meshBuffer.indices = context.stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);// typo?// important
 	}
 
 	void loadTextures() {

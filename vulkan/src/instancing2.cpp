@@ -96,6 +96,7 @@ public:
         cmdBuffer.setScissor(0, vkx::rect2D(size));
         cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSet, nullptr);
         cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.solid);
+
         // Binding point 0 : Mesh vertex buffer
         cmdBuffer.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, meshes.example.vertices.buffer, { 0 });
         // Binding point 1 : Instance data buffer
@@ -318,6 +319,7 @@ public:
         // Staging
         // Instanced data is static, copy to device local memory 
         // This results in better performance
+		//modifiable if not done? test this
         instanceBuffer = context.stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, instanceData);
     }
 

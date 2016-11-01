@@ -24,15 +24,15 @@
     <ClCompile Include="src\vulkanClasses\vulkanAndroid.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanApp.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanContext.cpp" />
-    <ClCompile Include="src\vulkanClasses\vulkanDebug2.cpp" />
+    <ClCompile Include="src\vulkanClasses\vulkanDebug.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanFrameBuffer.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanMeshLoader.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanOffscreen.cpp" />
-    <ClCompile Include="src\vulkanscene.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanSwapChain.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTextOverlay.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTextureLoader.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTools.cpp" />
+    <ClCompile Include="src\vulkanscene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\vulkanClasses\camera.h" />
@@ -42,7 +42,7 @@
     <ClInclude Include="include\vulkanClasses\vulkanModel.h" />
     <ClInclude Include="include\vulkanClasses\vulkanApp.h" />
     <ClInclude Include="include\vulkanClasses\vulkanContext.h" />
-    <ClInclude Include="include\vulkanClasses\vulkanDebug2.h" />
+    <ClInclude Include="include\vulkanClasses\vulkanDebug.h" />
     <ClInclude Include="include\vulkanClasses\vulkanFrameBuffer.h" />
     <ClInclude Include="include\vulkanClasses\vulkanMesh.h" />
     <ClInclude Include="include\vulkanClasses\vulkanMeshLoader.h" />

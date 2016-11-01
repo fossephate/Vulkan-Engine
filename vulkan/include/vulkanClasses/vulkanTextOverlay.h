@@ -19,7 +19,7 @@
 #include <glm/glm.hpp>
 #include <vulkan/vulkan.hpp>
 #include "vulkanTools.h"
-#include "vulkanDebug2.h"
+#include "vulkanDebug.h"
 #include "vulkanContext.h"
 
 #include "../external/stb/stb_font_consolas_24_latin1.inl"

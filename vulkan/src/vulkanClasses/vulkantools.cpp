@@ -327,6 +327,7 @@ namespace vkx {
 		vk::DescriptorType type,
 		vk::ShaderStageFlags stageFlags,
 		uint32_t binding) {
+
 		vk::DescriptorSetLayoutBinding setLayoutBinding;
 		setLayoutBinding.descriptorType = type;
 		setLayoutBinding.stageFlags = stageFlags;
@@ -393,6 +394,7 @@ namespace vkx {
 		vk::DescriptorType type,
 		uint32_t binding,
 		vk::DescriptorImageInfo * imageInfo) {
+
 		vk::WriteDescriptorSet writeDescriptorSet;
 		writeDescriptorSet.dstSet = dstSet;
 		writeDescriptorSet.descriptorType = type;

@@ -42,9 +42,6 @@
     <ClCompile Include="src\vulkanClasses\vulkanTools.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\vulkanClasses\vulkanDebug2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\vulkanClasses\vulkanContext.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -52,6 +49,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\vulkanClasses\shapes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vulkanClasses\vulkanDebug.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\vulkanscene.cpp">
@@ -83,9 +83,6 @@
     <ClInclude Include="include\vulkanClasses\vulkanTools.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\vulkanClasses\vulkanDebug2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\vulkanClasses\common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -111,6 +108,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\vulkanClasses\vulkanModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vulkanClasses\vulkanDebug.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
