@@ -22,7 +22,8 @@ std::vector<vkx::VertexLayout> vertexLayout =
 	vkx::VertexLayout::VERTEX_LAYOUT_COLOR
 };
 
-float test;
+
+
 
 class VulkanExample : public vkx::vulkanApp {
 
@@ -40,6 +41,7 @@ public:
 
 	struct {
 		vkx::UniformData meshVS;
+		vkx::UniformData dynamic;
 	} uniformData;
 
 	struct {
@@ -51,6 +53,10 @@ public:
 
 		glm::vec4 lightPos;
 	} uboVS;
+
+	struct {
+		glm::mat4 transform;
+	} matrixData;
 
 	struct {
 		vkx::Texture skybox;
@@ -65,9 +71,13 @@ public:
 	//vk::DescriptorSet descriptorSet;
 	//vk::DescriptorSetLayout descriptorSetLayout;
 
-	std::vector<vk::DescriptorSetLayout> descriptorSetLayouts;
-	std::vector<vk::DescriptorSet> descriptorSets;
-	std::vector<vk::DescriptorPool> descriptorPools;
+	//std::vector<vk::DescriptorSetLayout> descriptorSetLayouts;
+	//std::vector<vk::DescriptorSet> descriptorSets;
+	//std::vector<vk::DescriptorPool> descriptorPools;
+
+	vk::DescriptorSetLayout descriptorSetLayouts[2];
+	vk::DescriptorSet descriptorSets[2];
+	vk::DescriptorPool descriptorPools[2];
 	
 
 
@@ -97,7 +107,7 @@ public:
 		device.destroyPipeline(pipelines.skybox);
 
 		device.destroyPipelineLayout(pipelineLayout);
-		device.destroyDescriptorSetLayout(descriptorSetLayout);
+		//device.destroyDescriptorSetLayout(descriptorSetLayout);
 
 		uniformData.meshVS.destroy();
 
@@ -122,7 +132,7 @@ public:
 		cmdBuffer.setScissor(0, vkx::rect2D(size));
 
 
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSet, nullptr);
+		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSets[0], nullptr);
 
 		//https://github.com/nvpro-samples/gl_vk_threaded_cadscene/blob/master/doc/vulkan_uniforms.md
 
@@ -144,12 +154,12 @@ public:
 		//uboVS.model = meshes[1].model;
 
 		//meshes[1].orientation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-
+		int i = 1;
 
 		for (auto &mesh : meshes) {
 
 
-			uboVS.model = mesh.model;
+			//uboVS.model = mesh.model;
 			//uboVS.model = glm::mat4_cast(mesh.orientation);
 			//updateUniformBuffers();
 
@@ -157,17 +167,18 @@ public:
 			cmdBuffer.bindVertexBuffers(mesh.vertexBufferBinding, mesh.meshBuffer.vertices.buffer, vk::DeviceSize());
 			cmdBuffer.bindIndexBuffer(mesh.meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
 
-			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSet, nullptr);
+			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSets[0], nullptr);
 
 
-
+			//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSets[1], nullptr);
 
 
 
 			cmdBuffer.drawIndexed(mesh.meshBuffer.indexCount, 1, 0, 0, 0);
 
 
-			mesh.drawIndexed(cmdBuffer);
+			//mesh.drawIndexed(cmdBuffer);
+			i += 1;
 		}
 
 		uboVS.model = glm::mat4();
@@ -259,9 +270,9 @@ public:
 		// Example uses one ubo and one image sampler
 		std::vector<vk::DescriptorPoolSize> poolSizes =
 		{
-			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 1),
+			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 2),
 			vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 1),
-			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1)
+			//vkx::descriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1)
 		};
 
 		vk::DescriptorPoolCreateInfo descriptorPoolInfo =
@@ -270,50 +281,64 @@ public:
 		descriptorPool = device.createDescriptorPool(descriptorPoolInfo);
 
 
-		vk::DescriptorPool descPool;
-		descriptorSets.push_back(vk::DescriptorSet());
-		descriptorSets.push_back(vk::DescriptorSet());
-		descriptorSets.push_back(vk::DescriptorSet());
-
-		uint32_t maxcounts[2];
-		maxcounts[0] = 1;
-		maxcounts[1] = 1;
 
 
-		for (int i = 0; i < 2; i++) {
-			
-			vk::DescriptorPool descrPool;// where the descriptor pool will be stored
 
-			vk::DescriptorPoolCreateInfo descrPoolInfo;
-			descrPoolInfo.maxSets = maxcounts[i];
-			//descrPoolInfo.maxSets = 1;
-			descrPoolInfo.poolSizeCount = 1;
-			
-			descrPoolInfo.pPoolSizes = &poolSizes[i];
+		//vk::DescriptorPool descPool;
+		////descriptorSets.push_back(vk::DescriptorSet());
+		////descriptorSets.push_back(vk::DescriptorSet());
+		////descriptorSets.push_back(vk::DescriptorSet());
 
-			// scene pool
-			device.createDescriptorPool(&descrPoolInfo, NULL, &descrPool);
+		//uint32_t maxcounts[2];
+		//maxcounts[0] = 1;
+		//maxcounts[1] = 1;
 
-			descriptorPools[i] = descrPool;
 
-			vk::DescriptorSetLayout setLayouts[] = { descriptorSetLayouts[0], descriptorSetLayouts[1] };
 
-			for (uint32_t n = 0; n < maxcounts[i]; n++) {
 
-				vk::DescriptorSetAllocateInfo allocInfo;
-				allocInfo.descriptorPool = descrPool;
-				allocInfo.descriptorSetCount = 1;
-				allocInfo.pSetLayouts = setLayouts + i;
+		//for (int i = 0; i < 1; i++) {
 
-				//vkx::descriptorSetAllocateInfo(descriptorPool, setLayout
+		//	
+		//	vk::DescriptorPool descrPool;// where the descriptor pool will be stored
 
-				// do one at a time, as we don't have layouts in maxcounts-many pointer array
-				//result = vkAllocateDescriptorSets(m_device, &allocInfo, setstores[i] + n);
-				device.allocateDescriptorSets(&allocInfo, (&descriptorSets[i] + n));
-				//assert(result == VK_SUCCESS);
+		//	vk::DescriptorPoolCreateInfo descrPoolInfo;
+		//	descrPoolInfo.maxSets = maxcounts[i];
+		//	//descrPoolInfo.maxSets = 1;
+		//	descrPoolInfo.poolSizeCount = 1;
+		//	
+		//	descrPoolInfo.pPoolSizes = &poolSizes[i];
 
-			}
-		}
+		//	// scene pool
+		//	descrPool = device.createDescriptorPool(descrPoolInfo, nullptr);
+
+		//	descriptorPools[i] = descrPool;
+
+		//	//vk::DescriptorSetLayout setLayouts[] = { descriptorSetLayouts[0], descriptorSetLayouts[1] };
+
+		//	//device.allocateDescriptorSets(a)
+
+		//	vk::DescriptorSetAllocateInfo allocInfo = vkx::descriptorSetAllocateInfo(descrPool, descriptorSetLayouts + i, 1);
+
+		//	device.allocateDescriptorSets(&allocInfo, &descriptorSets[i]);
+
+
+		//	//for (uint32_t n = 0; n < maxcounts[i]; n++) {
+
+		//	//	//vk::DescriptorSetAllocateInfo allocInfo;
+		//	//	//allocInfo.descriptorPool = descrPool;
+		//	//	//allocInfo.descriptorSetCount = 1;
+		//	//	//allocInfo.pSetLayouts = descriptorSetLayouts + i;
+
+		//	//	//vkx::descriptorSetAllocateInfo(descriptorPool, setLayout
+
+		//	//	// do one at a time, as we don't have layouts in maxcounts-many pointer array
+		//	//	//result = vkAllocateDescriptorSets(m_device, &allocInfo, setstores[i] + n);
+		//	//	//device.allocateDescriptorSets(&allocInfo, (&descriptorSets[i] + n));
+
+		//	//	//assert(result == VK_SUCCESS);
+
+		//	//}
+		//}
 
 
 
@@ -384,26 +409,29 @@ public:
 
 
 		// create a descriptorSetLayout for each set of layout bindings
-		std::vector<vk::DescriptorSetLayout> descriptorSetLayouts;
+		//std::vector<vk::DescriptorSetLayout> descriptorSetLayouts;
 
 		// create info
 		vk::DescriptorSetLayoutCreateInfo descriptorSetLayout1Info =
 			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayout1Bindings.data()+0, descriptorSetLayout1Bindings.size());
 
-		vk::DescriptorSetLayout descriptorSetLayout1 = device.createDescriptorSetLayout(descriptorSetLayout1Info);
-		descriptorSetLayouts.push_back(descriptorSetLayout1);
+		//vk::DescriptorSetLayout descriptorSetLayout1 = device.createDescriptorSetLayout(descriptorSetLayout1Info);
+		//descriptorSetLayouts.push_back(descriptorSetLayout1);
+		descriptorSetLayouts[0] = device.createDescriptorSetLayout(descriptorSetLayout1Info);
 
 		
 
 		// create info
 		vk::DescriptorSetLayoutCreateInfo descriptorSetLayout2Info =
-			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayout2Bindings.data()+1, descriptorSetLayout2Bindings.size());
+			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayout2Bindings.data(), descriptorSetLayout2Bindings.size());
 
-		vk::DescriptorSetLayout descriptorSetLayout2 = device.createDescriptorSetLayout(descriptorSetLayout2Info);
-		descriptorSetLayouts.push_back(descriptorSetLayout2);
+		//vk::DescriptorSetLayout descriptorSetLayout2 = device.createDescriptorSetLayout(descriptorSetLayout2Info);
+		//descriptorSetLayouts.push_back(descriptorSetLayout2);
+
+		//descriptorSetLayouts[1] = device.createDescriptorSetLayout(descriptorSetLayout2Info);
 
 
-		vk::DescriptorSetLayout setLayouts[] = { descriptorSetLayouts[0], descriptorSetLayouts[1] };
+		vk::DescriptorSetLayout setLayouts[] = { descriptorSetLayouts[0]/*, descriptorSetLayouts[1]*/ };
 
 		#define NV_ARRAYSIZE(arr) (sizeof(arr)/sizeof(arr[0]))
 
@@ -455,6 +483,43 @@ public:
 		//};
 
 		//device.updateDescriptorSets(writeDescriptorSets, nullptr);
+
+
+
+
+		vk::DescriptorImageInfo texDescriptorCubeMap =
+			vkx::descriptorImageInfo(textures.skybox.sampler, textures.skybox.view, vk::ImageLayout::eGeneral);
+
+		std::vector<vk::WriteDescriptorSet> writeDescriptorSets{
+
+			// Binding 0 : Vertex shader uniform buffer
+			vkx::writeDescriptorSet(
+				descriptorSets[0],// destination descriptor set
+				vk::DescriptorType::eUniformBuffer,
+				0,
+				&uniformData.meshVS.descriptor),
+
+
+			// Binding 1 : Fragment shader image sampler
+			vkx::writeDescriptorSet(
+				descriptorSets[0],// destination descriptor set
+				vk::DescriptorType::eCombinedImageSampler,
+				1,
+				&texDescriptorCubeMap),
+
+			// Binding 0 : Vertex shader dynamic uniform buffer
+			//vkx::writeDescriptorSet(
+			//	descriptorSets[1],// destination descriptor set
+			//	vk::DescriptorType::eUniformBufferDynamic,
+			//	0,
+			//	&uniformData.dynamic.descriptor),
+		};
+
+		device.updateDescriptorSets(writeDescriptorSets, nullptr);
+
+
+
+
 	}
 
 
@@ -563,6 +628,8 @@ public:
 
 		uboVS.lightPos = lightPos;
 		uniformData.meshVS.copy(uboVS);
+
+		//uniformData.dynamic.copy(matrixData);
 	}
 
 	void prepare() {

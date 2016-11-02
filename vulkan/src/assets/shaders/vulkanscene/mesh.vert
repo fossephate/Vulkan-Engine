@@ -37,14 +37,14 @@ void main()
 	outColor = inColor;
 
 	///////////
-	ubo.model = instance.transform;
+	//ubo.model = instance.transform;
 	/////////
 
 	mat4 modelView = ubo.view * ubo.model;
 	vec4 pos = modelView * inPos;
 	
 	//gl_Position = ubo.projection * pos;
-	gl_Position = ubo.projection * ubo.view * ubo.model * vec4(inPos.xyz, 1.0);
+	gl_Position = ubo.projection * ubo.view * ubo.model * instance.transform * vec4(inPos.xyz, 1.0);
 
 	outEyePos = vec3(modelView * pos);
 	
