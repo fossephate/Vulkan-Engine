@@ -22,6 +22,12 @@ std::vector<vkx::VertexLayout> vertexLayout =
 	vkx::VertexLayout::VERTEX_LAYOUT_COLOR
 };
 
+inline size_t alignedSize(size_t align, size_t sz) {
+	return ((sz + align - 1) / align)*align;
+}
+
+
+
 
 
 
@@ -40,26 +46,37 @@ public:
 	vkx::Mesh skyboxMesh;
 
 	struct {
-		vkx::UniformData meshVS;
-		vkx::UniformData dynamic;
+		vkx::UniformData sceneVS;
+		vkx::UniformData dynamicVS;
 	} uniformData;
 
 	struct {
-		glm::mat4 model;
+		glm::mat4 model;// moved to dynamic
 		glm::mat4 view;
 		glm::mat4 projection;
 
 		glm::mat4 normal;
 
 		glm::vec4 lightPos;
-	} uboVS;
+	} uboScene;
 
 	struct {
-		glm::mat4 transform;
-	} matrixData;
+		glm::mat4 model;
+	} uboMatrixData;
+
+	unsigned int alignedMatrixSize;
+	unsigned int alignedMaterialSize;
+
+
+
+
+	//struct {
+	//	vkx::Texture skybox;
+	//} textures;
 
 	struct {
-		vkx::Texture skybox;
+		vkx::Texture colorMap;
+		vkx::Texture floor;
 	} textures;
 
 	struct {
@@ -71,13 +88,20 @@ public:
 	//vk::DescriptorSet descriptorSet;
 	//vk::DescriptorSetLayout descriptorSetLayout;
 
-	//std::vector<vk::DescriptorSetLayout> descriptorSetLayouts;
-	//std::vector<vk::DescriptorSet> descriptorSets;
-	//std::vector<vk::DescriptorPool> descriptorPools;
+	std::vector<vk::DescriptorSetLayout> descriptorSetLayouts;
+	std::vector<vk::DescriptorSet> descriptorSets;
+	std::vector<vk::DescriptorPool> descriptorPools;
 
-	vk::DescriptorSetLayout descriptorSetLayouts[2];
-	vk::DescriptorSet descriptorSets[2];
-	vk::DescriptorPool descriptorPools[2];
+	//descriptorSetLayouts.resize(2);
+	//descriptorSets.resize(2);
+	//descriptorPools.resize(2);
+
+	//vk::DescriptorSetLayout descriptorSetLayouts[2];
+	//vk::DescriptorSet descriptorSets[2];
+	//vk::DescriptorPool descriptorPools[2];
+
+	//vk::DescriptorSetLayout descriptorSetLayout;
+	//vk::DescriptorSet descriptorSet;
 	
 
 
@@ -91,7 +115,8 @@ public:
 
 		camera.setTranslation({ -1.0f, 1.0f, 3.0f });
 
-		
+		unsigned int alignment = (uint32_t)context.deviceProperties.limits.minUniformBufferOffsetAlignment;
+		alignedMatrixSize = (unsigned int)(alignedSize(alignment, sizeof(uboMatrixData)));
 
 		//camera.matrices.projection = glm::perspectiveRH(glm::radians(60.0f), (float)size.width / (float)size.height, 0.0001f, 256.0f);
 
@@ -104,12 +129,12 @@ public:
 
 		// destroy pipelines
 		device.destroyPipeline(pipelines.meshes);
-		device.destroyPipeline(pipelines.skybox);
+		//device.destroyPipeline(pipelines.skybox);
 
 		device.destroyPipelineLayout(pipelineLayout);
 		//device.destroyDescriptorSetLayout(descriptorSetLayout);
 
-		uniformData.meshVS.destroy();
+		uniformData.sceneVS.destroy();
 
 		for (auto& mesh : meshes) {
 			device.destroyBuffer(mesh.meshBuffer.vertices.buffer);
@@ -119,12 +144,13 @@ public:
 			device.freeMemory(mesh.meshBuffer.indices.memory);
 		}
 
-		textures.skybox.destroy();
+		//textures.skybox.destroy();
 
 	}
 
 	void loadTextures() {
-		textures.skybox = textureLoader->loadCubemap(getAssetPath() + "textures/cubemap_vulkan.ktx", vk::Format::eR8G8B8A8Unorm);
+		textures.colorMap = textureLoader->loadCubemap(getAssetPath() + "textures/cubemap_vulkan.ktx", vk::Format::eR8G8B8A8Unorm);
+		//textures.skybox = textureLoader->loadCubemap(getAssetPath() + "textures/cubemap_vulkan.ktx", vk::Format::eR8G8B8A8Unorm);
 	}
 
 	void updateDrawCommandBuffer(const vk::CommandBuffer& cmdBuffer) {
@@ -132,7 +158,8 @@ public:
 		cmdBuffer.setScissor(0, vkx::rect2D(size));
 
 
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSets[0], nullptr);
+		//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSet, nullptr);
+		//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSets[0], nullptr);
 
 		//https://github.com/nvpro-samples/gl_vk_threaded_cadscene/blob/master/doc/vulkan_uniforms.md
 
@@ -167,6 +194,14 @@ public:
 			cmdBuffer.bindVertexBuffers(mesh.vertexBufferBinding, mesh.meshBuffer.vertices.buffer, vk::DeviceSize());
 			cmdBuffer.bindIndexBuffer(mesh.meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
 
+
+			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSets[0], nullptr);
+
+			//uint32_t offset = di.matrixIndex * res->m_alignedMatrixSize;
+			uint32_t offset = 1 * alignedMatrixSize;
+			//https://www.khronos.org/registry/vulkan/specs/1.0/apispec.html#vkCmdBindDescriptorSets
+			//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, 1, &descriptorSets[1], 1, &offset);
+
 			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSets[0], nullptr);
 
 
@@ -181,7 +216,7 @@ public:
 			i += 1;
 		}
 
-		uboVS.model = glm::mat4();
+		uboScene.model = glm::mat4();
 
 	}
 
@@ -262,265 +297,425 @@ public:
 
 
 
-
 	void setupDescriptorPool() {
+		
 
-
-
-		// Example uses one ubo and one image sampler
-		std::vector<vk::DescriptorPoolSize> poolSizes =
+		std::vector<vk::DescriptorPoolSize> poolSizes1 =
 		{
-			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 2),
-			vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 1),
-			//vkx::descriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1)
+			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 2),// static data
+			vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 1),// will eventually be material data
 		};
 
-		vk::DescriptorPoolCreateInfo descriptorPoolInfo =
-			vkx::descriptorPoolCreateInfo(poolSizes.size(), poolSizes.data(), 2);
-
-		descriptorPool = device.createDescriptorPool(descriptorPoolInfo);
+		vk::DescriptorPoolCreateInfo descriptorPool1Info =
+			vkx::descriptorPoolCreateInfo(poolSizes1.size(), poolSizes1.data(), 2);
 
 
-
-
-
-		//vk::DescriptorPool descPool;
-		////descriptorSets.push_back(vk::DescriptorSet());
-		////descriptorSets.push_back(vk::DescriptorSet());
-		////descriptorSets.push_back(vk::DescriptorSet());
-
-		//uint32_t maxcounts[2];
-		//maxcounts[0] = 1;
-		//maxcounts[1] = 1;
+		vk::DescriptorPool descPool1 = device.createDescriptorPool(descriptorPool1Info);
+		descriptorPools.push_back(descPool1);
 
 
 
 
-		//for (int i = 0; i < 1; i++) {
 
-		//	
-		//	vk::DescriptorPool descrPool;// where the descriptor pool will be stored
+		std::vector<vk::DescriptorPoolSize> poolSizes2 =
+		{
+			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1),// non-static data
+		};
 
-		//	vk::DescriptorPoolCreateInfo descrPoolInfo;
-		//	descrPoolInfo.maxSets = maxcounts[i];
-		//	//descrPoolInfo.maxSets = 1;
-		//	descrPoolInfo.poolSizeCount = 1;
-		//	
-		//	descrPoolInfo.pPoolSizes = &poolSizes[i];
+		vk::DescriptorPoolCreateInfo descriptorPool2Info =
+			vkx::descriptorPoolCreateInfo(poolSizes2.size(), poolSizes2.data(), 1);
 
-		//	// scene pool
-		//	descrPool = device.createDescriptorPool(descrPoolInfo, nullptr);
-
-		//	descriptorPools[i] = descrPool;
-
-		//	//vk::DescriptorSetLayout setLayouts[] = { descriptorSetLayouts[0], descriptorSetLayouts[1] };
-
-		//	//device.allocateDescriptorSets(a)
-
-		//	vk::DescriptorSetAllocateInfo allocInfo = vkx::descriptorSetAllocateInfo(descrPool, descriptorSetLayouts + i, 1);
-
-		//	device.allocateDescriptorSets(&allocInfo, &descriptorSets[i]);
+		vk::DescriptorPool descPool2 = device.createDescriptorPool(descriptorPool2Info);
+		descriptorPools.push_back(descPool2);
 
 
-		//	//for (uint32_t n = 0; n < maxcounts[i]; n++) {
-
-		//	//	//vk::DescriptorSetAllocateInfo allocInfo;
-		//	//	//allocInfo.descriptorPool = descrPool;
-		//	//	//allocInfo.descriptorSetCount = 1;
-		//	//	//allocInfo.pSetLayouts = descriptorSetLayouts + i;
-
-		//	//	//vkx::descriptorSetAllocateInfo(descriptorPool, setLayout
-
-		//	//	// do one at a time, as we don't have layouts in maxcounts-many pointer array
-		//	//	//result = vkAllocateDescriptorSets(m_device, &allocInfo, setstores[i] + n);
-		//	//	//device.allocateDescriptorSets(&allocInfo, (&descriptorSets[i] + n));
-
-		//	//	//assert(result == VK_SUCCESS);
-
-		//	//}
-		//}
 
 
+		//std::vector<vk::DescriptorPoolSize> poolSizes3 =
+		//{
+		//	vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 1),// will eventually be material data
+		//};
+
+		//vk::DescriptorPoolCreateInfo descriptorPool3Info =
+		//	vkx::descriptorPoolCreateInfo(poolSizes3.size(), poolSizes3.data(), 1);
+
+
+		//vk::DescriptorPool descPool3 = device.createDescriptorPool(descriptorPool3Info);
+		//descriptorPools.push_back(descPool3);
+
+
+		
 
 	}
 
-
-
-
-
-
 	void setupDescriptorSetLayout() {
-		//std::vector<vk::DescriptorSetLayoutBinding> setLayoutBindings =
-		//{
-		//	// Binding 0 : Vertex shader uniform buffer
-		//	vkx::descriptorSetLayoutBinding(
-		//		vk::DescriptorType::eUniformBuffer,
-		//		vk::ShaderStageFlagBits::eVertex,
-		//		0),
-		//	// Binding 1 : Fragment shader color map image sampler
-		//	vkx::descriptorSetLayoutBinding(
-		//		vk::DescriptorType::eCombinedImageSampler,
-		//		vk::ShaderStageFlagBits::eFragment,
-		//		1),
-		//	//// Binding 2 : vertex test uniform
-		//	//vkx::descriptorSetLayoutBinding(
-		//	//	vk::DescriptorType::eUniformBufferDynamic,
-		//	//	vk::ShaderStageFlagBits::eVertex,
-		//	//	1),
-
-
-		//};
-
-		//vk::DescriptorSetLayoutCreateInfo descriptorSetEntry =
-		//	vkx::descriptorSetLayoutCreateInfo(setLayoutBindings.data(), setLayoutBindings.size());
-
-		//descriptorSetLayout = device.createDescriptorSetLayout(descriptorSetEntry);
-
-
-		//vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
-		//	vkx::pipelineLayoutCreateInfo(&descriptorSetLayout, 1);
-
-		//pipelineLayout = device.createPipelineLayout(pPipelineLayoutCreateInfo);
-
-
-		// bindings for descriptor set layout 1
-		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayout1Bindings =// rename to descriptorSetLayout1Bindings?
+		std::vector<vk::DescriptorSetLayoutBinding> setLayout1Bindings =
 		{
+			// Binding 0 : Vertex shader uniform buffer
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBuffer,
 				vk::ShaderStageFlagBits::eVertex,
-				0),// binding 0
+				0),// binding 1
 
+			// Binding 1 : Fragment shader color map image sampler
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
 				1)// binding 1
 		};
 
+		vk::DescriptorSetLayoutCreateInfo descriptorLayout1 =
+			vkx::descriptorSetLayoutCreateInfo(setLayout1Bindings.data(), setLayout1Bindings.size());
 
-		// bindings for descriptor set layout 2
-		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayout2Bindings =
+		vk::DescriptorSetLayout setLayout1 = device.createDescriptorSetLayout(descriptorLayout1);
+
+		descriptorSetLayouts.push_back(setLayout1);
+
+
+
+
+
+		std::vector<vk::DescriptorSetLayoutBinding> setLayout2Bindings =
 		{
+			// Binding 0 : Vertex shader dynamic uniform buffer
 			vkx::descriptorSetLayoutBinding(
-				vk::DescriptorType::eUniformBufferDynamic,// dynamic
-				vk::ShaderStageFlagBits::eVertex,// only vertex
-				0)// binding 0
+				vk::DescriptorType::eUniformBufferDynamic,
+				vk::ShaderStageFlagBits::eVertex,
+				0),// binding 0
 		};
 
+		vk::DescriptorSetLayoutCreateInfo descriptorLayout2 =
+			vkx::descriptorSetLayoutCreateInfo(setLayout2Bindings.data(), setLayout2Bindings.size());
 
-		// create a descriptorSetLayout for each set of layout bindings
-		//std::vector<vk::DescriptorSetLayout> descriptorSetLayouts;
+		vk::DescriptorSetLayout setLayout2 = device.createDescriptorSetLayout(descriptorLayout2);
 
-		// create info
-		vk::DescriptorSetLayoutCreateInfo descriptorSetLayout1Info =
-			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayout1Bindings.data()+0, descriptorSetLayout1Bindings.size());
-
-		//vk::DescriptorSetLayout descriptorSetLayout1 = device.createDescriptorSetLayout(descriptorSetLayout1Info);
-		//descriptorSetLayouts.push_back(descriptorSetLayout1);
-		descriptorSetLayouts[0] = device.createDescriptorSetLayout(descriptorSetLayout1Info);
-
-		
-
-		// create info
-		vk::DescriptorSetLayoutCreateInfo descriptorSetLayout2Info =
-			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayout2Bindings.data(), descriptorSetLayout2Bindings.size());
-
-		//vk::DescriptorSetLayout descriptorSetLayout2 = device.createDescriptorSetLayout(descriptorSetLayout2Info);
-		//descriptorSetLayouts.push_back(descriptorSetLayout2);
-
-		//descriptorSetLayouts[1] = device.createDescriptorSetLayout(descriptorSetLayout2Info);
+		descriptorSetLayouts.push_back(setLayout2);
 
 
-		vk::DescriptorSetLayout setLayouts[] = { descriptorSetLayouts[0]/*, descriptorSetLayouts[1]*/ };
-
-		#define NV_ARRAYSIZE(arr) (sizeof(arr)/sizeof(arr[0]))
 
 
-		//vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
-		//	vkx::pipelineLayoutCreateInfo(&descriptorSetLayout, 1);
 
-		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfo;
-		pPipelineLayoutCreateInfo.setLayoutCount = NV_ARRAYSIZE(setLayouts);
-		pPipelineLayoutCreateInfo.pSetLayouts = setLayouts;
+
+
+
+
+		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
+			vkx::pipelineLayoutCreateInfo(descriptorSetLayouts.data(), descriptorSetLayouts.size());
 
 		pipelineLayout = device.createPipelineLayout(pPipelineLayoutCreateInfo);
 
-
-
-
 	}
-
-
-
 
 	void setupDescriptorSet() {
 
+		/*for (int i = 0; i < descriptorPools.size(); ++i) {
+			vk::DescriptorSetAllocateInfo allocInfo =
+				vkx::descriptorSetAllocateInfo(descriptorPools[i], &descriptorSetLayouts[i], 1);
 
-		/*vk::DescriptorSetAllocateInfo allocInfo =
-			vkx::descriptorSetAllocateInfo(descriptorPool, &descriptorSetLayout, 1);
+			vk::DescriptorSet descSet = device.allocateDescriptorSets(allocInfo)[0];
+			descriptorSets.push_back(descSet);
+		}*/
 
-		descriptorSet = device.allocateDescriptorSets(allocInfo)[0];*/
-
-
-		//// Cube map image descriptor
-		//vk::DescriptorImageInfo texDescriptorCubeMap =
-		//	vkx::descriptorImageInfo(textures.skybox.sampler, textures.skybox.view, vk::ImageLayout::eGeneral);
-
-		//std::vector<vk::WriteDescriptorSet> writeDescriptorSets =
-		//{
-		//	// Binding 0 : Vertex shader uniform buffer
-		//	vkx::writeDescriptorSet(
-		//		descriptorSet,
-		//		vk::DescriptorType::eUniformBuffer,
-		//		0,
-		//		&uniformData.meshVS.descriptor),
-		//	// Binding 1 : Fragment shader image sampler
-		//	vkx::writeDescriptorSet(
-		//		descriptorSet,
-		//		vk::DescriptorType::eCombinedImageSampler,
-		//		1,
-		//		&texDescriptorCubeMap)
+		//std::vector<vk::DescriptorSetAllocateInfo> descAllocInfos = {
+		//	vkx::descriptorSetAllocateInfo(descriptorPools[0], &descriptorSetLayouts[0], 1),
+		//	vkx::descriptorSetAllocateInfo(descriptorPools[1], &descriptorSetLayouts[1], 1),
 		//};
 
-		//device.updateDescriptorSets(writeDescriptorSets, nullptr);
+		vk::DescriptorSetAllocateInfo descriptorSetInfo1 =
+			vkx::descriptorSetAllocateInfo(descriptorPools[0], &descriptorSetLayouts[0], 1);
+
+		std::vector<vk::DescriptorSet> descSets1 = device.allocateDescriptorSets(descriptorSetInfo1);
+		//std::vector<vk::DescriptorSet> descSets1 = device.allocateDescriptorSets(*descAllocInfos);
+		//std::vector<vk::DescriptorSet> descSets1 = device.allocateDescriptorSets(*descAllocInfos.data());
+		descriptorSets.push_back(descSets1[0]);// descriptor set 1
+
+
+		vk::DescriptorSetAllocateInfo descriptorSetInfo2 =
+			vkx::descriptorSetAllocateInfo(descriptorPools[1], &descriptorSetLayouts[1], 1);
+
+		std::vector<vk::DescriptorSet> descSets2 = device.allocateDescriptorSets(descriptorSetInfo2);
+		descriptorSets.push_back(descSets2[0]);// descriptor set 2
 
 
 
 
-		vk::DescriptorImageInfo texDescriptorCubeMap =
-			vkx::descriptorImageInfo(textures.skybox.sampler, textures.skybox.view, vk::ImageLayout::eGeneral);
 
-		std::vector<vk::WriteDescriptorSet> writeDescriptorSets{
 
+
+
+
+
+
+
+
+
+
+		//vk::DescriptorSetAllocateInfo allocInfo1 =
+		//	vkx::descriptorSetAllocateInfo(descriptorPools[0], descriptorSetLayouts.data(), 1);
+
+		//vk::DescriptorSet descSet1 = device.allocateDescriptorSets(allocInfo1)[0];
+		//descriptorSets.push_back(descSet1);
+
+		//vk::DescriptorSetAllocateInfo allocInfo2 =
+		//	vkx::descriptorSetAllocateInfo(descriptorPools[1], descriptorSetLayouts.data(), 1);
+
+		//vk::DescriptorSet descSet2 = device.allocateDescriptorSets(allocInfo2)[0];
+		//descriptorSets.push_back(descSet2);
+
+
+		//vk::DescriptorSetAllocateInfo allocInfo =
+			//vkx::descriptorSetAllocateInfo(descriptorPool, &descriptorSetLayout, 1);
+
+		//descriptorSet = device.allocateDescriptorSets(allocInfo)[0];
+
+		// Cube map image descriptor
+		vk::DescriptorImageInfo texDescriptor =
+			vkx::descriptorImageInfo(textures.colorMap.sampler, textures.colorMap.view, vk::ImageLayout::eGeneral);
+
+		std::vector<vk::WriteDescriptorSet> writeDescriptorSets =
+		{
+			// set 0
 			// Binding 0 : Vertex shader uniform buffer
 			vkx::writeDescriptorSet(
-				descriptorSets[0],// destination descriptor set
+				descriptorSets[0],// descriptor set 0
 				vk::DescriptorType::eUniformBuffer,
-				0,
-				&uniformData.meshVS.descriptor),
-
-
+				0,// binding 0
+				&uniformData.sceneVS.descriptor),
 			// Binding 1 : Fragment shader image sampler
 			vkx::writeDescriptorSet(
-				descriptorSets[0],// destination descriptor set
+				descriptorSets[0],// descriptor set 0
 				vk::DescriptorType::eCombinedImageSampler,
-				1,
-				&texDescriptorCubeMap),
+				1,// binding 1
+				&texDescriptor),
 
-			// Binding 0 : Vertex shader dynamic uniform buffer
+			// vertex shader dynamic buffer
 			//vkx::writeDescriptorSet(
-			//	descriptorSets[1],// destination descriptor set
+			//	descriptorSets[1],// descriptor set 1
 			//	vk::DescriptorType::eUniformBufferDynamic,
-			//	0,
-			//	&uniformData.dynamic.descriptor),
+			//	0,// binding 0
+			//	&uniformData.dynamicVS.descriptor)
+
 		};
 
 		device.updateDescriptorSets(writeDescriptorSets, nullptr);
-
-
-
-
 	}
+
+
+	//void setupDescriptorPool() {
+
+
+
+	//	// Example uses one ubo and one image sampler
+	//	std::vector<vk::DescriptorPoolSize> poolSizes =
+	//	{
+	//		vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 2),
+	//		vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 1),
+	//		//vkx::descriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1)
+	//	};
+
+	//	vk::DescriptorPoolCreateInfo descriptorPoolInfo =
+	//		vkx::descriptorPoolCreateInfo(poolSizes.size(), poolSizes.data(), 2);
+
+	//	descriptorPool = device.createDescriptorPool(descriptorPoolInfo);
+
+
+	//}
+
+
+
+
+
+
+	//void setupDescriptorSetLayout() {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	//	//std::vector<vk::DescriptorSetLayoutBinding> setLayoutBindings =
+	//	//{
+	//	//	// Binding 0 : Vertex shader uniform buffer
+	//	//	vkx::descriptorSetLayoutBinding(
+	//	//		vk::DescriptorType::eUniformBuffer,
+	//	//		vk::ShaderStageFlagBits::eVertex,
+	//	//		0),
+	//	//	// Binding 1 : Fragment shader color map image sampler
+	//	//	vkx::descriptorSetLayoutBinding(
+	//	//		vk::DescriptorType::eCombinedImageSampler,
+	//	//		vk::ShaderStageFlagBits::eFragment,
+	//	//		1),
+	//	//	//// Binding 2 : vertex test uniform
+	//	//	//vkx::descriptorSetLayoutBinding(
+	//	//	//	vk::DescriptorType::eUniformBufferDynamic,
+	//	//	//	vk::ShaderStageFlagBits::eVertex,
+	//	//	//	1),
+
+
+	//	//};
+
+	//	//vk::DescriptorSetLayoutCreateInfo descriptorSetEntry =
+	//	//	vkx::descriptorSetLayoutCreateInfo(setLayoutBindings.data(), setLayoutBindings.size());
+
+	//	//descriptorSetLayout = device.createDescriptorSetLayout(descriptorSetEntry);
+
+
+	//	//vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
+	//	//	vkx::pipelineLayoutCreateInfo(&descriptorSetLayout, 1);
+
+	//	//pipelineLayout = device.createPipelineLayout(pPipelineLayoutCreateInfo);
+
+
+	//	// bindings for descriptor set layout 1
+	//	std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayout1Bindings =
+	//	{
+	//		vkx::descriptorSetLayoutBinding(
+	//			vk::DescriptorType::eUniformBuffer,
+	//			vk::ShaderStageFlagBits::eVertex,
+	//			0),// binding 0
+
+	//		vkx::descriptorSetLayoutBinding(
+	//			vk::DescriptorType::eCombinedImageSampler,
+	//			vk::ShaderStageFlagBits::eFragment,
+	//			1)// binding 1
+	//	};
+
+
+	//	//// bindings for descriptor set layout 2
+	//	//std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayout2Bindings =
+	//	//{
+	//	//	vkx::descriptorSetLayoutBinding(
+	//	//		vk::DescriptorType::eUniformBufferDynamic,// dynamic
+	//	//		vk::ShaderStageFlagBits::eVertex,// only vertex
+	//	//		0)// binding 0
+	//	//};
+
+
+	//	//// create a descriptorSetLayout for each set of layout bindings
+	//	////std::vector<vk::DescriptorSetLayout> descriptorSetLayouts;
+
+	//	// create info
+	//	vk::DescriptorSetLayoutCreateInfo descriptorSetLayout1Info =
+	//		vkx::descriptorSetLayoutCreateInfo(descriptorSetLayout1Bindings.data(), descriptorSetLayout1Bindings.size());
+
+	//	//vk::DescriptorSetLayout descriptorSetLayout1 = device.createDescriptorSetLayout(descriptorSetLayout1Info);
+	//	//descriptorSetLayouts.push_back(descriptorSetLayout1);
+	//	descriptorSetLayouts[0] = device.createDescriptorSetLayout(descriptorSetLayout1Info);
+
+	//	//
+
+	//	//// create info
+	//	//vk::DescriptorSetLayoutCreateInfo descriptorSetLayout2Info =
+	//	//	vkx::descriptorSetLayoutCreateInfo(descriptorSetLayout2Bindings.data(), descriptorSetLayout2Bindings.size());
+
+	//	////vk::DescriptorSetLayout descriptorSetLayout2 = device.createDescriptorSetLayout(descriptorSetLayout2Info);
+	//	////descriptorSetLayouts.push_back(descriptorSetLayout2);
+
+	//	////descriptorSetLayouts[1] = device.createDescriptorSetLayout(descriptorSetLayout2Info);
+
+
+	//	vk::DescriptorSetLayout setLayouts[] = { descriptorSetLayouts[0]/*, descriptorSetLayouts[1]*/ };
+
+	//	#define NV_ARRAYSIZE(arr) (sizeof(arr)/sizeof(arr[0]))
+
+
+	//	/*vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
+	//		vkx::pipelineLayoutCreateInfo(&descriptorSetLayouts[0], 1);*/
+
+	//	vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfo;
+	//	pPipelineLayoutCreateInfo.setLayoutCount = NV_ARRAYSIZE(setLayouts);
+	//	pPipelineLayoutCreateInfo.pSetLayouts = setLayouts;
+
+	//	pipelineLayout = device.createPipelineLayout(pPipelineLayoutCreateInfo);
+
+
+
+
+	//}
+
+
+
+
+	//void setupDescriptorSet() {
+
+
+	//	vk::DescriptorSetAllocateInfo allocInfo =
+	//		vkx::descriptorSetAllocateInfo(descriptorPool, &descriptorSetLayouts[0], 1);
+
+	//	descriptorSets[0] = device.allocateDescriptorSets(allocInfo)[0];
+
+
+	//	//// Cube map image descriptor
+	//	//vk::DescriptorImageInfo texDescriptorCubeMap =
+	//	//	vkx::descriptorImageInfo(textures.skybox.sampler, textures.skybox.view, vk::ImageLayout::eGeneral);
+
+	//	//std::vector<vk::WriteDescriptorSet> writeDescriptorSets =
+	//	//{
+	//	//	// Binding 0 : Vertex shader uniform buffer
+	//	//	vkx::writeDescriptorSet(
+	//	//		descriptorSet,
+	//	//		vk::DescriptorType::eUniformBuffer,
+	//	//		0,
+	//	//		&uniformData.meshVS.descriptor),
+	//	//	// Binding 1 : Fragment shader image sampler
+	//	//	vkx::writeDescriptorSet(
+	//	//		descriptorSet,
+	//	//		vk::DescriptorType::eCombinedImageSampler,
+	//	//		1,
+	//	//		&texDescriptorCubeMap)
+	//	//};
+
+	//	//device.updateDescriptorSets(writeDescriptorSets, nullptr);
+
+
+
+
+	//	vk::DescriptorImageInfo texDescriptorCubeMap =
+	//		vkx::descriptorImageInfo(textures.skybox.sampler, textures.skybox.view, vk::ImageLayout::eGeneral);
+
+	//	std::vector<vk::WriteDescriptorSet> writeDescriptorSets{
+
+	//		// Binding 0 : Vertex shader uniform buffer
+	//		vkx::writeDescriptorSet(
+	//			descriptorSets[0],// destination descriptor set
+	//			vk::DescriptorType::eUniformBuffer,
+	//			0,
+	//			&uniformData.meshVS.descriptor),
+
+
+	//		// Binding 1 : Fragment shader image sampler
+	//		vkx::writeDescriptorSet(
+	//			descriptorSets[0],// destination descriptor set
+	//			vk::DescriptorType::eCombinedImageSampler,
+	//			1,
+	//			&texDescriptorCubeMap),
+
+	//		// Binding 0 : Vertex shader dynamic uniform buffer
+	//		//vkx::writeDescriptorSet(
+	//		//	descriptorSets[1],// destination descriptor set
+	//		//	vk::DescriptorType::eUniformBufferDynamic,
+	//		//	0,
+	//		//	&uniformData.dynamic.descriptor),
+	//	};
+
+	//	device.updateDescriptorSets(writeDescriptorSets, nullptr);
+
+
+
+
+	//}
 
 
 
@@ -604,32 +799,28 @@ public:
 		for (auto &mesh : meshes) {
 			mesh.pipeline = pipelines.meshes;
 		}
-		//meshes[0].pipeline = pipelines.meshes;
-		//meshes[1].pipeline = pipelines.meshes;
-		//meshes[2].pipeline = pipelines.meshes;
 
-		//skyboxMesh.pipeline = pipelines.skybox;
 	}
 
 	// Prepare and initialize uniform buffer containing shader uniforms
 	void prepareUniformBuffers() {
 		// Vertex shader uniform buffer block
-		uniformData.meshVS = context.createUniformBuffer(uboVS);
+		uniformData.sceneVS = context.createUniformBuffer(uboScene);
+		//uniformData.dynamicVS = context.createUniformBuffer(uboMatrixData);
 		updateUniformBuffers();
 	}
 
 	void updateUniformBuffers() {
-		uboVS.projection = camera.matrices.projection;
-		uboVS.view = camera.matrices.view;
+		uboScene.projection = camera.matrices.projection;
+		uboScene.view = camera.matrices.view;
 
 		//uboVS.model = camera.matrices.skyboxView;
 
-		uboVS.normal = glm::inverseTranspose(uboVS.view * uboVS.model);
+		uboScene.normal = glm::inverseTranspose(uboScene.view * uboScene.model);
 
-		uboVS.lightPos = lightPos;
-		uniformData.meshVS.copy(uboVS);
-
-		//uniformData.dynamic.copy(matrixData);
+		uboScene.lightPos = lightPos;
+		uniformData.sceneVS.copy(uboScene);
+		//uniformData.dynamicVS.copy(uboMatrixData);
 	}
 
 	void prepare() {

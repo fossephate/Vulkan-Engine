@@ -9,7 +9,7 @@ layout (location = 2) in vec2 inUV;
 layout (location = 3) in vec3 inColor;
 
 // scene
-layout (binding = 0, set = 0) uniform UBO 
+layout (binding = 0, set = 0) uniform UBO
 {
 	mat4 model;
 	mat4 view;
@@ -19,10 +19,10 @@ layout (binding = 0, set = 0) uniform UBO
 } ubo;
 
 // transform
-layout (binding = 0, set = 1) uniform matrixBuffer
+/*layout (binding = 0, set = 1) uniform matrixBuffer
 {
-	mat4 transform;
-} instance;
+	mat4 model;
+} instance;*/
 
 layout (location = 0) out vec2 outUV;
 layout (location = 1) out vec3 outNormal;
@@ -41,10 +41,12 @@ void main()
 	/////////
 
 	mat4 modelView = ubo.view * ubo.model;
+	//mat4 modelView = ubo.view * instance.model;
 	vec4 pos = modelView * inPos;
 	
 	//gl_Position = ubo.projection * pos;
-	gl_Position = ubo.projection * ubo.view * ubo.model * instance.transform * vec4(inPos.xyz, 1.0);
+	gl_Position = ubo.projection * ubo.view * ubo.model * vec4(inPos.xyz, 1.0);
+	//gl_Position = ubo.projection * ubo.view * instance.model * vec4(inPos.xyz, 1.0);
 
 	outEyePos = vec3(modelView * pos);
 	

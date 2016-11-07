@@ -379,6 +379,7 @@ namespace vkx {
 		vk::DescriptorType type,
 		uint32_t binding,
 		vk::DescriptorBufferInfo* bufferInfo) {
+
 		vk::WriteDescriptorSet writeDescriptorSet;
 		writeDescriptorSet.dstSet = dstSet;
 		writeDescriptorSet.descriptorType = type;
