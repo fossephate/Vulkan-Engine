@@ -19,10 +19,10 @@ layout (binding = 0, set = 0) uniform UBO
 } ubo;
 
 // transform
-/*layout (binding = 0, set = 1) uniform matrixBuffer
+layout (binding = 0, set = 1) uniform matrixBuffer
 {
 	mat4 model;
-} instance;*/
+} instance;
 
 layout (location = 0) out vec2 outUV;
 layout (location = 1) out vec3 outNormal;
@@ -40,13 +40,14 @@ void main()
 	//ubo.model = instance.transform;
 	/////////
 
-	mat4 modelView = ubo.view * ubo.model;
-	//mat4 modelView = ubo.view * instance.model;
+	//mat4 modelView = ubo.view * ubo.model;
+	mat4 modelView = ubo.view * instance.model;
+	
 	vec4 pos = modelView * inPos;
 	
 	//gl_Position = ubo.projection * pos;
-	gl_Position = ubo.projection * ubo.view * ubo.model * vec4(inPos.xyz, 1.0);
-	//gl_Position = ubo.projection * ubo.view * instance.model * vec4(inPos.xyz, 1.0);
+	//gl_Position = ubo.projection * ubo.view * ubo.model * vec4(inPos.xyz, 1.0);
+	gl_Position = ubo.projection * ubo.view * instance.model * vec4(inPos.xyz, 1.0);
 
 	outEyePos = vec3(modelView * pos);
 	
