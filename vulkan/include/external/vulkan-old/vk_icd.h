@@ -28,7 +28,7 @@
 /*
  * Loader-ICD version negotiation API
  */
-#define CURRENT_LOADER_ICD_INTERFACE_VERSION 3
+#define CURRENT_LOADER_ICD_INTERFACE_VERSION 2
 #define MIN_SUPPORTED_LOADER_ICD_INTERFACE_VERSION 0
 typedef VkResult (VKAPI_PTR *PFN_vkNegotiateLoaderICDInterfaceVersion)(uint32_t *pVersion);
 /*
@@ -111,12 +111,6 @@ typedef struct {
 } VkIcdSurfaceXlib;
 #endif // VK_USE_PLATFORM_XLIB_KHR
 
-#ifdef VK_USE_PLATFORM_ANDROID_KHR
-typedef struct {
-    ANativeWindow* window;
-} VkIcdSurfaceAndroid;
-#endif //VK_USE_PLATFORM_ANDROID_KHR
-
 typedef struct {
     VkIcdSurfaceBase base;
     VkDisplayModeKHR displayMode;
@@ -127,5 +121,4 @@ typedef struct {
     VkDisplayPlaneAlphaFlagBitsKHR alphaMode;
     VkExtent2D imageExtent;
 } VkIcdSurfaceDisplay;
-
 #endif // VKICD_H

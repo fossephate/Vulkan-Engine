@@ -21,7 +21,7 @@ glm::quat RotationBetweenVectors(glm::vec3 start, glm::vec3 dest) {
 		}
 
 		rotationAxis = normalize(rotationAxis);
-		return glm::angleAxis(180.0f, rotationAxis);
+		return glm::angleAxis(glm::radians(180.0f), rotationAxis);
 	}
 
 	rotationAxis = glm::cross(start, dest);
@@ -106,7 +106,6 @@ void Camera::updateViewMatrix() {
 	//glm::mat4 rotationMatrix = glm::mat4_cast(glm::normalize(this->transform.rotation));
 	//glm::mat4 rotationMatrix = glm::mat4();
 	//glm::mat4 rotationMatrix = glm::rotate(glm::mat4(), glm::angle(this->transform.rotation), glm::axis(this->transform.rotation));
-
 	//rotationMatrix = rotationMatrix * glm::mat4_cast(glm::angleAxis(glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
 	//rotationMatrix = glm::scale(rotationMatrix, glm::vec3(-1.0f, 1.0f, -1.0f));
 
@@ -115,6 +114,7 @@ void Camera::updateViewMatrix() {
 	//glm::mat4 inverseTrans = glm::inverse(translationMatrix);
 
 	//this->matrices.transform = (translationMatrix) * (rotationMatrix);
+
 	//this->matrices.view = glm::inverse(this->matrices.transform);
 
 	//glm::mat4 rotationMatrix2 = glm::mat4_cast(glm::normalize(glm::conjugate(rot)));

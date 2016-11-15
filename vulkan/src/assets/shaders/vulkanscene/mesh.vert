@@ -48,6 +48,7 @@ void main()
 	//gl_Position = ubo.projection * pos;
 	//gl_Position = ubo.projection * ubo.view * ubo.model * vec4(inPos.xyz, 1.0);
 	gl_Position = ubo.projection * ubo.view * instance.model * vec4(inPos.xyz, 1.0);
+	//gl_Position = ubo.projection * ubo.view * vec4(inPos.xyz, 1.0);
 
 	outEyePos = vec3(modelView * pos);
 	

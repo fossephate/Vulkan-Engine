@@ -73,6 +73,8 @@ public:
 	unsigned int alignedMatrixSize;
 	unsigned int alignedMaterialSize;
 
+	float globalP = 0.0f;
+
 
 
 
@@ -119,12 +121,12 @@ public:
 		size.height = 720;
 
 
-		camera.setTranslation({ -1.0f, 1.0f, 3.0f });
+		camera.setTranslation({ 0.0f, 1.0f, 5.0f });
 
 		matrices.resize(2);
 
-		matrices[0].model = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, 0.0f));
-		matrices[1].model = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, 0.0f));
+		matrices[0].model = glm::translate(glm::mat4(), glm::vec3(-5.0f, 0.0f, 0.0f));
+		matrices[1].model = glm::translate(glm::mat4(), glm::vec3(-5.0f, 0.0f, 0.0f));
 
 		unsigned int alignment = (uint32_t)context.deviceProperties.limits.minUniformBufferOffsetAlignment;
 		alignedMatrixSize = (unsigned int)(alignedSize(alignment, sizeof(matrixNode)));
@@ -191,17 +193,35 @@ public:
 
 		//meshes[1].model = glm::translate(glm::mat4(), glm::vec3(0.0f, 10.0f, 0.0f));
 
-		meshes[1].model = glm::translate(glm::mat4(), glm::vec3(5.0f, 5.0f, 0.0f));
+		//meshes[1].model = glm::translate(glm::mat4(), glm::vec3(5.0f, 5.0f, 0.0f));
 
 		//uboMatrixData.model = meshes[1].model;
-		updateUniformBuffers();
+		//updateUniformBuffers();
+
 		
 		//uboVS.model = meshes[1].model;
 
 		//meshes[1].orientation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 		int i = 1;
 
+		meshes[0].matrixIndex = 0;
+		meshes[1].matrixIndex = 1;
+
+		globalP += 0.005f;
+
+
+
+		matrices[0].model = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, 0.0f));
+		matrices[1].model = glm::translate(glm::mat4(), glm::vec3(sin(globalP), 1.0f, 0.0f));
+		
+		//updateDescriptorSets();
+		//updateUniformBuffers();
+
+
+
 		for (auto &mesh : meshes) {
+		//for(int i = 0; )
+			//auto &mesh = meshes[i];
 
 
 			//uboVS.model = mesh.model;
@@ -216,7 +236,7 @@ public:
 			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSets[0], nullptr);
 
 			//uint32_t offset = di.matrixIndex * res->m_alignedMatrixSize;
-			uint32_t offset = 0 * alignedMatrixSize;
+			uint32_t offset = mesh.matrixIndex * alignedMatrixSize;
 			//https://www.khronos.org/registry/vulkan/specs/1.0/apispec.html#vkCmdBindDescriptorSets
 			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, 1, &descriptorSets[1], 1, &offset);
 
@@ -517,7 +537,45 @@ public:
 		};
 
 		device.updateDescriptorSets(writeDescriptorSets, nullptr);
+
+		//updateDescriptorSets();
 	}
+
+	//void updateDescriptorSets() {
+
+	//	// Cube map image descriptor
+	//	vk::DescriptorImageInfo texDescriptor =
+	//		vkx::descriptorImageInfo(textures.colorMap.sampler, textures.colorMap.view, vk::ImageLayout::eGeneral);
+
+	//	std::vector<vk::WriteDescriptorSet> writeDescriptorSets =
+	//	{
+	//		// set 0
+	//		// Binding 0 : Vertex shader uniform buffer
+	//		vkx::writeDescriptorSet(
+	//			descriptorSets[0],// descriptor set 0
+	//			vk::DescriptorType::eUniformBuffer,
+	//			0,// binding 0
+	//			&uniformData.sceneVS.descriptor),
+	//		// Binding 1 : Fragment shader image sampler
+	//		vkx::writeDescriptorSet(
+	//			descriptorSets[0],// descriptor set 0
+	//			vk::DescriptorType::eCombinedImageSampler,
+	//			1,// binding 1
+	//			&texDescriptor),
+
+	//		// set 1
+	//		// vertex shader dynamic buffer
+	//		vkx::writeDescriptorSet(
+	//			descriptorSets[1],// descriptor set 1
+	//			vk::DescriptorType::eUniformBufferDynamic,
+	//			0,// binding 0
+	//			&uniformData.dynamicVS.descriptor)
+
+	//	};
+
+	//	device.updateDescriptorSets(writeDescriptorSets, nullptr);
+
+	//}
 
 
 	void preparePipelines() {
@@ -602,8 +660,9 @@ public:
 		// Vertex shader uniform buffer block
 		uniformData.sceneVS = context.createUniformBuffer(uboScene);
 		//uniformData.dynamicVS = context.createUniformBuffer(matrices.data(), matrices.size()+1);
-		uniformData.dynamicVS = context.createUniformBuffer(matrices);
+		//uniformData.dynamicVS = context.createUniformBuffer(&matrices.data(), matrices.size());
 		//uniformData.dynamicVS = context.createUniformBuffer(matrices.data(), matrices.size());
+		uniformData.dynamicVS = context.createDynamicUniformBuffer(matrices);
 		
 		updateUniformBuffers();
 	}
@@ -614,7 +673,8 @@ public:
 
 		//uboVS.model = camera.matrices.skyboxView;
 
-		uboScene.normal = glm::inverseTranspose(uboScene.view * uboScene.model);
+		// ?
+		uboScene.normal = glm::inverseTranspose(uboScene.view * uboScene.model);// fix this
 
 		uboScene.lightPos = lightPos;
 

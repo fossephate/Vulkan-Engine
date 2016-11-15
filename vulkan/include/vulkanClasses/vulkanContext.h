@@ -151,7 +151,13 @@ namespace vkx {
 		CreateBufferResult createUniformBuffer(const T& data, size_t count = 3) const;
 
 		template<typename T>
-		CreateBufferResult createDynamicUniformBuffer(const T & data, size_t count) const;
+		CreateBufferResult createDynamicUniformBuffer(const std::vector<T>& data) const;
+
+		//template<typename T>
+		//CreateBufferResult createDynamicUniformBuffer(const T & data, size_t elementSize, size_t count = 3) const;
+
+		//template<typename T>
+		//CreateBufferResult createDynamicUniformBuffer(const T & data, size_t count = 3) const;
 
 		void copyToMemory(const vk::DeviceMemory & memory, const void* data, vk::DeviceSize size, vk::DeviceSize offset = 0) const;
 
@@ -316,17 +322,22 @@ namespace vkx {
 	}
 
 	template<typename T>
-	inline CreateBufferResult Context::createDynamicUniformBuffer(const T & data, size_t count) const {
+	inline CreateBufferResult Context::createDynamicUniformBuffer(const std::vector<T>& data) const {
 
 		auto alignment = deviceProperties.limits.minUniformBufferOffsetAlignment;
 		auto extra = sizeof(T) % alignment;
 		auto alignedSize = sizeof(T) + (alignment - extra);
-		auto allocatedSize = count * alignedSize;
-		CreateBufferResult result = createBuffer(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, allocatedSize);
+		auto allocatedSize = /*count*/data.size() * alignedSize;
+
+
+
+		CreateBufferResult result = createBuffer(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, allocatedSize);
+		
 		result.alignment = alignedSize;
 		result.descriptor.range = result.alignment;
 		result.map();
-		result.copy(data);
+		//result.copy(data);
+		result.copy((void*)data.data());
 		return result;
 	}
 

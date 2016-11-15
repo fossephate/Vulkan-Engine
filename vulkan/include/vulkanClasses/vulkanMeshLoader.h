@@ -198,6 +198,9 @@ namespace vkx {
 	public:
 
 		glm::mat4 model;
+
+		int matrixIndex;
+
 		glm::vec3 position;
 		glm::quat orientation;
 

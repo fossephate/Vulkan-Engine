@@ -1505,12 +1505,13 @@ void vulkanApp::renderLoop() {
 	SDL_Event e;
 
 	while (!quit) {
+		
 		auto tEnd = std::chrono::high_resolution_clock::now();
 		auto tDiff = std::chrono::duration<float, std::milli>(tEnd - tStart).count();
 		auto tDiffSeconds = tDiff / 1000.0f;
 		tStart = tEnd;
 
-		float FPS = 60.0f;
+		float FPS = 70.0f;
 		float numOfMS = (1000.0f / FPS)*2.0f;// this doesn't seem to work properly
 		if (tDiff < numOfMS) {
 			float extraTime = numOfMS - tDiff;
@@ -1629,9 +1630,10 @@ void vulkanApp::renderLoop() {
 
 		//updateTextOverlay();
 
-
+		updateDrawCommandBuffers();
 		render();
 		update(tDiffSeconds);
+	
 	}
 	SDL_DestroyWindow(this->SDLWindow);
 	SDL_Quit();
