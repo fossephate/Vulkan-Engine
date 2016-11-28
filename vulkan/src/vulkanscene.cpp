@@ -45,7 +45,8 @@ public:
 
 	struct {
 		vkx::UniformData sceneVS;
-		vkx::UniformData dynamicVS;
+		vkx::UniformData matrixVS;
+		vkx::UniformData materialVS;
 	} uniformData;
 
 	struct {
@@ -68,6 +69,14 @@ public:
 
 	std::vector<matrixNode> matrices;
 
+	struct material2 {
+		glm::vec4 ambient;
+		glm::vec4 diffuse;
+		glm::vec4 specular;
+		glm::vec4 emissive;
+	};
+
+
 	struct MaterialSide {
 		glm::vec4 ambient;
 		glm::vec4 diffuse;
@@ -75,17 +84,19 @@ public:
 		glm::vec4 emissive;
 	};
 
+
+
 	// need to keep this 256 byte aligned (UBO range)
-	struct Material {
+	struct materialNode {
 		MaterialSide        sides[2];
 		unsigned int        _pad[32];
 
 		Material() {
-			memset(this, 0, sizeof(Material));
+			memset(this, 0, sizeof(materialNode));
 		}
 	};
 
-	std::vector<matrixNode> materials;
+	std::vector<materialNode> materials;
 	
 
 
@@ -151,7 +162,7 @@ public:
 		alignedMatrixSize = (unsigned int)(alignedSize(alignment, sizeof(matrixNode)));
 
 		//unsigned int alignment = (uint32_t)context.deviceProperties.limits.minUniformBufferOffsetAlignment;
-		alignedMatrixSize = (unsigned int)(alignedSize(alignment, sizeof(Material)));
+		alignedMatrixSize = (unsigned int)(alignedSize(alignment, sizeof(materialNode)));
 
 		//camera.matrices.projection = glm::perspectiveRH(glm::radians(60.0f), (float)size.width / (float)size.height, 0.0001f, 256.0f);
 
@@ -232,14 +243,19 @@ public:
 		globalP += 0.005f;
 
 
+		meshes[1].setTranslation(glm::vec3(sin(globalP), 1.0f, 0.0f));
 
-		matrices[0].model = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, 0.0f));
-		matrices[1].model = glm::translate(glm::mat4(), glm::vec3(sin(globalP), 1.0f, 0.0f));
+		//matrices[0].model = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, 0.0f));
+		//matrices[1].model = glm::translate(glm::mat4(), glm::vec3(sin(globalP), 1.0f, 0.0f));
 		
 		//updateDescriptorSets();
 		//updateUniformBuffers();
 
+		for (int i = 0; i < meshes.size(); ++i) {
+			matrices[i].model = meshes[i].transfMatrix;
+		}
 
+		updateUniformBuffers();
 
 		for (auto &mesh : meshes) {
 		//for(int i = 0; )
@@ -421,7 +437,11 @@ public:
 	}
 
 	void setupDescriptorSetLayout() {
-		std::vector<vk::DescriptorSetLayoutBinding> setLayout1Bindings =
+
+
+		// descriptor set layout 0
+
+		std::vector<vk::DescriptorSetLayoutBinding> setLayout0Bindings =
 		{
 			// Binding 0 : Vertex shader uniform buffer
 			vkx::descriptorSetLayoutBinding(
@@ -436,6 +456,26 @@ public:
 				1)// binding 1
 		};
 
+		vk::DescriptorSetLayoutCreateInfo descriptorLayout0 =
+			vkx::descriptorSetLayoutCreateInfo(setLayout0Bindings.data(), setLayout0Bindings.size());
+
+		vk::DescriptorSetLayout setLayout0 = device.createDescriptorSetLayout(descriptorLayout0);
+
+		descriptorSetLayouts.push_back(setLayout0);
+
+
+
+		// descriptor set layout 1
+
+		std::vector<vk::DescriptorSetLayoutBinding> setLayout1Bindings =
+		{
+			// Binding 0 : Vertex shader dynamic uniform buffer
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eUniformBufferDynamic,
+				vk::ShaderStageFlagBits::eVertex,
+				0),// binding 0
+		};
+
 		vk::DescriptorSetLayoutCreateInfo descriptorLayout1 =
 			vkx::descriptorSetLayoutCreateInfo(setLayout1Bindings.data(), setLayout1Bindings.size());
 
@@ -446,6 +486,8 @@ public:
 
 
 
+
+		// descriptor set layout 3
 
 		std::vector<vk::DescriptorSetLayoutBinding> setLayout2Bindings =
 		{
@@ -468,7 +510,7 @@ public:
 
 
 
-
+		// use all descriptor set layouts
 
 
 		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
@@ -493,24 +535,33 @@ public:
 		//	vkx::descriptorSetAllocateInfo(descriptorPools[1], &descriptorSetLayouts[1], 1),
 		//};
 
-		vk::DescriptorSetAllocateInfo descriptorSetInfo1 =
+		// descriptor set 0
+
+		vk::DescriptorSetAllocateInfo descriptorSetInfo0 =
 			vkx::descriptorSetAllocateInfo(descriptorPools[0], &descriptorSetLayouts[0], 1);
 
+		std::vector<vk::DescriptorSet> descSets0 = device.allocateDescriptorSets(descriptorSetInfo0);
+		descriptorSets.push_back(descSets0[0]);// descriptor set 1
+
+
+
+
+		// descriptor set 1
+
+		vk::DescriptorSetAllocateInfo descriptorSetInfo1 =
+			vkx::descriptorSetAllocateInfo(descriptorPools[1], &descriptorSetLayouts[1], 1);
+
 		std::vector<vk::DescriptorSet> descSets1 = device.allocateDescriptorSets(descriptorSetInfo1);
-		//std::vector<vk::DescriptorSet> descSets1 = device.allocateDescriptorSets(*descAllocInfos);
-		//std::vector<vk::DescriptorSet> descSets1 = device.allocateDescriptorSets(*descAllocInfos.data());
 		descriptorSets.push_back(descSets1[0]);// descriptor set 1
 
 
+
+		// descriptor set 2
 		vk::DescriptorSetAllocateInfo descriptorSetInfo2 =
-			vkx::descriptorSetAllocateInfo(descriptorPools[1], &descriptorSetLayouts[1], 1);
+			vkx::descriptorSetAllocateInfo(descriptorPools[2], &descriptorSetLayouts[2], 1);
 
 		std::vector<vk::DescriptorSet> descSets2 = device.allocateDescriptorSets(descriptorSetInfo2);
 		descriptorSets.push_back(descSets2[0]);// descriptor set 2
-
-
-
-
 
 
 
@@ -561,12 +612,21 @@ public:
 				&texDescriptor),
 			
 			// set 1
-			// vertex shader dynamic buffer
+			// vertex shader matrix dynamic buffer
 			vkx::writeDescriptorSet(
 				descriptorSets[1],// descriptor set 1
 				vk::DescriptorType::eUniformBufferDynamic,
 				0,// binding 0
-				&uniformData.dynamicVS.descriptor)
+				&uniformData.matrixVS.descriptor),
+
+
+			// set 2
+			// vertex shader material dynamic buffer
+			vkx::writeDescriptorSet(
+				descriptorSets[2],// descriptor set 2
+				vk::DescriptorType::eUniformBufferDynamic,
+				0,// binding 0
+				&uniformData.materialVS.descriptor)
 
 		};
 
@@ -574,42 +634,6 @@ public:
 
 		//updateDescriptorSets();
 	}
-
-	//void updateDescriptorSets() {
-
-	//	// Cube map image descriptor
-	//	vk::DescriptorImageInfo texDescriptor =
-	//		vkx::descriptorImageInfo(textures.colorMap.sampler, textures.colorMap.view, vk::ImageLayout::eGeneral);
-
-	//	std::vector<vk::WriteDescriptorSet> writeDescriptorSets =
-	//	{
-	//		// set 0
-	//		// Binding 0 : Vertex shader uniform buffer
-	//		vkx::writeDescriptorSet(
-	//			descriptorSets[0],// descriptor set 0
-	//			vk::DescriptorType::eUniformBuffer,
-	//			0,// binding 0
-	//			&uniformData.sceneVS.descriptor),
-	//		// Binding 1 : Fragment shader image sampler
-	//		vkx::writeDescriptorSet(
-	//			descriptorSets[0],// descriptor set 0
-	//			vk::DescriptorType::eCombinedImageSampler,
-	//			1,// binding 1
-	//			&texDescriptor),
-
-	//		// set 1
-	//		// vertex shader dynamic buffer
-	//		vkx::writeDescriptorSet(
-	//			descriptorSets[1],// descriptor set 1
-	//			vk::DescriptorType::eUniformBufferDynamic,
-	//			0,// binding 0
-	//			&uniformData.dynamicVS.descriptor)
-
-	//	};
-
-	//	device.updateDescriptorSets(writeDescriptorSets, nullptr);
-
-	//}
 
 
 	void preparePipelines() {
@@ -696,8 +720,9 @@ public:
 		//uniformData.dynamicVS = context.createUniformBuffer(matrices.data(), matrices.size()+1);
 		//uniformData.dynamicVS = context.createUniformBuffer(&matrices.data(), matrices.size());
 		//uniformData.dynamicVS = context.createUniformBuffer(matrices.data(), matrices.size());
-		uniformData.dynamicVS = context.createDynamicUniformBuffer(matrices);
-		
+		uniformData.matrixVS = context.createDynamicUniformBuffer(matrices);
+		uniformData.materialVS = context.createDynamicUniformBuffer(materials);
+
 		updateUniformBuffers();
 	}
 
@@ -713,7 +738,11 @@ public:
 		uboScene.lightPos = lightPos;
 
 		uniformData.sceneVS.copy(uboScene);
-		uniformData.dynamicVS.copy(matrices);
+
+		uniformData.matrixVS.copy(matrices);
+
+		// seperate this!// important
+		uniformData.materialVS.copy(materials);
 	}
 
 	void prepare() {

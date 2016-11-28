@@ -5,19 +5,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 // deconstructor
 vkx::MeshLoader::~MeshLoader() {
 	m_Entries.clear();
@@ -93,7 +80,8 @@ bool vkx::MeshLoader::load(const std::string & filename, int flags) {
 
 
 
-void loadMaterials() {
+void loadMaterials(const aiScene *aScene, TextureLoader *textureloader) {
+
 	//materials.resize(aScene->mNumMaterials);
 
 	for (size_t i = 0; i < materials.size(); i++) {
@@ -120,6 +108,8 @@ void loadMaterials() {
 
 		// Textures
 		aiString texturefile;
+		std::string assetPath = "models/";
+
 		// Diffuse
 		aScene->mMaterials[i]->GetTexture(aiTextureType_DIFFUSE, 0, &texturefile);
 		if (aScene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
@@ -244,7 +234,7 @@ void loadMaterials() {
 
 
 
-bool vkx::MeshLoader::parse(const aiScene * pScene, const std::string & Filename) {
+bool vkx::MeshLoader::parse(const aiScene *pScene, const std::string & Filename) {
 	m_Entries.resize(pScene->mNumMeshes);
 
 	// Counters
@@ -254,7 +244,7 @@ bool vkx::MeshLoader::parse(const aiScene * pScene, const std::string & Filename
 	}
 
 
-	loadMaterials();
+	loadMaterials(pScene);
 
 	// Initialize the meshes in the scene one by one
 	for (unsigned int i = 0; i < m_Entries.size(); i++) {

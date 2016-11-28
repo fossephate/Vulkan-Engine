@@ -38,6 +38,9 @@
 
 #include "vulkanTools.h"
 #include "vulkanContext.h"
+#include "vulkanTextureLoader.h"
+
+#include "Object3D.h"
 
 namespace vkx {
 
@@ -189,20 +192,18 @@ namespace vkx {
 
 
 
-
-
-
 	// Stores some additonal info and functions for 
 	// specifying pipelines, vertex bindings, etc.
-	class Mesh {
+	class Mesh : public Object3D {
 	public:
 
 		glm::mat4 model;
 		
 		uint32_t matrixIndex;
+
 		
-		glm::vec3 position;
-		glm::quat orientation;
+		//glm::vec3 position;
+		//glm::quat orientation;
 
 		// Vulkan buffers
 		vkx::MeshBuffer meshBuffer;
