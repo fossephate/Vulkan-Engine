@@ -60,12 +60,43 @@ namespace vkx {
 
 	using MeshLayout = std::vector<VertexLayout>;
 
+
+
+
+	struct materialProperites {
+		glm::vec4 ambient;
+		glm::vec4 diffuse;
+		glm::vec4 specular;
+		float opacity;
+	};
+
+	// Stores info on the materials used in the scene
+	struct materialNode {
+		// name
+		std::string name;
+		// Material properties
+		materialProperites properties;
+		// The example only uses a diffuse channel
+		Texture diffuse;
+
+
+		// The material's descriptor contains the material descriptors
+		//vk::DescriptorSet descriptorSet;
+		// Pointer to the pipeline used by this material
+		//vk::Pipeline *pipeline;
+	};
+
+
+
+
 	struct MeshBuffer {
-		vkx::CreateBufferResult vertices;// was MeshBufferInfo
-		vkx::CreateBufferResult indices;// was MeshBufferInfo
+		vkx::CreateBufferResult vertices;
+		vkx::CreateBufferResult indices;
 		uint32_t indexCount{ 0 };
 
 		glm::vec3 dim;
+
+		materialNode *material;
 
 		void destroy() {
 			vertices.destroy();
@@ -157,13 +188,25 @@ namespace vkx {
 				uint32_t count;
 			} indexBuffer;
 
+			
+
 			vk::PipelineVertexInputStateCreateInfo vi;
 			std::vector<vk::VertexInputBindingDescription> bindingDescriptions;
 			std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
 			vk::Pipeline pipeline;
 
 			Assimp::Importer Importer;
-			const aiScene* pScene{ nullptr };
+
+			TextureLoader textureLoader;
+
+			Context *context;
+
+
+			const aiScene *pScene{ nullptr };
+
+
+
+			MeshLoader(vkx::Context &context);
 
 			~MeshLoader();
 
@@ -172,6 +215,8 @@ namespace vkx {
 
 			// Load the mesh with custom flags
 			bool load(const std::string& filename, int flags);
+
+			void loadMaterials(const aiScene * aScene, TextureLoader *textureloader);
 
 		private:
 			bool parse(const aiScene* pScene, const std::string& Filename);
@@ -210,7 +255,7 @@ namespace vkx {
 
 		// Reference to assimp mesh
 		// Required for animation
-		vkx::MeshLoader* meshLoader;
+		vkx::MeshLoader *meshLoader;
 
 		vk::Pipeline pipeline;
 

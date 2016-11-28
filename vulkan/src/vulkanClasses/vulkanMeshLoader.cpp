@@ -2,7 +2,10 @@
 
 
 
-
+vkx::MeshLoader::MeshLoader(vkx::Context &context) {
+	this->context = &context;
+	this->textureLoader = new vkx::TextureLoader(context);
+}
 
 
 // deconstructor
@@ -13,14 +16,14 @@ vkx::MeshLoader::~MeshLoader() {
 
 
 // Loads the mesh with some default flags
-bool vkx::MeshLoader::load(const std::string & filename) {
+bool vkx::MeshLoader::load(const std::string &filename) {
 	int flags = aiProcess_FlipWindingOrder | aiProcess_Triangulate | aiProcess_PreTransformVertices | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals;
 
 	return load(filename, flags);
 }
 
 // Load the mesh with custom flags
-bool vkx::MeshLoader::load(const std::string & filename, int flags) {
+bool vkx::MeshLoader::load(const std::string &filename, int flags) {
 	#if defined(__ANDROID__)
 	// Meshes are stored inside the apk on Android (compressed)
 	// So they need to be loaded via the asset manager
@@ -80,7 +83,8 @@ bool vkx::MeshLoader::load(const std::string & filename, int flags) {
 
 
 
-void loadMaterials(const aiScene *aScene, TextureLoader *textureloader) {
+void vkx::MeshLoader::loadMaterials(const aiScene *aScene, TextureLoader *textureloader) {
+
 
 	//materials.resize(aScene->mNumMaterials);
 
@@ -255,7 +259,7 @@ bool vkx::MeshLoader::parse(const aiScene *pScene, const std::string & Filename)
 	return true;
 }
 
-void vkx::MeshLoader::InitMesh(unsigned int index, const aiMesh * paiMesh, const aiScene * pScene) {
+void vkx::MeshLoader::InitMesh(unsigned int index, const aiMesh *paiMesh, const aiScene *pScene) {
 	m_Entries[index].MaterialIndex = paiMesh->mMaterialIndex;
 
 	aiColor3D pColor(0.f, 0.f, 0.f);
@@ -444,6 +448,7 @@ namespace vkx {
 	}
 
 	Mesh::Mesh(vkx::Context &context) {
+		this->meshLoader = new vkx::MeshLoader(context);
 		this->context = &context;
 	}
 

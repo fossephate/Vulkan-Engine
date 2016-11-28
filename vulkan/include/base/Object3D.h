@@ -29,7 +29,7 @@ namespace vkx {
 		glm::vec3 &scale = transform.scale;
 
 
-		glm::mat4 *transfMatrix;
+		glm::mat4 transfMatrix;
 
 		//struct {
 		//	glm::mat4 transform;

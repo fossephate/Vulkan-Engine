@@ -69,32 +69,58 @@ public:
 
 	std::vector<matrixNode> matrices;
 
-	struct material2 {
-		glm::vec4 ambient;
-		glm::vec4 diffuse;
-		glm::vec4 specular;
-		glm::vec4 emissive;
-	};
-
-
-	struct MaterialSide {
-		glm::vec4 ambient;
-		glm::vec4 diffuse;
-		glm::vec4 specular;
-		glm::vec4 emissive;
-	};
-
-
-
-	// need to keep this 256 byte aligned (UBO range)
 	struct materialNode {
-		MaterialSide        sides[2];
-		unsigned int        _pad[32];
-
-		Material() {
-			memset(this, 0, sizeof(materialNode));
-		}
+		glm::vec4 ambient;
+		glm::vec4 diffuse;
+		glm::vec4 specular;
+		glm::vec4 emissive;
+		float opacity;
 	};
+
+
+	//struct MaterialSide {
+	//	glm::vec4 ambient;
+	//	glm::vec4 diffuse;
+	//	glm::vec4 specular;
+	//	glm::vec4 emissive;
+	//  float opacity;// added
+	//};
+
+
+
+	//// need to keep this 256 byte aligned (UBO range)
+	//struct materialNode {
+	//	MaterialSide        sides[2];
+	//	unsigned int        _pad[32];
+
+	//	Material() {
+	//		memset(this, 0, sizeof(materialNode));
+	//	}
+	//};
+
+
+	// Shader properites for a material
+	// Will be passed to the shaders using push constant
+	struct SceneMaterialProperites {
+		glm::vec4 ambient;
+		glm::vec4 diffuse;
+		glm::vec4 specular;
+		float opacity;
+	};
+
+	// Stores info on the materials used in the scene
+	struct SceneMaterial {
+		std::string name;
+		// Material properties
+		SceneMaterialProperites properties;
+		// The example only uses a diffuse channel
+		vkx::Texture diffuse;
+		// The material's descriptor contains the material descriptors
+		vk::DescriptorSet descriptorSet;
+		// Pointer to the pipeline used by this material
+		vk::Pipeline *pipeline;
+	};
+
 
 	std::vector<materialNode> materials;
 	
@@ -258,9 +284,6 @@ public:
 		updateUniformBuffers();
 
 		for (auto &mesh : meshes) {
-		//for(int i = 0; )
-			//auto &mesh = meshes[i];
-
 
 			//uboVS.model = mesh.model;
 			//uboVS.model = glm::mat4_cast(mesh.orientation);
@@ -279,8 +302,8 @@ public:
 			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, 1, &descriptorSets[1], 1, &offset);
 
 
-			//uint32_t offset = mesh.matrixIndex * alignedMatrixSize;
-			uint32_t offset2 = mesh.materialIndex * alignedMatrixSize;// change?
+			uint32_t offset = mesh.matrixIndex * alignedMaterialSize;
+			//uint32_t offset2 = mesh.materialIndex * alignedMatrixSize;// change?
 			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, 1, &descriptorSets[2], 1, &offset2);
 
 			//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSets[0], nullptr);
