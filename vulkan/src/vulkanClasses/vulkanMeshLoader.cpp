@@ -80,11 +80,169 @@ bool vkx::MeshLoader::load(const std::string & filename, int flags) {
 
 	//RootNodeMatrix = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(1.0f, 0.0f, 0.0f)) * RootNodeMatrix;
 
+
+
+
+
+
 	if (!pScene) {
 		throw std::runtime_error("Unable to parse " + filename);
 	}
 	return parse(pScene, filename);
 }
+
+
+
+void loadMaterials() {
+	//materials.resize(aScene->mNumMaterials);
+
+	for (size_t i = 0; i < materials.size(); i++) {
+		materials[i] = {};
+
+		aiString name;
+		aScene->mMaterials[i]->Get(AI_MATKEY_NAME, name);
+
+		// Properties
+		aiColor4D color;
+		aScene->mMaterials[i]->Get(AI_MATKEY_COLOR_AMBIENT, color);
+		materials[i].properties.ambient = glm::make_vec4(&color.r) + glm::vec4(0.1f);
+		aScene->mMaterials[i]->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+		materials[i].properties.diffuse = glm::make_vec4(&color.r);
+		aScene->mMaterials[i]->Get(AI_MATKEY_COLOR_SPECULAR, color);
+		materials[i].properties.specular = glm::make_vec4(&color.r);
+		aScene->mMaterials[i]->Get(AI_MATKEY_OPACITY, materials[i].properties.opacity);
+
+		if ((materials[i].properties.opacity) > 0.0f)
+			materials[i].properties.specular = glm::vec4(0.0f);
+
+		materials[i].name = name.C_Str();
+		std::cout << "Material \"" << materials[i].name << "\"" << std::endl;
+
+		// Textures
+		aiString texturefile;
+		// Diffuse
+		aScene->mMaterials[i]->GetTexture(aiTextureType_DIFFUSE, 0, &texturefile);
+		if (aScene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
+			std::cout << "  Diffuse: \"" << texturefile.C_Str() << "\"" << std::endl;
+			std::string fileName = std::string(texturefile.C_Str());
+			std::replace(fileName.begin(), fileName.end(), '\\', '/');
+			materials[i].diffuse = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc3UnormBlock);
+		}
+		else {
+			std::cout << "  Material has no diffuse, using dummy texture!" << std::endl;
+			// todo : separate pipeline and layout
+			materials[i].diffuse = textureLoader->loadTexture(assetPath + "dummy.ktx", vk::Format::eBc2UnormBlock);
+		}
+
+		// For scenes with multiple textures per material we would need to check for additional texture types, e.g.:
+		// aiTextureType_HEIGHT, aiTextureType_OPACITY, aiTextureType_SPECULAR, etc.
+
+		// Assign pipeline
+		materials[i].pipeline = (materials[i].properties.opacity == 0.0f) ? &pipelines.solid : &pipelines.blending;
+	}
+
+	// Generate descriptor sets for the materials
+
+	//// Descriptor pool
+	//std::vector<vk::DescriptorPoolSize> poolSizes;
+	//poolSizes.push_back(vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, static_cast<uint32_t>(materials.size())));
+	//poolSizes.push_back(vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, static_cast<uint32_t>(materials.size())));
+
+	//vk::DescriptorPoolCreateInfo descriptorPoolInfo =
+	//	vkx::descriptorPoolCreateInfo(
+	//		static_cast<uint32_t>(poolSizes.size()),
+	//		poolSizes.data(),
+	//		static_cast<uint32_t>(materials.size()) + 1);
+
+	//descriptorPool = device.createDescriptorPool(descriptorPoolInfo);
+
+	//// Descriptor set and pipeline layouts
+	//std::vector<vk::DescriptorSetLayoutBinding> setLayoutBindings;
+	//vk::DescriptorSetLayoutCreateInfo descriptorLayout;
+
+	//// Set 0: Scene matrices
+	//setLayoutBindings.push_back(vkx::descriptorSetLayoutBinding(
+	//	vk::DescriptorType::eUniformBuffer,
+	//	vk::ShaderStageFlagBits::eVertex,
+	//	0));
+	//descriptorLayout = vkx::descriptorSetLayoutCreateInfo(
+	//	setLayoutBindings.data(),
+	//	static_cast<uint32_t>(setLayoutBindings.size()));
+	//descriptorSetLayouts.scene = device.createDescriptorSetLayout(descriptorLayout);
+
+	//// Set 1: Material data
+	//setLayoutBindings.clear();
+	//setLayoutBindings.push_back(vkx::descriptorSetLayoutBinding(
+	//	vk::DescriptorType::eCombinedImageSampler,
+	//	vk::ShaderStageFlagBits::eFragment,
+	//	0));
+	//descriptorSetLayouts.material = device.createDescriptorSetLayout(descriptorLayout);
+
+	//// Setup pipeline layout
+	//std::array<vk::DescriptorSetLayout, 2> setLayouts = { descriptorSetLayouts.scene, descriptorSetLayouts.material };
+	//vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo = vkx::pipelineLayoutCreateInfo(setLayouts.data(), static_cast<uint32_t>(setLayouts.size()));
+
+	//// We will be using a push constant block to pass material properties to the fragment shaders
+	//vk::PushConstantRange pushConstantRange = vkx::pushConstantRange(
+	//	vk::ShaderStageFlagBits::eFragment,
+	//	sizeof(SceneMaterialProperites),
+	//	0);
+	//pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+	//pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
+
+	//pipelineLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
+
+	//// Material descriptor sets
+	//for (size_t i = 0; i < materials.size(); i++) {
+	//	// Descriptor set
+	//	vk::DescriptorSetAllocateInfo allocInfo =
+	//		vkx::descriptorSetAllocateInfo(
+	//			descriptorPool,
+	//			&descriptorSetLayouts.material,
+	//			1);
+
+	//	materials[i].descriptorSet = device.allocateDescriptorSets(allocInfo)[0];
+
+	//	vk::DescriptorImageInfo texDescriptor =
+	//		vkx::descriptorImageInfo(
+	//			materials[i].diffuse.sampler,
+	//			materials[i].diffuse.view,
+	//			vk::ImageLayout::eGeneral);
+
+	//	std::vector<vk::WriteDescriptorSet> writeDescriptorSets;
+
+	//	// todo : only use image sampler descriptor set and use one scene ubo for matrices
+
+	//	// Binding 0: Diffuse texture
+	//	writeDescriptorSets.push_back(vkx::writeDescriptorSet(
+	//		materials[i].descriptorSet,
+	//		vk::DescriptorType::eCombinedImageSampler,
+	//		0,
+	//		&texDescriptor));
+
+	//	device.updateDescriptorSets(writeDescriptorSets, {});
+	//}
+
+	//// Scene descriptor set
+	//vk::DescriptorSetAllocateInfo allocInfo =
+	//	vkx::descriptorSetAllocateInfo(
+	//		descriptorPool,
+	//		&descriptorSetLayouts.scene,
+	//		1);
+	//descriptorSetScene = device.allocateDescriptorSets(allocInfo)[0];
+
+	//std::vector<vk::WriteDescriptorSet> writeDescriptorSets;
+	//// Binding 0 : Vertex shader uniform buffer
+	//writeDescriptorSets.push_back(vkx::writeDescriptorSet(
+	//	descriptorSetScene,
+	//	vk::DescriptorType::eUniformBuffer,
+	//	0,
+	//	&uniformBuffer.descriptor));
+
+	//device.updateDescriptorSets(writeDescriptorSets, {});
+}
+
+
 
 bool vkx::MeshLoader::parse(const aiScene * pScene, const std::string & Filename) {
 	m_Entries.resize(pScene->mNumMeshes);
@@ -94,6 +252,9 @@ bool vkx::MeshLoader::parse(const aiScene * pScene, const std::string & Filename
 		m_Entries[i].vertexBase = numVertices;
 		numVertices += pScene->mMeshes[i]->mNumVertices;
 	}
+
+
+	loadMaterials();
 
 	// Initialize the meshes in the scene one by one
 	for (unsigned int i = 0; i < m_Entries.size(); i++) {
@@ -290,6 +451,10 @@ namespace vkx {
 
 	Mesh::Mesh() {
 		this->meshLoader = new vkx::MeshLoader();
+	}
+
+	Mesh::Mesh(vkx::Context &context) {
+		this->context = &context;
 	}
 
 	void Mesh::load(const std::string & filename) {

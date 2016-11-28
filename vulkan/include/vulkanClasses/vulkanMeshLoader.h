@@ -198,9 +198,9 @@ namespace vkx {
 	public:
 
 		glm::mat4 model;
-
-		int matrixIndex;
-
+		
+		uint32_t matrixIndex;
+		
 		glm::vec3 position;
 		glm::quat orientation;
 
@@ -224,21 +224,27 @@ namespace vkx {
 		std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
 
 
+		vkx::Context *context;
+
 		Mesh();
+
+		Mesh(vkx::Context &context);
 
 		//~Mesh();
 
+		// NEEDS REF TO CONTEXT FOR TEXTURE LOADER
+
 
 		// load mesh
-		void load(const std::string & filename);
+		void load(const std::string &filename);
 
 		// load mesh with custom flags
-		void load(const std::string & filename, int flags);
+		void load(const std::string &filename, int flags);
 
-		void createBuffers(const Context & context, const std::vector<VertexLayout>& layout, float scale, uint32_t binding);
+		void createBuffers(const Context &context, const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
 
 
-		void setupVertexInputState(const std::vector<VertexLayout>& layout);
+		void setupVertexInputState(const std::vector<VertexLayout> &layout);
 
 		void drawIndexed(const vk::CommandBuffer& cmdBuffer);
 	};

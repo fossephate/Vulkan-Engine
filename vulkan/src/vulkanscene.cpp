@@ -12,8 +12,6 @@
 
 #include "vulkanApp.h"
 
-//static std::vector<std::string> names{ "logos", "background", "models", "skybox" };
-
 std::vector<vkx::VertexLayout> vertexLayout =
 {
 	vkx::VertexLayout::VERTEX_LAYOUT_POSITION,
@@ -70,6 +68,27 @@ public:
 
 	std::vector<matrixNode> matrices;
 
+	struct MaterialSide {
+		glm::vec4 ambient;
+		glm::vec4 diffuse;
+		glm::vec4 specular;
+		glm::vec4 emissive;
+	};
+
+	// need to keep this 256 byte aligned (UBO range)
+	struct Material {
+		MaterialSide        sides[2];
+		unsigned int        _pad[32];
+
+		Material() {
+			memset(this, 0, sizeof(Material));
+		}
+	};
+
+	std::vector<matrixNode> materials;
+	
+
+
 	unsigned int alignedMatrixSize;
 	unsigned int alignedMaterialSize;
 
@@ -125,11 +144,14 @@ public:
 
 		matrices.resize(2);
 
-		matrices[0].model = glm::translate(glm::mat4(), glm::vec3(-5.0f, 0.0f, 0.0f));
-		matrices[1].model = glm::translate(glm::mat4(), glm::vec3(-5.0f, 0.0f, 0.0f));
+		//matrices[0].model = glm::translate(glm::mat4(), glm::vec3(-5.0f, 0.0f, 0.0f));
+		//matrices[1].model = glm::translate(glm::mat4(), glm::vec3(-5.0f, 0.0f, 0.0f));
 
 		unsigned int alignment = (uint32_t)context.deviceProperties.limits.minUniformBufferOffsetAlignment;
 		alignedMatrixSize = (unsigned int)(alignedSize(alignment, sizeof(matrixNode)));
+
+		//unsigned int alignment = (uint32_t)context.deviceProperties.limits.minUniformBufferOffsetAlignment;
+		alignedMatrixSize = (unsigned int)(alignedSize(alignment, sizeof(Material)));
 
 		//camera.matrices.projection = glm::perspectiveRH(glm::radians(60.0f), (float)size.width / (float)size.height, 0.0001f, 256.0f);
 
@@ -202,7 +224,7 @@ public:
 		//uboVS.model = meshes[1].model;
 
 		//meshes[1].orientation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		int i = 1;
+		//int i = 1;
 
 		meshes[0].matrixIndex = 0;
 		meshes[1].matrixIndex = 1;
@@ -240,6 +262,11 @@ public:
 			//https://www.khronos.org/registry/vulkan/specs/1.0/apispec.html#vkCmdBindDescriptorSets
 			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, 1, &descriptorSets[1], 1, &offset);
 
+
+			//uint32_t offset = mesh.matrixIndex * alignedMatrixSize;
+			uint32_t offset2 = mesh.materialIndex * alignedMatrixSize;// change?
+			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, 1, &descriptorSets[2], 1, &offset2);
+
 			//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSets[0], nullptr);
 
 
@@ -251,7 +278,7 @@ public:
 
 
 			//mesh.drawIndexed(cmdBuffer);
-			i += 1;
+			//i += 1;
 		}
 
 		//uboScene.model = glm::mat4();
@@ -268,16 +295,23 @@ public:
 		};
 
 		// re-usable? meshloader class// definitely not reusable// important
-		vkx::MeshLoader* loader = new vkx::MeshLoader();
+		//vkx::MeshLoader* loader = new vkx::MeshLoader();
 
-		loader->load(getAssetPath() + "models/xyplane.dae");
-		vkx::Mesh planeMesh = loader->createMeshFromBuffers(context, vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		//loader->load(getAssetPath() + "models/xyplane.dae");
+		//vkx::Mesh planeMesh = loader->createMeshFromBuffers(context, vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
 
-		loader = new vkx::MeshLoader();
+		//loader = new vkx::MeshLoader();
 
-		loader->load(getAssetPath() + "models/vulkanscenemodels.dae");
-		vkx::Mesh otherMesh1 = loader->createMeshFromBuffers(context, vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		//loader->load(getAssetPath() + "models/vulkanscenemodels.dae");
+		//vkx::Mesh otherMesh1 = loader->createMeshFromBuffers(context, vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+
+		vkx::Mesh planeMesh(context);
+		planeMesh.load(getAssetPath() + "models/xyplane.dae");
+
+
+		vkx::Mesh otherMesh1(context);
+		otherMesh1.load(getAssetPath() + "models/vulkanscenemodels.dae");
 
 		//loader = new vkx::MeshLoader();
 
