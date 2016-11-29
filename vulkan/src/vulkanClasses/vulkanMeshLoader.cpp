@@ -2,10 +2,20 @@
 
 
 
-vkx::MeshLoader::MeshLoader(vkx::Context &context) {
-	this->context = &context;
+vkx::MeshLoader::MeshLoader() {
+	this->textureLoader = nullptr;
+}
+
+vkx::MeshLoader::MeshLoader(const vkx::Context &context) {
+	//this->context = context;
 	this->textureLoader = new vkx::TextureLoader(context);
 }
+
+//vkx::MeshLoader::MeshLoader(const vkx::Context &context):
+//	context(context)
+//{
+//	this->textureLoader = new vkx::TextureLoader(context);
+//}
 
 
 // deconstructor
@@ -46,34 +56,21 @@ bool vkx::MeshLoader::load(const std::string &filename, int flags) {
 	#endif
 
 	//pScene->mRootNode->mTransformation = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(1.0f, 0.0f, 0.0f)) * pScene->mRootNode->mTransformation;
-
 	//pScene->mRootNode->mTransformation
-
 	//aiMatrix4x4 &r = pScene->mRootNode->mTransformation;
-
 	//aiMatrix4x4 rot;
 	//rot.FromEulerAnglesXYZ(aiVector3D(-90.0f, 0.0f, 0.0f));
 	//pScene->mRootNode->mTransformation = rot * pScene->mRootNode->mTransformation;// change collada model back to z up// important
 	////pScene->mRootNode->mTransformation = pScene->mRootNode->mTransformation * rot;
-
 	//glm::mat4 r2 = glm::mat4(\
 	//	r.a1, r.a2, r.a3, r.a4,
 	//	r.b1, r.b2, r.b3, r.b4,
 	//	r.c1, r.c2, r.c3, r.c4, 
 	//	r.d1, r.d2, r.d3, r.d4);
-
 	//r2 = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(1.0f, 0.0f, 0.0f)) * r2;
-
-	
-
 	//glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
 
 	//RootNodeMatrix = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(1.0f, 0.0f, 0.0f)) * RootNodeMatrix;
-
-
-
-
-
 
 	if (!pScene) {
 		throw std::runtime_error("Unable to parse " + filename);
@@ -83,10 +80,10 @@ bool vkx::MeshLoader::load(const std::string &filename, int flags) {
 
 
 
-void vkx::MeshLoader::loadMaterials(const aiScene *aScene, TextureLoader *textureloader) {
+void vkx::MeshLoader::loadMaterials(const aiScene *aScene) {
 
 
-	//materials.resize(aScene->mNumMaterials);
+	materials.resize(aScene->mNumMaterials);
 
 	for (size_t i = 0; i < materials.size(); i++) {
 		materials[i] = {};
@@ -112,27 +109,29 @@ void vkx::MeshLoader::loadMaterials(const aiScene *aScene, TextureLoader *textur
 
 		// Textures
 		aiString texturefile;
-		std::string assetPath = "models/";
+		std::string assetPath = getAssetPath()+ "models/";
 
 		// Diffuse
 		aScene->mMaterials[i]->GetTexture(aiTextureType_DIFFUSE, 0, &texturefile);
-		if (aScene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
-			std::cout << "  Diffuse: \"" << texturefile.C_Str() << "\"" << std::endl;
-			std::string fileName = std::string(texturefile.C_Str());
-			std::replace(fileName.begin(), fileName.end(), '\\', '/');
-			materials[i].diffuse = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc3UnormBlock);
-		}
-		else {
+		//if (aScene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
+		//	std::cout << "  Diffuse: \"" << texturefile.C_Str() << "\"" << std::endl;
+		//	std::string fileName = std::string(texturefile.C_Str());
+		//	std::replace(fileName.begin(), fileName.end(), '\\', '/');
+		//	materials[i].diffuse = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc3UnormBlock);
+		//} else {
+
+		// for now:
+		// force dummy texture
 			std::cout << "  Material has no diffuse, using dummy texture!" << std::endl;
 			// todo : separate pipeline and layout
 			materials[i].diffuse = textureLoader->loadTexture(assetPath + "dummy.ktx", vk::Format::eBc2UnormBlock);
-		}
+		//}
 
 		// For scenes with multiple textures per material we would need to check for additional texture types, e.g.:
 		// aiTextureType_HEIGHT, aiTextureType_OPACITY, aiTextureType_SPECULAR, etc.
 
 		// Assign pipeline
-		materials[i].pipeline = (materials[i].properties.opacity == 0.0f) ? &pipelines.solid : &pipelines.blending;
+		//materials[i].pipeline = (materials[i].properties.opacity == 0.0f) ? &pipelines.solid : &pipelines.blending;
 	}
 
 	// Generate descriptor sets for the materials
@@ -395,10 +394,115 @@ vkx::MeshBuffer vkx::MeshLoader::createBuffers(const Context & context, const st
 	return meshBuffer;
 }
 
+
+
+std::vector<vkx::MeshBuffer> vkx::MeshLoader::createBufferParts(const Context & context, const std::vector<VertexLayout>& layout, float scale) {
+
+
+
+	std::vector<vkx::MeshBuffer> meshParts;
+
+
+	
+	
+
+
+	for (int m = 0; m < m_Entries.size(); m++) {
+
+
+		std::vector<float> vertexBuffer;
+
+		for (int i = 0; i < m_Entries[m].Vertices.size(); i++) {
+			// Push vertex data depending on layout
+			for (auto& layoutDetail : layout) {
+				// Position
+				if (layoutDetail == VERTEX_LAYOUT_POSITION) {
+					vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.x * scale);
+					vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.y * scale);
+					vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.z * scale);
+				}
+				// Normal
+				if (layoutDetail == VERTEX_LAYOUT_NORMAL) {
+					vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.x);
+					vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.y);// y was negative// important
+					vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.z);
+				}
+				// Texture coordinates
+				if (layoutDetail == VERTEX_LAYOUT_UV) {
+					vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tex.s);
+					vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tex.t);
+				}
+				// Color
+				if (layoutDetail == VERTEX_LAYOUT_COLOR) {
+					vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.r);
+					vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.g);
+					vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.b);
+				}
+				// Tangent
+				if (layoutDetail == VERTEX_LAYOUT_TANGENT) {
+					vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.x);
+					vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.y);
+					vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.z);
+				}
+				// Bitangent
+				if (layoutDetail == VERTEX_LAYOUT_BITANGENT) {
+					vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.x);
+					vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.y);
+					vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.z);
+				}
+				// Dummy layout components for padding
+				if (layoutDetail == VERTEX_LAYOUT_DUMMY_FLOAT) {
+					vertexBuffer.push_back(0.0f);
+				}
+				if (layoutDetail == VERTEX_LAYOUT_DUMMY_VEC4) {
+					vertexBuffer.push_back(0.0f);
+					vertexBuffer.push_back(0.0f);
+					vertexBuffer.push_back(0.0f);
+					vertexBuffer.push_back(0.0f);
+				}
+			}
+		}
+
+		MeshBuffer meshBuffer;
+		meshBuffer.vertices.size = vertexBuffer.size() * sizeof(float);
+
+		dim.min *= scale;
+		dim.max *= scale;
+		dim.size *= scale;
+
+		std::vector<uint32_t> indexBuffer;
+		uint32_t indexBase = (uint32_t)indexBuffer.size();
+		for (uint32_t i = 0; i < m_Entries[m].Indices.size(); i++) {
+			indexBuffer.push_back(m_Entries[m].Indices[i] + indexBase);
+		}
+
+		meshBuffer.indexCount = (uint32_t)indexBuffer.size();
+		// Use staging buffer to move vertex and index buffer to device local memory
+		// Vertex buffer
+		meshBuffer.vertices = context.stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
+		// Index buffer
+		meshBuffer.indices = context.stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);
+		meshBuffer.dim = dim.size;
+
+		meshBuffer.materialIndex = m_Entries[m].MaterialIndex;
+
+	}
+
+
+
+	return meshBuffer;
+}
+
+
+
+
+
+
+// remove?
 vkx::Mesh vkx::MeshLoader::createMeshFromBuffers(const Context & context, const std::vector<VertexLayout>& layout, float scale, uint32_t binding) {
 	vkx::MeshBuffer mBuffer = createBuffers(context, layout, scale);
 
-	vkx::Mesh mesh;// = vkx::Mesh(mBuffer, binding, layout);
+	vkx::Mesh mesh(context);// = vkx::Mesh(mBuffer, binding, layout);
 	mesh.meshBuffer = mBuffer;
 	mesh.vertexBufferBinding = binding;
 	mesh.setupVertexInputState(layout);
@@ -439,18 +543,27 @@ vkx::Mesh vkx::MeshLoader::createMeshFromBuffers(const Context & context, const 
 
 
 
+
 namespace vkx {
 
-	
+	//http://stackoverflow.com/questions/12927169/how-can-i-initialize-c-object-member-variables-in-the-constructor
+	//http://stackoverflow.com/questions/14169584/passing-and-storing-a-const-reference-via-a-constructor
 
 	Mesh::Mesh() {
+		//this->context = nullptr;
 		this->meshLoader = new vkx::MeshLoader();
 	}
 
-	Mesh::Mesh(vkx::Context &context) {
+	Mesh::Mesh(const vkx::Context &context) {
+		this->context = context;
 		this->meshLoader = new vkx::MeshLoader(context);
-		this->context = &context;
 	}
+
+	//Mesh::Mesh(const vkx::Context &context):
+	//	context(context)
+	//{
+	//	this->meshLoader = new vkx::MeshLoader(context);
+	//}
 
 	void Mesh::load(const std::string & filename) {
 		this->meshLoader->load(filename);
@@ -460,8 +573,8 @@ namespace vkx {
 		this->meshLoader->load(filename, flags);
 	}
 
-	void Mesh::createBuffers(const Context & context, const std::vector<VertexLayout>& layout, float scale, uint32_t binding) {
-		this->meshBuffer = this->meshLoader->createBuffers(context, layout, scale);
+	void Mesh::createBuffers(/*const Context & context, */const std::vector<VertexLayout>& layout, float scale, uint32_t binding) {
+		this->meshBuffer = this->meshLoader->createBuffers(this->context, layout, scale);
 
 		this->attributeDescriptions = this->meshLoader->attributeDescriptions;
 

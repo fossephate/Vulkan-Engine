@@ -55,6 +55,7 @@
 #include "vulkanTextureLoader.h"
 #include "vulkanMeshLoader.h"
 #include "vulkanTextOverlay.h"
+#include "Object3D.h"
 #include "camera.h"
 
 #define VERTEX_BUFFER_BIND_ID 0

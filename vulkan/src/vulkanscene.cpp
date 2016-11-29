@@ -50,7 +50,7 @@ public:
 	} uniformData;
 
 	struct {
-		glm::mat4 model;// moved to dynamic
+		glm::mat4 model;// not really needed
 		glm::mat4 view;
 		glm::mat4 projection;
 
@@ -59,9 +59,6 @@ public:
 		glm::vec4 lightPos;
 	} uboScene;
 
-	//struct {
-	//	glm::mat4 model;
-	//} uboMatrixData;
 
 	struct matrixNode {
 		glm::mat4 model;
@@ -76,6 +73,10 @@ public:
 		glm::vec4 emissive;
 		float opacity;
 	};
+
+	//struct materialNode {
+	//	float test;
+	//};
 
 
 	//struct MaterialSide {
@@ -180,6 +181,10 @@ public:
 		camera.setTranslation({ 0.0f, 1.0f, 5.0f });
 
 		matrices.resize(2);
+		materials.resize(2);
+
+		materials[0].test = 0.0f;
+		materials[1].test = 1.0f;
 
 		//matrices[0].model = glm::translate(glm::mat4(), glm::vec3(-5.0f, 0.0f, 0.0f));
 		//matrices[1].model = glm::translate(glm::mat4(), glm::vec3(-5.0f, 0.0f, 0.0f));
@@ -269,7 +274,7 @@ public:
 		globalP += 0.005f;
 
 
-		meshes[1].setTranslation(glm::vec3(sin(globalP), 1.0f, 0.0f));
+		//meshes[1].setTranslation(glm::vec3(sin(globalP), 1.0f, 0.0f));
 
 		//matrices[0].model = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, 0.0f));
 		//matrices[1].model = glm::translate(glm::mat4(), glm::vec3(sin(globalP), 1.0f, 0.0f));
@@ -278,8 +283,10 @@ public:
 		//updateUniformBuffers();
 
 		for (int i = 0; i < meshes.size(); ++i) {
-			matrices[i].model = meshes[i].transfMatrix;
+			matrices[i].model = meshes[i].transfMatrix;// change to use index // todo
 		}
+
+
 
 		updateUniformBuffers();
 
@@ -302,13 +309,11 @@ public:
 			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, 1, &descriptorSets[1], 1, &offset);
 
 
-			uint32_t offset = mesh.matrixIndex * alignedMaterialSize;
+			//uint32_t offset2 = mesh.matrixIndex * alignedMaterialSize;
 			//uint32_t offset2 = mesh.materialIndex * alignedMatrixSize;// change?
-			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, 1, &descriptorSets[2], 1, &offset2);
+			//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, 1, &descriptorSets[2], 1, &offset2);
 
 			//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSets[0], nullptr);
-
-
 			//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSets[1], nullptr);
 
 
@@ -347,10 +352,12 @@ public:
 
 		vkx::Mesh planeMesh(context);
 		planeMesh.load(getAssetPath() + "models/xyplane.dae");
+		planeMesh.createBuffers(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
 
 		vkx::Mesh otherMesh1(context);
 		otherMesh1.load(getAssetPath() + "models/vulkanscenemodels.dae");
+		otherMesh1.createBuffers(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
 		//loader = new vkx::MeshLoader();
 
@@ -442,17 +449,17 @@ public:
 
 
 
-		//std::vector<vk::DescriptorPoolSize> poolSizes3 =
-		//{
-		//	vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 1),// will eventually be material data
-		//};
+		std::vector<vk::DescriptorPoolSize> poolSizes3 =
+		{
+			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1),// will eventually be material data
+		};
 
-		//vk::DescriptorPoolCreateInfo descriptorPool3Info =
-		//	vkx::descriptorPoolCreateInfo(poolSizes3.size(), poolSizes3.data(), 1);
+		vk::DescriptorPoolCreateInfo descriptorPool3Info =
+			vkx::descriptorPoolCreateInfo(poolSizes3.size(), poolSizes3.data(), 1);
 
 
-		//vk::DescriptorPool descPool3 = device.createDescriptorPool(descriptorPool3Info);
-		//descriptorPools.push_back(descPool3);
+		vk::DescriptorPool descPool3 = device.createDescriptorPool(descriptorPool3Info);
+		descriptorPools.push_back(descPool3);
 
 
 		
@@ -756,7 +763,9 @@ public:
 		//uboVS.model = camera.matrices.skyboxView;
 
 		// ?
-		uboScene.normal = glm::inverseTranspose(uboScene.view * uboScene.model);// fix this
+		//uboScene.normal = glm::inverseTranspose(uboScene.view * uboScene.model);// fix this// important
+
+		//uboScene.normal = glm::inverseTranspose(uboScene.view);
 
 		uboScene.lightPos = lightPos;
 
@@ -765,7 +774,7 @@ public:
 		uniformData.matrixVS.copy(matrices);
 
 		// seperate this!// important
-		uniformData.materialVS.copy(materials);
+		//uniformData.materialVS.copy(materials);
 	}
 
 	void prepare() {

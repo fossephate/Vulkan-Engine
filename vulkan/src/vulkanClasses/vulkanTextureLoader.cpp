@@ -19,7 +19,7 @@ void vkx::Texture::destroy() {
 	}
 }
 
-vkx::TextureLoader::TextureLoader(const Context & context) {
+vkx::TextureLoader::TextureLoader(const Context &context) {
 	this->context = context;
 
 	// Create command buffer for submitting image barriers
@@ -70,6 +70,7 @@ vkx::Texture vkx::TextureLoader::loadTexture(const std::string & filename, vk::F
 	// Get device properites for the requested texture format
 	vk::FormatProperties formatProperties;
 	formatProperties = context.physicalDevice.getFormatProperties(format);
+
 
 	// Only use linear tiling if requested (and supported by the device)
 	// Support for linear tiling is mostly limited, so prefer to use

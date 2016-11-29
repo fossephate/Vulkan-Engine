@@ -11,7 +11,7 @@ layout (location = 3) in vec3 inColor;
 // scene
 layout (set = 0, binding = 0) uniform sceneBuffer
 {
-	mat4 model;
+	mat4 model;// not used
 	mat4 view;
 	mat4 projection;
 	mat4 normal;
@@ -22,40 +22,51 @@ layout (set = 0, binding = 0) uniform sceneBuffer
 layout (set = 1, binding = 0) uniform matrixBuffer
 {
 	mat4 model;
-} instance;
+} matrices;
 
 
 
 layout (location = 0) out vec2 outUV;
 layout (location = 1) out vec3 outNormal;
 layout (location = 2) out vec3 outColor;
-layout (location = 3) out vec3 outEyePos;
+layout (location = 3) out vec3 outViewVec;
 layout (location = 4) out vec3 outLightVec;
 
 void main() 
 {
-	outUV = inUV;
-	outNormal = normalize(mat3(scene.normal) * inNormal);
+	// outUV = inUV;
+	// outNormal = normalize(mat3(scene.normal) * inNormal);
+	// outColor = inColor;
+
+	// //mat4 modelView = ubo.view * ubo.model;
+	// mat4 modelView = scene.view * matrices.model;
+	// mat4 MVP = scene.projection * scene.view * matrices.model;
+
+	// gl_Position = MVP * vec4(inPos.xyz, 1.0);
+	// //gl_Position = ubo.projection * ubo.view * vec4(inPos.xyz, 1.0);
+	// vec4 pos = modelView * inPos;
+	// outEyePos = vec3(modelView * pos);
+	// vec4 lightPos = vec4(scene.lightpos, 1.0) * modelView;
+	// //vec4 lightPos = vec4(ubo.lightpos, 1.0) * ubo.view;
+	// outLightVec = normalize(lightPos.xyz - outEyePos);
+
+
+
+	outNormal = inNormal;
 	outColor = inColor;
+	outUV = inUV;
 
-	///////////
-	//ubo.model = instance.transform;
-	/////////
+	mat4 modelView = scene.view * matrices.model;
 
-	//mat4 modelView = ubo.view * ubo.model;
-	mat4 modelView = scene.view * instance.model;
+	gl_Position = scene.projection * scene.view * matrices.model * vec4(inPos.xyz, 1.0);
 	
 	vec4 pos = modelView * inPos;
-	
-	//gl_Position = ubo.projection * pos;
-	//gl_Position = ubo.projection * ubo.view * ubo.model * vec4(inPos.xyz, 1.0);
-	gl_Position = scene.projection * scene.view * instance.model * vec4(inPos.xyz, 1.0);
-	//gl_Position = ubo.projection * ubo.view * vec4(inPos.xyz, 1.0);
+	outNormal = mat3(matrices.model) * inNormal;
+	vec3 lPos = mat3(matrices.model) * scene.lightpos.xyz;
 
-	outEyePos = vec3(modelView * pos);
-	
-	vec4 lightPos = vec4(scene.lightpos, 1.0) * modelView;
-	//vec4 lightPos = vec4(ubo.lightpos, 1.0) * ubo.view;
+	outLightVec = lPos - (matrices.model * vec4(inPos.xyz, 0.0)).xyz;
+	outViewVec = -(matrices.model * vec4(inPos.xyz, 0.0)).xyz;
 
-	outLightVec = normalize(lightPos.xyz - outEyePos);
+
+
 }
