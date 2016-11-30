@@ -183,8 +183,8 @@ public:
 		matrices.resize(2);
 		materials.resize(2);
 
-		materials[0].test = 0.0f;
-		materials[1].test = 1.0f;
+		//materials[0].test = 0.0f;
+		//materials[1].test = 1.0f;
 
 		//matrices[0].model = glm::translate(glm::mat4(), glm::vec3(-5.0f, 0.0f, 0.0f));
 		//matrices[1].model = glm::translate(glm::mat4(), glm::vec3(-5.0f, 0.0f, 0.0f));
@@ -193,7 +193,7 @@ public:
 		alignedMatrixSize = (unsigned int)(alignedSize(alignment, sizeof(matrixNode)));
 
 		//unsigned int alignment = (uint32_t)context.deviceProperties.limits.minUniformBufferOffsetAlignment;
-		alignedMatrixSize = (unsigned int)(alignedSize(alignment, sizeof(materialNode)));
+		alignedMaterialSize = (unsigned int)(alignedSize(alignment, sizeof(materialNode)));
 
 		//camera.matrices.projection = glm::perspectiveRH(glm::radians(60.0f), (float)size.width / (float)size.height, 0.0001f, 256.0f);
 
@@ -216,7 +216,7 @@ public:
 
 		uniformData.sceneVS.destroy();
 
-		for (auto& mesh : meshes) {
+		for (auto &mesh : meshes) {
 			device.destroyBuffer(mesh.meshBuffer.vertices.buffer);
 			device.freeMemory(mesh.meshBuffer.vertices.memory);
 
@@ -309,9 +309,9 @@ public:
 			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, 1, &descriptorSets[1], 1, &offset);
 
 
-			//uint32_t offset2 = mesh.matrixIndex * alignedMaterialSize;
+			uint32_t offset2 = mesh.matrixIndex * alignedMaterialSize;
 			//uint32_t offset2 = mesh.materialIndex * alignedMatrixSize;// change?
-			//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, 1, &descriptorSets[2], 1, &offset2);
+			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, 1, &descriptorSets[2], 1, &offset2);
 
 			//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSets[0], nullptr);
 			//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSets[1], nullptr);

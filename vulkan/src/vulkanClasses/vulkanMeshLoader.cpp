@@ -101,8 +101,9 @@ void vkx::MeshLoader::loadMaterials(const aiScene *aScene) {
 		materials[i].properties.specular = glm::make_vec4(&color.r);
 		aScene->mMaterials[i]->Get(AI_MATKEY_OPACITY, materials[i].properties.opacity);
 
-		if ((materials[i].properties.opacity) > 0.0f)
+		if ((materials[i].properties.opacity) > 0.0f) {
 			materials[i].properties.specular = glm::vec4(0.0f);
+		}
 
 		materials[i].name = name.C_Str();
 		std::cout << "Material \"" << materials[i].name << "\"" << std::endl;
@@ -113,19 +114,17 @@ void vkx::MeshLoader::loadMaterials(const aiScene *aScene) {
 
 		// Diffuse
 		aScene->mMaterials[i]->GetTexture(aiTextureType_DIFFUSE, 0, &texturefile);
-		//if (aScene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
-		//	std::cout << "  Diffuse: \"" << texturefile.C_Str() << "\"" << std::endl;
-		//	std::string fileName = std::string(texturefile.C_Str());
-		//	std::replace(fileName.begin(), fileName.end(), '\\', '/');
-		//	materials[i].diffuse = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc3UnormBlock);
-		//} else {
+		if (aScene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
+			std::cout << "  Diffuse: \"" << texturefile.C_Str() << "\"" << std::endl;
+			std::string fileName = std::string(texturefile.C_Str());
+			std::replace(fileName.begin(), fileName.end(), '\\', '/');
+			materials[i].diffuse = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc3UnormBlock);
+		} else {
 
-		// for now:
-		// force dummy texture
 			std::cout << "  Material has no diffuse, using dummy texture!" << std::endl;
 			// todo : separate pipeline and layout
 			materials[i].diffuse = textureLoader->loadTexture(assetPath + "dummy.ktx", vk::Format::eBc2UnormBlock);
-		//}
+		}
 
 		// For scenes with multiple textures per material we would need to check for additional texture types, e.g.:
 		// aiTextureType_HEIGHT, aiTextureType_OPACITY, aiTextureType_SPECULAR, etc.
@@ -396,16 +395,9 @@ vkx::MeshBuffer vkx::MeshLoader::createBuffers(const Context & context, const st
 
 
 
-std::vector<vkx::MeshBuffer> vkx::MeshLoader::createBufferParts(const Context & context, const std::vector<VertexLayout>& layout, float scale) {
-
-
+std::vector<vkx::MeshBuffer> vkx::MeshLoader::createPartBuffers(const Context & context, const std::vector<VertexLayout>& layout, float scale) {
 
 	std::vector<vkx::MeshBuffer> meshParts;
-
-
-	
-	
-
 
 	for (int m = 0; m < m_Entries.size(); m++) {
 
@@ -490,7 +482,7 @@ std::vector<vkx::MeshBuffer> vkx::MeshLoader::createBufferParts(const Context & 
 
 
 
-	return meshBuffer;
+	return meshParts;
 }
 
 
@@ -565,16 +557,30 @@ namespace vkx {
 	//	this->meshLoader = new vkx::MeshLoader(context);
 	//}
 
-	void Mesh::load(const std::string & filename) {
+	void Mesh::load(const std::string &filename) {
 		this->meshLoader->load(filename);
 	}
 
-	void Mesh::load(const std::string & filename, int flags) {
+	void Mesh::load(const std::string &filename, int flags) {
 		this->meshLoader->load(filename, flags);
 	}
 
-	void Mesh::createBuffers(/*const Context & context, */const std::vector<VertexLayout>& layout, float scale, uint32_t binding) {
+	void Mesh::createBuffers(const std::vector<VertexLayout> &layout, float scale, uint32_t binding) {
 		this->meshBuffer = this->meshLoader->createBuffers(this->context, layout, scale);
+		this->materials = this->meshLoader->materials;
+
+		this->attributeDescriptions = this->meshLoader->attributeDescriptions;
+
+		this->vertexBufferBinding = binding;// important
+		this->setupVertexInputState(layout);// doesn't seem to be necessary/used
+
+		//this->bindingDescription = this->meshLoader->bindingDescriptions[0];// ?
+		//this->pipeline = this->meshLoader->pipeline;// not needed?
+	}
+
+	void Mesh::createPartBuffers(const std::vector<VertexLayout> &layout, float scale, uint32_t binding) {
+		this->partBuffers = this->meshLoader->createPartBuffers(this->context, layout, scale);
+		this->materials = this->meshLoader->materials;
 
 		this->attributeDescriptions = this->meshLoader->attributeDescriptions;
 
@@ -587,7 +593,7 @@ namespace vkx {
 
 
 
-	void Mesh::setupVertexInputState(const MeshLayout& layout) {
+	void Mesh::setupVertexInputState(const MeshLayout &layout) {
 		bindingDescription = vertexInputBindingDescription(
 			vertexBufferBinding,
 			vertexSize(layout),

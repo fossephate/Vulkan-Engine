@@ -87,23 +87,31 @@ namespace vkx {
 	};
 
 
-	struct meshPart {
+	//struct meshPartBuffer {
 
-		vkx::CreateBufferResult vertices;
-		vkx::CreateBufferResult indices;
+	//	vkx::CreateBufferResult vertices;
+	//	vkx::CreateBufferResult indices;
 
-		//std::vector<*material> materials;
-		Material *material;
-	};
+	//	//std::vector<*material> materials;
+	//	Material *material;
+
+	//	void destroy() {
+	//		vertices.destroy();
+	//		indices.destroy();
+	//	}
+	//};
 
 	struct MeshBuffer {
 		vkx::CreateBufferResult vertices;
 		vkx::CreateBufferResult indices;
-		uint32_t indexCount{ 0 };
+
+		
 
 		glm::vec3 dim;
 
 		Material *material;
+
+		uint32_t indexCount{ 0 };
 
 		uint32_t materialIndex{ 0 };
 
@@ -173,14 +181,6 @@ namespace vkx {
 				std::vector<unsigned int> Indices;
 			};
 
-			struct MeshPartEntry {
-				uint32_t NumIndices;
-				uint32_t MaterialIndex;
-				uint32_t vertexBase;
-				std::vector<Vertex> Vertices;
-				std::vector<unsigned int> Indices;
-			};
-
 		public:
 			#if defined(__ANDROID__)
 			AAssetManager* assetManager = nullptr;
@@ -188,7 +188,7 @@ namespace vkx {
 
 			std::vector<MeshEntry> m_Entries;
 
-			std::vector<materialNode> materials;
+			std::vector<Material> materials;
 
 			struct Dimension {
 				glm::vec3 min = glm::vec3(FLT_MAX);
@@ -251,13 +251,13 @@ namespace vkx {
 		public:
 			// Create vertex and index buffer with given layout
 			// Note : Only does staging if a valid command buffer and transfer queue are passed
-			MeshBuffer createBuffers(const Context& context, const std::vector<VertexLayout>& layout, float scale);
+			MeshBuffer createBuffers(const Context &context, const std::vector<VertexLayout> &layout, float scale);
 
-			std::vector<vkx::MeshBuffer> createBufferParts(const Context & context, const std::vector<VertexLayout>& layout, float scale);
+			std::vector<vkx::MeshBuffer> createPartBuffers(const Context &context, const std::vector<VertexLayout> &layout, float scale);
 
 			// convienience// just calls above function and then creates mesh class
 			//vkx::Mesh createMeshFromBuffers(const Context& context, const std::vector<VertexLayout>& layout, float scale, uint32_t binding);
-			vkx::Mesh createMeshFromBuffers(const Context& context, const std::vector<VertexLayout>& layout, float scale, uint32_t binding);
+			vkx::Mesh createMeshFromBuffers(const Context &context, const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
 	};
 
 
@@ -282,6 +282,10 @@ namespace vkx {
 
 			// Vulkan buffers
 			vkx::MeshBuffer meshBuffer;
+
+			std::vector<vkx::MeshBuffer> partBuffers;
+
+			std::vector<Material> materials;
 
 			// Reference to assimp mesh
 			// Required for animation
@@ -312,8 +316,6 @@ namespace vkx {
 
 			//~Mesh();
 
-			// NEEDS REF TO CONTEXT FOR TEXTURE LOADER
-
 
 			// load mesh
 			void load(const std::string &filename);
@@ -321,7 +323,9 @@ namespace vkx {
 			// load mesh with custom flags
 			void load(const std::string &filename, int flags);
 
-			void createBuffers(const std::vector<VertexLayout>& layout, float scale, uint32_t binding);
+			void createBuffers(const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
+
+			void createPartBuffers(const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
 
 			//void createBuffers(const Context &context, const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
 
