@@ -54,7 +54,7 @@
     <ClCompile Include="src\vulkanClasses\vulkanDebug.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\vulkanscene.cpp">
+    <ClCompile Include="src\deferred.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -111,6 +111,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\vulkanClasses\vulkanDebug.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vulkanClasses\vulkanOffscreenExampleBase.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

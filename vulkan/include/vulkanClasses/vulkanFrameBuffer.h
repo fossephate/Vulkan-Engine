@@ -27,6 +27,6 @@ namespace vkx {
 		// Prepare a new framebuffer for offscreen rendering
 		// The contents of this framebuffer are then
 		// blitted to our render target
-		void create(const vkx::Context& context, const glm::uvec2& size, const std::vector<vk::Format>& colorFormats, vk::Format depthFormat, const vk::RenderPass& renderPass, vk::ImageUsageFlags colorUsage = vk::ImageUsageFlagBits::eSampled, vk::ImageUsageFlags depthUsage = vk::ImageUsageFlags());
+		void create(const vkx::Context &context, const glm::uvec2& size, const std::vector<vk::Format> &colorFormats, vk::Format depthFormat, const vk::RenderPass &renderPass, vk::ImageUsageFlags colorUsage = vk::ImageUsageFlagBits::eSampled, vk::ImageUsageFlags depthUsage = vk::ImageUsageFlags());
 	};
 }

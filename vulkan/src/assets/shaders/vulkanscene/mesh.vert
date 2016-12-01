@@ -34,38 +34,39 @@ layout (location = 4) out vec3 outLightVec;
 
 void main() 
 {
-	// outUV = inUV;
-	// outNormal = normalize(mat3(scene.normal) * inNormal);
-	// outColor = inColor;
-
-	// //mat4 modelView = ubo.view * ubo.model;
-	// mat4 modelView = scene.view * matrices.model;
-	// mat4 MVP = scene.projection * scene.view * matrices.model;
-
-	// gl_Position = MVP * vec4(inPos.xyz, 1.0);
-	// //gl_Position = ubo.projection * ubo.view * vec4(inPos.xyz, 1.0);
-	// vec4 pos = modelView * inPos;
-	// outEyePos = vec3(modelView * pos);
-	// vec4 lightPos = vec4(scene.lightpos, 1.0) * modelView;
-	// //vec4 lightPos = vec4(ubo.lightpos, 1.0) * ubo.view;
-	// outLightVec = normalize(lightPos.xyz - outEyePos);
-
-
-
-	outNormal = inNormal;
-	outColor = inColor;
 	outUV = inUV;
-
-	mat4 modelView = scene.view * matrices.model;
-
-	gl_Position = scene.projection * scene.view * matrices.model * vec4(inPos.xyz, 1.0);
+	outNormal = normalize(mat3(scene.normal) * inNormal);
+	outColor = inColor;
 	
-	vec4 pos = modelView * inPos;
-	outNormal = mat3(matrices.model) * inNormal;
-	vec3 lPos = mat3(matrices.model) * scene.lightpos.xyz;
+	mat4 modelView = scene.view * matrices.model;
+	mat4 MVP = scene.projection * scene.view * matrices.model;
 
-	outLightVec = lPos - (matrices.model * vec4(inPos.xyz, 0.0)).xyz;
-	outViewVec = -(matrices.model * vec4(inPos.xyz, 0.0)).xyz;
+	gl_Position = MVP * vec4(inPos.xyz, 1.0);
+
+	vec4 pos = modelView * inPos;
+	outViewVec = vec3(modelView * pos);
+
+
+	vec4 lightPos = vec4(scene.lightpos, 1.0) * modelView;
+
+	outLightVec = normalize(lightPos.xyz - outViewVec);
+
+
+
+	// outNormal = inNormal;
+	// outColor = inColor;
+	// outUV = inUV;
+
+	// mat4 modelView = scene.view * matrices.model;
+
+	// gl_Position = scene.projection * scene.view * matrices.model * vec4(inPos.xyz, 1.0);
+	
+	// vec4 pos = modelView * inPos;
+	// outNormal = mat3(matrices.model) * inNormal;
+	// vec3 lPos = mat3(matrices.model) * scene.lightpos.xyz;
+
+	// outLightVec = lPos - (matrices.model * vec4(inPos.xyz, 0.0)).xyz;
+	// outViewVec = -(matrices.model * vec4(inPos.xyz, 0.0)).xyz;
 
 
 

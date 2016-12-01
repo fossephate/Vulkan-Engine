@@ -49,12 +49,13 @@
 #include "vulkanTools.h"
 #include "vulkanDebug.h"
 
-//#include "vulkanDevice.h"
+
 #include "vulkanContext.h"
 #include "vulkanSwapChain.h"
 #include "vulkanTextureLoader.h"
 #include "vulkanMeshLoader.h"
 #include "vulkanTextOverlay.h"
+#include "vulkanFrameBuffer.h"
 #include "Object3D.h"
 #include "camera.h"
 

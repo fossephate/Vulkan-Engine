@@ -233,7 +233,7 @@ public:
 		//textures.skybox = textureLoader->loadCubemap(getAssetPath() + "textures/cubemap_vulkan.ktx", vk::Format::eR8G8B8A8Unorm);
 	}
 
-	void updateDrawCommandBuffer(const vk::CommandBuffer& cmdBuffer) {
+	void updateDrawCommandBuffer(const vk::CommandBuffer &cmdBuffer) {
 		cmdBuffer.setViewport(0, vkx::viewport(size));
 		cmdBuffer.setScissor(0, vkx::rect2D(size));
 
@@ -274,7 +274,7 @@ public:
 		globalP += 0.005f;
 
 
-		//meshes[1].setTranslation(glm::vec3(sin(globalP), 1.0f, 0.0f));
+		meshes[1].setTranslation(glm::vec3(sin(globalP), 1.0f, 0.0f));
 
 		//matrices[0].model = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, 0.0f));
 		//matrices[1].model = glm::translate(glm::mat4(), glm::vec3(sin(globalP), 1.0f, 0.0f));
@@ -303,15 +303,15 @@ public:
 
 			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSets[0], nullptr);
 
-			//uint32_t offset = di.matrixIndex * res->m_alignedMatrixSize;
+
 			uint32_t offset = mesh.matrixIndex * alignedMatrixSize;
 			//https://www.khronos.org/registry/vulkan/specs/1.0/apispec.html#vkCmdBindDescriptorSets
 			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, 1, &descriptorSets[1], 1, &offset);
 
 
-			uint32_t offset2 = mesh.matrixIndex * alignedMaterialSize;
+			//uint32_t offset2 = mesh.matrixIndex * alignedMaterialSize;
 			//uint32_t offset2 = mesh.materialIndex * alignedMatrixSize;// change?
-			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, 1, &descriptorSets[2], 1, &offset2);
+			//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, 1, &descriptorSets[2], 1, &offset2);
 
 			//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSets[0], nullptr);
 			//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSets[1], nullptr);
@@ -351,13 +351,18 @@ public:
 		//vkx::Mesh otherMesh1 = loader->createMeshFromBuffers(context, vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
 		vkx::Mesh planeMesh(context);
-		planeMesh.load(getAssetPath() + "models/xyplane.dae");
+		planeMesh.load(getAssetPath() + "models/plane2.dae");
 		planeMesh.createBuffers(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
 
-		vkx::Mesh otherMesh1(context);
-		otherMesh1.load(getAssetPath() + "models/vulkanscenemodels.dae");
-		otherMesh1.createBuffers(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		//vkx::Mesh otherMesh1(context);
+		////otherMesh1.load(getAssetPath() + "models/vulkanscenemodels.dae");
+		//otherMesh1.load(getAssetPath() + "models/vulkanscenemodels.dae");
+		//otherMesh1.createBuffers(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+
+		vkx::Mesh otherMesh2(context);
+		otherMesh2.load(getAssetPath() + "models/torus.obj");
+		otherMesh2.createBuffers(vertexLayout, 0.02f, VERTEX_BUFFER_BIND_ID);
 
 		//loader = new vkx::MeshLoader();
 
@@ -382,8 +387,8 @@ public:
 
 		//meshes.push_back(skyboxMesh);
 		meshes.push_back(planeMesh);
-		meshes.push_back(otherMesh1);
-		//meshes.push_back(otherMesh2);
+		//meshes.push_back(otherMesh1);
+		meshes.push_back(otherMesh2);
 
 
 		// Binding description

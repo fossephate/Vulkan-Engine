@@ -45,9 +45,14 @@ namespace vkx {
 
 	class TextureLoader {
 	private:
-		Context context;
+		//Context context;
 		//const Context &context;
+		//Context context;
+		Context *context;
+
 		vk::CommandBuffer cmdBuffer;
+
+		
 
 	public:
 

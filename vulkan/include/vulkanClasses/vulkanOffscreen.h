@@ -12,7 +12,8 @@ namespace vkx {
         vk::CommandPool cmdPool;
         vk::RenderPass renderPass;
         glm::uvec2 framebufferSize;
-        std::vector<vk::Format> colorFormats{ { vk::Format::eB8G8R8A8Unorm } };
+        //std::vector<vk::Format> colorFormats{ { vk::Format::eB8G8R8A8Unorm } };
+		std::vector<vk::Format> colorFormats;
         // This value is chosen as an invalid default that signals that the code should pick a specific depth buffer
         // Alternative, you can set this to undefined to explicitly declare you want no depth buffer.
         vk::Format depthFormat = vk::Format::eR8Uscaled;
@@ -29,7 +30,7 @@ namespace vkx {
         vk::ImageUsageFlags attachmentUsage{ vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eInputAttachment };
         vk::DescriptorPool descriptorPool;
 
-        OffscreenRenderer(const vkx::Context& context) : context(context), device(context.device), queue(context.queue) {}
+		OffscreenRenderer(const vkx::Context& context) : context(context), device(context.device), queue(context.queue), colorFormats({ vk::Format::eB8G8R8A8Unorm }) {}
 
 		void destroy();
 

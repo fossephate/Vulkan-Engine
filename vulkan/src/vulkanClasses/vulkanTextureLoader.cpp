@@ -19,6 +19,20 @@ void vkx::Texture::destroy() {
 	}
 }
 
+//vkx::TextureLoader::TextureLoader(const Context &context) {
+//	this->context = context;
+//
+//	// Create command buffer for submitting image barriers
+//	// and converting tilings
+//	vk::CommandBufferAllocateInfo cmdBufInfo;
+//	cmdBufInfo.commandPool = context.getCommandPool();
+//	cmdBufInfo.level = vk::CommandBufferLevel::ePrimary;
+//	cmdBufInfo.commandBufferCount = 1;
+//
+//	cmdBuffer = context.device.allocateCommandBuffers(cmdBufInfo)[0];
+//}
+
+
 vkx::TextureLoader::TextureLoader(const Context &context) {
 	this->context = context;
 

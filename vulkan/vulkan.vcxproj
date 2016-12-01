@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\deferred.cpp" />
     <ClCompile Include="src\vulkanClasses\camera.cpp" />
     <ClCompile Include="src\vulkanClasses\shapes.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanAndroid.cpp" />
@@ -32,7 +33,6 @@
     <ClCompile Include="src\vulkanClasses\vulkanTextOverlay.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTextureLoader.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTools.cpp" />
-    <ClCompile Include="src\vulkanscene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\vulkanClasses\camera.h" />
@@ -47,6 +47,7 @@
     <ClInclude Include="include\vulkanClasses\vulkanMesh.h" />
     <ClInclude Include="include\vulkanClasses\vulkanMeshLoader.h" />
     <ClInclude Include="include\vulkanClasses\vulkanOffscreen.h" />
+    <ClInclude Include="include\vulkanClasses\vulkanOffscreenExampleBase.hpp" />
     <ClInclude Include="include\vulkanClasses\vulkanShaders.h" />
     <ClInclude Include="include\vulkanClasses\vulkanShapes.h" />
     <ClInclude Include="include\vulkanClasses\vulkanSwapChain.h" />

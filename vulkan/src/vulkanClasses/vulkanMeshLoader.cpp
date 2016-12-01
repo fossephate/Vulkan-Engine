@@ -236,7 +236,7 @@ void vkx::MeshLoader::loadMaterials(const aiScene *aScene) {
 
 
 
-bool vkx::MeshLoader::parse(const aiScene *pScene, const std::string & Filename) {
+bool vkx::MeshLoader::parse(const aiScene *pScene, const std::string &Filename) {
 	m_Entries.resize(pScene->mNumMeshes);
 
 	// Counters

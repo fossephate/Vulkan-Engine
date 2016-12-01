@@ -90,7 +90,7 @@ public:
     
     VulkanExample() : vkx::OffscreenExampleBase(ENABLE_VALIDATION) {
         
-        camera.setZoom(-8.0f);
+        //camera.setZoom(-8.0f);
         size.width = 1024;
         size.height = 1024;
         title = "Vulkan Example - Deferred shading";
@@ -246,7 +246,7 @@ public:
                 y += 1.0f;
             }
         }
-        meshes.quad.vertices = stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
+        meshes.quad.vertices = context.stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
 
         // Setup indices
         std::vector<uint32_t> indexBuffer = { 0,1,2, 2,3,0 };
@@ -257,7 +257,7 @@ public:
             }
         }
         meshes.quad.indexCount = indexBuffer.size();
-        meshes.quad.indices = stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);
+        meshes.quad.indices = context.stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);
     }
 
     void setupVertexDescriptions() {
@@ -458,8 +458,8 @@ public:
         // Final fullscreen pass pipeline
         std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStages;
 
-        shaderStages[0] = loadShader(getAssetPath() + "shaders/deferred/deferred.vert.spv", vk::ShaderStageFlagBits::eVertex);
-        shaderStages[1] = loadShader(getAssetPath() + "shaders/deferred/deferred.frag.spv", vk::ShaderStageFlagBits::eFragment);
+        shaderStages[0] = context.loadShader(getAssetPath() + "shaders/deferred/deferred.vert.spv", vk::ShaderStageFlagBits::eVertex);
+        shaderStages[1] = context.loadShader(getAssetPath() + "shaders/deferred/deferred.frag.spv", vk::ShaderStageFlagBits::eFragment);
 
         vk::GraphicsPipelineCreateInfo pipelineCreateInfo = vkx::pipelineCreateInfo(pipelineLayouts.deferred, renderPass);
         pipelineCreateInfo.pVertexInputState = &vertices.inputState;
@@ -477,14 +477,14 @@ public:
 
 
         // Debug display pipeline
-        shaderStages[0] = loadShader(getAssetPath() + "shaders/deferred/debug.vert.spv", vk::ShaderStageFlagBits::eVertex);
-        shaderStages[1] = loadShader(getAssetPath() + "shaders/deferred/debug.frag.spv", vk::ShaderStageFlagBits::eFragment);
+        shaderStages[0] = context.loadShader(getAssetPath() + "shaders/deferred/debug.vert.spv", vk::ShaderStageFlagBits::eVertex);
+        shaderStages[1] = context.loadShader(getAssetPath() + "shaders/deferred/debug.frag.spv", vk::ShaderStageFlagBits::eFragment);
         pipelines.debug = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo, nullptr)[0];
 
 
         // Offscreen pipeline
-        shaderStages[0] = loadShader(getAssetPath() + "shaders/deferred/mrt.vert.spv", vk::ShaderStageFlagBits::eVertex);
-        shaderStages[1] = loadShader(getAssetPath() + "shaders/deferred/mrt.frag.spv", vk::ShaderStageFlagBits::eFragment);
+        shaderStages[0] = context.loadShader(getAssetPath() + "shaders/deferred/mrt.vert.spv", vk::ShaderStageFlagBits::eVertex);
+        shaderStages[1] = context.loadShader(getAssetPath() + "shaders/deferred/mrt.frag.spv", vk::ShaderStageFlagBits::eFragment);
 
         // Separate render pass
         pipelineCreateInfo.renderPass = offscreen.renderPass;
@@ -510,11 +510,11 @@ public:
     // Prepare and initialize uniform buffer containing shader uniforms
     void prepareUniformBuffers() {
         // Fullscreen vertex shader
-        uniformData.vsFullScreen = createUniformBuffer(uboVS);
+        uniformData.vsFullScreen = context.createUniformBuffer(uboVS);
         // Deferred vertex shader
-        uniformData.vsOffscreen = createUniformBuffer(uboOffscreenVS);
+        uniformData.vsOffscreen = context.createUniformBuffer(uboOffscreenVS);
         // Deferred fragment shader
-        uniformData.fsLights = createUniformBuffer(uboFragmentLights);
+        uniformData.fsLights = context.createUniformBuffer(uboFragmentLights);
 
         // Update
         updateUniformBuffersScreen();
@@ -533,7 +533,7 @@ public:
     }
 
     void updateUniformBufferDeferredMatrices() {
-        uboOffscreenVS.projection = camera.matrices.perspective;
+        uboOffscreenVS.projection = camera.matrices.projection;
         uboOffscreenVS.view = camera.matrices.view;
         uboOffscreenVS.model = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.25f, 0.0f));
         uniformData.vsOffscreen.copy(uboOffscreenVS);
@@ -573,7 +573,7 @@ public:
         uboFragmentLights.lights[4].quadraticFalloff = 0.6f;
 
         // Current view position
-        uboFragmentLights.viewPos = glm::vec4(0.0f, 0.0f, -camera.position.z, 0.0f);
+        uboFragmentLights.viewPos = glm::vec4(0.0f, 0.0f, -camera.translation.z, 0.0f);
 
         uniformData.fsLights.copy(uboFragmentLights);
     }
@@ -612,15 +612,22 @@ public:
         updateUniformBuffersScreen();
     }
 
-    void keyPressed(uint32_t key) override {
-        Parent::keyPressed(key);
-        switch (key) {
-        case GLFW_KEY_D:
-            toggleDebugDisplay();
-            break;
-        }
-    }
+    //void keyPressed(uint32_t key) override {
+    //    Parent::keyPressed(key);
+    //    switch (key) {
+    //    case GLFW_KEY_D:
+    //        toggleDebugDisplay();
+    //        break;
+    //    }
+    //}
 };
 
-RUN_EXAMPLE(VulkanExample)
+VulkanExample *vulkanExample;
+
+int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow) {
+	VulkanExample* example = new VulkanExample();
+	example->run();
+	delete(example);
+	return 0;
+}
 

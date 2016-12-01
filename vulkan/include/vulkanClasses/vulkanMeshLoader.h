@@ -271,8 +271,6 @@ namespace vkx {
 	// specifying pipelines, vertex bindings, etc.
 	class Mesh : public Object3D {
 		public:
-
-			glm::mat4 model;
 		
 			uint32_t matrixIndex;
 
