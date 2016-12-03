@@ -91,8 +91,8 @@ public:
     VulkanExample() : vkx::OffscreenExampleBase(ENABLE_VALIDATION) {
         
         //camera.setZoom(-8.0f);
-        size.width = 1024;
-        size.height = 1024;
+        size.width = 800;
+        size.height = 600;
         title = "Vulkan Example - Deferred shading";
     }
 
@@ -165,7 +165,7 @@ public:
         vk::DeviceSize offsets = { 0 };
         offscreenCmdBuffer.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, meshes.example.vertices.buffer, { 0 });
         offscreenCmdBuffer.bindIndexBuffer(meshes.example.indices.buffer, 0, vk::IndexType::eUint32);
-        offscreenCmdBuffer.drawIndexed(meshes.example.indexCount, 1, 0, 0, 0);
+        //offscreenCmdBuffer.drawIndexed(meshes.example.indexCount, 1, 0, 0, 0);
         offscreenCmdBuffer.endRenderPass();
         offscreenCmdBuffer.end();
     }
@@ -598,6 +598,9 @@ public:
         setupDescriptorSet();
         updateDrawCommandBuffers();
         buildOffscreenCommandBuffer();
+
+		toggleDebugDisplay();// added
+
         prepared = true;
     }
 

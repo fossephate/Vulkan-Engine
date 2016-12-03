@@ -2,9 +2,9 @@
 
 
 
-vkx::MeshLoader::MeshLoader() {
-	this->textureLoader = nullptr;
-}
+//vkx::MeshLoader::MeshLoader() {
+//	this->textureLoader = nullptr;
+//}
 
 vkx::MeshLoader::MeshLoader(const vkx::Context &context) {
 	//this->context = context;
@@ -242,7 +242,7 @@ bool vkx::MeshLoader::parse(const aiScene *pScene, const std::string &Filename) 
 	// Counters
 	for (unsigned int i = 0; i < m_Entries.size(); i++) {
 		m_Entries[i].vertexBase = numVertices;
-		numVertices += pScene->mMeshes[i]->mNumVertices;
+		numVertices += pScene->mMeshes[i]->mNumVertices;// total for all vertices
 	}
 
 
@@ -258,10 +258,17 @@ bool vkx::MeshLoader::parse(const aiScene *pScene, const std::string &Filename) 
 }
 
 void vkx::MeshLoader::InitMesh(unsigned int index, const aiMesh *paiMesh, const aiScene *pScene) {
+	
 	m_Entries[index].MaterialIndex = paiMesh->mMaterialIndex;
 
 	aiColor3D pColor(0.f, 0.f, 0.f);
 	pScene->mMaterials[paiMesh->mMaterialIndex]->Get(AI_MATKEY_COLOR_DIFFUSE, pColor);
+
+
+
+
+
+
 
 	aiVector3D Zero3D(0.0f, 0.0f, 0.0f);
 
@@ -491,21 +498,28 @@ std::vector<vkx::MeshBuffer> vkx::MeshLoader::createPartBuffers(const Context & 
 
 
 // remove?
-vkx::Mesh vkx::MeshLoader::createMeshFromBuffers(const Context & context, const std::vector<VertexLayout>& layout, float scale, uint32_t binding) {
-	vkx::MeshBuffer mBuffer = createBuffers(context, layout, scale);
+//vkx::Mesh vkx::MeshLoader::createMeshFromBuffers(const Context & context, const std::vector<VertexLayout>& layout, float scale, uint32_t binding) {
+//	vkx::MeshBuffer mBuffer = createBuffers(context, layout, scale);
+//
+//	vkx::Mesh mesh(context);// = vkx::Mesh(mBuffer, binding, layout);
+//	mesh.meshBuffer = mBuffer;
+//	mesh.vertexBufferBinding = binding;
+//	mesh.setupVertexInputState(layout);
+//
+//	mesh.attributeDescriptions = this->attributeDescriptions;
+//
+//	//mesh.bindingDescription = this->bindingDescriptions[0];
+//	//mesh.pipeline = this->pipeline;
+//
+//	return mesh;
+//}
 
-	vkx::Mesh mesh(context);// = vkx::Mesh(mBuffer, binding, layout);
-	mesh.meshBuffer = mBuffer;
-	mesh.vertexBufferBinding = binding;
-	mesh.setupVertexInputState(layout);
 
-	mesh.attributeDescriptions = this->attributeDescriptions;
 
-	//mesh.bindingDescription = this->bindingDescriptions[0];
-	//mesh.pipeline = this->pipeline;
 
-	return mesh;
-}
+
+
+
 
 
 
@@ -541,21 +555,26 @@ namespace vkx {
 	//http://stackoverflow.com/questions/12927169/how-can-i-initialize-c-object-member-variables-in-the-constructor
 	//http://stackoverflow.com/questions/14169584/passing-and-storing-a-const-reference-via-a-constructor
 
-	Mesh::Mesh() {
+	// don't ever use this constructor
+	Mesh::Mesh():
+		context(vkx::Context())
+	{
 		//this->context = nullptr;
-		this->meshLoader = new vkx::MeshLoader();
+		//this->meshLoader = new vkx::MeshLoader();
 	}
 
-	Mesh::Mesh(const vkx::Context &context) {
-		this->context = context;
-		this->meshLoader = new vkx::MeshLoader(context);
-	}
-
-	//Mesh::Mesh(const vkx::Context &context):
-	//	context(context)
-	//{
+	// pointer way:
+	//Mesh::Mesh(const vkx::Context &context) {
+	//	this->context = &context;
 	//	this->meshLoader = new vkx::MeshLoader(context);
 	//}
+
+	// reference way:
+	Mesh::Mesh(const vkx::Context &context):
+		context(context)
+	{
+		this->meshLoader = new vkx::MeshLoader(context);
+	}
 
 	void Mesh::load(const std::string &filename) {
 		this->meshLoader->load(filename);

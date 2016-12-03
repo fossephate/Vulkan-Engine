@@ -1422,6 +1422,10 @@ void vulkanApp::prepare() {
 
 	// Create a simple texture loader class
 	textureLoader = new TextureLoader(this->context);
+
+
+	// todo: add mesh loader here// important
+
 	#if defined(__ANDROID__)
 	textureLoader->assetManager = androidApp->activity->assetManager;
 	#endif
@@ -1436,7 +1440,7 @@ void vulkanApp::prepare() {
 }
 
 MeshBuffer vulkanApp::loadMesh(const std::string& filename, const MeshLayout& vertexLayout, float scale) {
-	MeshLoader loader;
+	MeshLoader loader(this->context);
 	#if defined(__ANDROID__)
 	loader.assetManager = androidApp->activity->assetManager;
 	#endif

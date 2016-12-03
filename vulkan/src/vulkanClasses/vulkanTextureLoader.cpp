@@ -20,7 +20,7 @@ void vkx::Texture::destroy() {
 }
 
 //vkx::TextureLoader::TextureLoader(const Context &context) {
-//	this->context = context;
+//	this->context = &context;
 //
 //	// Create command buffer for submitting image barriers
 //	// and converting tilings
@@ -33,8 +33,9 @@ void vkx::Texture::destroy() {
 //}
 
 
-vkx::TextureLoader::TextureLoader(const Context &context) {
-	this->context = context;
+vkx::TextureLoader::TextureLoader(const Context &context)
+	: context(context)
+{
 
 	// Create command buffer for submitting image barriers
 	// and converting tilings
@@ -71,12 +72,14 @@ vkx::Texture vkx::TextureLoader::loadTexture(const std::string & filename, vk::F
 
 	free(textureData);
 	#else
+
 	gli::texture2D tex2D(gli::load(filename.c_str()));
 	#endif        
 	assert(!tex2D.empty());
 
 	Texture texture;
-	texture.device = context.device;
+	texture.device = this->context.device;
+
 	texture.extent.width = (uint32_t)tex2D[0].dimensions().x;
 	texture.extent.height = (uint32_t)tex2D[0].dimensions().y;
 	texture.mipLevels = tex2D.levels();

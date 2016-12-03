@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\deferred.cpp" />
     <ClCompile Include="src\vulkanClasses\camera.cpp" />
     <ClCompile Include="src\vulkanClasses\shapes.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanAndroid.cpp" />
@@ -33,6 +32,7 @@
     <ClCompile Include="src\vulkanClasses\vulkanTextOverlay.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTextureLoader.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTools.cpp" />
+    <ClCompile Include="src\vulkanscene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\vulkanClasses\camera.h" />
@@ -135,6 +135,7 @@
       <PreprocessorDefinitions>WIN32;_WINDOWS;VK_USE_PLATFORM_WIN32_KHR;_USE_MATH_DEFINES;NOMINMAX;_CRT_SECURE_NO_WARNINGS;_DEBUG</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
       <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\include\vulkanClasses</AdditionalIncludeDirectories>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <Link>
       <AdditionalDependencies>vulkan/$(Platform)/vulkan-1.lib;SDL2/$(Platform)/SDL2.lib;assimp/assimp.lib;//glfw/$(Platform)/glfw3.lib;glslang/$(Platform)/$(Configuration)/glslang.lib;glslang/$(Platform)/$(Configuration)/glslang-default-resource-limits.lib;SPIRV/$(Platform)/$(Configuration)/SPIRV.lib;HLSL/$(Platform)/$(Configuration)/HLSL.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -148,6 +149,7 @@
       <OpenMPSupport>true</OpenMPSupport>
       <WarningLevel>Level3</WarningLevel>
       <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\include\vulkanClasses</AdditionalIncludeDirectories>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <Link>
       <AdditionalDependencies>vulkan/$(Platform)/vulkan-1.lib;SDL2/$(Platform)/SDL2.lib;assimp/assimp.lib;//glfw/$(Platform)/glfw3.lib;glslang/$(Platform)/$(Configuration)/glslang.lib;glslang/$(Platform)/$(Configuration)/glslang-default-resource-limits.lib;SPIRV/$(Platform)/$(Configuration)/SPIRV.lib;HLSL/$(Platform)/$(Configuration)/HLSL.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -162,6 +164,7 @@
       <PreprocessorDefinitions>WIN32;_WINDOWS;VK_USE_PLATFORM_WIN32_KHR;_USE_MATH_DEFINES;NOMINMAX;_CRT_SECURE_NO_WARNINGS;NDEBUG</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
       <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\include\vulkanClasses</AdditionalIncludeDirectories>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -176,6 +179,7 @@
       <PreprocessorDefinitions>WIN32;_WINDOWS;VK_USE_PLATFORM_WIN32_KHR;_USE_MATH_DEFINES;NOMINMAX;_CRT_SECURE_NO_WARNINGS;NDEBUG</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
       <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\include\vulkanClasses</AdditionalIncludeDirectories>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

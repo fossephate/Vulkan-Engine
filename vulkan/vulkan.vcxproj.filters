@@ -54,7 +54,7 @@
     <ClCompile Include="src\vulkanClasses\vulkanDebug.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\deferred.cpp">
+    <ClCompile Include="src\vulkanscene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

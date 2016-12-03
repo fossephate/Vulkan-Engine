@@ -176,7 +176,8 @@ namespace vkx {
 			struct MeshEntry {
 				uint32_t NumIndices;
 				uint32_t MaterialIndex;
-				uint32_t vertexBase;
+				uint32_t vertexBase;// offset (for indexed draw)? p sure
+
 				std::vector<Vertex> Vertices;
 				std::vector<unsigned int> Indices;
 			};
@@ -226,8 +227,8 @@ namespace vkx {
 
 			const aiScene *pScene{ nullptr };
 
-
-			MeshLoader();
+			// todo: remove this default constructor
+			//MeshLoader();
 
 			MeshLoader(const vkx::Context &context);
 
@@ -257,7 +258,7 @@ namespace vkx {
 
 			// convienience// just calls above function and then creates mesh class
 			//vkx::Mesh createMeshFromBuffers(const Context& context, const std::vector<VertexLayout>& layout, float scale, uint32_t binding);
-			vkx::Mesh createMeshFromBuffers(const Context &context, const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
+			//vkx::Mesh createMeshFromBuffers(const Context &context, const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
 	};
 
 
@@ -274,13 +275,8 @@ namespace vkx {
 		
 			uint32_t matrixIndex;
 
-		
-			//glm::vec3 position;
-			//glm::quat orientation;
-
 			// Vulkan buffers
 			vkx::MeshBuffer meshBuffer;
-
 			std::vector<vkx::MeshBuffer> partBuffers;
 
 			std::vector<Material> materials;
@@ -288,9 +284,10 @@ namespace vkx {
 			// Reference to assimp mesh
 			// Required for animation
 			vkx::MeshLoader *meshLoader;
-			vkx::Context context;
+			//vkx::Context context;
 
-			//const vkx::Context &context;
+			// reference way:
+			const vkx::Context &context;
 		
 			//http://www.learncpp.com/cpp-tutorial/8-5a-constructor-member-initializer-lists/
 
@@ -303,11 +300,10 @@ namespace vkx {
 
 			vk::PipelineVertexInputStateCreateInfo vertexInputState;
 			vk::VertexInputBindingDescription bindingDescription;
-
 			std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
 
 
-
+			// no default constructor
 			Mesh();
 
 			Mesh(const vkx::Context &context);

@@ -53,7 +53,7 @@ public:
 		glm::mat4 model;// not really needed
 		glm::mat4 view;
 		glm::mat4 projection;
-
+		
 		glm::mat4 normal;
 
 		glm::vec4 lightPos;
@@ -180,8 +180,8 @@ public:
 
 		camera.setTranslation({ 0.0f, 1.0f, 5.0f });
 
-		matrices.resize(2);
-		materials.resize(2);
+		matrices.resize(3);
+		materials.resize(3);
 
 		//materials[0].test = 0.0f;
 		//materials[1].test = 1.0f;
@@ -356,9 +356,14 @@ public:
 
 
 		//vkx::Mesh otherMesh1(context);
-		////otherMesh1.load(getAssetPath() + "models/vulkanscenemodels.dae");
+		//////otherMesh1.load(getAssetPath() + "models/vulkanscenemodels.dae");
 		//otherMesh1.load(getAssetPath() + "models/vulkanscenemodels.dae");
 		//otherMesh1.createBuffers(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+
+		vkx::Mesh otherMesh1(context);
+		////otherMesh1.load(getAssetPath() + "models/vulkanscenemodels.dae");
+		otherMesh1.load(getAssetPath() + "models/rock01.dae");
+		otherMesh1.createBuffers(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
 		vkx::Mesh otherMesh2(context);
 		otherMesh2.load(getAssetPath() + "models/torus.obj");
@@ -387,7 +392,7 @@ public:
 
 		//meshes.push_back(skyboxMesh);
 		meshes.push_back(planeMesh);
-		//meshes.push_back(otherMesh1);
+		meshes.push_back(otherMesh1);
 		meshes.push_back(otherMesh2);
 
 
