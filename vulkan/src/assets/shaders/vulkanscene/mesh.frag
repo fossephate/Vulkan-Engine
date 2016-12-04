@@ -13,6 +13,9 @@ layout (set = 0, binding = 0) uniform sceneBuffer
 	vec3 lightpos;
 } scene;
 
+
+
+
 layout (set = 0, binding = 1) uniform sampler2D samplerColorMap;
 
 layout (location = 0) in vec2 inUV;
@@ -65,7 +68,9 @@ void main()
 	float intensity = 0.1 + diff + spec;
  
 	vec4 IAmbient = vec4(0.2, 0.2, 0.2, 1.0);
+
 	vec4 IDiffuse = vec4(0.5, 0.5, 0.5, 0.5) * max(dot(inNormal, inLightVec), 0.0);
+	
 	float shininess = 0.75;
 	vec4 ISpecular = vec4(0.5, 0.5, 0.5, 1.0) * pow(max(dot(Reflected, Eye), 0.0), 2.0) * shininess; 
 

@@ -247,14 +247,25 @@ bool vkx::MeshLoader::parse(const aiScene *pScene, const std::string &Filename) 
 
 
 	loadMaterials(pScene);
+	loadMeshes(pScene);
 
 	// Initialize the meshes in the scene one by one
-	for (unsigned int i = 0; i < m_Entries.size(); i++) {
-		const aiMesh* paiMesh = pScene->mMeshes[i];
-		InitMesh(i, paiMesh, pScene);
-	}
+	//for (unsigned int i = 0; i < m_Entries.size(); i++) {
+	//	const aiMesh* paiMesh = pScene->mMeshes[i];
+	//	InitMesh(i, paiMesh, pScene);
+	//}
 
 	return true;
+}
+
+void vkx::MeshLoader::loadMeshes(const aiScene *pScene) {
+
+
+	for (unsigned int i = 0; i < m_Entries.size(); i++) {
+		const aiMesh *pMesh = pScene->mMeshes[i];
+
+	}
+
 }
 
 void vkx::MeshLoader::InitMesh(unsigned int index, const aiMesh *paiMesh, const aiScene *pScene) {
@@ -275,16 +286,19 @@ void vkx::MeshLoader::InitMesh(unsigned int index, const aiMesh *paiMesh, const 
 	for (unsigned int i = 0; i < paiMesh->mNumVertices; i++) {
 		aiVector3D* pPos = &(paiMesh->mVertices[i]);
 		aiVector3D* pNormal = &(paiMesh->mNormals[i]);
-		aiVector3D *pTexCoord;
-		if (paiMesh->HasTextureCoords(0)) {
-			pTexCoord = &(paiMesh->mTextureCoords[0][i]);
-		} else {
-			pTexCoord = &Zero3D;
-		}
+		//aiVector3D *pTexCoord;
+		//if (paiMesh->HasTextureCoords(0)) {
+		//	pTexCoord = &(paiMesh->mTextureCoords[0][i]);
+		//} else {
+		//	pTexCoord = &Zero3D;
+		//}
+		aiVector3D *pTexCoord = (paiMesh->HasTextureCoords(0)) ? &(paiMesh->mTextureCoords[0][i]) : &Zero3D;
+
 		aiVector3D* pTangent = (paiMesh->HasTangentsAndBitangents()) ? &(paiMesh->mTangents[i]) : &Zero3D;
 		aiVector3D* pBiTangent = (paiMesh->HasTangentsAndBitangents()) ? &(paiMesh->mBitangents[i]) : &Zero3D;
 
-		Vertex v(glm::vec3(pPos->x, pPos->y, pPos->z),// y was negative// important
+		Vertex v(
+			glm::vec3(pPos->x, pPos->y, pPos->z),
 			glm::vec2(pTexCoord->x, pTexCoord->y),
 			glm::vec3(pNormal->x, pNormal->y, pNormal->z),
 			glm::vec3(pTangent->x, pTangent->y, pTangent->z),
@@ -305,6 +319,8 @@ void vkx::MeshLoader::InitMesh(unsigned int index, const aiMesh *paiMesh, const 
 
 	dim.size = dim.max - dim.min;
 
+	// get indices
+
 	for (unsigned int i = 0; i < paiMesh->mNumFaces; i++) {
 		const aiFace& Face = paiMesh->mFaces[i];
 		if (Face.mNumIndices != 3) {
@@ -314,6 +330,9 @@ void vkx::MeshLoader::InitMesh(unsigned int index, const aiMesh *paiMesh, const 
 		m_Entries[index].Indices.push_back(Face.mIndices[1]);
 		m_Entries[index].Indices.push_back(Face.mIndices[2]);
 	}
+
+
+
 }
 
 // Create vertex and index buffer with given layout
@@ -497,29 +516,6 @@ std::vector<vkx::MeshBuffer> vkx::MeshLoader::createPartBuffers(const Context & 
 
 
 
-// remove?
-//vkx::Mesh vkx::MeshLoader::createMeshFromBuffers(const Context & context, const std::vector<VertexLayout>& layout, float scale, uint32_t binding) {
-//	vkx::MeshBuffer mBuffer = createBuffers(context, layout, scale);
-//
-//	vkx::Mesh mesh(context);// = vkx::Mesh(mBuffer, binding, layout);
-//	mesh.meshBuffer = mBuffer;
-//	mesh.vertexBufferBinding = binding;
-//	mesh.setupVertexInputState(layout);
-//
-//	mesh.attributeDescriptions = this->attributeDescriptions;
-//
-//	//mesh.bindingDescription = this->bindingDescriptions[0];
-//	//mesh.pipeline = this->pipeline;
-//
-//	return mesh;
-//}
-
-
-
-
-
-
-
 
 
 
@@ -586,7 +582,7 @@ namespace vkx {
 
 	void Mesh::createBuffers(const std::vector<VertexLayout> &layout, float scale, uint32_t binding) {
 		this->meshBuffer = this->meshLoader->createBuffers(this->context, layout, scale);
-		this->materials = this->meshLoader->materials;
+		//this->materials = this->meshLoader->materials;
 
 		this->attributeDescriptions = this->meshLoader->attributeDescriptions;
 
@@ -599,7 +595,7 @@ namespace vkx {
 
 	void Mesh::createPartBuffers(const std::vector<VertexLayout> &layout, float scale, uint32_t binding) {
 		this->partBuffers = this->meshLoader->createPartBuffers(this->context, layout, scale);
-		this->materials = this->meshLoader->materials;
+		//this->materials = this->meshLoader->materials;
 
 		this->attributeDescriptions = this->meshLoader->attributeDescriptions;
 
@@ -654,9 +650,42 @@ namespace vkx {
 			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSet, nullptr);
 		}
 
+
+
+
+
+
+
 		cmdBuffer.bindVertexBuffers(vertexBufferBinding, meshBuffer.vertices.buffer, vk::DeviceSize());
 		cmdBuffer.bindIndexBuffer(meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
 		cmdBuffer.drawIndexed(meshBuffer.indexCount, 1, 0, 0, 0);
+
+
+
 	}
+
+}
+
+
+
+
+
+
+
+
+
+namespace vkx {
+
+	//http://stackoverflow.com/questions/12927169/how-can-i-initialize-c-object-member-variables-in-the-constructor
+	//http://stackoverflow.com/questions/14169584/passing-and-storing-a-const-reference-via-a-constructor
+
+	// don't ever use this constructor
+	Model::Model() :
+		context(vkx::Context())
+	{
+		//this->context = nullptr;
+		//this->meshLoader = new vkx::MeshLoader();
+	}
+
 
 }

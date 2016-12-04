@@ -40,6 +40,7 @@ public:
 	std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
 
 	std::vector<vkx::Mesh> meshes;
+	std::vector<vkx::Model> models;
 
 	vkx::Mesh skyboxMesh;
 
@@ -63,8 +64,9 @@ public:
 	struct matrixNode {
 		glm::mat4 model;
 	};
-
 	std::vector<matrixNode> matrices;
+
+
 
 	struct materialNode {
 		glm::vec4 ambient;
@@ -74,31 +76,7 @@ public:
 		float opacity;
 	};
 
-	//struct materialNode {
-	//	float test;
-	//};
-
-
-	//struct MaterialSide {
-	//	glm::vec4 ambient;
-	//	glm::vec4 diffuse;
-	//	glm::vec4 specular;
-	//	glm::vec4 emissive;
-	//  float opacity;// added
-	//};
-
-
-
-	//// need to keep this 256 byte aligned (UBO range)
-	//struct materialNode {
-	//	MaterialSide        sides[2];
-	//	unsigned int        _pad[32];
-
-	//	Material() {
-	//		memset(this, 0, sizeof(materialNode));
-	//	}
-	//};
-
+	std::vector<materialNode> materials;
 
 	// Shader properites for a material
 	// Will be passed to the shaders using push constant
@@ -121,9 +99,6 @@ public:
 		// Pointer to the pipeline used by this material
 		vk::Pipeline *pipeline;
 	};
-
-
-	std::vector<materialNode> materials;
 	
 
 
@@ -290,17 +265,18 @@ public:
 
 		updateUniformBuffers();
 
-		for (auto &mesh : meshes) {
 
-			//uboVS.model = mesh.model;
-			//uboVS.model = glm::mat4_cast(mesh.orientation);
-			//updateUniformBuffers();
+
+
+
+		for (auto &mesh : meshes) {
 
 			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, mesh.pipeline);
 			cmdBuffer.bindVertexBuffers(mesh.vertexBufferBinding, mesh.meshBuffer.vertices.buffer, vk::DeviceSize());
 			cmdBuffer.bindIndexBuffer(mesh.meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
 
 
+			// move this outside loop
 			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSets[0], nullptr);
 
 
@@ -361,8 +337,8 @@ public:
 		//otherMesh1.createBuffers(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
 		vkx::Mesh otherMesh1(context);
-		////otherMesh1.load(getAssetPath() + "models/vulkanscenemodels.dae");
-		otherMesh1.load(getAssetPath() + "models/rock01.dae");
+		otherMesh1.load(getAssetPath() + "models/vulkanscenemodels.dae");
+		//otherMesh1.load(getAssetPath() + "models/rock01.dae");
 		otherMesh1.createBuffers(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
 		vkx::Mesh otherMesh2(context);

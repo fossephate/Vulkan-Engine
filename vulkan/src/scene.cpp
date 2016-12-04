@@ -246,12 +246,8 @@ private:
 
 			for (uint32_t v = 0; v < aMesh->mNumVertices; v++) {
 				vertices[v].pos = glm::make_vec3(&aMesh->mVertices[v].x);
-				//vertices[v].pos.y = vertices[v].pos.y;// was negative// important
-
 				vertices[v].uv = hasUV ? glm::make_vec2(&aMesh->mTextureCoords[0][v].x) : glm::vec2(0.0f);
 				vertices[v].normal = hasNormals ? glm::make_vec3(&aMesh->mNormals[v].x) : glm::vec3(0.0f);
-				//vertices[v].normal.y = vertices[v].normal.y;// was negative// important
-
 				vertices[v].color = hasColor ? glm::make_vec3(&aMesh->mColors[0][v].r) : glm::vec3(1.0f);
 			}
 			meshes[i].vertices = context.stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertices);

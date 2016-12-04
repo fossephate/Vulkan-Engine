@@ -44,6 +44,7 @@
 
 namespace vkx {
 
+	class Model;
 	class Mesh;
 	class MeshLoader;
 
@@ -179,7 +180,8 @@ namespace vkx {
 				uint32_t vertexBase;// offset (for indexed draw)? p sure
 
 				std::vector<Vertex> Vertices;
-				std::vector<unsigned int> Indices;
+				//std::vector<unsigned int> Indices;
+				std::vector<uint32_t> Indices;
 			};
 
 		public:
@@ -245,7 +247,9 @@ namespace vkx {
 			//void loadMaterials(const aiScene * aScene, TextureLoader *textureloader);
 
 		private:
-			bool parse(const aiScene* pScene, const std::string& Filename);
+			bool parse(const aiScene *pScene, const std::string &Filename);
+
+			void loadMeshes(const aiScene *pScene);
 
 			void InitMesh(unsigned int index, const aiMesh* paiMesh, const aiScene* pScene);
 
@@ -279,7 +283,10 @@ namespace vkx {
 			vkx::MeshBuffer meshBuffer;
 			std::vector<vkx::MeshBuffer> partBuffers;
 
-			std::vector<Material> materials;
+			//std::vector<Material> materials;
+
+			// pointer to the material used by this mesh
+			vkx::Material *material;
 
 			// Reference to assimp mesh
 			// Required for animation
@@ -332,7 +339,17 @@ namespace vkx {
 
 
 
+	class Model : public Object3D {
 
+		public:
+
+			// load model
+			void load(const std::string &filename);
+			// load model with custom flags
+			void load(const std::string &filename, int flags);
+
+
+	};
 
 
 }
