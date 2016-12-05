@@ -75,10 +75,12 @@ bool vkx::MeshLoader::load(const std::string &filename, int flags) {
 
 void vkx::MeshLoader::loadMaterials(const aiScene *pScene) {
 
+	// keep track of original size
+	int numOfMaterials = globalMaterials.size();
 
-	materials.resize(pScene->mNumMaterials);
+	//materials.resize(pScene->mNumMaterials);
 
-	for (size_t i = 0; i < materials.size(); i++) {
+	for (size_t i = 0; i < pScene->mNumMaterials; i++) {
 		materials[i] = {};
 
 		aiString name;
@@ -124,7 +126,18 @@ void vkx::MeshLoader::loadMaterials(const aiScene *pScene) {
 
 		// Assign pipeline
 		//materials[i].pipeline = (materials[i].properties.opacity == 0.0f) ? &pipelines.solid : &pipelines.blending;
+
+		// add materials to global materials vector
+		globalMaterials.push_back(materials[i]);
 	}
+
+	
+
+	
+
+
+
+
 
 	// Generate descriptor sets for the materials
 
@@ -657,6 +670,8 @@ void vkx::MeshLoader::createMeshBuffers(const Context &context, const std::vecto
 
 		meshBuffer.materialIndex = m_Entries[m].MaterialIndex;
 
+
+
 		// set pointer to material used by this mesh
 		// todo: create an asset manager
 		//meshBuffer.material = &materials[meshBuffer.materialIndex];
@@ -906,24 +921,24 @@ namespace vkx {
 	void Model::drawIndexed(const vk::CommandBuffer & cmdBuffer) {
 
 		// todo: add more
-		if (pipeline) {
-			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
-		}
+		//if (pipeline) {
+		//	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
+		//}
 
 
-		if ((pipelineLayout) && (descriptorSet)) {
-			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSet, nullptr);
-		}
-
-
-
+		//if ((pipelineLayout) && (descriptorSet)) {
+		//	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSet, nullptr);
+		//}
 
 
 
 
-		cmdBuffer.bindVertexBuffers(vertexBufferBinding, meshBuffer.vertices.buffer, vk::DeviceSize());
-		cmdBuffer.bindIndexBuffer(meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
-		cmdBuffer.drawIndexed(meshBuffer.indexCount, 1, 0, 0, 0);
+
+
+
+		//cmdBuffer.bindVertexBuffers(vertexBufferBinding, meshBuffer.vertices.buffer, vk::DeviceSize());
+		//cmdBuffer.bindIndexBuffer(meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
+		//cmdBuffer.drawIndexed(meshBuffer.indexCount, 1, 0, 0, 0);
 
 	}
 

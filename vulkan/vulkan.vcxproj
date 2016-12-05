@@ -28,7 +28,6 @@
     <ClCompile Include="src\vulkanClasses\vulkanFrameBuffer.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanMeshLoader.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanOffscreen.cpp" />
-    <ClCompile Include="src\vulkanClasses\vulkanShaders.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanSwapChain.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTextOverlay.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTextureLoader.cpp" />

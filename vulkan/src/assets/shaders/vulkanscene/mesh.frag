@@ -33,7 +33,6 @@ layout (set = 2, binding = 0) uniform materialBuffer
 	vec4 ambient;
 	vec4 diffuse;
 	vec4 specular;
-	vec4 emissive;
 	float opacity;
 } material;
 
@@ -49,6 +48,15 @@ float specpart(vec3 L, vec3 N, vec3 H)
 	}
 	return 0.0;
 }
+
+
+
+
+
+
+
+
+
 
 void main() 
 {

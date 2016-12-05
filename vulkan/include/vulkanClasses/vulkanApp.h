@@ -355,10 +355,10 @@ namespace vkx
 
 		// Load a mesh (using ASSIMP) and create vulkan vertex and index buffers with given vertex layout
 		// todo: remove this
-		vkx::MeshBuffer loadMesh(
-			const std::string& filename,
-			const vkx::MeshLayout& vertexLayout,
-			float scale = 1.0f);
+		//vkx::MeshBuffer loadMesh(
+		//	const std::string& filename,
+		//	const vkx::MeshLayout& vertexLayout,
+		//	float scale = 1.0f);
 
 
 		// Start the main render loop

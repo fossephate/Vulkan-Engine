@@ -57,9 +57,6 @@
     <ClCompile Include="src\vulkanscene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\vulkanClasses\vulkanShaders.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\vulkanClasses\camera.h">

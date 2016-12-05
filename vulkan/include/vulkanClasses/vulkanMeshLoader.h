@@ -64,7 +64,7 @@ namespace vkx {
 
 
 
-	struct materialProperites {
+	struct materialProperties {
 		glm::vec4 ambient;
 		glm::vec4 diffuse;
 		glm::vec4 specular;
@@ -76,7 +76,7 @@ namespace vkx {
 		// name
 		std::string name;
 		// Material properties
-		materialProperites properties;
+		materialProperties properties;
 		// The example only uses a diffuse channel
 		Texture diffuse;
 
@@ -100,7 +100,6 @@ namespace vkx {
 		//Material *material;
 
 		uint32_t indexCount{ 0 };
-
 		uint32_t materialIndex{ 0 };
 
 		void destroy() {
@@ -111,7 +110,7 @@ namespace vkx {
 
 	// todo: replace this with an asset manager class
 	std::vector<Material> globalMaterials;
-	std::vector<Texture> globalTextures;
+	//std::vector<Texture> globalTextures;
 
 
 

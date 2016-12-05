@@ -12,6 +12,7 @@
 
 #include "vulkanApp.h"
 
+// todo: rename this: // important!
 std::vector<vkx::VertexLayout> vertexLayout =
 {
 	vkx::VertexLayout::VERTEX_LAYOUT_POSITION,
@@ -64,41 +65,41 @@ public:
 	struct matrixNode {
 		glm::mat4 model;
 	};
-	std::vector<matrixNode> matrices;
+	std::vector<matrixNode> matrixNodes;
 
 
-
+	// rename to materialPropertiesNode
+	// possibly move
 	struct materialNode {
 		glm::vec4 ambient;
 		glm::vec4 diffuse;
 		glm::vec4 specular;
-		glm::vec4 emissive;
 		float opacity;
 	};
 
-	std::vector<materialNode> materials;
+	std::vector<materialNode> materialNodes;
 
-	// Shader properites for a material
-	// Will be passed to the shaders using push constant
-	struct SceneMaterialProperites {
-		glm::vec4 ambient;
-		glm::vec4 diffuse;
-		glm::vec4 specular;
-		float opacity;
-	};
+	//// Shader properites for a material
+	//// Will be passed to the shaders using push constant
+	//struct SceneMaterialProperites {
+	//	glm::vec4 ambient;
+	//	glm::vec4 diffuse;
+	//	glm::vec4 specular;
+	//	float opacity;
+	//};
 
-	// Stores info on the materials used in the scene
-	struct SceneMaterial {
-		std::string name;
-		// Material properties
-		SceneMaterialProperites properties;
-		// The example only uses a diffuse channel
-		vkx::Texture diffuse;
-		// The material's descriptor contains the material descriptors
-		vk::DescriptorSet descriptorSet;
-		// Pointer to the pipeline used by this material
-		vk::Pipeline *pipeline;
-	};
+	//// Stores info on the materials used in the scene
+	//struct SceneMaterial {
+	//	std::string name;
+	//	// Material properties
+	//	SceneMaterialProperites properties;
+	//	// The example only uses a diffuse channel
+	//	vkx::Texture diffuse;
+	//	// The material's descriptor contains the material descriptors
+	//	vk::DescriptorSet descriptorSet;
+	//	// Pointer to the pipeline used by this material
+	//	vk::Pipeline *pipeline;
+	//};
 	
 
 
@@ -157,14 +158,14 @@ public:
 
 		camera.setTranslation({ 0.0f, 1.0f, 5.0f });
 
-		matrices.resize(3);
-		materials.resize(3);
+		matrixNodes.resize(3);
+		materialNodes.resize(3);
 
-		//materials[0].test = 0.0f;
-		//materials[1].test = 1.0f;
+		//materialNodes[0].test = 0.0f;
+		//materialNodes[1].test = 1.0f;
 
 		//matrices[0].model = glm::translate(glm::mat4(), glm::vec3(-5.0f, 0.0f, 0.0f));
-		//matrices[1].model = glm::translate(glm::mat4(), glm::vec3(-5.0f, 0.0f, 0.0f));
+		//matrixNodes[1].model = glm::translate(glm::mat4(), glm::vec3(-5.0f, 0.0f, 0.0f));
 
 		unsigned int alignment = (uint32_t)context.deviceProperties.limits.minUniformBufferOffsetAlignment;
 		alignedMatrixSize = (unsigned int)(alignedSize(alignment, sizeof(matrixNode)));
@@ -172,7 +173,7 @@ public:
 		//unsigned int alignment = (uint32_t)context.deviceProperties.limits.minUniformBufferOffsetAlignment;
 		alignedMaterialSize = (unsigned int)(alignedSize(alignment, sizeof(materialNode)));
 
-		//camera.matrices.projection = glm::perspectiveRH(glm::radians(60.0f), (float)size.width / (float)size.height, 0.0001f, 256.0f);
+		//camera.matrixNodes.projection = glm::perspectiveRH(glm::radians(60.0f), (float)size.width / (float)size.height, 0.0001f, 256.0f);
 
 		title = "Vulkan Demo Scene";
 	}
@@ -248,33 +249,53 @@ public:
 		// todo: fix this
 		models[0].matrixIndex = 0;
 		models[1].matrixIndex = 1;
-		models[2].matrixIndex = 1;
+		models[2].matrixIndex = 2;
 
 		globalP += 0.005f;
 
 
-		meshes[1].setTranslation(glm::vec3(sin(globalP), 1.0f, 0.0f));
+		models[1].setTranslation(glm::vec3(sin(globalP), 1.0f, 0.0f));
 
-		//matrices[0].model = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, 0.0f));
-		//matrices[1].model = glm::translate(glm::mat4(), glm::vec3(sin(globalP), 1.0f, 0.0f));
+		//matrixNodes[0].model = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, 0.0f));
+		//matrixNodes[1].model = glm::translate(glm::mat4(), glm::vec3(sin(globalP), 1.0f, 0.0f));
 		
 		//updateDescriptorSets();
 		//updateUniformBuffers();
 
 		//for (int i = 0; i < meshes.size(); ++i) {
-		//	matrices[i].model = meshes[i].transfMatrix;// change to use index // todo
+		//	matrixNodes[i].model = meshes[i].transfMatrix;// change to use index // todo
 		//}
 
 
 		// todo: fix
 		for (auto &model : models) {
-			matrices[model.matrixIndex].model = model.transfMatrix;
-			//matrices[i].model = meshes[i].transfMatrix;// change to use index // todo
+			matrixNodes[model.matrixIndex].model = model.transfMatrix;
+
+
+		}
+
+
+		for (auto &mesh : meshes) {
+			//matrixNodes[mesh.matrixIndex].model = mesh.transfMatrix;
+		}
+		
+		// todo: fix this up
+		// really innefficient
+		// incredibly inefficient
+		// fix asap
+		// make an interface to copy material properties to materials array
+		// also rename materials array to material properties
+		for (auto &model : models) {
+
+			for (auto &mesh : model.meshes) {
+				materialNodes[mesh.me] = &mesh.material->properties;
+			}
+
 		}
 
 
 
-
+		for(auto &mat : )
 
 		updateUniformBuffers();
 
@@ -314,6 +335,9 @@ public:
 
 		// for each model
 		for (auto &model : models) {
+
+
+
 			// for each of the models meshes
 			for (auto &mesh : model.meshes) {
 
@@ -323,6 +347,7 @@ public:
 
 
 				// move this outside loop?
+				// bind scene descriptor set
 				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSets[0], nullptr);
 
 
@@ -330,6 +355,7 @@ public:
 
 				// this will probably squish a scene to one point
 				// change to above
+				// possibly move outside loop
 				uint32_t offset = model.matrixIndex * alignedMatrixSize;
 				//https://www.khronos.org/registry/vulkan/specs/1.0/apispec.html#vkCmdBindDescriptorSets
 				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, 1, &descriptorSets[1], 1, &offset);
@@ -338,8 +364,9 @@ public:
 				// get offset of mesh's material using meshbuffer's material index
 				// and aligned material size
 				uint32_t offset2 = mesh.meshBuffer.materialIndex * alignedMaterialSize;
-				//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, 1, &descriptorSets[2], 1, &offset2);
+				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, 1, &descriptorSets[2], 1, &offset2);
 
+				// draw:
 				cmdBuffer.drawIndexed(mesh.meshBuffer.indexCount, 1, 0, 0, 0);
 			}
 
@@ -784,11 +811,11 @@ public:
 	void prepareUniformBuffers() {
 		// Vertex shader uniform buffer block
 		uniformData.sceneVS = context.createUniformBuffer(uboScene);
-		//uniformData.dynamicVS = context.createUniformBuffer(matrices.data(), matrices.size()+1);
-		//uniformData.dynamicVS = context.createUniformBuffer(&matrices.data(), matrices.size());
-		//uniformData.dynamicVS = context.createUniformBuffer(matrices.data(), matrices.size());
-		uniformData.matrixVS = context.createDynamicUniformBuffer(matrices);
-		uniformData.materialVS = context.createDynamicUniformBuffer(materials);
+		//uniformData.dynamicVS = context.createUniformBuffer(matrixNodes.data(), matrixNodes.size()+1);
+		//uniformData.dynamicVS = context.createUniformBuffer(&matrixNodes.data(), matrixNodes.size());
+		//uniformData.dynamicVS = context.createUniformBuffer(matrixNodes.data(), matrixNodes.size());
+		uniformData.matrixVS = context.createDynamicUniformBuffer(matrixNodes);
+		uniformData.materialVS = context.createDynamicUniformBuffer(materialNodes);
 
 		updateUniformBuffers();
 	}
@@ -797,7 +824,7 @@ public:
 		uboScene.projection = camera.matrices.projection;
 		uboScene.view = camera.matrices.view;
 
-		//uboVS.model = camera.matrices.skyboxView;
+		//uboVS.model = camera.matrixNodes.skyboxView;
 
 		// ?
 		//uboScene.normal = glm::inverseTranspose(uboScene.view * uboScene.model);// fix this// important
@@ -808,10 +835,10 @@ public:
 
 		uniformData.sceneVS.copy(uboScene);
 
-		uniformData.matrixVS.copy(matrices);
+		uniformData.matrixVS.copy(matrixNodes);
 
 		// seperate this!// important
-		//uniformData.materialVS.copy(materials);
+		uniformData.materialVS.copy(materialNodes);
 	}
 
 	void prepare() {
