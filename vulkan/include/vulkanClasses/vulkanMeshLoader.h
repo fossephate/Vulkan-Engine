@@ -59,7 +59,7 @@ namespace vkx {
 		VERTEX_LAYOUT_DUMMY_VEC4 = 0x7
 	} VertexLayout;
 
-	using MeshLayout = std::vector<VertexLayout>;
+	//using MeshLayout = std::vector<VertexLayout>;
 
 
 
@@ -87,30 +87,17 @@ namespace vkx {
 		//vk::Pipeline *pipeline;
 	};
 
-
-	//struct meshPartBuffer {
-
-	//	vkx::CreateBufferResult vertices;
-	//	vkx::CreateBufferResult indices;
-
-	//	//std::vector<*material> materials;
-	//	Material *material;
-
-	//	void destroy() {
-	//		vertices.destroy();
-	//		indices.destroy();
-	//	}
-	//};
-
 	struct MeshBuffer {
+
+		// vulkan buffers
 		vkx::CreateBufferResult vertices;
 		vkx::CreateBufferResult indices;
 
-		
-
+		// size? I'm not sure what this is
 		glm::vec3 dim;
 
-		Material *material;
+		// pointer to the material used by this meshbuffer
+		//Material *material;
 
 		uint32_t indexCount{ 0 };
 
@@ -122,11 +109,15 @@ namespace vkx {
 		}
 	};
 
+	// todo: replace this with an asset manager class
+	std::vector<Material> globalMaterials;
+	std::vector<Texture> globalTextures;
+
 
 
 
 	// Get vertex size from vertex layout
-	static uint32_t vertexSize(const MeshLayout& layout) {
+	static uint32_t vertexSize(const std::vector<VertexLayout> &layout) {
 		uint32_t vSize = 0;
 		for (auto& layoutDetail : layout) {
 			switch (layoutDetail) {
@@ -189,9 +180,21 @@ namespace vkx {
 			AAssetManager* assetManager = nullptr;
 			#endif
 
+			// raw data
 			std::vector<MeshEntry> m_Entries;
+			
 
+			// fitted to vertex layout && usable to draw
+			MeshBuffer combinedBuffer;
+			std::vector<MeshBuffer> meshBuffers;
 			std::vector<Material> materials;
+
+
+
+
+
+
+
 
 			struct Dimension {
 				glm::vec3 min = glm::vec3(FLT_MAX);
@@ -200,6 +203,9 @@ namespace vkx {
 			} dim;
 
 			uint32_t numVertices{ 0 };
+
+
+
 
 			// Optional
 			struct {
@@ -242,23 +248,24 @@ namespace vkx {
 			// Load the mesh with custom flags
 			bool load(const std::string& filename, int flags);
 
-			void loadMaterials(const aiScene * aScene);
+			void loadMaterials(const aiScene *pScene);
+			void loadMeshes(const aiScene *pScene);
+
+			bool parse(const aiScene *pScene, const std::string &Filename);
+
+			
+
+			//void InitMesh(unsigned int index, const aiMesh* paiMesh, const aiScene* pScene);
 
 			//void loadMaterials(const aiScene * aScene, TextureLoader *textureloader);
 
-		private:
-			bool parse(const aiScene *pScene, const std::string &Filename);
-
-			void loadMeshes(const aiScene *pScene);
-
-			void InitMesh(unsigned int index, const aiMesh* paiMesh, const aiScene* pScene);
 
 		public:
 			// Create vertex and index buffer with given layout
 			// Note : Only does staging if a valid command buffer and transfer queue are passed
-			MeshBuffer createBuffers(const Context &context, const std::vector<VertexLayout> &layout, float scale);
 
-			std::vector<vkx::MeshBuffer> createPartBuffers(const Context &context, const std::vector<VertexLayout> &layout, float scale);
+			void createMeshBuffer(const Context &context, const std::vector<VertexLayout> &layout, float scale);
+			void createMeshBuffers(const Context &context, const std::vector<VertexLayout> &layout, float scale);
 
 			// convienience// just calls above function and then creates mesh class
 			//vkx::Mesh createMeshFromBuffers(const Context& context, const std::vector<VertexLayout>& layout, float scale, uint32_t binding);
@@ -276,77 +283,105 @@ namespace vkx {
 	// specifying pipelines, vertex bindings, etc.
 	class Mesh : public Object3D {
 		public:
-		
-			uint32_t matrixIndex;
+			
+			
+			//uint32_t matrixIndex;
 
-			// Vulkan buffers
+			// Mesh buffer
 			vkx::MeshBuffer meshBuffer;
-			std::vector<vkx::MeshBuffer> partBuffers;
-
-			//std::vector<Material> materials;
 
 			// pointer to the material used by this mesh
 			vkx::Material *material;
-
-			// Reference to assimp mesh
-			// Required for animation
-			vkx::MeshLoader *meshLoader;
-			//vkx::Context context;
-
-			// reference way:
-			const vkx::Context &context;
 		
 			//http://www.learncpp.com/cpp-tutorial/8-5a-constructor-member-initializer-lists/
 
 
-			vk::Pipeline pipeline;
-			vk::PipelineLayout pipelineLayout;
-			vk::DescriptorSet descriptorSet;
+			// todo: fix:
+			uint32_t vertexBufferBinding = 0;// not that necessary for most uses
 
-			uint32_t vertexBufferBinding = 0;
-
-			vk::PipelineVertexInputStateCreateInfo vertexInputState;
-			vk::VertexInputBindingDescription bindingDescription;
-			std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
+			//vk::Pipeline pipeline;
+			//vk::PipelineLayout pipelineLayout;
+			//vk::DescriptorSet descriptorSet;
+			
+			//vk::PipelineVertexInputStateCreateInfo vertexInputState;
+			//vk::VertexInputBindingDescription bindingDescription;
+			//std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
 
 
 			// no default constructor
 			Mesh();
 
-			Mesh(const vkx::Context &context);
+			Mesh(vkx::MeshBuffer meshBuffer, Material material);
 
+			//Mesh(const vkx::Context &context);
 			//~Mesh();
-
-
 			// load mesh
-			void load(const std::string &filename);
-
+			//void load(const std::string &filename);
 			// load mesh with custom flags
-			void load(const std::string &filename, int flags);
+			//void load(const std::string &filename, int flags);
 
-			void createBuffers(const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
-
-			void createPartBuffers(const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
-
-			//void createBuffers(const Context &context, const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
-
-
-			void setupVertexInputState(const std::vector<VertexLayout> &layout);
-
-			void drawIndexed(const vk::CommandBuffer& cmdBuffer);
+			//void createMeshBuffer(const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
+			//void setupVertexInputState(const std::vector<VertexLayout> &layout);
+			//void drawIndexed(const vk::CommandBuffer& cmdBuffer);
 	};
+
+
+
 
 
 
 
 	class Model : public Object3D {
 
+
+		private:
+			
+
+
+			
+			
+
 		public:
+
+			std::vector<Mesh> meshes;
+			std::vector<Material> materials;
+
+			uint32_t matrixIndex;
+			uint32_t vertexBufferBinding = 0;
+
+			// reference to meshLoader: // change from pointer to ref?
+			vkx::MeshLoader *meshLoader;
+
+			// reference to context:
+			const vkx::Context &context;
+
+			vk::Pipeline pipeline;
+			
+			
+			// constructors:
+
+			// no default constructor
+			Model();
+
+			Model(const vkx::Context &context);
+
+			//~Model();
+
+
+
 
 			// load model
 			void load(const std::string &filename);
 			// load model with custom flags
 			void load(const std::string &filename, int flags);
+
+
+
+			void createMeshes(const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
+
+			void setupVertexInputState(const std::vector<VertexLayout> &layout);
+
+			void drawIndexed(const vk::CommandBuffer& cmdBuffer);
 
 
 	};

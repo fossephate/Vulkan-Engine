@@ -57,6 +57,9 @@
     <ClCompile Include="src\vulkanscene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\vulkanClasses\vulkanShaders.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\vulkanClasses\camera.h">
@@ -92,9 +95,6 @@
     <ClInclude Include="include\vulkanClasses\vulkanShaders.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\vulkanClasses\vulkanShapes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\vulkanClasses\vulkanOffscreen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -114,6 +114,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\vulkanClasses\vulkanOffscreenExampleBase.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vulkanClasses\vulkanAssetManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

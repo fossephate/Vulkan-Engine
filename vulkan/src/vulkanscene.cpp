@@ -121,7 +121,9 @@ public:
 
 	struct {
 		vk::Pipeline meshes;
-		vk::Pipeline skybox;
+		vk::Pipeline blending;
+		vk::Pipeline wireframe;
+		//vk::Pipeline skybox;
 	} pipelines;
 
 	vk::PipelineLayout pipelineLayout;
@@ -243,8 +245,10 @@ public:
 		//meshes[1].orientation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 		//int i = 1;
 
-		meshes[0].matrixIndex = 0;
-		meshes[1].matrixIndex = 1;
+		// todo: fix this
+		models[0].matrixIndex = 0;
+		models[1].matrixIndex = 1;
+		models[2].matrixIndex = 1;
 
 		globalP += 0.005f;
 
@@ -257,9 +261,18 @@ public:
 		//updateDescriptorSets();
 		//updateUniformBuffers();
 
-		for (int i = 0; i < meshes.size(); ++i) {
-			matrices[i].model = meshes[i].transfMatrix;// change to use index // todo
+		//for (int i = 0; i < meshes.size(); ++i) {
+		//	matrices[i].model = meshes[i].transfMatrix;// change to use index // todo
+		//}
+
+
+		// todo: fix
+		for (auto &model : models) {
+			matrices[model.matrixIndex].model = model.transfMatrix;
+			//matrices[i].model = meshes[i].transfMatrix;// change to use index // todo
 		}
+
+
 
 
 
@@ -269,39 +282,68 @@ public:
 
 
 
-		for (auto &mesh : meshes) {
 
-			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, mesh.pipeline);
-			cmdBuffer.bindVertexBuffers(mesh.vertexBufferBinding, mesh.meshBuffer.vertices.buffer, vk::DeviceSize());
-			cmdBuffer.bindIndexBuffer(mesh.meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
+		//for (auto &mesh : meshes) {
 
-
-			// move this outside loop
-			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSets[0], nullptr);
+		//	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, mesh.pipeline);
+		//	cmdBuffer.bindVertexBuffers(mesh.vertexBufferBinding, mesh.meshBuffer.vertices.buffer, vk::DeviceSize());
+		//	cmdBuffer.bindIndexBuffer(mesh.meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
 
 
-			uint32_t offset = mesh.matrixIndex * alignedMatrixSize;
-			//https://www.khronos.org/registry/vulkan/specs/1.0/apispec.html#vkCmdBindDescriptorSets
-			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, 1, &descriptorSets[1], 1, &offset);
+		//	// move this outside loop
+		//	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSets[0], nullptr);
 
 
-			//uint32_t offset2 = mesh.matrixIndex * alignedMaterialSize;
-			//uint32_t offset2 = mesh.materialIndex * alignedMatrixSize;// change?
-			//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, 1, &descriptorSets[2], 1, &offset2);
-
-			//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSets[0], nullptr);
-			//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSets[1], nullptr);
+		//	uint32_t offset = mesh.matrixIndex * alignedMatrixSize;
+		//	//https://www.khronos.org/registry/vulkan/specs/1.0/apispec.html#vkCmdBindDescriptorSets
+		//	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, 1, &descriptorSets[1], 1, &offset);
 
 
+		//	//uint32_t offset2 = mesh.matrixIndex * alignedMaterialSize;
+		//	//uint32_t offset2 = mesh.materialIndex * alignedMatrixSize;// change?
+		//	//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, 1, &descriptorSets[2], 1, &offset2);
 
-			cmdBuffer.drawIndexed(mesh.meshBuffer.indexCount, 1, 0, 0, 0);
+		//	cmdBuffer.drawIndexed(mesh.meshBuffer.indexCount, 1, 0, 0, 0);
+		//}
 
 
-			//mesh.drawIndexed(cmdBuffer);
-			//i += 1;
+		// MODELS:
+
+		// bind mesh pipeline
+		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.meshes);
+
+		// for each model
+		for (auto &model : models) {
+			// for each of the models meshes
+			for (auto &mesh : model.meshes) {
+
+
+				cmdBuffer.bindVertexBuffers(mesh.vertexBufferBinding, mesh.meshBuffer.vertices.buffer, vk::DeviceSize());
+				cmdBuffer.bindIndexBuffer(mesh.meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
+
+
+				// move this outside loop?
+				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSets[0], nullptr);
+
+
+				//uint32_t offset = mesh.matrixIndex * alignedMatrixSize;
+
+				// this will probably squish a scene to one point
+				// change to above
+				uint32_t offset = model.matrixIndex * alignedMatrixSize;
+				//https://www.khronos.org/registry/vulkan/specs/1.0/apispec.html#vkCmdBindDescriptorSets
+				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, 1, &descriptorSets[1], 1, &offset);
+
+
+				// get offset of mesh's material using meshbuffer's material index
+				// and aligned material size
+				uint32_t offset2 = mesh.meshBuffer.materialIndex * alignedMaterialSize;
+				//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, 1, &descriptorSets[2], 1, &offset2);
+
+				cmdBuffer.drawIndexed(mesh.meshBuffer.indexCount, 1, 0, 0, 0);
+			}
+
 		}
-
-		//uboScene.model = glm::mat4();
 
 	}
 
@@ -314,62 +356,45 @@ public:
 			float color[3];
 		};
 
-		// re-usable? meshloader class// definitely not reusable// important
-		//vkx::MeshLoader* loader = new vkx::MeshLoader();
-
-		//loader->load(getAssetPath() + "models/xyplane.dae");
-		//vkx::Mesh planeMesh = loader->createMeshFromBuffers(context, vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		//vkx::Mesh planeMesh(context);
+		//planeMesh.load(getAssetPath() + "models/plane2.dae");
+		//planeMesh.createBuffers(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
 
-		//loader = new vkx::MeshLoader();
+		////vkx::Mesh otherMesh1(context);
+		////////otherMesh1.load(getAssetPath() + "models/vulkanscenemodels.dae");
+		////otherMesh1.load(getAssetPath() + "models/vulkanscenemodels.dae");
+		////otherMesh1.createBuffers(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
-		//loader->load(getAssetPath() + "models/vulkanscenemodels.dae");
-		//vkx::Mesh otherMesh1 = loader->createMeshFromBuffers(context, vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
-
-		vkx::Mesh planeMesh(context);
-		planeMesh.load(getAssetPath() + "models/plane2.dae");
-		planeMesh.createBuffers(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
-
-
-		//vkx::Mesh otherMesh1(context);
-		//////otherMesh1.load(getAssetPath() + "models/vulkanscenemodels.dae");
-		//otherMesh1.load(getAssetPath() + "models/vulkanscenemodels.dae");
-		//otherMesh1.createBuffers(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
-
-		vkx::Mesh otherMesh1(context);
-		otherMesh1.load(getAssetPath() + "models/vulkanscenemodels.dae");
-		//otherMesh1.load(getAssetPath() + "models/rock01.dae");
-		otherMesh1.createBuffers(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
-
-		vkx::Mesh otherMesh2(context);
-		otherMesh2.load(getAssetPath() + "models/torus.obj");
-		otherMesh2.createBuffers(vertexLayout, 0.02f, VERTEX_BUFFER_BIND_ID);
-
-		//loader = new vkx::MeshLoader();
-
-		//loader->load(getAssetPath() + "models/cube.obj");
-		//vkx::Mesh otherMesh2 = loader->createMeshFromBuffers(context, vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
-
-		//loader->load(getAssetPath() + "models/cube.obj");
-		//skyboxMesh = loader->createMeshFromBuffers(context, vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		//vkx::Mesh otherMesh2(context);
+		//otherMesh2.load(getAssetPath() + "models/torus.obj");
+		//otherMesh2.createBuffers(vertexLayout, 0.02f, VERTEX_BUFFER_BIND_ID);
 
 
-		// better:
-		//vkx::Mesh planeMesh;
-		//planeMesh.load(getAssetPath() + "models/xyplane.dae");
-		//planeMesh.createBuffers(context, vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
-		//vkx::Mesh otherMesh1;
-		//otherMesh1.load(getAssetPath() + "models/vulkanscenemodels.dae");
-		//otherMesh1.createBuffers(context, vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		vkx::Model planeModel(context);
+		planeModel.load(getAssetPath() + "models/plane2.dae");
+		planeModel.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
+
+		vkx::Model otherModel1(context);
+		otherModel1.load(getAssetPath() + "models/vulkanscenemodels.dae");
+		otherModel1.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+
+		vkx::Model otherModel2(context);
+		otherModel2.load(getAssetPath() + "models/torus.obj");
+		otherModel2.createMeshes(vertexLayout, 0.02f, VERTEX_BUFFER_BIND_ID);
 
 
 
 		//meshes.push_back(skyboxMesh);
-		meshes.push_back(planeMesh);
-		meshes.push_back(otherMesh1);
-		meshes.push_back(otherMesh2);
+		//meshes.push_back(planeMesh);
+		//meshes.push_back(otherMesh1);
+
+		models.push_back(planeModel);
+		models.push_back(otherModel1);
+		models.push_back(otherModel2);
+
 
 
 		// Binding description
@@ -503,7 +528,7 @@ public:
 
 
 
-		// descriptor set layout 3
+		// descriptor set layout 2
 
 		std::vector<vk::DescriptorSetLayoutBinding> setLayout2Bindings =
 		{
@@ -721,10 +746,36 @@ public:
 		//pipelines.skybox = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo, nullptr)[0];
 
 
-		// Assign pipelines
+		// Alpha blended pipeline
+		// transparency
+		rasterizationState.cullMode = vk::CullModeFlagBits::eNone;
+		blendAttachmentState.blendEnable = VK_TRUE;
+		blendAttachmentState.colorBlendOp = vk::BlendOp::eAdd;
+		blendAttachmentState.srcColorBlendFactor = vk::BlendFactor::eSrcColor;
+		blendAttachmentState.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcColor;
+		pipelines.blending = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)[0];
 
-		for (auto &mesh : meshes) {
-			mesh.pipeline = pipelines.meshes;
+
+		// Wire frame rendering pipeline
+		rasterizationState.cullMode = vk::CullModeFlagBits::eBack;
+		blendAttachmentState.blendEnable = VK_FALSE;
+		rasterizationState.polygonMode = vk::PolygonMode::eLine;
+		rasterizationState.lineWidth = 1.0f;
+		pipelines.wireframe = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)[0];
+
+
+
+
+
+		// Assign pipelines
+		
+		// todo:
+		//for (auto &mesh : meshes) {
+		//	mesh.pipeline = pipelines.meshes;
+		//}
+
+		for (auto &model : models) {
+			model.pipeline = pipelines.meshes;
 		}
 
 	}

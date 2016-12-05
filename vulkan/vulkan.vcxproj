@@ -28,6 +28,7 @@
     <ClCompile Include="src\vulkanClasses\vulkanFrameBuffer.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanMeshLoader.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanOffscreen.cpp" />
+    <ClCompile Include="src\vulkanClasses\vulkanShaders.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanSwapChain.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTextOverlay.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTextureLoader.cpp" />
@@ -39,6 +40,7 @@
     <ClInclude Include="include\vulkanClasses\common.h" />
     <ClInclude Include="include\vulkanClasses\easings.h" />
     <ClInclude Include="include\vulkanClasses\shapes.h" />
+    <ClInclude Include="include\vulkanClasses\vulkanAssetManager.h" />
     <ClInclude Include="include\vulkanClasses\vulkanModel.h" />
     <ClInclude Include="include\vulkanClasses\vulkanApp.h" />
     <ClInclude Include="include\vulkanClasses\vulkanContext.h" />
@@ -49,7 +51,6 @@
     <ClInclude Include="include\vulkanClasses\vulkanOffscreen.h" />
     <ClInclude Include="include\vulkanClasses\vulkanOffscreenExampleBase.hpp" />
     <ClInclude Include="include\vulkanClasses\vulkanShaders.h" />
-    <ClInclude Include="include\vulkanClasses\vulkanShapes.h" />
     <ClInclude Include="include\vulkanClasses\vulkanSwapChain.h" />
     <ClInclude Include="include\vulkanClasses\vulkanTextOverlay.h" />
     <ClInclude Include="include\vulkanClasses\vulkanTextureLoader.h" />

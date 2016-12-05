@@ -1439,15 +1439,15 @@ void vulkanApp::prepare() {
 	}
 }
 
-MeshBuffer vulkanApp::loadMesh(const std::string& filename, const MeshLayout& vertexLayout, float scale) {
-	MeshLoader loader(this->context);
-	#if defined(__ANDROID__)
-	loader.assetManager = androidApp->activity->assetManager;
-	#endif
-	loader.load(filename);
-	assert(loader.m_Entries.size() > 0);
-	return loader.createBuffers(this->context, vertexLayout, scale);
-}
+//MeshBuffer vulkanApp::loadMesh(const std::string& filename, const MeshLayout& vertexLayout, float scale) {
+//	MeshLoader loader(this->context);
+//	#if defined(__ANDROID__)
+//	loader.assetManager = androidApp->activity->assetManager;
+//	#endif
+//	loader.load(filename);
+//	assert(loader.m_Entries.size() > 0);
+//	return loader.createBuffers(this->context, vertexLayout, scale);
+//}
 
 //should not be here
 void vulkanApp::renderLoop() {
