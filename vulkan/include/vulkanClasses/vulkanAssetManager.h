@@ -3,11 +3,6 @@
 
 #include <vulkan/vulkan.hpp>
 
-#include <assimp/Importer.hpp> 
-#include <assimp/scene.h>     
-#include <assimp/postprocess.h>
-#include <assimp/cimport.h>
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -18,8 +13,33 @@
 #include "vulkanTools.h"
 #include "vulkanContext.h"
 #include "vulkanTextureLoader.h"
+#include "vulkanMeshLoader.h"
 
 #include "Object3D.h"
 
-#include "vulkanMeshLoader.h"
 
+
+
+
+
+namespace vkx {
+
+	//struct Material;
+
+	class AssetManager {
+
+		public:
+			
+
+			std::vector<Material> materials;
+			std::vector<Texture> textures;
+
+
+
+
+	};
+
+
+
+
+}

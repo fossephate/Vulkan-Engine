@@ -77,7 +77,7 @@ public:
 		float opacity;
 	};
 
-	std::vector<materialNode> materialNodes;
+	std::vector<vkx::materialProperties> materialNodes;
 
 	//// Shader properites for a material
 	//// Will be passed to the shaders using push constant
@@ -275,9 +275,9 @@ public:
 		}
 
 
-		for (auto &mesh : meshes) {
+		//for (auto &mesh : meshes) {
 			//matrixNodes[mesh.matrixIndex].model = mesh.transfMatrix;
-		}
+		//}
 		
 		// todo: fix this up
 		// really innefficient
@@ -285,17 +285,19 @@ public:
 		// fix asap
 		// make an interface to copy material properties to materials array
 		// also rename materials array to material properties
+		// don't do this every frame!!!!
+
 		for (auto &model : models) {
 
 			for (auto &mesh : model.meshes) {
-				materialNodes[mesh.me] = &mesh.material->properties;
+				materialNodes[mesh.meshBuffer.materialIndex] = vkx::globalMaterials[mesh.meshBuffer.materialIndex].properties;
 			}
 
 		}
 
 
 
-		for(auto &mat : )
+		//for(auto &mat : )
 
 		updateUniformBuffers();
 

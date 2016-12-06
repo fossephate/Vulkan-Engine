@@ -39,7 +39,7 @@
 #include "vulkanTools.h"
 #include "vulkanContext.h"
 #include "vulkanTextureLoader.h"
-
+#include "vulkanAssetManager.h"
 #include "Object3D.h"
 
 namespace vkx {
@@ -79,12 +79,6 @@ namespace vkx {
 		materialProperties properties;
 		// The example only uses a diffuse channel
 		Texture diffuse;
-
-
-		// The material's descriptor contains the material descriptors
-		//vk::DescriptorSet descriptorSet;
-		// Pointer to the pipeline used by this material
-		//vk::Pipeline *pipeline;
 	};
 
 	struct MeshBuffer {
@@ -96,9 +90,6 @@ namespace vkx {
 		// size? I'm not sure what this is
 		glm::vec3 dim;
 
-		// pointer to the material used by this meshbuffer
-		//Material *material;
-
 		uint32_t indexCount{ 0 };
 		uint32_t materialIndex{ 0 };
 
@@ -109,7 +100,7 @@ namespace vkx {
 	};
 
 	// todo: replace this with an asset manager class
-	std::vector<Material> globalMaterials;
+	//std::vector<Material> globalMaterials;
 	//std::vector<Texture> globalTextures;
 
 
@@ -170,7 +161,6 @@ namespace vkx {
 				uint32_t vertexBase;// offset (for indexed draw)? p sure
 
 				std::vector<Vertex> Vertices;
-				//std::vector<unsigned int> Indices;
 				std::vector<uint32_t> Indices;
 			};
 
@@ -228,14 +218,9 @@ namespace vkx {
 			Assimp::Importer Importer;
 
 			TextureLoader *textureLoader{ nullptr };
-			//Context context{ nullptr };
-			//const Context &context;
 
 
 			const aiScene *pScene{ nullptr };
-
-			// todo: remove this default constructor
-			//MeshLoader();
 
 			MeshLoader(const vkx::Context &context);
 
@@ -252,23 +237,11 @@ namespace vkx {
 
 			bool parse(const aiScene *pScene, const std::string &Filename);
 
-			
-
-			//void InitMesh(unsigned int index, const aiMesh* paiMesh, const aiScene* pScene);
-
-			//void loadMaterials(const aiScene * aScene, TextureLoader *textureloader);
-
-
 		public:
 			// Create vertex and index buffer with given layout
 			// Note : Only does staging if a valid command buffer and transfer queue are passed
-
 			void createMeshBuffer(const Context &context, const std::vector<VertexLayout> &layout, float scale);
 			void createMeshBuffers(const Context &context, const std::vector<VertexLayout> &layout, float scale);
-
-			// convienience// just calls above function and then creates mesh class
-			//vkx::Mesh createMeshFromBuffers(const Context& context, const std::vector<VertexLayout>& layout, float scale, uint32_t binding);
-			//vkx::Mesh createMeshFromBuffers(const Context &context, const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
 	};
 
 
@@ -290,7 +263,7 @@ namespace vkx {
 			vkx::MeshBuffer meshBuffer;
 
 			// pointer to the material used by this mesh
-			vkx::Material *material;
+			//vkx::Material *material;
 		
 			//http://www.learncpp.com/cpp-tutorial/8-5a-constructor-member-initializer-lists/
 
@@ -301,7 +274,7 @@ namespace vkx {
 			//vk::Pipeline pipeline;
 			//vk::PipelineLayout pipelineLayout;
 			//vk::DescriptorSet descriptorSet;
-			
+
 			//vk::PipelineVertexInputStateCreateInfo vertexInputState;
 			//vk::VertexInputBindingDescription bindingDescription;
 			//std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
@@ -310,7 +283,9 @@ namespace vkx {
 			// no default constructor
 			Mesh();
 
-			Mesh(vkx::MeshBuffer meshBuffer, Material material);
+			Mesh(vkx::MeshBuffer meshBuffer);
+
+			//Mesh(vkx::MeshBuffer meshBuffer, Material material);
 
 			//Mesh(const vkx::Context &context);
 			//~Mesh();
@@ -343,7 +318,7 @@ namespace vkx {
 		public:
 
 			std::vector<Mesh> meshes;
-			std::vector<Material> materials;
+			//std::vector<Material> materials;
 
 			uint32_t matrixIndex;
 			uint32_t vertexBufferBinding = 0;

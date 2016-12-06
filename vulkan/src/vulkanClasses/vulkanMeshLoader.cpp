@@ -75,13 +75,9 @@ bool vkx::MeshLoader::load(const std::string &filename, int flags) {
 
 void vkx::MeshLoader::loadMaterials(const aiScene *pScene) {
 
-	// keep track of original size
-	int numOfMaterials = globalMaterials.size();
-
-	//materials.resize(pScene->mNumMaterials);
-
 	for (size_t i = 0; i < pScene->mNumMaterials; i++) {
-		materials[i] = {};
+
+		Material material;
 
 		aiString name;
 		pScene->mMaterials[i]->Get(AI_MATKEY_NAME, name);
@@ -89,19 +85,22 @@ void vkx::MeshLoader::loadMaterials(const aiScene *pScene) {
 		// Properties
 		aiColor4D color;
 		pScene->mMaterials[i]->Get(AI_MATKEY_COLOR_AMBIENT, color);
-		materials[i].properties.ambient = glm::make_vec4(&color.r) + glm::vec4(0.1f);
+		material.properties.ambient = glm::make_vec4(&color.r) + glm::vec4(0.1f);
+
 		pScene->mMaterials[i]->Get(AI_MATKEY_COLOR_DIFFUSE, color);
-		materials[i].properties.diffuse = glm::make_vec4(&color.r);
+		material.properties.diffuse = glm::make_vec4(&color.r);
+
 		pScene->mMaterials[i]->Get(AI_MATKEY_COLOR_SPECULAR, color);
-		materials[i].properties.specular = glm::make_vec4(&color.r);
+		material.properties.specular = glm::make_vec4(&color.r);
+
 		pScene->mMaterials[i]->Get(AI_MATKEY_OPACITY, materials[i].properties.opacity);
 
-		if ((materials[i].properties.opacity) > 0.0f) {
-			materials[i].properties.specular = glm::vec4(0.0f);
+		if ((material.properties.opacity) > 0.0f) {
+			material.properties.specular = glm::vec4(0.0f);
 		}
 
-		materials[i].name = name.C_Str();
-		std::cout << "Material \"" << materials[i].name << "\"" << std::endl;
+		material.name = name.C_Str();
+		std::cout << "Material \"" << material.name << "\"" << std::endl;
 
 		// Textures
 		aiString texturefile;
@@ -113,12 +112,12 @@ void vkx::MeshLoader::loadMaterials(const aiScene *pScene) {
 			std::cout << "  Diffuse: \"" << texturefile.C_Str() << "\"" << std::endl;
 			std::string fileName = std::string(texturefile.C_Str());
 			std::replace(fileName.begin(), fileName.end(), '\\', '/');
-			materials[i].diffuse = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc3UnormBlock);
+			material.diffuse = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc3UnormBlock);
 		} else {
 
 			std::cout << "  Material has no diffuse, using dummy texture!" << std::endl;
 			// todo : separate pipeline and layout
-			materials[i].diffuse = textureLoader->loadTexture(assetPath + "dummy.ktx", vk::Format::eBc2UnormBlock);
+			material.diffuse = textureLoader->loadTexture(assetPath + "dummy.ktx", vk::Format::eBc2UnormBlock);
 		}
 
 		// For scenes with multiple textures per material we would need to check for additional texture types, e.g.:
@@ -127,8 +126,10 @@ void vkx::MeshLoader::loadMaterials(const aiScene *pScene) {
 		// Assign pipeline
 		//materials[i].pipeline = (materials[i].properties.opacity == 0.0f) ? &pipelines.solid : &pipelines.blending;
 
+		materials.push_back(material);
+
 		// add materials to global materials vector
-		globalMaterials.push_back(materials[i]);
+		//globalMaterials.push_back(material);
 	}
 
 	
@@ -266,6 +267,10 @@ bool vkx::MeshLoader::parse(const aiScene *pScene, const std::string &Filename) 
 
 void vkx::MeshLoader::loadMeshes(const aiScene *pScene) {
 
+	for (int i = 0; i < materials.size(); ++i) {
+		globalMaterials.push_back(materials[i]);
+	}
+
 
 	// init each entry with mesh data
 	for (unsigned int index = 0; index < m_Entries.size(); ++index) {
@@ -278,7 +283,9 @@ void vkx::MeshLoader::loadMeshes(const aiScene *pScene) {
 
 
 		// set material index for this mesh
-		m_Entries[index].MaterialIndex = pMesh->mMaterialIndex;
+
+		int materialIndex = globalMaterials.size() - pScene->mNumMaterials + pMesh->mMaterialIndex;
+		m_Entries[index].MaterialIndex = materialIndex;
 
 
 		// get the color of this mesh's material
@@ -734,10 +741,14 @@ namespace vkx {
 
 	}
 
-	Mesh::Mesh(vkx::MeshBuffer meshBuffer, Material material) {
+	Mesh::Mesh(vkx::MeshBuffer meshBuffer) {
 		this->meshBuffer = meshBuffer;
-		this->material = &material;
 	}
+
+	//Mesh::Mesh(vkx::MeshBuffer meshBuffer, Material material) {
+	//	this->meshBuffer = meshBuffer;
+	//	this->material = &material;
+	//}
 
 	// pointer way:
 	//Mesh::Mesh(const vkx::Context &context) {
@@ -896,11 +907,11 @@ namespace vkx {
 		std::vector<MeshBuffer> meshBuffers = this->meshLoader->meshBuffers;
 
 		// copy vector of materials this class
-		this->materials = this->meshLoader->materials;
+		//this->materials = this->meshLoader->materials;
 
 		for (int i = 0; i < meshBuffers.size(); ++i) {
 			vkx::MeshBuffer &mBuffer = meshBuffers[i];
-			vkx::Mesh m(mBuffer, this->materials[mBuffer.materialIndex]);
+			vkx::Mesh m(mBuffer);
 			
 			//this->meshes.push_back(vkx::Mesh(mBuffer, this->materials[mBuffer.materialIndex]));
 			this->meshes.push_back(m);
