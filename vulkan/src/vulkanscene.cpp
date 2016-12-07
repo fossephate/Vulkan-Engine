@@ -78,28 +78,6 @@ public:
 	};
 
 	std::vector<vkx::materialProperties> materialNodes;
-
-	//// Shader properites for a material
-	//// Will be passed to the shaders using push constant
-	//struct SceneMaterialProperites {
-	//	glm::vec4 ambient;
-	//	glm::vec4 diffuse;
-	//	glm::vec4 specular;
-	//	float opacity;
-	//};
-
-	//// Stores info on the materials used in the scene
-	//struct SceneMaterial {
-	//	std::string name;
-	//	// Material properties
-	//	SceneMaterialProperites properties;
-	//	// The example only uses a diffuse channel
-	//	vkx::Texture diffuse;
-	//	// The material's descriptor contains the material descriptors
-	//	vk::DescriptorSet descriptorSet;
-	//	// Pointer to the pipeline used by this material
-	//	vk::Pipeline *pipeline;
-	//};
 	
 
 
@@ -110,10 +88,6 @@ public:
 
 
 
-
-	//struct {
-	//	vkx::Texture skybox;
-	//} textures;
 
 	struct {
 		vkx::Texture colorMap;
@@ -229,27 +203,10 @@ public:
 		//viewport.x += viewport.width;
 		//cmdBuffer.setViewport(0, viewport);
 
-		//uboVS.model = glm::translate(uboVS.model, glm::vec3(0.0f, 5.0f, 0.0f));
-
-		
-
-		//meshes[1].model = glm::translate(glm::mat4(), glm::vec3(0.0f, 10.0f, 0.0f));
-
-		//meshes[1].model = glm::translate(glm::mat4(), glm::vec3(5.0f, 5.0f, 0.0f));
-
-		//uboMatrixData.model = meshes[1].model;
-		//updateUniformBuffers();
-
-		
-		//uboVS.model = meshes[1].model;
-
-		//meshes[1].orientation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		//int i = 1;
-
 		// todo: fix this
 		models[0].matrixIndex = 0;
 		models[1].matrixIndex = 1;
-		models[2].matrixIndex = 2;
+		//models[2].matrixIndex = 2;
 
 		globalP += 0.005f;
 
@@ -268,11 +225,10 @@ public:
 
 
 		// todo: fix
-		for (auto &model : models) {
-			matrixNodes[model.matrixIndex].model = model.transfMatrix;
+		//for (auto &model : models) {
+		//	matrixNodes[model.matrixIndex].model = model.transfMatrix;
 
-
-		}
+		//}
 
 
 		//for (auto &mesh : meshes) {
@@ -280,7 +236,7 @@ public:
 		//}
 		
 		// todo: fix this up
-		// really innefficient
+		// really inefficient
 		// incredibly inefficient
 		// fix asap
 		// make an interface to copy material properties to materials array
@@ -290,14 +246,16 @@ public:
 		for (auto &model : models) {
 
 			for (auto &mesh : model.meshes) {
-				materialNodes[mesh.meshBuffer.materialIndex] = vkx::globalMaterials[mesh.meshBuffer.materialIndex].properties;
+
+				if (mesh.meshBuffer.materialIndex >= materialNodes.size()) {
+					materialNodes.resize(mesh.meshBuffer.materialIndex+1);
+				}
+
+				materialNodes[mesh.meshBuffer.materialIndex] = this->assetManager.loadedMaterials[mesh.meshBuffer.materialIndex].properties;
 			}
 
 		}
 
-
-
-		//for(auto &mat : )
 
 		updateUniformBuffers();
 
@@ -332,7 +290,7 @@ public:
 
 		// MODELS:
 
-		// bind mesh pipeline
+		//// bind mesh pipeline
 		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.meshes);
 
 		// for each model
@@ -401,18 +359,18 @@ public:
 
 
 
-		vkx::Model planeModel(context);
+		vkx::Model planeModel(context, assetManager);
 		planeModel.load(getAssetPath() + "models/plane2.dae");
 		planeModel.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
 
-		vkx::Model otherModel1(context);
+		vkx::Model otherModel1(context, assetManager);
 		otherModel1.load(getAssetPath() + "models/vulkanscenemodels.dae");
 		otherModel1.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
-		vkx::Model otherModel2(context);
-		otherModel2.load(getAssetPath() + "models/torus.obj");
-		otherModel2.createMeshes(vertexLayout, 0.02f, VERTEX_BUFFER_BIND_ID);
+		//vkx::Model otherModel2(context, assetManager);
+		//otherModel2.load(getAssetPath() + "models/torus.obj");
+		//otherModel2.createMeshes(vertexLayout, 0.02f, VERTEX_BUFFER_BIND_ID);
 
 
 
@@ -422,7 +380,7 @@ public:
 
 		models.push_back(planeModel);
 		models.push_back(otherModel1);
-		models.push_back(otherModel2);
+		//models.push_back(otherModel2);
 
 
 

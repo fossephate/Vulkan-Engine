@@ -26,7 +26,9 @@
     <ClCompile Include="src\vulkanClasses\vulkanContext.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanDebug.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanFrameBuffer.cpp" />
+    <ClCompile Include="src\vulkanClasses\vulkanMesh.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanMeshLoader.cpp" />
+    <ClCompile Include="src\vulkanClasses\vulkanModel.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanOffscreen.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanSwapChain.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTextOverlay.cpp" />
@@ -35,6 +37,7 @@
     <ClCompile Include="src\vulkanscene.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\base\Object3D.h" />
     <ClInclude Include="include\vulkanClasses\camera.h" />
     <ClInclude Include="include\vulkanClasses\common.h" />
     <ClInclude Include="include\vulkanClasses\easings.h" />

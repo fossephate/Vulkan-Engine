@@ -4,14 +4,14 @@
 #extension GL_ARB_shading_language_420pack : enable
 
 // scene
-layout (set = 0, binding = 0) uniform sceneBuffer
-{
-	mat4 model;
-	mat4 view;
-	mat4 projection;
-	mat4 normal;
-	vec3 lightpos;
-} scene;
+// layout (set = 0, binding = 0) uniform sceneBuffer
+// {
+// 	mat4 model;
+// 	mat4 view;
+// 	mat4 projection;
+// 	mat4 normal;
+// 	vec3 lightpos;
+// } scene;
 
 
 

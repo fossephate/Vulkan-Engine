@@ -52,8 +52,12 @@
 #include "vulkanAssetManager.h"
 #include "vulkanContext.h"
 #include "vulkanSwapChain.h"
+
 #include "vulkanTextureLoader.h"
 #include "vulkanMeshLoader.h"
+#include "vulkanMesh.h"
+#include "vulkanModel.h"
+
 #include "vulkanTextOverlay.h"
 #include "vulkanFrameBuffer.h"
 #include "Object3D.h"

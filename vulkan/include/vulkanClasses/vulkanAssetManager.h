@@ -19,10 +19,50 @@
 
 
 
+//namespace vkx {
+//
+//
+//
+//	extern std::vector<Material> globalMaterials;
+//	extern std::vector<Texture> globalTextures;
+//
+//
+//}
+
+
+
 
 
 
 namespace vkx {
+
+
+
+
+
+	struct materialProperties {
+		glm::vec4 ambient;
+		glm::vec4 diffuse;
+		glm::vec4 specular;
+		float opacity;
+	};
+
+	// Stores info on the materials used in the scene
+	struct Material {
+		// name
+		std::string name;
+		// Material properties
+		materialProperties properties;
+		// The example only uses a diffuse channel
+		Texture diffuse;
+	};
+
+
+
+
+
+
+
 
 	//struct Material;
 
@@ -31,7 +71,7 @@ namespace vkx {
 		public:
 			
 
-			std::vector<Material> materials;
+			std::vector<Material> loadedMaterials;
 			std::vector<Texture> textures;
 
 
