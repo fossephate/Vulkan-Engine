@@ -267,21 +267,23 @@ bool vkx::MeshLoader::parse(const aiScene *pScene, const std::string &Filename) 
 	loadMaterials(pScene);
 	loadMeshes(pScene);
 
-	// Initialize the meshes in the scene one by one
-	//for (unsigned int i = 0; i < m_Entries.size(); i++) {
-	//	const aiMesh* paiMesh = pScene->mMeshes[i];
-	//	InitMesh(i, paiMesh, pScene);
-	//}
-
 	return true;
 }
 
 void vkx::MeshLoader::loadMeshes(const aiScene *pScene) {
 
+
+	// todo: prevent duplicate materials
+	//http://stackoverflow.com/questions/5740310/no-operator-found-while-comparing-structs-in-c
+
 	for (int i = 0; i < tempMaterials.size(); ++i) {
 		//this->assetManager.materials.push_back(materials[i]);
 		Material m = tempMaterials[i];
 		this->assetManager.loadedMaterials.push_back(m);
+	}
+
+	for (int i = 0; i < m_Entries.size(); ++i) {
+
 	}
 
 
@@ -536,7 +538,6 @@ void vkx::MeshLoader::createMeshBuffers(const Context &context, const std::vecto
 
 
 		// set pointer to material used by this mesh
-		// todo: create an asset manager
 		//meshBuffer.material = &materials[meshBuffer.materialIndex];
 
 		meshBuffers.push_back(meshBuffer);

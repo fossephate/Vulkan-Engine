@@ -32,6 +32,7 @@ namespace vkx {
 
 			glm::mat4 transfMatrix;
 
+			bool changed = false;
 
 
 
@@ -70,7 +71,9 @@ namespace vkx {
 
 
 
-
+			void change() {
+				this->changed = true;
+			}
 
 
 

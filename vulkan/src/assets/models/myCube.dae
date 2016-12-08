@@ -150,7 +150,7 @@
   </library_lights>
   <library_images>
     <image id="cubeDiffuse" name="cubeDiffuse">
-      <init_from>cubeDiffuse.png</init_from>
+      <init_from>cubeDiffuse.ktx</init_from>
     </image>
   </library_images>
   <library_effects>

@@ -78,7 +78,7 @@ namespace vkx {
 	}
 
 
-	void Model::drawIndexed(const vk::CommandBuffer & cmdBuffer) {
+	void Model::drawIndexed(const vk::CommandBuffer &cmdBuffer) {
 
 		// todo: add more
 		//if (pipeline) {

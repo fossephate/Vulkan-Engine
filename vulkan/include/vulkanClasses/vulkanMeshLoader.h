@@ -15,6 +15,9 @@
 #include <stdio.h>
 #include <vector>
 #include <map>
+#include <algorithm>
+
+
 #ifdef _WIN32
 #include <windows.h>
 #include <fcntl.h>
@@ -193,6 +196,7 @@ namespace vkx {
 
 			Assimp::Importer Importer;
 
+			// not const
 			vkx::AssetManager &assetManager;
 
 			TextureLoader *textureLoader{ nullptr };

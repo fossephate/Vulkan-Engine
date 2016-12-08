@@ -28,13 +28,26 @@ layout (location = 4) in vec3 inLightVec;
 
 
 // material data
+// layout (set = 2, binding = 0) uniform materialBuffer
+// {
+// 	vec4 ambient;
+// 	vec4 diffuse;
+// 	vec4 specular;
+// 	float opacity;
+// } material;
+
 layout (set = 2, binding = 0) uniform materialBuffer
 {
 	vec4 ambient;
 	vec4 diffuse;
 	vec4 specular;
-	float opacity;
+	float opacity;// temp test for align
 } material;
+
+// layout (set = 2, binding = 0) uniform materialBuffer
+// {
+// 	float test;
+// } mtl;
 
 
 layout (location = 0) out vec4 outFragColor;
