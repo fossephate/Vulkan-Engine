@@ -64,6 +64,7 @@ public:
 
 	struct matrixNode {
 		glm::mat4 model;
+		glm::mat4 normal;
 	};
 	std::vector<matrixNode> matrixNodes;
 
@@ -134,8 +135,8 @@ public:
 
 		camera.setTranslation({ 0.0f, 1.0f, 5.0f });
 
-		matrixNodes.resize(10);
-		materialNodes.resize(10);
+		matrixNodes.resize(100);
+		materialNodes.resize(100);
 
 		//materialNodes[0].test = 0.0f;
 		//materialNodes[1].test = 1.0f;
@@ -221,11 +222,13 @@ public:
 
 		//models[1].change();
 
-		models[2].setTranslation(glm::vec3(sin(globalP)-2.0f, 1.0f, 0.0f));
-		models[3].setTranslation(glm::vec3(sin(globalP*globalP)-2.0f, 2.0f, 0.0f));
-		models[4].setTranslation(glm::vec3(sin(globalP*globalP)-2.0f, 3.0f, 0.0f));
-		models[5].setTranslation(glm::vec3(sin(globalP*globalP)-2.0f, 1.0f, sin(globalP)-1.0f));
-		//
+		models[1].setTranslation(glm::vec3(cos(globalP)+2.0f, 2.0f, sin(globalP)));
+		models[2].setTranslation(glm::vec3(cos(globalP)+2.0f, 3.0f, 0.0f));
+		models[3].setTranslation(glm::vec3(cos(globalP)-2.0f, 2.0f, 0.0f));
+		models[4].setTranslation(glm::vec3(cos(globalP), 3.0f, 0.0f));
+		models[5].setTranslation(glm::vec3(cos(globalP)-2.0f, 4.0f, 0.0f));
+
+
 
 		//matrixNodes[0].model = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, 0.0f));
 		//matrixNodes[1].model = glm::translate(glm::mat4(), glm::vec3(sin(globalP), 1.0f, 0.0f));
@@ -241,6 +244,8 @@ public:
 		// todo: fix
 		for (auto &model : models) {
 			matrixNodes[model.matrixIndex].model = model.transfMatrix;
+			//matrixNodes[model.matrixIndex].
+			//glm::inverseTranspose(uboScene.view * uboScene.model);
 			//matrixNodes[model.matrixIndex].model = glm::mat4();
 		}
 
@@ -318,6 +323,8 @@ public:
 			for (auto &mesh : model.meshes) {
 
 
+				// todo: possibly bind multiple descriptor sets at once?
+
 				cmdBuffer.bindVertexBuffers(mesh.vertexBufferBinding, mesh.meshBuffer.vertices.buffer, vk::DeviceSize());
 				cmdBuffer.bindIndexBuffer(mesh.meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
 
@@ -358,6 +365,23 @@ public:
 					cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, setNum, 1, &descriptorSets[setNum], 1, &offset2);
 				//}
 
+
+
+
+
+
+
+				////if (lastMaterialIndex != mesh.meshBuffer.materialIndex) {
+				//lastMaterialIndex = mesh.meshBuffer.materialIndex;
+				////uint32_t offset2 = mesh.meshBuffer.materialIndex * alignedMaterialSize;
+				//uint32_t offset2 = 0 * alignedMaterialSize;
+				//// the third param is the set number!
+				//setNum = 2;
+				//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, setNum, 1, &descriptorSets[setNum], 1, &offset2);
+
+
+
+
 				// draw:
 				cmdBuffer.drawIndexed(mesh.meshBuffer.indexCount, 1, 0, 0, 0);
 			}
@@ -387,16 +411,16 @@ public:
 
 
 		vkx::Model otherModel1(context, assetManager);
-		otherModel1.load(getAssetPath() + "models/cube.obj");
-		otherModel1.createMeshes(vertexLayout, 0.02f, VERTEX_BUFFER_BIND_ID);
+		otherModel1.load(getAssetPath() + "models/vulkanscenemodels.dae");
+		otherModel1.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
 		vkx::Model otherModel2(context, assetManager);
-		otherModel2.load(getAssetPath() + "models/cube.obj");
-		otherModel2.createMeshes(vertexLayout, 0.02f, VERTEX_BUFFER_BIND_ID);
+		otherModel2.load(getAssetPath() + "models/myCube.dae");
+		otherModel2.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
 		vkx::Model otherModel3(context, assetManager);
-		otherModel3.load(getAssetPath() + "models/cube.obj");
-		otherModel3.createMeshes(vertexLayout, 0.02f, VERTEX_BUFFER_BIND_ID);
+		otherModel3.load(getAssetPath() + "models/myCube.dae");
+		otherModel3.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
 		vkx::Model otherModel4(context, assetManager);
 		otherModel4.load(getAssetPath() + "models/cube.obj");
@@ -454,41 +478,56 @@ public:
 
 	void setupDescriptorPool() {
 		
+		// scene data
+		std::vector<vk::DescriptorPoolSize> poolSizes0 =
+		{
+			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 2),// mostly static data
+			//vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 1),// will eventually be material data
+		};
 
+		vk::DescriptorPoolCreateInfo descriptorPool0Info =
+			vkx::descriptorPoolCreateInfo(poolSizes0.size(), poolSizes0.data(), 2);
+
+
+		vk::DescriptorPool descPool0 = device.createDescriptorPool(descriptorPool0Info);
+		descriptorPools.push_back(descPool0);
+
+
+
+
+		// matrix data
 		std::vector<vk::DescriptorPoolSize> poolSizes1 =
 		{
-			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 2),// static data
-			vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 1),// will eventually be material data
+			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1),// non-static data
 		};
 
 		vk::DescriptorPoolCreateInfo descriptorPool1Info =
-			vkx::descriptorPoolCreateInfo(poolSizes1.size(), poolSizes1.data(), 2);
-
+			vkx::descriptorPoolCreateInfo(poolSizes1.size(), poolSizes1.data(), 1);
 
 		vk::DescriptorPool descPool1 = device.createDescriptorPool(descriptorPool1Info);
 		descriptorPools.push_back(descPool1);
 
 
 
-
-
+		// material data
 		std::vector<vk::DescriptorPoolSize> poolSizes2 =
 		{
-			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1),// non-static data
+			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1),
 		};
 
 		vk::DescriptorPoolCreateInfo descriptorPool2Info =
 			vkx::descriptorPoolCreateInfo(poolSizes2.size(), poolSizes2.data(), 1);
+
 
 		vk::DescriptorPool descPool2 = device.createDescriptorPool(descriptorPool2Info);
 		descriptorPools.push_back(descPool2);
 
 
 
-
+		// textures
 		std::vector<vk::DescriptorPoolSize> poolSizes3 =
 		{
-			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1),// will eventually be material data
+			vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 1),
 		};
 
 		vk::DescriptorPoolCreateInfo descriptorPool3Info =
@@ -507,6 +546,7 @@ public:
 
 
 		// descriptor set layout 0
+		// scene data
 
 		std::vector<vk::DescriptorSetLayoutBinding> setLayout0Bindings =
 		{
@@ -516,11 +556,11 @@ public:
 				vk::ShaderStageFlagBits::eVertex,
 				0),// binding 1
 
-			// Binding 1 : Fragment shader color map image sampler
-			vkx::descriptorSetLayoutBinding(
-				vk::DescriptorType::eCombinedImageSampler,
-				vk::ShaderStageFlagBits::eFragment,
-				1)// binding 1
+			//// Binding 1 : Fragment shader color map image sampler
+			//vkx::descriptorSetLayoutBinding(
+			//	vk::DescriptorType::eCombinedImageSampler,
+			//	vk::ShaderStageFlagBits::eFragment,
+			//	1)// binding 1
 		};
 
 		vk::DescriptorSetLayoutCreateInfo descriptorLayout0 =
@@ -533,6 +573,7 @@ public:
 
 
 		// descriptor set layout 1
+		// matrix data
 
 		std::vector<vk::DescriptorSetLayoutBinding> setLayout1Bindings =
 		{
@@ -555,6 +596,7 @@ public:
 
 
 		// descriptor set layout 2
+		// material data
 
 		std::vector<vk::DescriptorSetLayoutBinding> setLayout2Bindings =
 		{
@@ -571,6 +613,27 @@ public:
 		vk::DescriptorSetLayout setLayout2 = device.createDescriptorSetLayout(descriptorLayout2);
 
 		descriptorSetLayouts.push_back(setLayout2);
+
+
+
+		// descriptor set layout 3
+		// combined image sampler
+
+		std::vector<vk::DescriptorSetLayoutBinding> setLayout3Bindings =
+		{
+			// Binding 0 : Fragment shader color map image sampler
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eCombinedImageSampler,
+				vk::ShaderStageFlagBits::eFragment,
+				0),// binding 0
+		};
+
+		vk::DescriptorSetLayoutCreateInfo descriptorLayout3 =
+			vkx::descriptorSetLayoutCreateInfo(setLayout3Bindings.data(), setLayout3Bindings.size());
+
+		vk::DescriptorSetLayout setLayout3 = device.createDescriptorSetLayout(descriptorLayout3);
+
+		descriptorSetLayouts.push_back(setLayout3);
 
 
 
@@ -603,18 +666,18 @@ public:
 		//};
 
 		// descriptor set 0
-
+		// scene data
 		vk::DescriptorSetAllocateInfo descriptorSetInfo0 =
 			vkx::descriptorSetAllocateInfo(descriptorPools[0], &descriptorSetLayouts[0], 1);
 
 		std::vector<vk::DescriptorSet> descSets0 = device.allocateDescriptorSets(descriptorSetInfo0);
-		descriptorSets.push_back(descSets0[0]);// descriptor set 1
+		descriptorSets.push_back(descSets0[0]);// descriptor set 0
 
 
 
 
 		// descriptor set 1
-
+		// matrix data
 		vk::DescriptorSetAllocateInfo descriptorSetInfo1 =
 			vkx::descriptorSetAllocateInfo(descriptorPools[1], &descriptorSetLayouts[1], 1);
 
@@ -624,6 +687,7 @@ public:
 
 
 		// descriptor set 2
+		// material data
 		vk::DescriptorSetAllocateInfo descriptorSetInfo2 =
 			vkx::descriptorSetAllocateInfo(descriptorPools[2], &descriptorSetLayouts[2], 1);
 
@@ -632,6 +696,13 @@ public:
 
 
 
+		// descriptor set 3
+		// image sampler
+		vk::DescriptorSetAllocateInfo descriptorSetInfo3 =
+			vkx::descriptorSetAllocateInfo(descriptorPools[3], &descriptorSetLayouts[3], 1);
+
+		std::vector<vk::DescriptorSet> descSets3 = device.allocateDescriptorSets(descriptorSetInfo3);
+		descriptorSets.push_back(descSets3[0]);// descriptor set 3
 
 
 
@@ -639,24 +710,6 @@ public:
 
 
 
-
-		//vk::DescriptorSetAllocateInfo allocInfo1 =
-		//	vkx::descriptorSetAllocateInfo(descriptorPools[0], descriptorSetLayouts.data(), 1);
-
-		//vk::DescriptorSet descSet1 = device.allocateDescriptorSets(allocInfo1)[0];
-		//descriptorSets.push_back(descSet1);
-
-		//vk::DescriptorSetAllocateInfo allocInfo2 =
-		//	vkx::descriptorSetAllocateInfo(descriptorPools[1], descriptorSetLayouts.data(), 1);
-
-		//vk::DescriptorSet descSet2 = device.allocateDescriptorSets(allocInfo2)[0];
-		//descriptorSets.push_back(descSet2);
-
-
-		//vk::DescriptorSetAllocateInfo allocInfo =
-			//vkx::descriptorSetAllocateInfo(descriptorPool, &descriptorSetLayout, 1);
-
-		//descriptorSet = device.allocateDescriptorSets(allocInfo)[0];
 
 		// Cube map image descriptor
 		vk::DescriptorImageInfo texDescriptor =

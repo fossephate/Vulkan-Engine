@@ -22,6 +22,7 @@ layout (set = 0, binding = 0) uniform sceneBuffer
 layout (set = 1, binding = 0) uniform matrixBuffer
 {
 	mat4 model;
+	mat4 normal;
 } matrices;
 
 
@@ -32,10 +33,13 @@ layout (location = 2) out vec3 outColor;
 layout (location = 3) out vec3 outViewVec;
 layout (location = 4) out vec3 outLightVec;
 
+
+
 void main() 
 {
 	outUV = inUV;
-	outNormal = normalize(mat3(scene.normal) * inNormal);
+	//outNormal = normalize(mat3(matrices.normal) * inNormal);
+	//outNormal = inNormal;
 	outColor = inColor;
 	
 	mat4 modelView = scene.view * matrices.model;
@@ -43,13 +47,23 @@ void main()
 
 	gl_Position = MVP * vec4(inPos.xyz, 1.0);
 
-	vec4 pos = modelView * inPos;
-	outViewVec = vec3(modelView * pos);
+	vec4 pos = modelView * vec4(inPos.xyz, 0.0);
+	outNormal = mat3(matrices.model) * inNormal;
 
 
-	vec4 lightPos = vec4(scene.lightpos, 1.0) * modelView;
+	vec3 lPos = mat3(matrices.model) * scene.lightpos.xyz;
+	outLightVec = lPos - (matrices.model * vec4(inPos.xyz, 0.0)).xyz;
+	outViewVec = -(matrices.model * vec4(inPos.xyz, 0.0)).xyz;
 
-	outLightVec = normalize(lightPos.xyz - outViewVec);
+	// FragPos = vec3(model * vec4(position, 1.0f));
+
+	// vec4 pos = modelView * inPos;
+	// outViewVec = vec3(modelView * pos);
+
+
+	// vec4 lightPos = vec4(scene.lightpos, 1.0) * modelView;
+
+	// outLightVec = normalize(lightPos.xyz - outViewVec);
 
 
 
