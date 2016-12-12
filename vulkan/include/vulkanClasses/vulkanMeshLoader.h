@@ -120,6 +120,8 @@ namespace vkx {
 	// Simple mesh class for getting all the necessary stuff from models loaded via ASSIMP
 	class MeshLoader {
 		private:
+
+
 			struct Vertex {
 				glm::vec3 m_pos;
 				glm::vec2 m_tex;
@@ -198,6 +200,13 @@ namespace vkx {
 
 			// not const
 			vkx::AssetManager &assetManager;
+
+			// also not const (needs to be modified: updatedescriptorsets)
+			// circumvented by copying device
+			const vkx::Context &context;
+			// copy of device
+			vk::Device device;
+			vk::Queue queue;
 
 			TextureLoader *textureLoader{ nullptr };
 			const aiScene *pScene{ nullptr };

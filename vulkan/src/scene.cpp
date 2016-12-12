@@ -225,7 +225,7 @@ private:
 
 	// Load all meshes from the scene and generate the Vulkan resources
 	// for rendering them
-	void loadMeshes(vk::CommandBuffer copyCmd) {
+	void loadMeshes() {
 		meshes.resize(aScene->mNumMeshes);
 		for (uint32_t i = 0; i < meshes.size(); i++) {
 			aiMesh *aMesh = aScene->mMeshes[i];
@@ -322,7 +322,7 @@ public:
 		uniformBuffer.destroy();
 	}
 
-	void load(std::string filename, vk::CommandBuffer copyCmd) {
+	void load(std::string filename) {
 		Assimp::Importer Importer;
 
 		int flags = aiProcess_PreTransformVertices | aiProcess_Triangulate | aiProcess_GenNormals;
@@ -351,7 +351,7 @@ public:
 
 		if (aScene) {
 			loadMaterials();
-			loadMeshes(copyCmd);
+			loadMeshes();
 		} else {
 			printf("Error parsing '%s': '%s'\n", filename.c_str(), Importer.GetErrorString());
 			#if defined(__ANDROID__)
@@ -587,13 +587,15 @@ public:
 
 	void loadScene() {
 		context.withPrimaryCommandBuffer([&](const vk::CommandBuffer& cmdBuffer) {
+		});
 			scene = new Scene(context, textureLoader);
 			#if defined(__ANDROID__)
 			scene->assetManager = androidApp->activity->assetManager;
 			#endif
 			scene->assetPath = getAssetPath() + "models/sibenik/";
-			scene->load(getAssetPath() + "models/sibenik/sibenik.dae", cmdBuffer);
-		});
+		
+			scene->load(getAssetPath() + "models/sibenik/sibenik.dae");
+		//});
 
 		updateUniformBuffers();
 	}

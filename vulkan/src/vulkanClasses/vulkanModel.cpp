@@ -27,7 +27,7 @@ namespace vkx {
 
 
 	// reference way:
-	Model::Model(const vkx::Context &context, vkx::AssetManager &assetManager) :
+	Model::Model(vkx::Context &context, vkx::AssetManager &assetManager) :
 		context(context), assetManager(assetManager)// init context with reference
 	{
 		this->meshLoader = new vkx::MeshLoader(context, assetManager);

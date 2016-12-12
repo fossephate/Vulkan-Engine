@@ -109,6 +109,7 @@ void vulkanApp::run() {
 	#if !defined(__ANDROID__)
 		prepare();
 	#endif
+
 	renderLoop();
 
 	// Once we exit the render loop, wait for everything to become idle before proceeding to the descructor.

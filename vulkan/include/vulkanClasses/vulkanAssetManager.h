@@ -54,7 +54,10 @@ namespace vkx {
 		// Material properties
 		materialProperties properties;
 		// The example only uses a diffuse channel
+		// todo: add more
 		Texture diffuse;
+		// The material's descriptor set
+		vk::DescriptorSet descriptorSet;
 	};
 
 

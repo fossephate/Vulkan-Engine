@@ -259,6 +259,8 @@ vkx::Texture vkx::TextureLoader::loadTexture(const std::string & filename, vk::F
 		view.image = texture.image;
 		texture.view = context.device.createImageView(view);
 	}
+
+
 	texture.descriptor.imageLayout = texture.imageLayout;
 	texture.descriptor.imageView = texture.view;
 	texture.descriptor.sampler = texture.sampler;

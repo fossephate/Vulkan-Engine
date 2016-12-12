@@ -12,8 +12,9 @@
 
 
 vkx::MeshLoader::MeshLoader(const vkx::Context & context, vkx::AssetManager & assetManager) :
-	assetManager(assetManager)
+	context(context), assetManager(assetManager)
 {
+	this->device = context.device;
 	this->textureLoader = new vkx::TextureLoader(context);
 }
 
@@ -125,7 +126,8 @@ void vkx::MeshLoader::loadMaterials(const aiScene *pScene) {
 
 			std::cout << "  Material has no diffuse, using dummy texture!" << std::endl;
 			// todo : separate pipeline and layout
-			material.diffuse = textureLoader->loadTexture(assetPath + "dummy.ktx", vk::Format::eBc2UnormBlock);
+			//material.diffuse = textureLoader->loadTexture(assetPath + "dummy.ktx", vk::Format::eBc2UnormBlock);
+			material.diffuse = textureLoader->loadTexture(assetPath + "kamen.ktx", vk::Format::eBc2UnormBlock);
 		}
 
 		// For scenes with multiple textures per material we would need to check for additional texture types, e.g.:
@@ -140,113 +142,105 @@ void vkx::MeshLoader::loadMaterials(const aiScene *pScene) {
 		//globalMaterials.push_back(material);
 	}
 
-	
-
-	
-
+	// todo: prevent duplicate materials
+	//http://stackoverflow.com/questions/5740310/no-operator-found-while-comparing-structs-in-c
 
 
 
 
-	// Generate descriptor sets for the materials
 
-	//// Descriptor pool
-	//std::vector<vk::DescriptorPoolSize> poolSizes;
-	//poolSizes.push_back(vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, static_cast<uint32_t>(materials.size())));
-	//poolSizes.push_back(vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, static_cast<uint32_t>(materials.size())));
 
-	//vk::DescriptorPoolCreateInfo descriptorPoolInfo =
+
+
+
+
+
+
+	std::vector<vk::DescriptorPoolSize> poolSizes3 =
+	{
+		//vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 1),
+		vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, static_cast<uint32_t>(tempMaterials.size())),
+	};
+
+	//vk::DescriptorPoolCreateInfo descriptorPool3Info =
 	//	vkx::descriptorPoolCreateInfo(
-	//		static_cast<uint32_t>(poolSizes.size()),
-	//		poolSizes.data(),
-	//		static_cast<uint32_t>(materials.size()) + 1);
+	//		static_cast<uint32_t>(poolSizes3.size()),
+	//		poolSizes3.data(),
+	//		static_cast<uint32_t>(tempMaterials.size()) + 1);
 
-	//descriptorPool = device.createDescriptorPool(descriptorPoolInfo);
 
-	//// Descriptor set and pipeline layouts
-	//std::vector<vk::DescriptorSetLayoutBinding> setLayoutBindings;
-	//vk::DescriptorSetLayoutCreateInfo descriptorLayout;
+	vk::DescriptorPoolCreateInfo descriptorPool3Info =
+		vkx::descriptorPoolCreateInfo(poolSizes3.size(), poolSizes3.data(), 1);
 
-	//// Set 0: Scene matrices
-	//setLayoutBindings.push_back(vkx::descriptorSetLayoutBinding(
-	//	vk::DescriptorType::eUniformBuffer,
-	//	vk::ShaderStageFlagBits::eVertex,
-	//	0));
-	//descriptorLayout = vkx::descriptorSetLayoutCreateInfo(
-	//	setLayoutBindings.data(),
-	//	static_cast<uint32_t>(setLayoutBindings.size()));
-	//descriptorSetLayouts.scene = device.createDescriptorSetLayout(descriptorLayout);
+	vk::DescriptorPool descPool3 = context.device.createDescriptorPool(descriptorPool3Info);
 
-	//// Set 1: Material data
-	//setLayoutBindings.clear();
-	//setLayoutBindings.push_back(vkx::descriptorSetLayoutBinding(
-	//	vk::DescriptorType::eCombinedImageSampler,
-	//	vk::ShaderStageFlagBits::eFragment,
-	//	0));
-	//descriptorSetLayouts.material = device.createDescriptorSetLayout(descriptorLayout);
 
-	//// Setup pipeline layout
-	//std::array<vk::DescriptorSetLayout, 2> setLayouts = { descriptorSetLayouts.scene, descriptorSetLayouts.material };
-	//vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo = vkx::pipelineLayoutCreateInfo(setLayouts.data(), static_cast<uint32_t>(setLayouts.size()));
+	std::vector<vk::DescriptorSetLayoutBinding> setLayout3Bindings =
+	{
+		// Binding 0 : Fragment shader color map image sampler
+		vkx::descriptorSetLayoutBinding(
+			vk::DescriptorType::eCombinedImageSampler,
+			vk::ShaderStageFlagBits::eFragment,
+			0),// binding 0
+	};
 
-	//// We will be using a push constant block to pass material properties to the fragment shaders
-	//vk::PushConstantRange pushConstantRange = vkx::pushConstantRange(
-	//	vk::ShaderStageFlagBits::eFragment,
-	//	sizeof(SceneMaterialProperites),
-	//	0);
-	//pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
-	//pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
+	vk::DescriptorSetLayoutCreateInfo descriptorLayout3 =
+		vkx::descriptorSetLayoutCreateInfo(setLayout3Bindings.data(), setLayout3Bindings.size());
 
-	//pipelineLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
+	vk::DescriptorSetLayout setLayout3 = context.device.createDescriptorSetLayout(descriptorLayout3);
 
-	//// Material descriptor sets
-	//for (size_t i = 0; i < materials.size(); i++) {
-	//	// Descriptor set
-	//	vk::DescriptorSetAllocateInfo allocInfo =
-	//		vkx::descriptorSetAllocateInfo(
-	//			descriptorPool,
-	//			&descriptorSetLayouts.material,
-	//			1);
 
-	//	materials[i].descriptorSet = device.allocateDescriptorSets(allocInfo)[0];
+	std::array<vk::DescriptorSetLayout, 1> setLayouts = { setLayout3 };
+	vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo = vkx::pipelineLayoutCreateInfo(setLayouts.data(), static_cast<uint32_t>(setLayouts.size()));
 
-	//	vk::DescriptorImageInfo texDescriptor =
-	//		vkx::descriptorImageInfo(
-	//			materials[i].diffuse.sampler,
-	//			materials[i].diffuse.view,
-	//			vk::ImageLayout::eGeneral);
+	vk::PipelineLayout pipelineLayout = context.device.createPipelineLayout(pipelineLayoutCreateInfo);
 
-	//	std::vector<vk::WriteDescriptorSet> writeDescriptorSets;
 
-	//	// todo : only use image sampler descriptor set and use one scene ubo for matrices
 
-	//	// Binding 0: Diffuse texture
-	//	writeDescriptorSets.push_back(vkx::writeDescriptorSet(
-	//		materials[i].descriptorSet,
-	//		vk::DescriptorType::eCombinedImageSampler,
-	//		0,
-	//		&texDescriptor));
+	// todo: remove the tempMaterials vector
+	for (int i = 0; i < tempMaterials.size(); ++i) {
 
-	//	device.updateDescriptorSets(writeDescriptorSets, {});
-	//}
 
-	//// Scene descriptor set
-	//vk::DescriptorSetAllocateInfo allocInfo =
-	//	vkx::descriptorSetAllocateInfo(
-	//		descriptorPool,
-	//		&descriptorSetLayouts.scene,
-	//		1);
-	//descriptorSetScene = device.allocateDescriptorSets(allocInfo)[0];
 
-	//std::vector<vk::WriteDescriptorSet> writeDescriptorSets;
-	//// Binding 0 : Vertex shader uniform buffer
-	//writeDescriptorSets.push_back(vkx::writeDescriptorSet(
-	//	descriptorSetScene,
-	//	vk::DescriptorType::eUniformBuffer,
-	//	0,
-	//	&uniformBuffer.descriptor));
 
-	//device.updateDescriptorSets(writeDescriptorSets, {});
+		//if (i < 13) {
+		//	continue;
+		//}
+
+
+		// Descriptor set
+		vk::DescriptorSetAllocateInfo allocInfo =
+			vkx::descriptorSetAllocateInfo(
+				descPool3,
+				&setLayout3,
+				1);
+
+		tempMaterials[i].descriptorSet = context.device.allocateDescriptorSets(allocInfo)[0];
+
+		vk::DescriptorImageInfo texDescriptor =
+			vkx::descriptorImageInfo(
+				tempMaterials[i].diffuse.sampler,
+				tempMaterials[i].diffuse.view,
+				vk::ImageLayout::eGeneral);
+
+		std::vector<vk::WriteDescriptorSet> writeDescriptorSets =
+		{
+			vkx::writeDescriptorSet(
+				tempMaterials[i].descriptorSet,
+				vk::DescriptorType::eCombinedImageSampler,
+				0,
+				&texDescriptor),// not valid? // todo: find out why
+		};
+
+
+
+		context.device.updateDescriptorSets(writeDescriptorSets, {});
+
+
+
+		this->assetManager.loadedMaterials.push_back(tempMaterials[i]);
+	}
+
 }
 
 
@@ -271,16 +265,6 @@ bool vkx::MeshLoader::parse(const aiScene *pScene, const std::string &Filename) 
 }
 
 void vkx::MeshLoader::loadMeshes(const aiScene *pScene) {
-
-
-	// todo: prevent duplicate materials
-	//http://stackoverflow.com/questions/5740310/no-operator-found-while-comparing-structs-in-c
-
-	for (int i = 0; i < tempMaterials.size(); ++i) {
-		//this->assetManager.materials.push_back(materials[i]);
-		Material m = tempMaterials[i];
-		this->assetManager.loadedMaterials.push_back(m);
-	}
 
 	for (int i = 0; i < m_Entries.size(); ++i) {
 

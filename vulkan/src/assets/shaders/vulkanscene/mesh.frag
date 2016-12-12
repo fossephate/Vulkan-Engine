@@ -32,6 +32,7 @@ layout (set = 2, binding = 0) uniform materialBuffer
 
 
 
+//layout (set = 3, binding = 0) uniform sampler2D samplerColorMap;
 layout (set = 3, binding = 0) uniform sampler2D samplerColorMap;
 
 
@@ -101,16 +102,6 @@ void main()
 	// }
 
 
-	// vec4 color = texture(samplerColorMap, inUV) * vec4(inColor, 1.0);
-	// vec3 N = normalize(inNormal);
-	// vec3 L = normalize(inLightVec);
-	// vec3 V = normalize(inViewVec);
-	// vec3 R = reflect(-L, N);
-	// vec3 diffuse = max(dot(N, L), 0.0) * material.diffuse.rgb;
-	// vec3 specular = pow(max(dot(R, V), 0.0), 16.0) * material.specular.rgb;
-	// outFragColor = vec4((material.ambient.rgb + diffuse) * color.rgb + specular, 1.0-material.opacity);
-
-
 
 
 
@@ -147,19 +138,37 @@ void main()
     // color = vec4(result, 1.0f);
 
 
+	// vec4 color = vec4(inColor, 1.0);
+	// vec3 N = normalize(inNormal);
+	// vec3 L = normalize(inLightVec);
+	// vec3 V = normalize(inViewVec);
+	// vec3 R = reflect(-L, N);
+	// vec3 diffuse = max(dot(N, L), 0.0) * vec3(25.0, 25.0, 25.0);
+	// vec3 specular = pow(max(dot(R, V), 0.0), 16.0) * material.specular.rgb;
+	// outFragColor = vec4((vec3(90.0, 10.0, 25.0) + diffuse) * color.rgb + specular, 1.0-1.0);
 
 
 
-
-	vec4 color = texture(samplerColorMap, inUV) * vec4(inColor, 1.0);
+	//vec4 color = texture(samplerColorMap, inUV) * vec4(inColor, 1.0);
+	vec4 color = vec4(inColor, 1.0);
 	vec3 N = normalize(inNormal);
 	vec3 L = normalize(inLightVec);
 	vec3 V = normalize(inViewVec);
 	vec3 R = reflect(-L, N);
-	vec3 diffuse = max(dot(N, L), 0.0) * material.diffuse.rgb;
-	vec3 specular = pow(max(dot(R, V), 0.0), 16.0) * material.specular.rgb;
-	outFragColor = vec4((material.ambient.rgb + diffuse) * color.rgb + specular, 1.0-material.opacity);
+	
+	//vec3 diffuse = max(dot(N, L), 0.0) * material.diffuse.rgb;
+	vec3 diffuse = max(dot(N, L), 0.0) * vec3(0.0, 100.0, 0.0);
 
+	//vec3 specular = pow(max(dot(R, V), 0.0), 16.0) * material.specular.rgb;
+	//vec3 specular = pow(max(dot(R, V), 0.0), 2.0) * material.specular.rgb;
+	vec3 specular = pow(max(dot(R, V), 0.0), 1.0) * vec3(25.0, 25.0, 25.0);
+
+	//outFragColor = vec4((material.ambient.rgb + diffuse) * color.rgb + specular, 1.0-material.opacity);
+
+
+	float opacity = 1.0-material.opacity;
+	//outFragColor = vec4((material.ambient.rgb + diffuse) * color.rgb + specular, opacity);
+	outFragColor = vec4((vec3(0.0, 100.0, 100.0) + diffuse) * color.rgb + specular, opacity);
 
 
 

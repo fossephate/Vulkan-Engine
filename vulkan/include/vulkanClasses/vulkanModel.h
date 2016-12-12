@@ -38,7 +38,7 @@ namespace vkx {
 		vkx::MeshLoader *meshLoader;
 
 		// reference to context:
-		const vkx::Context &context;
+		vkx::Context &context;
 
 		// not constant// its members can change
 		vkx::AssetManager &assetManager;
@@ -53,7 +53,7 @@ namespace vkx {
 		// no default constructor
 		Model();
 
-		Model(const vkx::Context &context, vkx::AssetManager &assetManager);
+		Model(vkx::Context &context, vkx::AssetManager &assetManager);
 
 		//~Model();
 

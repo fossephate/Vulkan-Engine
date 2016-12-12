@@ -222,11 +222,11 @@ public:
 
 		//models[1].change();
 
-		models[1].setTranslation(glm::vec3(cos(globalP)+2.0f, 2.0f, sin(globalP)));
-		models[2].setTranslation(glm::vec3(cos(globalP)+2.0f, 3.0f, 0.0f));
-		models[3].setTranslation(glm::vec3(cos(globalP)-2.0f, 2.0f, 0.0f));
-		models[4].setTranslation(glm::vec3(cos(globalP), 3.0f, 0.0f));
-		models[5].setTranslation(glm::vec3(cos(globalP)-2.0f, 4.0f, 0.0f));
+		//models[1].setTranslation(glm::vec3(cos(globalP)+2.0f, 2.0f, sin(globalP)));
+		//models[2].setTranslation(glm::vec3(cos(globalP)+2.0f, 3.0f, 0.0f));
+		//models[3].setTranslation(glm::vec3(cos(globalP)-2.0f, 2.0f, 0.0f));
+		//models[4].setTranslation(glm::vec3(cos(globalP), 3.0f, 0.0f));
+		//models[5].setTranslation(glm::vec3(cos(globalP)-2.0f, 4.0f, 0.0f));
 
 
 
@@ -371,6 +371,7 @@ public:
 
 
 
+
 				////if (lastMaterialIndex != mesh.meshBuffer.materialIndex) {
 				//lastMaterialIndex = mesh.meshBuffer.materialIndex;
 				////uint32_t offset2 = mesh.meshBuffer.materialIndex * alignedMaterialSize;
@@ -379,6 +380,10 @@ public:
 				//setNum = 2;
 				//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, setNum, 1, &descriptorSets[setNum], 1, &offset2);
 
+				// must make pipeline layout compatible
+				setNum = 3;
+				//vkx::Material m = this->assetManager.loadedMaterials[mesh.meshBuffer.materialIndex];
+				//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, setNum, m.descriptorSet, nullptr);
 
 
 
@@ -398,50 +403,6 @@ public:
 			float uv[2];
 			float color[3];
 		};
-
-
-		vkx::Model planeModel(context, assetManager);
-		planeModel.load(getAssetPath() + "models/plane2.dae");
-		planeModel.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
-
-
-		//vkx::Model otherModel1(context, assetManager);
-		//otherModel1.load(getAssetPath() + "models/vulkanscenemodels.dae");
-		//otherModel1.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
-
-
-		vkx::Model otherModel1(context, assetManager);
-		otherModel1.load(getAssetPath() + "models/vulkanscenemodels.dae");
-		otherModel1.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
-
-		vkx::Model otherModel2(context, assetManager);
-		otherModel2.load(getAssetPath() + "models/myCube.dae");
-		otherModel2.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
-
-		vkx::Model otherModel3(context, assetManager);
-		otherModel3.load(getAssetPath() + "models/myCube.dae");
-		otherModel3.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
-
-		vkx::Model otherModel4(context, assetManager);
-		otherModel4.load(getAssetPath() + "models/cube.obj");
-		otherModel4.createMeshes(vertexLayout, 0.02f, VERTEX_BUFFER_BIND_ID);
-
-		vkx::Model otherModel5(context, assetManager);
-		otherModel5.load(getAssetPath() + "models/cube.obj");
-		otherModel5.createMeshes(vertexLayout, 0.02f, VERTEX_BUFFER_BIND_ID);
-
-
-
-		//meshes.push_back(skyboxMesh);
-		//meshes.push_back(planeMesh);
-		//meshes.push_back(otherMesh1);
-
-		models.push_back(planeModel);
-		models.push_back(otherModel1);
-		models.push_back(otherModel2);
-		models.push_back(otherModel3);
-		models.push_back(otherModel4);
-		models.push_back(otherModel5);
 
 		// todo: update materialNodes vector here
 
@@ -481,12 +442,12 @@ public:
 		// scene data
 		std::vector<vk::DescriptorPoolSize> poolSizes0 =
 		{
-			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 2),// mostly static data
+			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 1),// mostly static data
 			//vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 1),// will eventually be material data
 		};
 
 		vk::DescriptorPoolCreateInfo descriptorPool0Info =
-			vkx::descriptorPoolCreateInfo(poolSizes0.size(), poolSizes0.data(), 2);
+			vkx::descriptorPoolCreateInfo(poolSizes0.size(), poolSizes0.data(), 1);
 
 
 		vk::DescriptorPool descPool0 = device.createDescriptorPool(descriptorPool0Info);
@@ -524,18 +485,18 @@ public:
 
 
 
-		// textures
-		std::vector<vk::DescriptorPoolSize> poolSizes3 =
-		{
-			vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 1),
-		};
+		// combined image sampler
+		//std::vector<vk::DescriptorPoolSize> poolSizes3 =
+		//{
+		//	vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 1),
+		//};
 
-		vk::DescriptorPoolCreateInfo descriptorPool3Info =
-			vkx::descriptorPoolCreateInfo(poolSizes3.size(), poolSizes3.data(), 1);
+		//vk::DescriptorPoolCreateInfo descriptorPool3Info =
+		//	vkx::descriptorPoolCreateInfo(poolSizes3.size(), poolSizes3.data(), 1);
 
 
-		vk::DescriptorPool descPool3 = device.createDescriptorPool(descriptorPool3Info);
-		descriptorPools.push_back(descPool3);
+		//vk::DescriptorPool descPool3 = device.createDescriptorPool(descriptorPool3Info);
+		//descriptorPools.push_back(descPool3);
 
 
 		
@@ -619,21 +580,21 @@ public:
 		// descriptor set layout 3
 		// combined image sampler
 
-		std::vector<vk::DescriptorSetLayoutBinding> setLayout3Bindings =
-		{
-			// Binding 0 : Fragment shader color map image sampler
-			vkx::descriptorSetLayoutBinding(
-				vk::DescriptorType::eCombinedImageSampler,
-				vk::ShaderStageFlagBits::eFragment,
-				0),// binding 0
-		};
+		//std::vector<vk::DescriptorSetLayoutBinding> setLayout3Bindings =
+		//{
+		//	// Binding 0 : Fragment shader color map image sampler
+		//	vkx::descriptorSetLayoutBinding(
+		//		vk::DescriptorType::eCombinedImageSampler,
+		//		vk::ShaderStageFlagBits::eFragment,
+		//		0),// binding 0
+		//};
 
-		vk::DescriptorSetLayoutCreateInfo descriptorLayout3 =
-			vkx::descriptorSetLayoutCreateInfo(setLayout3Bindings.data(), setLayout3Bindings.size());
+		//vk::DescriptorSetLayoutCreateInfo descriptorLayout3 =
+		//	vkx::descriptorSetLayoutCreateInfo(setLayout3Bindings.data(), setLayout3Bindings.size());
 
-		vk::DescriptorSetLayout setLayout3 = device.createDescriptorSetLayout(descriptorLayout3);
+		//vk::DescriptorSetLayout setLayout3 = device.createDescriptorSetLayout(descriptorLayout3);
 
-		descriptorSetLayouts.push_back(setLayout3);
+		//descriptorSetLayouts.push_back(setLayout3);
 
 
 
@@ -698,11 +659,11 @@ public:
 
 		// descriptor set 3
 		// image sampler
-		vk::DescriptorSetAllocateInfo descriptorSetInfo3 =
-			vkx::descriptorSetAllocateInfo(descriptorPools[3], &descriptorSetLayouts[3], 1);
+		//vk::DescriptorSetAllocateInfo descriptorSetInfo3 =
+		//	vkx::descriptorSetAllocateInfo(descriptorPools[3], &descriptorSetLayouts[3], 1);
 
-		std::vector<vk::DescriptorSet> descSets3 = device.allocateDescriptorSets(descriptorSetInfo3);
-		descriptorSets.push_back(descSets3[0]);// descriptor set 3
+		//std::vector<vk::DescriptorSet> descSets3 = device.allocateDescriptorSets(descriptorSetInfo3);
+		//descriptorSets.push_back(descSets3[0]);// descriptor set 3
 
 
 
@@ -725,11 +686,11 @@ public:
 				0,// binding 0
 				&uniformData.sceneVS.descriptor),
 			// Binding 1 : Fragment shader image sampler
-			vkx::writeDescriptorSet(
-				descriptorSets[0],// descriptor set 0
-				vk::DescriptorType::eCombinedImageSampler,
-				1,// binding 1
-				&texDescriptor),
+			//vkx::writeDescriptorSet(
+			//	descriptorSets[0],// descriptor set 0
+			//	vk::DescriptorType::eCombinedImageSampler,
+			//	1,// binding 1
+			//	&texDescriptor),
 			
 			// set 1
 			// vertex shader matrix dynamic buffer
@@ -893,16 +854,80 @@ public:
 		uniformData.materialVS.copy(materialNodes);
 	}
 
+
+	void start() {
+
+
+		//vkx::Model planeModel(context, assetManager);
+		//planeModel.load(getAssetPath() + "models/plane2.dae");
+		//planeModel.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+
+
+		//vkx::Model otherModel1(context, assetManager);
+		//otherModel1.load(getAssetPath() + "models/vulkanscenemodels.dae");
+		//otherModel1.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+
+
+		//vkx::Model otherModel1(context, assetManager);
+		//otherModel1.load(getAssetPath() + "models/vulkanscenemodels.dae");
+		//otherModel1.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+
+		vkx::Model otherModel1(context, assetManager);
+		otherModel1.load(getAssetPath() + "models/sibenik/sibenik.dae");
+		otherModel1.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+
+		//vkx::Model otherModel2(context, assetManager);
+		//otherModel2.load(getAssetPath() + "models/myCube.dae");
+		//otherModel2.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+
+		//vkx::Model otherModel3(context, assetManager);
+		//otherModel3.load(getAssetPath() + "models/myCube.dae");
+		//otherModel3.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+
+		//vkx::Model otherModel4(context, assetManager);
+		//otherModel4.load(getAssetPath() + "models/cube.obj");
+		//otherModel4.createMeshes(vertexLayout, 0.02f, VERTEX_BUFFER_BIND_ID);
+
+		//vkx::Model otherModel5(context, assetManager);
+		//otherModel5.load(getAssetPath() + "models/cube.obj");
+		//otherModel5.createMeshes(vertexLayout, 0.02f, VERTEX_BUFFER_BIND_ID);
+
+
+
+		//meshes.push_back(skyboxMesh);
+		//meshes.push_back(planeMesh);
+		//meshes.push_back(otherMesh1);
+
+		//models.push_back(planeModel);
+		models.push_back(otherModel1);
+		//models.push_back(otherModel2);
+		//models.push_back(otherModel3);
+		//models.push_back(otherModel4);
+		//models.push_back(otherModel5);
+
+	}
+
+
+
 	void prepare() {
 		vulkanApp::prepare();
 		loadTextures();
+
+		//start();
 		prepareVertices();
+		start();
 		prepareUniformBuffers();
 		setupDescriptorSetLayout();
+
+		
+
 		preparePipelines();
 		setupDescriptorPool();
 		setupDescriptorSet();
 		updateDrawCommandBuffers();
+
+		
+
 		prepared = true;
 	}
 
