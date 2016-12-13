@@ -112,7 +112,7 @@ void vulkanApp::run() {
 
 	renderLoop();
 
-	// Once we exit the render loop, wait for everything to become idle before proceeding to the descructor.
+	// Once we exit the render loop, wait for everything to become idle before proceeding to the destructor.
 	queue.waitIdle();
 	device.waitIdle();
 }
@@ -633,6 +633,7 @@ void vulkanApp::prepare() {
 	setupFrameBuffer();
 
 	// Create a simple texture loader class
+	// todo: move this into asset manager class
 	textureLoader = new TextureLoader(this->context);
 
 
@@ -663,64 +664,131 @@ MeshBuffer vulkanApp::loadMesh(const std::string& filename, const std::vector<Ve
 	return loader.combinedBuffer;
 }
 
-//should not be here
-void vulkanApp::renderLoop() {
-	#if defined(__ANDROID__)
-	while (1) {
-		int ident;
-		int events;
-		struct android_poll_source* source;
-		bool destroy = false;
 
-		focused = true;
+void vulkanApp::updateKeyboardMouseInfo() {
 
-		while ((ident = ALooper_pollAll(focused ? 0 : -1, NULL, &events, (void**)&source)) >= 0) {
-			if (source != NULL) {
-				source->process(androidApp, source);
-			}
-			if (androidApp->destroyRequested != 0) {
-				LOGD("Android app destroy requested");
-				destroy = true;
-				break;
+	
+	// todo: move this somewhere else
+	SDL_Event e;
+	
+	// poll events
+	while (SDL_PollEvent(&e)) {
+		if (e.type == SDL_QUIT) {
+			quit = true;
+			//SDL_DestroyWindow(this->SDLWindow);
+			//SDL_Quit();
+		}
+
+		if (e.type == SDL_KEYDOWN || e.type == SDL_KEYUP) {
+			bool state = (e.type == SDL_KEYDOWN) ? true : false;
+			switch (e.key.keysym.sym) {
+				case SDLK_ESCAPE:
+					quit = true;
+					break;
+				case SDLK_w:
+					keyStates.w = state;
+					break;
+				case SDLK_s:
+					keyStates.s = state;
+					break;
+				case SDLK_a:
+					keyStates.a = state;
+					break;
+				case SDLK_d:
+					keyStates.d = state;
+					break;
+				case SDLK_q:
+					keyStates.q = state;
+					break;
+				case SDLK_e:
+					keyStates.e = state;
+					break;
+				case SDLK_SPACE:
+					keyStates.space = state;
+					break;
+				case SDLK_UP:
+					keyStates.up_arrow = state;
+					break;
+				case SDLK_DOWN:
+					keyStates.down_arrow = state;
+					break;
+				case SDLK_LEFT:
+					keyStates.left_arrow = state;
+					break;
+				case SDLK_RIGHT:
+					keyStates.right_arrow = state;
+					break;
+				case SDLK_LSHIFT:
+					keyStates.shift = state;
+					break;
+				// another wsadqe
+				case SDLK_i:
+					keyStates.i = state;
+					break;
+				case SDLK_k:
+					keyStates.k = state;
+					break;
+				case SDLK_j:
+					keyStates.j = state;
+					break;
+				case SDLK_l:
+					keyStates.l = state;
+					break;
+				case SDLK_u:
+					keyStates.u = state;
+					break;
+				case SDLK_o:
+					keyStates.o = state;
+					break;
+
+				default:
+					break;
 			}
 		}
 
-		// App destruction requested
-		// Exit loop, example will be destroyed in application main
-		if (destroy) {
-			break;
+		if (e.type == SDL_MOUSEMOTION) {
+			mouse.delta.x = e.motion.xrel;
+			mouse.delta.y = e.motion.yrel;
+			mouse.current.x = e.motion.x;
+			mouse.current.y = e.motion.y;
+			mouse.movedThisFrame = true;// why does sdl2 not report no movement?
 		}
 
-		// Render frame
-		if (prepared) {
-			auto tStart = std::chrono::high_resolution_clock::now();
-			render();
-			frameCounter++;
-			auto tEnd = std::chrono::high_resolution_clock::now();
-			auto tDiff = std::chrono::duration<double, std::milli>(tEnd - tStart).count();
-			frameTimer = tDiff / 1000.0f;
-			// Convert to clamped timer value
-			if (!paused) {
-				timer += timerSpeed * frameTimer;
-				if (timer > 1.0) {
-					timer -= 1.0f;
-				}
+		// should be if else's / switch case
+
+		if (e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP) {
+			bool state = (e.type == SDL_MOUSEBUTTONDOWN) ? true : false;
+
+			// todo: implement pressed and released coords
+			if (e.button.button == SDL_BUTTON_LEFT) {
+				mouse.leftMouseButton.state = state;
+			} else if (e.button.button == SDL_BUTTON_MIDDLE) {
+				mouse.middleMouseButton.state = state;
+			} else if (e.button.button == SDL_BUTTON_RIGHT) {
+				mouse.rightMouseButton.state = state;
 			}
-			fpsTimer += (float)tDiff;
-			if (fpsTimer > 1000.0f) {
-				lastFPS = frameCounter;
-				updateTextOverlay();
-				fpsTimer = 0.0f;
-				frameCounter = 0;
-			}
+			//mouse.delta.x = e.motion.xrel;
+			//mouse.delta.y = e.motion.yrel;
+			//mouse.current.x = e.motion.x;
+			//mouse.current.y = e.motion.y;
 		}
 	}
-	#else
+	if (!mouse.movedThisFrame) {
+		mouse.delta.x = 0;
+		mouse.delta.y = 0;
+	}
+	mouse.movedThisFrame = false;
+
+}
+
+
+
+
+//should not be here
+void vulkanApp::renderLoop() {
+
 
 	auto tStart = std::chrono::high_resolution_clock::now();
-
-	bool quit = false;
-	SDL_Event e;
 
 	while (!quit) {
 		
@@ -736,119 +804,15 @@ void vulkanApp::renderLoop() {
 			std::this_thread::sleep_for(std::chrono::milliseconds((int)extraTime));
 		}
 
-		// poll events
-		
-		while (SDL_PollEvent(&e)) {
 
-			if (e.type == SDL_QUIT) {
-				quit = true;
-				//SDL_DestroyWindow(this->SDLWindow);
-				//SDL_Quit();
-			}
 
-			if (e.type == SDL_KEYDOWN || e.type == SDL_KEYUP) {
-				bool state = (e.type == SDL_KEYDOWN) ? true : false;
-				switch (e.key.keysym.sym) {
-					case SDLK_ESCAPE:
-						quit = true;
-						break;
-					case SDLK_w:
-						keyStates.w = state;
-						break;
-					case SDLK_s:
-						keyStates.s = state;
-						break;
-					case SDLK_a:
-						keyStates.a = state;
-						break;
-					case SDLK_d:
-						keyStates.d = state;
-						break;
-					case SDLK_q:
-						keyStates.q = state;
-						break;
-					case SDLK_e:
-						keyStates.e = state;
-						break;
-					case SDLK_SPACE:
-						keyStates.space = state;
-						break;
-					case SDLK_UP:
-						keyStates.up_arrow = state;
-						break;
-					case SDLK_DOWN:
-						keyStates.down_arrow = state;
-						break;
-					case SDLK_LEFT:
-						keyStates.left_arrow = state;
-						break;
-					case SDLK_RIGHT:
-						keyStates.right_arrow = state;
-						break;
-					case SDLK_LSHIFT:
-						keyStates.shift = state;
-						break;
-					// another wsadqe
-					case SDLK_i:
-						keyStates.i = state;
-						break;
-					case SDLK_k:
-						keyStates.k = state;
-						break;
-					case SDLK_j:
-						keyStates.j = state;
-						break;
-					case SDLK_l:
-						keyStates.l = state;
-						break;
-					case SDLK_u:
-						keyStates.u = state;
-						break;
-					case SDLK_o:
-						keyStates.o = state;
-						break;
-
-					default:
-						break;
-				}
-			}
-
-			if (e.type == SDL_MOUSEMOTION) {
-				mouse.delta.x = e.motion.xrel;
-				mouse.delta.y = e.motion.yrel;
-				mouse.current.x = e.motion.x;
-				mouse.current.y = e.motion.y;
-				mouse.movedThisFrame = true;// why does sdl2 not report no movement?
-			}
-
-			// should be if else's / switch case
-
-			if (e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP) {
-				bool state = (e.type == SDL_MOUSEBUTTONDOWN) ? true : false;
-
-				// todo: implement pressed and released coords
-				if (e.button.button == SDL_BUTTON_LEFT) {
-					mouse.leftMouseButton.state = state;
-				} else if (e.button.button == SDL_BUTTON_MIDDLE) {
-					mouse.middleMouseButton.state = state;
-				} else if (e.button.button == SDL_BUTTON_RIGHT) {
-					mouse.rightMouseButton.state = state;
-				}
-				//mouse.delta.x = e.motion.xrel;
-				//mouse.delta.y = e.motion.yrel;
-				//mouse.current.x = e.motion.x;
-				//mouse.current.y = e.motion.y;
-			}
-		}
-		if (!mouse.movedThisFrame) {
-			mouse.delta.x = 0;
-			mouse.delta.y = 0;
-		}
-		mouse.movedThisFrame = false;
+		updateKeyboardMouseInfo();
 
 		//updateTextOverlay();
 
+		// actually draw models
 		updateDrawCommandBuffers();
+
 		render();
 		update(tDiffSeconds);
 	
@@ -856,10 +820,6 @@ void vulkanApp::renderLoop() {
 	SDL_DestroyWindow(this->SDLWindow);
 	SDL_Quit();
 
-	//render();
-
-
-	#endif
 }
 
 

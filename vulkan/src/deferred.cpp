@@ -358,13 +358,16 @@ public:
 
         // vk::Image descriptor for the offscreen texture targets
         vk::DescriptorImageInfo texDescriptorPosition =
-            vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[0].colors[0].view, vk::ImageLayout::eGeneral);
+            //vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[0].colors[0].view, vk::ImageLayout::eGeneral);
+			vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[0].colors[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 
         vk::DescriptorImageInfo texDescriptorNormal =
-            vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[1].sampler, offscreen.framebuffers[0].colors[1].view, vk::ImageLayout::eGeneral);
+            //vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[1].sampler, offscreen.framebuffers[0].colors[1].view, vk::ImageLayout::eGeneral);
+			vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[1].sampler, offscreen.framebuffers[0].colors[1].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 
         vk::DescriptorImageInfo texDescriptorAlbedo =
-            vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[2].sampler, offscreen.framebuffers[0].colors[2].view, vk::ImageLayout::eGeneral);
+            //vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[2].sampler, offscreen.framebuffers[0].colors[2].view, vk::ImageLayout::eGeneral);
+			vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[2].sampler, offscreen.framebuffers[0].colors[2].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 
         std::vector<vk::WriteDescriptorSet> writeDescriptorSets =
         {

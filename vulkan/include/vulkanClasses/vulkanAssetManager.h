@@ -75,10 +75,21 @@ namespace vkx {
 
 		public:
 			
-
+			
 			std::vector<Material> loadedMaterials;
 			std::vector<Texture> textures;
 
+			vk::DescriptorSetLayout *materialDescriptorSetLayout;
+			vk::DescriptorPool *materialDescriptorPool;
+
+			//vkx::Context &context;
+
+
+			//AssetManager(vkx::Context &context) :
+			//	context(context)
+			//{
+
+			//}
 
 
 

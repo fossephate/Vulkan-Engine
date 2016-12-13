@@ -13,6 +13,7 @@
 #include "vulkanApp.h"
 
 // todo: rename this: // important!
+// vertexLayout has the same name!
 std::vector<vkx::VertexLayout> vertexLayout =
 {
 	vkx::VertexLayout::VERTEX_LAYOUT_POSITION,
@@ -46,19 +47,21 @@ public:
 	vkx::Mesh skyboxMesh;
 
 	struct {
-		vkx::UniformData sceneVS;
-		vkx::UniformData matrixVS;
-		vkx::UniformData materialVS;
+		vkx::UniformData sceneVS;// scene data
+		vkx::UniformData matrixVS;// matrix data
+		vkx::UniformData materialVS;// material data
 	} uniformData;
 
 	struct {
-		glm::mat4 model;// not really needed
+		glm::mat4 model;// not really needed// todo: remove
 		glm::mat4 view;
 		glm::mat4 projection;
 		
 		glm::mat4 normal;
 
-		glm::vec4 lightPos;
+		glm::vec3 lightPos;
+
+		glm::vec3 cameraPos;
 	} uboScene;
 
 
@@ -78,7 +81,6 @@ public:
 	//	glm::vec4 specular;
 	//	float opacity;
 	//};
-
 
 	std::vector<vkx::materialProperties> materialNodes;
 	
@@ -126,9 +128,11 @@ public:
 
 
 	//glm::vec4 lightPos = glm::vec4(2.0f, 2.0f, 5.0f, 0.0f);
-	glm::vec4 lightPos = glm::vec4(1.0f, 2.0f, 0.0f, 0.0f);
+	glm::vec3 lightPos = glm::vec3(1.0f, 2.0f, 0.0f);
 
 	VulkanExample() : vkx::vulkanApp(ENABLE_VALIDATION) {
+		// todo: pick better numbers
+		// or pick based on screen size
 		size.width = 1280;
 		size.height = 720;
 
@@ -144,6 +148,9 @@ public:
 		//matrices[0].model = glm::translate(glm::mat4(), glm::vec3(-5.0f, 0.0f, 0.0f));
 		//matrixNodes[1].model = glm::translate(glm::mat4(), glm::vec3(-5.0f, 0.0f, 0.0f));
 
+
+		// todo: move this somewhere else
+		// it doesn't need to be here
 		unsigned int alignment = (uint32_t)context.deviceProperties.limits.minUniformBufferOffsetAlignment;
 
 
@@ -166,7 +173,6 @@ public:
 
 		// destroy pipelines
 		device.destroyPipeline(pipelines.meshes);
-		//device.destroyPipeline(pipelines.skybox);
 
 		device.destroyPipelineLayout(pipelineLayout);
 		//device.destroyDescriptorSetLayout(descriptorSetLayout);
@@ -186,7 +192,7 @@ public:
 	}
 
 	void loadTextures() {
-		textures.colorMap = textureLoader->loadCubemap(getAssetPath() + "textures/cubemap_vulkan.ktx", vk::Format::eR8G8B8A8Unorm);
+		//textures.colorMap = textureLoader->loadCubemap(getAssetPath() + "textures/cubemap_vulkan.ktx", vk::Format::eR8G8B8A8Unorm);
 		//textures.skybox = textureLoader->loadCubemap(getAssetPath() + "textures/cubemap_vulkan.ktx", vk::Format::eR8G8B8A8Unorm);
 	}
 
@@ -222,12 +228,15 @@ public:
 
 		//models[1].change();
 
-		//models[1].setTranslation(glm::vec3(cos(globalP)+2.0f, 2.0f, sin(globalP)));
-		//models[2].setTranslation(glm::vec3(cos(globalP)+2.0f, 3.0f, 0.0f));
+		models[1].setTranslation(glm::vec3(3*cos(globalP), 2.0f, 3*sin(globalP)));
+		models[2].setTranslation(glm::vec3(/*2*cos(globalP)+*/2.0f, 3.0f, 0.0f));
 		//models[3].setTranslation(glm::vec3(cos(globalP)-2.0f, 2.0f, 0.0f));
 		//models[4].setTranslation(glm::vec3(cos(globalP), 3.0f, 0.0f));
 		//models[5].setTranslation(glm::vec3(cos(globalP)-2.0f, 4.0f, 0.0f));
 
+
+		//uboScene.lightPos = glm::vec4(cos(globalP), 4.0f, cos(globalP), 0.0f);
+		uboScene.lightPos = glm::vec3(sin(globalP), 2.0f, 0.0f);
 
 
 		//matrixNodes[0].model = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, 0.0f));
@@ -277,6 +286,8 @@ public:
 			materialNodes[i] = this->assetManager.loadedMaterials[i].properties;
 		}
 
+
+		
 
 		updateUniformBuffers();
 
@@ -371,7 +382,6 @@ public:
 
 
 
-
 				////if (lastMaterialIndex != mesh.meshBuffer.materialIndex) {
 				//lastMaterialIndex = mesh.meshBuffer.materialIndex;
 				////uint32_t offset2 = mesh.meshBuffer.materialIndex * alignedMaterialSize;
@@ -383,7 +393,7 @@ public:
 				// must make pipeline layout compatible
 				setNum = 3;
 				vkx::Material m = this->assetManager.loadedMaterials[mesh.meshBuffer.materialIndex];
-				//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, setNum, m.descriptorSet, nullptr);
+				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, setNum, m.descriptorSet, nullptr);
 
 
 
@@ -403,10 +413,6 @@ public:
 			float uv[2];
 			float color[3];
 		};
-
-		// todo: update materialNodes vector here
-
-
 
 		// Binding description
 		bindingDescriptions.resize(1);
@@ -443,7 +449,6 @@ public:
 		std::vector<vk::DescriptorPoolSize> poolSizes0 =
 		{
 			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 1),// mostly static data
-			//vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 1),// will eventually be material data
 		};
 
 		vk::DescriptorPoolCreateInfo descriptorPool0Info =
@@ -486,17 +491,19 @@ public:
 
 
 		// combined image sampler
-		//std::vector<vk::DescriptorPoolSize> poolSizes3 =
-		//{
-		//	vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 1),
-		//};
+		std::vector<vk::DescriptorPoolSize> poolSizes3 =
+		{
+			vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 10000),
+		};
 
-		//vk::DescriptorPoolCreateInfo descriptorPool3Info =
-		//	vkx::descriptorPoolCreateInfo(poolSizes3.size(), poolSizes3.data(), 1);
+		vk::DescriptorPoolCreateInfo descriptorPool3Info =
+			vkx::descriptorPoolCreateInfo(poolSizes3.size(), poolSizes3.data(), 10000);
 
 
-		//vk::DescriptorPool descPool3 = device.createDescriptorPool(descriptorPool3Info);
-		//descriptorPools.push_back(descPool3);
+		vk::DescriptorPool descPool3 = device.createDescriptorPool(descriptorPool3Info);
+		descriptorPools.push_back(descPool3);
+
+		this->assetManager.materialDescriptorPool = &descriptorPools[3];
 
 
 		
@@ -516,12 +523,6 @@ public:
 				vk::DescriptorType::eUniformBuffer,
 				vk::ShaderStageFlagBits::eVertex,
 				0),// binding 1
-
-			//// Binding 1 : Fragment shader color map image sampler
-			//vkx::descriptorSetLayoutBinding(
-			//	vk::DescriptorType::eCombinedImageSampler,
-			//	vk::ShaderStageFlagBits::eFragment,
-			//	1)// binding 1
 		};
 
 		vk::DescriptorSetLayoutCreateInfo descriptorLayout0 =
@@ -580,25 +581,23 @@ public:
 		// descriptor set layout 3
 		// combined image sampler
 
-		//std::vector<vk::DescriptorSetLayoutBinding> setLayout3Bindings =
-		//{
-		//	// Binding 0 : Fragment shader color map image sampler
-		//	vkx::descriptorSetLayoutBinding(
-		//		vk::DescriptorType::eCombinedImageSampler,
-		//		vk::ShaderStageFlagBits::eFragment,
-		//		0),// binding 0
-		//};
+		std::vector<vk::DescriptorSetLayoutBinding> setLayout3Bindings =
+		{
+			// Binding 0 : Fragment shader color map image sampler
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eCombinedImageSampler,
+				vk::ShaderStageFlagBits::eFragment,
+				0),// binding 0
+		};
 
-		//vk::DescriptorSetLayoutCreateInfo descriptorLayout3 =
-		//	vkx::descriptorSetLayoutCreateInfo(setLayout3Bindings.data(), setLayout3Bindings.size());
+		vk::DescriptorSetLayoutCreateInfo descriptorLayout3 =
+			vkx::descriptorSetLayoutCreateInfo(setLayout3Bindings.data(), setLayout3Bindings.size());
 
-		//vk::DescriptorSetLayout setLayout3 = device.createDescriptorSetLayout(descriptorLayout3);
+		vk::DescriptorSetLayout setLayout3 = device.createDescriptorSetLayout(descriptorLayout3);
 
-		//descriptorSetLayouts.push_back(setLayout3);
+		descriptorSetLayouts.push_back(setLayout3);
 
-
-
-
+		this->assetManager.materialDescriptorSetLayout = &descriptorSetLayouts[3];
 
 
 		// use all descriptor set layouts
@@ -625,6 +624,9 @@ public:
 		//	vkx::descriptorSetAllocateInfo(descriptorPools[0], &descriptorSetLayouts[0], 1),
 		//	vkx::descriptorSetAllocateInfo(descriptorPools[1], &descriptorSetLayouts[1], 1),
 		//};
+
+
+
 
 		// descriptor set 0
 		// scene data
@@ -827,9 +829,6 @@ public:
 	void prepareUniformBuffers() {
 		// Vertex shader uniform buffer block
 		uniformData.sceneVS = context.createUniformBuffer(uboScene);
-		//uniformData.dynamicVS = context.createUniformBuffer(matrixNodes.data(), matrixNodes.size()+1);
-		//uniformData.dynamicVS = context.createUniformBuffer(&matrixNodes.data(), matrixNodes.size());
-		//uniformData.dynamicVS = context.createUniformBuffer(matrixNodes.data(), matrixNodes.size());
 		uniformData.matrixVS = context.createDynamicUniformBuffer(matrixNodes);
 		uniformData.materialVS = context.createDynamicUniformBuffer(materialNodes);
 
@@ -839,6 +838,7 @@ public:
 	void updateUniformBuffers() {
 		uboScene.projection = camera.matrices.projection;
 		uboScene.view = camera.matrices.view;
+		uboScene.cameraPos = camera.translation;
 
 		//uboVS.model = camera.matrixNodes.skyboxView;
 
@@ -847,7 +847,7 @@ public:
 
 		//uboScene.normal = glm::inverseTranspose(uboScene.view);
 
-		uboScene.lightPos = lightPos;
+		//uboScene.lightPos = lightPos;
 
 		uniformData.sceneVS.copy(uboScene);
 
@@ -861,9 +861,9 @@ public:
 	void start() {
 
 
-		//vkx::Model planeModel(context, assetManager);
-		//planeModel.load(getAssetPath() + "models/plane2.dae");
-		//planeModel.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		vkx::Model planeModel(context, assetManager);
+		planeModel.load(getAssetPath() + "models/plane2.dae");
+		planeModel.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
 
 		//vkx::Model otherModel1(context, assetManager);
@@ -877,11 +877,11 @@ public:
 
 		vkx::Model otherModel1(context, assetManager);
 		otherModel1.load(getAssetPath() + "models/sibenik/sibenik.dae");
-		otherModel1.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		otherModel1.createMeshes(vertexLayout, 0.05f, VERTEX_BUFFER_BIND_ID);
 
-		//vkx::Model otherModel2(context, assetManager);
-		//otherModel2.load(getAssetPath() + "models/myCube.dae");
-		//otherModel2.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		vkx::Model otherModel2(context, assetManager);
+		otherModel2.load(getAssetPath() + "models/vulkanscenemodels.dae");
+		otherModel2.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
 		//vkx::Model otherModel3(context, assetManager);
 		//otherModel3.load(getAssetPath() + "models/myCube.dae");
@@ -901,9 +901,9 @@ public:
 		//meshes.push_back(planeMesh);
 		//meshes.push_back(otherMesh1);
 
-		//models.push_back(planeModel);
+		models.push_back(planeModel);
 		models.push_back(otherModel1);
-		//models.push_back(otherModel2);
+		models.push_back(otherModel2);
 		//models.push_back(otherModel3);
 		//models.push_back(otherModel4);
 		//models.push_back(otherModel5);
@@ -914,19 +914,26 @@ public:
 
 	void prepare() {
 		vulkanApp::prepare();
+
+		// todo: remove this:
 		loadTextures();
 
-		//start();
+		
 		prepareVertices();
-		start();
-		prepareUniformBuffers();
-		setupDescriptorSetLayout();
 
 		
 
-		preparePipelines();
+		prepareUniformBuffers();
+
+		setupDescriptorSetLayout();
 		setupDescriptorPool();
 		setupDescriptorSet();
+
+		preparePipelines();
+
+		start();
+
+
 		updateDrawCommandBuffers();
 
 		

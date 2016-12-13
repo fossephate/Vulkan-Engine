@@ -127,8 +127,8 @@ void vkx::MeshLoader::loadMaterials(const aiScene *pScene) {
 
 			std::cout << "  Material has no diffuse, using dummy texture!" << std::endl;
 			// todo : separate pipeline and layout
-			//material.diffuse = textureLoader->loadTexture(assetPath + "dummy.ktx", vk::Format::eBc2UnormBlock);
-			material.diffuse = textureLoader->loadTexture(assetPath + "kamen.ktx", vk::Format::eBc2UnormBlock);
+			material.diffuse = textureLoader->loadTexture(assetPath + "dummy.ktx", vk::Format::eBc2UnormBlock);
+			//material.diffuse = textureLoader->loadTexture(assetPath + "kamen.ktx", vk::Format::eBc2UnormBlock);
 		}
 
 		// For scenes with multiple textures per material we would need to check for additional texture types, e.g.:
@@ -157,60 +157,48 @@ void vkx::MeshLoader::loadMaterials(const aiScene *pScene) {
 
 
 
-	std::vector<vk::DescriptorPoolSize> poolSizes3 =
-	{
-		//vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 1),
-		vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, static_cast<uint32_t>(tempMaterials.size())),
-	};
+	//std::vector<vk::DescriptorPoolSize> poolSizes3 =
+	//{
+	//	vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 10000),
+	//	//vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, static_cast<uint32_t>(tempMaterials.size())),
+	//};
 
 	//vk::DescriptorPoolCreateInfo descriptorPool3Info =
-	//	vkx::descriptorPoolCreateInfo(
-	//		static_cast<uint32_t>(poolSizes3.size()),
-	//		poolSizes3.data(),
-	//		static_cast<uint32_t>(tempMaterials.size()) + 1);
+	//	//vkx::descriptorPoolCreateInfo(poolSizes3.size(), poolSizes3.data(), tempMaterials.size()+1);
+	//	vkx::descriptorPoolCreateInfo(poolSizes3.size(), poolSizes3.data(), 10000);
+
+	//vk::DescriptorPool descPool3 = context.device.createDescriptorPool(descriptorPool3Info);
 
 
-	vk::DescriptorPoolCreateInfo descriptorPool3Info =
-		vkx::descriptorPoolCreateInfo(poolSizes3.size(), poolSizes3.data(), tempMaterials.size()+1);
+	//std::vector<vk::DescriptorSetLayoutBinding> setLayout3Bindings =
+	//{
+	//	// Binding 0 : Fragment shader color map image sampler
+	//	vkx::descriptorSetLayoutBinding(
+	//		vk::DescriptorType::eCombinedImageSampler,
+	//		vk::ShaderStageFlagBits::eFragment,
+	//		0),// binding 0
+	//};
 
-	vk::DescriptorPool descPool3 = context.device.createDescriptorPool(descriptorPool3Info);
+	//vk::DescriptorSetLayoutCreateInfo descriptorLayout3 =
+	//	vkx::descriptorSetLayoutCreateInfo(setLayout3Bindings.data(), setLayout3Bindings.size());
 
-
-	std::vector<vk::DescriptorSetLayoutBinding> setLayout3Bindings =
-	{
-		// Binding 0 : Fragment shader color map image sampler
-		vkx::descriptorSetLayoutBinding(
-			vk::DescriptorType::eCombinedImageSampler,
-			vk::ShaderStageFlagBits::eFragment,
-			0),// binding 0
-	};
-
-	vk::DescriptorSetLayoutCreateInfo descriptorLayout3 =
-		vkx::descriptorSetLayoutCreateInfo(setLayout3Bindings.data(), setLayout3Bindings.size());
-
-	vk::DescriptorSetLayout setLayout3 = context.device.createDescriptorSetLayout(descriptorLayout3);
-
-
-	//std::array<vk::DescriptorSetLayout, 1> setLayouts = { setLayout3 };
-	//vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo = vkx::pipelineLayoutCreateInfo(setLayouts.data(), static_cast<uint32_t>(setLayouts.size()));
-
-	//vk::PipelineLayout pipelineLayout = context.device.createPipelineLayout(pipelineLayoutCreateInfo);
+	//vk::DescriptorSetLayout setLayout3 = context.device.createDescriptorSetLayout(descriptorLayout3);
 
 
 
 	// todo: remove the tempMaterials vector
 	for (int i = 0; i < tempMaterials.size(); ++i) {
 
-		//if (i < 13) {
-		//	continue;
-		//}
-
-
 		// Descriptor set
+		//vk::DescriptorSetAllocateInfo allocInfo =
+		//	vkx::descriptorSetAllocateInfo(
+		//		descPool3,
+		//		&setLayout3,
+		//		1);
 		vk::DescriptorSetAllocateInfo allocInfo =
 			vkx::descriptorSetAllocateInfo(
-				descPool3,
-				&setLayout3,
+				*this->assetManager.materialDescriptorPool,
+				this->assetManager.materialDescriptorSetLayout,
 				1);
 
 		tempMaterials[i].descriptorSet = context.device.allocateDescriptorSets(allocInfo)[0];
@@ -227,7 +215,7 @@ void vkx::MeshLoader::loadMaterials(const aiScene *pScene) {
 				tempMaterials[i].descriptorSet,
 				vk::DescriptorType::eCombinedImageSampler,
 				0,
-				&texDescriptor),// not valid? // todo: find out why
+				&texDescriptor),
 		};
 
 
@@ -241,31 +229,13 @@ void vkx::MeshLoader::loadMaterials(const aiScene *pScene) {
 
 
 
-bool vkx::MeshLoader::parse(const aiScene *pScene, const std::string &Filename) {
-	//m_Entries.resize(pScene->mNumMeshes);
 
-	// Counters
-	for (unsigned int i = 0; i < pScene->mNumMeshes; ++i) {
-		MeshEntry mEntry;
-		mEntry.vertexBase = numVertices;
-		m_Entries.push_back(mEntry);
-
-		numVertices += pScene->mMeshes[i]->mNumVertices;// total for all vertices
-	}
-
-
-
-	loadMaterials(pScene);
-	loadMeshes(pScene);
-
-	return true;
-}
 
 void vkx::MeshLoader::loadMeshes(const aiScene *pScene) {
 
-	for (int i = 0; i < m_Entries.size(); ++i) {
+	//for (int i = 0; i < m_Entries.size(); ++i) {
 
-	}
+	//}
 
 
 	// init each entry with mesh data
@@ -350,6 +320,25 @@ void vkx::MeshLoader::loadMeshes(const aiScene *pScene) {
 }
 
 
+
+bool vkx::MeshLoader::parse(const aiScene *pScene, const std::string &Filename) {
+
+	// Counters
+	for (unsigned int i = 0; i < pScene->mNumMeshes; ++i) {
+		MeshEntry mEntry;
+		mEntry.vertexBase = numVertices;
+		m_Entries.push_back(mEntry);
+
+		numVertices += pScene->mMeshes[i]->mNumVertices;// total for all vertices
+	}
+
+
+
+	loadMaterials(pScene);
+	loadMeshes(pScene);
+
+	return true;
+}
 
 
 void vkx::MeshLoader::createMeshBuffer(const Context &context, const std::vector<VertexLayout> &layout, float scale) {

@@ -45,8 +45,6 @@ namespace vkx {
 
 
 
-
-
 		vk::Pipeline pipeline;
 
 

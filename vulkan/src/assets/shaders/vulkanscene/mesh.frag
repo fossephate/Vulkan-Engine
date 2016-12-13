@@ -10,7 +10,8 @@ layout (set = 0, binding = 0) uniform sceneBuffer
 	mat4 view;
 	mat4 projection;
 	mat4 normal;
-	vec3 lightpos;
+	vec3 lightPos;
+	vec3 cameraPos;
 } scene;
 
 
@@ -42,6 +43,7 @@ layout (location = 1) in vec3 inNormal;
 layout (location = 2) in vec3 inColor;
 layout (location = 3) in vec3 inViewVec;
 layout (location = 4) in vec3 inLightVec;
+layout (location = 5) in vec3 inPos;
 
 
 layout (location = 0) out vec4 outFragColor;
@@ -123,7 +125,7 @@ void main()
     // // Diffuse 
     // vec3 norm = normalize(Normal);
     // //vec3 lightDir = normalize(light.position - FragPos);
-    // vec3 lightDir = normalize(scene.lightpos - FragPos);// fix
+    // vec3 lightDir = normalize(scene.lightPos - FragPos);// fix
 
     // float diff = max(dot(norm, lightDir), 0.0);
     // vec3 diffuse = light.diffuse * (diff * material.diffuse);
@@ -150,27 +152,59 @@ void main()
 
 
 	//vec4 color = texture(samplerColorMap, inUV) * vec4(inColor, 1.0);
-	vec4 color = vec4(inColor, 1.0);
-	vec3 N = normalize(inNormal);
-	vec3 L = normalize(inLightVec);
-	vec3 V = normalize(inViewVec);
-	vec3 R = reflect(-L, N);
+	//vec4 color = vec4(inColor, 1.0);
+
+
+
+
+
+	// vec4 color = texture(samplerColorMap, inUV);
+	// vec3 N = normalize(inNormal);
+	// vec3 L = normalize(inLightVec);
+	// vec3 V = normalize(inViewVec);
+	// vec3 R = reflect(-L, N);
+
+	// vec3 ambient = vec3(0.5, 0.5, 0.5);
 	
-	//vec3 diffuse = max(dot(N, L), 0.0) * material.diffuse.rgb;
-	vec3 diffuse = max(dot(N, L), 0.0) * vec3(0.0, 100.0, 0.0);
+	// vec3 diffuse = max(dot(N, L), 0.0) * material.diffuse.rgb;
 
-	//vec3 specular = pow(max(dot(R, V), 0.0), 16.0) * material.specular.rgb;
-	//vec3 specular = pow(max(dot(R, V), 0.0), 2.0) * material.specular.rgb;
-	vec3 specular = pow(max(dot(R, V), 0.0), 1.0) * vec3(25.0, 25.0, 25.0);
+	// vec3 specular = pow(max(dot(R, V), 0.0), 16.0) * material.specular.rgb;
+	// float opacity = 1.0-material.opacity;
 
-	//outFragColor = vec4((material.ambient.rgb + diffuse) * color.rgb + specular, 1.0-material.opacity);
+	// outFragColor = vec4((ambient + diffuse) * color.rgb + specular, opacity);
 
 
-	float opacity = 1.0-material.opacity;
-	//outFragColor = vec4((material.ambient.rgb + diffuse) * color.rgb + specular, opacity);
-	outFragColor = vec4((vec3(0.0, 100.0, 100.0) + diffuse) * color.rgb + specular, opacity);
 
 
+    vec3 color = texture(samplerColorMap, inUV).rgb;
+    // Ambient
+    //vec3 ambient = 0.08 * color;
+    vec3 ambient = 0.001 * color;
+
+    // Diffuse
+    vec3 lightDir = normalize(scene.lightPos - inPos);
+    vec3 normal = normalize(inNormal);
+    float diff = max(dot(lightDir, normal), 0.0);
+    vec3 diffuse = diff * color;
+    
+
+    //vec3 viewPos = vec3(scene.view[0].w, scene.view[1].w, scene.view[2].w);
+    //vec3 viewPos = vec3(0.0, 1.0, 2.0);
+    // Specular
+    //vec3 viewDir = normalize(viewPos - inPos);
+    vec3 viewDir = normalize(scene.cameraPos - inPos);
+
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = 0.0;
+
+    vec3 halfwayDir = normalize(lightDir + viewDir);  
+    spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);
+
+    
+    vec3 specular = vec3(0.3) * spec; // assuming bright white light color
+
+
+    outFragColor = vec4(ambient + diffuse + specular, 1.0);
 
 
 

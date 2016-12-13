@@ -83,8 +83,7 @@ namespace vkx
 		}
 	};
 
-	class vulkanApp
-	{
+	class vulkanApp {
 		private:
 			// Set to true when example is created with enabled validation layers
 			bool enableValidation{ false };
@@ -94,20 +93,13 @@ namespace vkx
 			// fps timer (one second interval)
 			float fpsTimer = 0.0f;
 
-			//// Create application wide Vulkan instance
+			// Create application wide Vulkan instance
 			//vk::Result createInstance(bool enableValidation);
 
-			//// Get window title with example name, device, et.
+			// Get window title with example name, device, et.
 			std::string getWindowTitle();
 
-			///** brief Indicates that the view (position, rotation) has changed and */
-			//bool viewUpdated = false;
-
-			//// Destination dimensions for resizing the window
-			//vk::Extent2D destSize{ 1280, 720 };
-
-			//// Called if the window is resized and some resources have to be recreatesd
-			//void windowResize(const glm::uvec2& newSize);
+			bool quit = false;
 
 
 
@@ -122,7 +114,7 @@ namespace vkx
 			vk::RenderPassBeginInfo renderPassBeginInfo;
 
 
-		protected:
+
 			// Last frame time, measured using a high performance timer (if available)
 			float frameTimer{ 1.0f };
 			// Frame counter to display fps
@@ -365,6 +357,8 @@ namespace vkx
 				const std::string &filename,
 				const std::vector<VertexLayout> &vertexLayout,
 				float scale = 1.0f);
+
+			void updateKeyboardMouseInfo();
 
 
 			// Start the main render loop
