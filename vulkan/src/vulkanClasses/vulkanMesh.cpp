@@ -12,13 +12,6 @@ namespace vkx {
 	//http://stackoverflow.com/questions/14169584/passing-and-storing-a-const-reference-via-a-constructor
 
 	// don't ever use this constructor
-	//Mesh::Mesh():
-	//	context(vkx::Context())
-	//{
-	//	//this->context = nullptr;
-	//	//this->meshLoader = new vkx::MeshLoader();
-	//}
-
 	Mesh::Mesh() {
 
 	}

@@ -358,8 +358,8 @@ public:
 
 				//if (lastMaterialIndex != mesh.meshBuffer.materialIndex) {
 					lastMaterialIndex = mesh.meshBuffer.materialIndex;
-					//uint32_t offset2 = mesh.meshBuffer.materialIndex * alignedMaterialSize;
-					uint32_t offset2 = 0 * alignedMaterialSize;
+					uint32_t offset2 = mesh.meshBuffer.materialIndex * alignedMaterialSize;
+					//uint32_t offset2 = 0 * alignedMaterialSize;
 					// the third param is the set number!
 					setNum = 2;
 					cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, setNum, 1, &descriptorSets[setNum], 1, &offset2);
@@ -382,7 +382,7 @@ public:
 
 				// must make pipeline layout compatible
 				setNum = 3;
-				//vkx::Material m = this->assetManager.loadedMaterials[mesh.meshBuffer.materialIndex];
+				vkx::Material m = this->assetManager.loadedMaterials[mesh.meshBuffer.materialIndex];
 				//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, setNum, m.descriptorSet, nullptr);
 
 
@@ -602,7 +602,7 @@ public:
 
 
 		// use all descriptor set layouts
-
+		// to form pipeline layout
 
 		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
 			vkx::pipelineLayoutCreateInfo(descriptorSetLayouts.data(), descriptorSetLayouts.size());
@@ -673,8 +673,8 @@ public:
 
 
 		// Cube map image descriptor
-		vk::DescriptorImageInfo texDescriptor =
-			vkx::descriptorImageInfo(textures.colorMap.sampler, textures.colorMap.view, vk::ImageLayout::eGeneral);
+		//vk::DescriptorImageInfo texDescriptor =
+		//	vkx::descriptorImageInfo(textures.colorMap.sampler, textures.colorMap.view, vk::ImageLayout::eGeneral);
 
 		std::vector<vk::WriteDescriptorSet> writeDescriptorSets =
 		{
@@ -708,8 +708,8 @@ public:
 				vk::DescriptorType::eUniformBufferDynamic,
 				0,// binding 0
 				&uniformData.materialVS.descriptor)
-
 		};
+
 
 		device.updateDescriptorSets(writeDescriptorSets, nullptr);
 
@@ -718,6 +718,9 @@ public:
 
 
 	void preparePipelines() {
+		// todo:
+		// understand this:
+
 		vk::PipelineInputAssemblyStateCreateInfo inputAssemblyState;
 		inputAssemblyState.topology = vk::PrimitiveTopology::eTriangleList;
 

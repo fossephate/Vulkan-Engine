@@ -57,6 +57,8 @@ namespace vkx {
 		// todo: add more
 		Texture diffuse;
 		// The material's descriptor set
+		// this is inefficient, but works on all vulkan capable hardware
+		
 		vk::DescriptorSet descriptorSet;
 	};
 

@@ -82,7 +82,8 @@ bool vkx::MeshLoader::load(const std::string &filename, int flags) {
 
 void vkx::MeshLoader::loadMaterials(const aiScene *pScene) {
 
-	tempMaterials.resize(pScene->mNumMaterials);
+	// fix all my problems by commenting this line out:
+	//tempMaterials.resize(pScene->mNumMaterials);
 
 	for (size_t i = 0; i < pScene->mNumMaterials; i++) {
 
@@ -102,7 +103,7 @@ void vkx::MeshLoader::loadMaterials(const aiScene *pScene) {
 		pScene->mMaterials[i]->Get(AI_MATKEY_COLOR_SPECULAR, color);
 		material.properties.specular = glm::make_vec4(&color.r);
 
-		pScene->mMaterials[i]->Get(AI_MATKEY_OPACITY, tempMaterials[i].properties.opacity);
+		pScene->mMaterials[i]->Get(AI_MATKEY_OPACITY, /*tempMaterials[i]*/material.properties.opacity);
 
 		if ((material.properties.opacity) > 0.0f) {
 			material.properties.specular = glm::vec4(0.0f);
@@ -170,7 +171,7 @@ void vkx::MeshLoader::loadMaterials(const aiScene *pScene) {
 
 
 	vk::DescriptorPoolCreateInfo descriptorPool3Info =
-		vkx::descriptorPoolCreateInfo(poolSizes3.size(), poolSizes3.data(), 1);
+		vkx::descriptorPoolCreateInfo(poolSizes3.size(), poolSizes3.data(), tempMaterials.size()+1);
 
 	vk::DescriptorPool descPool3 = context.device.createDescriptorPool(descriptorPool3Info);
 
@@ -190,18 +191,15 @@ void vkx::MeshLoader::loadMaterials(const aiScene *pScene) {
 	vk::DescriptorSetLayout setLayout3 = context.device.createDescriptorSetLayout(descriptorLayout3);
 
 
-	std::array<vk::DescriptorSetLayout, 1> setLayouts = { setLayout3 };
-	vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo = vkx::pipelineLayoutCreateInfo(setLayouts.data(), static_cast<uint32_t>(setLayouts.size()));
+	//std::array<vk::DescriptorSetLayout, 1> setLayouts = { setLayout3 };
+	//vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo = vkx::pipelineLayoutCreateInfo(setLayouts.data(), static_cast<uint32_t>(setLayouts.size()));
 
-	vk::PipelineLayout pipelineLayout = context.device.createPipelineLayout(pipelineLayoutCreateInfo);
+	//vk::PipelineLayout pipelineLayout = context.device.createPipelineLayout(pipelineLayoutCreateInfo);
 
 
 
 	// todo: remove the tempMaterials vector
 	for (int i = 0; i < tempMaterials.size(); ++i) {
-
-
-
 
 		//if (i < 13) {
 		//	continue;
@@ -234,9 +232,7 @@ void vkx::MeshLoader::loadMaterials(const aiScene *pScene) {
 
 
 
-		context.device.updateDescriptorSets(writeDescriptorSets, {});
-
-
+		/*context.*/device.updateDescriptorSets(writeDescriptorSets, {});
 
 		this->assetManager.loadedMaterials.push_back(tempMaterials[i]);
 	}
@@ -256,6 +252,7 @@ bool vkx::MeshLoader::parse(const aiScene *pScene, const std::string &Filename) 
 
 		numVertices += pScene->mMeshes[i]->mNumVertices;// total for all vertices
 	}
+
 
 
 	loadMaterials(pScene);
