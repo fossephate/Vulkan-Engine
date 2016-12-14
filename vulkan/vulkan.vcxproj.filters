@@ -60,7 +60,7 @@
     <ClCompile Include="src\vulkanClasses\vulkanMesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\vulkanscene.cpp">
+    <ClCompile Include="src\deferred.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

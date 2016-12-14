@@ -3,16 +3,16 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 
-// scene
-layout (set = 0, binding = 0) uniform sceneBuffer
-{
-	mat4 model;
-	mat4 view;
-	mat4 projection;
-	mat4 normal;
-	vec3 lightPos;
-	vec3 cameraPos;
-} scene;
+// scene is not visible from fragment shader
+// layout (set = 0, binding = 0) uniform sceneBuffer
+// {
+// 	mat4 model;
+// 	mat4 view;
+// 	mat4 projection;
+// 	mat4 normal;
+// 	vec3 lightPos;
+// 	vec3 cameraPos;
+// } scene;
 
 
 
@@ -43,7 +43,13 @@ layout (location = 1) in vec3 inNormal;
 layout (location = 2) in vec3 inColor;
 layout (location = 3) in vec3 inViewVec;
 layout (location = 4) in vec3 inLightVec;
+
+
 layout (location = 5) in vec3 inPos;
+layout (location = 6) in vec3 inCamPos;
+layout (location = 7) in vec3 inLightPos;
+
+
 
 
 layout (location = 0) out vec4 outFragColor;
@@ -173,16 +179,18 @@ void main()
 
 	// outFragColor = vec4((ambient + diffuse) * color.rgb + specular, opacity);
 
+	//vec3 lPos = vec3(4.0, 1.0, 0.0);
+
+	
 
 
-
-    vec3 color = texture(samplerColorMap, inUV).rgb;
+    vec3 color = texture(samplerColorMap, inUV).rgb * inColor;
     // Ambient
     //vec3 ambient = 0.08 * color;
-    vec3 ambient = 0.001 * color;
+    vec3 ambient = 0.08 * color;
 
     // Diffuse
-    vec3 lightDir = normalize(scene.lightPos - inPos);
+    vec3 lightDir = normalize(inLightPos - inPos);
     vec3 normal = normalize(inNormal);
     float diff = max(dot(lightDir, normal), 0.0);
     vec3 diffuse = diff * color;
@@ -192,7 +200,7 @@ void main()
     //vec3 viewPos = vec3(0.0, 1.0, 2.0);
     // Specular
     //vec3 viewDir = normalize(viewPos - inPos);
-    vec3 viewDir = normalize(scene.cameraPos - inPos);
+    vec3 viewDir = normalize(inCamPos - inPos);
 
     vec3 reflectDir = reflect(-lightDir, normal);
     float spec = 0.0;
@@ -200,7 +208,7 @@ void main()
     vec3 halfwayDir = normalize(lightDir + viewDir);  
     spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);
 
-    
+
     vec3 specular = vec3(0.3) * spec; // assuming bright white light color
 
 

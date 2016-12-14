@@ -67,8 +67,8 @@ namespace vkx {
 
 	//using MeshLayout = std::vector<VertexLayout>;
 
-	extern struct materialProperties;
-	extern struct Material;
+	/*extern */struct materialProperties;
+	/*extern */struct Material;
 
 	struct MeshBuffer {
 

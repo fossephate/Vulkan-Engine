@@ -16,6 +16,7 @@ layout (set = 0, binding = 0) uniform sceneBuffer
 	mat4 projection;
 	mat4 normal;
 	vec3 lightPos;
+	vec3 cameraPos;
 } scene;
 
 // matrix data
@@ -32,7 +33,11 @@ layout (location = 1) out vec3 outNormal;
 layout (location = 2) out vec3 outColor;
 layout (location = 3) out vec3 outViewVec;
 layout (location = 4) out vec3 outLightVec;
+
 layout (location = 5) out vec3 outPos;
+layout (location = 6) out vec3 outCamPos;
+layout (location = 7) out vec3 outLightPos;
+
 
 
 
@@ -44,6 +49,9 @@ void main()
 	outColor = inColor;
 
 	outPos = inPos.xyz;
+	outCamPos = scene.cameraPos;
+	outLightPos = scene.lightPos;
+
 
 	
 	mat4 modelView = scene.view * matrices.model;

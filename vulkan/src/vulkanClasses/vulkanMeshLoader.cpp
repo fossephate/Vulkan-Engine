@@ -184,7 +184,9 @@ void vkx::MeshLoader::loadMaterials(const aiScene *pScene) {
 
 	//vk::DescriptorSetLayout setLayout3 = context.device.createDescriptorSetLayout(descriptorLayout3);
 
-
+	if (this->assetManager.materialDescriptorPool == nullptr) {
+		return;
+	}
 
 	// todo: remove the tempMaterials vector
 	for (int i = 0; i < tempMaterials.size(); ++i) {

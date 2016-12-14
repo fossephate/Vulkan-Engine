@@ -123,7 +123,7 @@ namespace vkx
 			std::list<UpdateOperation> pendingUpdates;
 
 			// Color buffer format
-			vk::Format colorformat{ vk::Format::eB8G8R8A8Unorm };
+			//vk::Format colorformat{ vk::Format::eB8G8R8A8Unorm };
 
 			// Depth buffer format...  selected during Vulkan initialization
 			vk::Format depthFormat{ vk::Format::eUndefined };

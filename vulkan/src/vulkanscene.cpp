@@ -229,14 +229,14 @@ public:
 		//models[1].change();
 
 		models[1].setTranslation(glm::vec3(3*cos(globalP), 2.0f, 3*sin(globalP)));
-		models[2].setTranslation(glm::vec3(/*2*cos(globalP)+*/2.0f, 3.0f, 0.0f));
+		//models[2].setTranslation(glm::vec3(/*2*cos(globalP)+*/2.0f, 3.0f, 0.0f));
 		//models[3].setTranslation(glm::vec3(cos(globalP)-2.0f, 2.0f, 0.0f));
 		//models[4].setTranslation(glm::vec3(cos(globalP), 3.0f, 0.0f));
 		//models[5].setTranslation(glm::vec3(cos(globalP)-2.0f, 4.0f, 0.0f));
 
 
 		//uboScene.lightPos = glm::vec4(cos(globalP), 4.0f, cos(globalP), 0.0f);
-		uboScene.lightPos = glm::vec3(sin(globalP), 2.0f, 0.0f);
+		uboScene.lightPos = glm::vec3(0.0f, 4.0f, 0.0f);
 
 
 		//matrixNodes[0].model = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, 0.0f));
@@ -875,9 +875,9 @@ public:
 		//otherModel1.load(getAssetPath() + "models/vulkanscenemodels.dae");
 		//otherModel1.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
-		vkx::Model otherModel1(context, assetManager);
-		otherModel1.load(getAssetPath() + "models/sibenik/sibenik.dae");
-		otherModel1.createMeshes(vertexLayout, 0.05f, VERTEX_BUFFER_BIND_ID);
+		//vkx::Model otherModel1(context, assetManager);
+		//otherModel1.load(getAssetPath() + "models/sibenik/sibenik.dae");
+		//otherModel1.createMeshes(vertexLayout, 0.05f, VERTEX_BUFFER_BIND_ID);
 
 		vkx::Model otherModel2(context, assetManager);
 		otherModel2.load(getAssetPath() + "models/vulkanscenemodels.dae");
@@ -902,7 +902,7 @@ public:
 		//meshes.push_back(otherMesh1);
 
 		models.push_back(planeModel);
-		models.push_back(otherModel1);
+		//models.push_back(otherModel1);
 		models.push_back(otherModel2);
 		//models.push_back(otherModel3);
 		//models.push_back(otherModel4);
