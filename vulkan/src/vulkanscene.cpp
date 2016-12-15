@@ -228,7 +228,7 @@ public:
 
 		//models[1].change();
 
-		models[1].setTranslation(glm::vec3(3*cos(globalP), 2.0f, 3*sin(globalP)));
+		models[1].setTranslation(glm::vec3(3*cos(globalP), 1.0f, 3*sin(globalP)));
 		//models[2].setTranslation(glm::vec3(/*2*cos(globalP)+*/2.0f, 3.0f, 0.0f));
 		//models[3].setTranslation(glm::vec3(cos(globalP)-2.0f, 2.0f, 0.0f));
 		//models[4].setTranslation(glm::vec3(cos(globalP), 3.0f, 0.0f));

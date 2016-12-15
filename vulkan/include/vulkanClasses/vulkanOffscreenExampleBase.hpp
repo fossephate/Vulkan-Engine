@@ -29,6 +29,8 @@ namespace vkx {
 			vk::ImageLayout colorFinalLayout{ vk::ImageLayout::eShaderReadOnlyOptimal };
 			vk::ImageLayout depthFinalLayout{ vk::ImageLayout::eUndefined };
 
+			
+
 			Offscreen(const vkx::Context& context) : context(context) {}
 
 			void prepare() {
@@ -123,9 +125,12 @@ namespace vkx {
 					depthAttachment.storeOp = depthFinalLayout == vk::ImageLayout::eUndefined ? vk::AttachmentStoreOp::eDontCare : vk::AttachmentStoreOp::eStore;
 					depthAttachment.initialLayout = vk::ImageLayout::eUndefined;
 					depthAttachment.finalLayout = depthFinalLayout;
+
 					attachments.push_back(depthAttachment);
 					depthAttachmentReference.attachment = attachments.size() - 1;
-					depthAttachmentReference.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+					//depthAttachmentReference.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+					//depthAttachmentReference.layout = vk::ImageLayout::eDepthStencilReadOnlyOptimal;
+					
 					subpass.pDepthStencilAttachment = &depthAttachmentReference;
 				}
 

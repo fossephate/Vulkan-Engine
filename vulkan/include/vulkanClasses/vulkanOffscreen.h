@@ -24,8 +24,10 @@ namespace vkx {
         vkx::Framebuffer framebuffer;
         // Typically the offscreen render results will either be used for a blit operation or a shader read operation
         // so the final color layout is usually either TransferSrcOptimal or ShaderReadOptimal
-        vk::ImageLayout colorFinalLayout{ vk::ImageLayout::eTransferSrcOptimal };
-        vk::ImageLayout depthFinalLayout{ vk::ImageLayout::eUndefined };
+        //vk::ImageLayout colorFinalLayout{ vk::ImageLayout::eTransferSrcOptimal };
+        //vk::ImageLayout depthFinalLayout{ vk::ImageLayout::eUndefined };
+		vk::ImageLayout colorFinalLayout{ vk::ImageLayout::eTransferSrcOptimal };
+		vk::ImageLayout depthFinalLayout{ vk::ImageLayout::eUndefined };
         vk::SubmitInfo submitInfo;
         vk::ImageUsageFlags attachmentUsage{ vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eInputAttachment };
         vk::DescriptorPool descriptorPool;

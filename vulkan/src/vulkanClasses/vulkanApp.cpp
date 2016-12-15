@@ -415,7 +415,7 @@ void vulkanApp::setupRenderPass() {
 
 	// Color attachment
 	//attachments[0].format = colorformat;
-	attachments[0].format = colorformat;
+	attachments[0].format = swapChain.colorFormat;
 	attachments[0].loadOp = vk::AttachmentLoadOp::eClear;
 	attachments[0].storeOp = vk::AttachmentStoreOp::eStore;
 	attachments[0].initialLayout = vk::ImageLayout::eUndefined;
