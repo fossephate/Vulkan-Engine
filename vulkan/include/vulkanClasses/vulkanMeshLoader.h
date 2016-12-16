@@ -47,6 +47,21 @@
 
 
 
+
+
+
+
+
+
+
+// Maximum number of bones per mesh
+// Must not be higher than same const in skinning shader
+#define MAX_BONES 64
+// Maximum number of bones per vertex
+#define MAX_BONES_PER_VERTEX 4
+
+
+
 namespace vkx {
 
 	class Model;
@@ -54,6 +69,7 @@ namespace vkx {
 	class MeshLoader;
 	class AssetManager;
 
+	// vertex layout enums
 	typedef enum VertexLayout {
 		VERTEX_LAYOUT_POSITION = 0x0,
 		VERTEX_LAYOUT_NORMAL = 0x1,
@@ -65,7 +81,6 @@ namespace vkx {
 		VERTEX_LAYOUT_DUMMY_VEC4 = 0x7
 	} VertexLayout;
 
-	//using MeshLayout = std::vector<VertexLayout>;
 
 	/*extern */struct materialProperties;
 	/*extern */struct Material;
@@ -86,6 +101,37 @@ namespace vkx {
 			vertices.destroy();
 			indices.destroy();
 		}
+	};
+
+
+
+
+	// Per-vertex bone IDs and weights
+	struct VertexBoneData {
+		std::array<uint32_t, MAX_BONES_PER_VERTEX> IDs;
+		std::array<float, MAX_BONES_PER_VERTEX> weights;
+
+		// Ad bone weighting to vertex info
+		void add(uint32_t boneID, float weight) {
+			for (uint32_t i = 0; i < MAX_BONES_PER_VERTEX; i++) {
+				if (weights[i] == 0.0f) {
+					IDs[i] = boneID;
+					weights[i] = weight;
+					return;
+				}
+			}
+		}
+	};
+
+	// Stores information on a single bone
+	struct BoneInfo {
+		aiMatrix4x4 offset;
+		aiMatrix4x4 finalTransformation;
+
+		BoneInfo() {
+			offset = aiMatrix4x4();
+			finalTransformation = aiMatrix4x4();
+		};
 	};
 
 

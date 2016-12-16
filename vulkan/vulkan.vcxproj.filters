@@ -60,7 +60,10 @@
     <ClCompile Include="src\vulkanClasses\vulkanMesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\vulkanscene.cpp">
+    <ClCompile Include="src\skeletalAnimation2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vulkanClasses\vulkanSkinnedMesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -123,6 +126,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\base\Object3D.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vulkanClasses\vulkanSkinnedMesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

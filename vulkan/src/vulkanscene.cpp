@@ -14,13 +14,27 @@
 
 // todo: rename this: // important!
 // vertexLayout has the same name!
-std::vector<vkx::VertexLayout> vertexLayout =
+std::vector<vkx::VertexLayout> meshVertexLayout =
 {
 	vkx::VertexLayout::VERTEX_LAYOUT_POSITION,
 	vkx::VertexLayout::VERTEX_LAYOUT_NORMAL,
 	vkx::VertexLayout::VERTEX_LAYOUT_UV,
 	vkx::VertexLayout::VERTEX_LAYOUT_COLOR
 };
+
+
+std::vector<vkx::VertexLayout> skinnedMeshVertexLayout =
+{
+	vkx::VertexLayout::VERTEX_LAYOUT_POSITION,
+	vkx::VertexLayout::VERTEX_LAYOUT_NORMAL,
+	vkx::VertexLayout::VERTEX_LAYOUT_UV,
+	vkx::VertexLayout::VERTEX_LAYOUT_COLOR,
+	vkx::VertexLayout::VERTEX_LAYOUT_DUMMY_VEC4,
+	vkx::VertexLayout::VERTEX_LAYOUT_DUMMY_VEC4
+};
+
+
+
 
 inline size_t alignedSize(size_t align, size_t sz) {
 	return ((sz + align - 1) / align)*align;
@@ -101,14 +115,23 @@ public:
 
 	struct {
 		vk::Pipeline meshes;
+		vk::Pipeline animated;
 		vk::Pipeline blending;
 		vk::Pipeline wireframe;
 		//vk::Pipeline skybox;
 	} pipelines;
 
 	vk::PipelineLayout pipelineLayout;
-	//vk::DescriptorSet descriptorSet;
-	//vk::DescriptorSetLayout descriptorSetLayout;
+
+
+
+
+	struct {
+		vk::PipelineLayout meshes;
+		vk::PipelineLayout animated;
+	} pipelineLayouts;
+
+
 
 	std::vector<vk::DescriptorSetLayout> descriptorSetLayouts;
 	std::vector<vk::DescriptorSet> descriptorSets;
@@ -439,7 +462,27 @@ public:
 
 		inputState.vertexAttributeDescriptionCount = attributeDescriptions.size();
 		inputState.pVertexAttributeDescriptions = attributeDescriptions.data();
+
+
+
+
+
+
+
+
+
+
+
+
 	}
+
+
+
+
+
+
+
+
 
 
 
@@ -812,6 +855,14 @@ public:
 
 
 
+
+
+
+
+
+
+
+
 		// Assign pipelines
 		
 		// todo:
@@ -863,37 +914,37 @@ public:
 
 		vkx::Model planeModel(context, assetManager);
 		planeModel.load(getAssetPath() + "models/plane2.dae");
-		planeModel.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		planeModel.createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
 
 		//vkx::Model otherModel1(context, assetManager);
 		//otherModel1.load(getAssetPath() + "models/vulkanscenemodels.dae");
-		//otherModel1.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		//otherModel1.createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
 
 		//vkx::Model otherModel1(context, assetManager);
 		//otherModel1.load(getAssetPath() + "models/vulkanscenemodels.dae");
-		//otherModel1.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		//otherModel1.createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
 		//vkx::Model otherModel1(context, assetManager);
 		//otherModel1.load(getAssetPath() + "models/sibenik/sibenik.dae");
-		//otherModel1.createMeshes(vertexLayout, 0.05f, VERTEX_BUFFER_BIND_ID);
+		//otherModel1.createMeshes(meshVertexLayout, 0.05f, VERTEX_BUFFER_BIND_ID);
 
 		vkx::Model otherModel2(context, assetManager);
 		otherModel2.load(getAssetPath() + "models/vulkanscenemodels.dae");
-		otherModel2.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		otherModel2.createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
 		//vkx::Model otherModel3(context, assetManager);
 		//otherModel3.load(getAssetPath() + "models/myCube.dae");
-		//otherModel3.createMeshes(vertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		//otherModel3.createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
 		//vkx::Model otherModel4(context, assetManager);
 		//otherModel4.load(getAssetPath() + "models/cube.obj");
-		//otherModel4.createMeshes(vertexLayout, 0.02f, VERTEX_BUFFER_BIND_ID);
+		//otherModel4.createMeshes(meshVertexLayout, 0.02f, VERTEX_BUFFER_BIND_ID);
 
 		//vkx::Model otherModel5(context, assetManager);
 		//otherModel5.load(getAssetPath() + "models/cube.obj");
-		//otherModel5.createMeshes(vertexLayout, 0.02f, VERTEX_BUFFER_BIND_ID);
+		//otherModel5.createMeshes(meshVertexLayout, 0.02f, VERTEX_BUFFER_BIND_ID);
 
 
 

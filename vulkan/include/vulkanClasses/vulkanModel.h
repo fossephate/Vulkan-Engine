@@ -28,48 +28,46 @@ namespace vkx {
 
 		public:
 
-		std::vector<Mesh> meshes;
-		//std::vector<Material> materials;
+			std::vector<Mesh> meshes;
+			//std::vector<Material> materials;
 
-		uint32_t matrixIndex;
-		uint32_t vertexBufferBinding = 0;
+			uint32_t matrixIndex;
+			uint32_t vertexBufferBinding = 0;
 
-		// reference to meshLoader: // change from pointer to ref?
-		vkx::MeshLoader *meshLoader;
+			// reference to meshLoader: // change from pointer to ref?
+			vkx::MeshLoader *meshLoader;
 
-		// reference to context:
-		vkx::Context &context;
+			// reference to context:
+			vkx::Context &context;
 
-		// not constant// its members can change
-		vkx::AssetManager &assetManager;
+			// not constant// its members can change
+			vkx::AssetManager &assetManager;
 
-
-
-		vk::Pipeline pipeline;
+			vk::Pipeline pipeline;
 
 
-		// constructors:
+			// constructors:
 
-		// no default constructor
-		Model();
+			// no default constructor
+			Model();
 
-		Model(vkx::Context &context, vkx::AssetManager &assetManager);
+			Model(vkx::Context &context, vkx::AssetManager &assetManager);
 
-		//~Model();
+			//~Model();
 
 
 
 
-		// load model
-		void load(const std::string &filename);
-		// load model with custom flags
-		void load(const std::string &filename, int flags);
+			// load model
+			void load(const std::string &filename);
+			// load model with custom flags
+			void load(const std::string &filename, int flags);
 
-		void createMeshes(const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
+			void createMeshes(const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
 
-		//void setupVertexInputState(const std::vector<VertexLayout> &layout);
+			//void setupVertexInputState(const std::vector<VertexLayout> &layout);
 
-		void drawIndexed(const vk::CommandBuffer& cmdBuffer);
+			void drawIndexed(const vk::CommandBuffer& cmdBuffer);
 	};
 
 }

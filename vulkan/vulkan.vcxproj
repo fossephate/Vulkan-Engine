@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\skeletalAnimation2.cpp" />
     <ClCompile Include="src\vulkanClasses\camera.cpp" />
     <ClCompile Include="src\vulkanClasses\shapes.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanAndroid.cpp" />
@@ -30,11 +31,11 @@
     <ClCompile Include="src\vulkanClasses\vulkanMeshLoader.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanModel.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanOffscreen.cpp" />
+    <ClCompile Include="src\vulkanClasses\vulkanSkinnedMesh.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanSwapChain.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTextOverlay.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTextureLoader.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTools.cpp" />
-    <ClCompile Include="src\vulkanscene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\base\Object3D.h" />
@@ -53,6 +54,7 @@
     <ClInclude Include="include\vulkanClasses\vulkanOffscreen.h" />
     <ClInclude Include="include\vulkanClasses\vulkanOffscreenExampleBase.hpp" />
     <ClInclude Include="include\vulkanClasses\vulkanShaders.h" />
+    <ClInclude Include="include\vulkanClasses\vulkanSkinnedMesh.h" />
     <ClInclude Include="include\vulkanClasses\vulkanSwapChain.h" />
     <ClInclude Include="include\vulkanClasses\vulkanTextOverlay.h" />
     <ClInclude Include="include\vulkanClasses\vulkanTextureLoader.h" />
