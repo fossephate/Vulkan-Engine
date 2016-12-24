@@ -798,7 +798,7 @@ void vulkanApp::renderLoop() {
 		auto tDiffSeconds = tDiff / 1000.0f;
 		tStart = tEnd;
 
-		float FPS = 70.0f;
+		float FPS = 60.0f;
 		float numOfMS = (1000.0f / FPS)*2.0f;// this doesn't seem to work properly
 		if (tDiff < numOfMS) {
 			float extraTime = numOfMS - tDiff;
