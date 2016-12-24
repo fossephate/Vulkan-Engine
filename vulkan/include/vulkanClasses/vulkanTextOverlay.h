@@ -39,61 +39,61 @@ namespace vkx {
 	// Mostly self-contained text overlay class
 	// todo : comment
 	class TextOverlay {
-	private:
-		Context context;
+		private:
+			Context context;
 
-		uint32_t& framebufferWidth;
-		uint32_t& framebufferHeight;
+			uint32_t& framebufferWidth;
+			uint32_t& framebufferHeight;
 
-		CreateImageResult texture;
-		CreateBufferResult vertexBuffer;
+			CreateImageResult texture;
+			CreateBufferResult vertexBuffer;
 
-		vk::DescriptorPool descriptorPool;
-		vk::DescriptorSetLayout descriptorSetLayout;
-		vk::DescriptorSet descriptorSet;
-		vk::PipelineLayout pipelineLayout;
-		vk::Pipeline pipeline;
+			vk::DescriptorPool descriptorPool;
+			vk::DescriptorSetLayout descriptorSetLayout;
+			vk::DescriptorSet descriptorSet;
+			vk::PipelineLayout pipelineLayout;
+			vk::Pipeline pipeline;
 
-		// Pointer to mapped vertex buffer
-		glm::vec4 *mapped = nullptr;
+			// Pointer to mapped vertex buffer
+			glm::vec4 *mapped = nullptr;
 
-		stb_fontchar stbFontData[STB_NUM_CHARS];
-		uint32_t numLetters;
+			stb_fontchar stbFontData[STB_NUM_CHARS];
+			uint32_t numLetters;
 
-	public:
+		public:
 
-		enum TextAlign { alignLeft, alignCenter, alignRight };
-		std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
+			enum TextAlign { alignLeft, alignCenter, alignRight };
+			std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
 
-		bool visible = true;
-		bool invalidated = false;
+			bool visible = true;
+			bool invalidated = false;
 
-		TextOverlay(
-			Context context,
-			uint32_t& framebufferwidth,
-			uint32_t& framebufferheight,
-			vk::RenderPass renderPass);
+			TextOverlay(
+				Context context,
+				uint32_t& framebufferwidth,
+				uint32_t& framebufferheight,
+				vk::RenderPass renderPass);
 
-		~TextOverlay();
+			~TextOverlay();
 
-		// Prepare all vulkan resources required to render the font
-		// The text overlay uses separate resources for descriptors (pool, sets, layouts), pipelines and command buffers
-		void prepareResources();
+			// Prepare all vulkan resources required to render the font
+			// The text overlay uses separate resources for descriptors (pool, sets, layouts), pipelines and command buffers
+			void prepareResources();
 
-		// Prepare a separate pipeline for the font rendering decoupled from the main application
-		void preparePipeline(vk::RenderPass renderPass);
+			// Prepare a separate pipeline for the font rendering decoupled from the main application
+			void preparePipeline(vk::RenderPass renderPass);
 
-		// Map buffer 
-		void beginTextUpdate();
+			// Map buffer 
+			void beginTextUpdate();
 
-		// Add text to the current buffer
-		// todo : drop shadow? color attribute?
-		void addText(std::string text, float x, float y, TextAlign align);
+			// Add text to the current buffer
+			// todo : drop shadow? color attribute?
+			void addText(std::string text, float x, float y, TextAlign align);
 
-		// Unmap buffer and update command buffers
-		void endTextUpdate();
+			// Unmap buffer and update command buffers
+			void endTextUpdate();
 
-		// Needs to be called by the application
-		void writeCommandBuffer(const vk::CommandBuffer& cmdBuffer);
+			// Needs to be called by the application
+			void writeCommandBuffer(const vk::CommandBuffer& cmdBuffer);
 	};
 }

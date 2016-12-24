@@ -251,7 +251,7 @@ public:
 
 		//models[1].change();
 
-		models[1].setTranslation(glm::vec3(3*cos(globalP), 1.0f, 3*sin(globalP)));
+		//models[1].setTranslation(glm::vec3(3*cos(globalP), 1.0f, 3*sin(globalP)));
 		//models[2].setTranslation(glm::vec3(/*2*cos(globalP)+*/2.0f, 3.0f, 0.0f));
 		//models[3].setTranslation(glm::vec3(cos(globalP)-2.0f, 2.0f, 0.0f));
 		//models[4].setTranslation(glm::vec3(cos(globalP), 3.0f, 0.0f));
@@ -930,9 +930,9 @@ public:
 		//otherModel1.load(getAssetPath() + "models/sibenik/sibenik.dae");
 		//otherModel1.createMeshes(meshVertexLayout, 0.05f, VERTEX_BUFFER_BIND_ID);
 
-		vkx::Model otherModel2(context, assetManager);
-		otherModel2.load(getAssetPath() + "models/vulkanscenemodels.dae");
-		otherModel2.createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		//vkx::Model otherModel2(context, assetManager);
+		//otherModel2.load(getAssetPath() + "models/vulkanscenemodels.dae");
+		//otherModel2.createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
 		//vkx::Model otherModel3(context, assetManager);
 		//otherModel3.load(getAssetPath() + "models/myCube.dae");
@@ -954,7 +954,7 @@ public:
 
 		models.push_back(planeModel);
 		//models.push_back(otherModel1);
-		models.push_back(otherModel2);
+		//models.push_back(otherModel2);
 		//models.push_back(otherModel3);
 		//models.push_back(otherModel4);
 		//models.push_back(otherModel5);
@@ -1004,17 +1004,51 @@ public:
 		updateUniformBuffers();
 	}
 
-	virtual void getOverlayText(vkx::TextOverlay *textOverlay)
-	{
-		textOverlay->addText("camera stats:", 5.0f, 70.0f, vkx::TextOverlay::alignLeft);
-		textOverlay->addText("rotation(q) w: " + std::to_string(camera.rotation.w), 5.0f, 90.0f, vkx::TextOverlay::alignLeft);
-		textOverlay->addText("rotation(q) x: " + std::to_string(camera.rotation.x), 5.0f, 110.0f, vkx::TextOverlay::alignLeft);
-		textOverlay->addText("rotation(q) y: " + std::to_string(camera.rotation.y), 5.0f, 130.0f, vkx::TextOverlay::alignLeft);
-		textOverlay->addText("rotation(q) z: " + std::to_string(camera.rotation.z), 5.0f, 150.0f, vkx::TextOverlay::alignLeft);
+	virtual void getOverlayText(vkx::TextOverlay *textOverlay) {
 
-		textOverlay->addText("pos x: " + std::to_string(camera.translation.x), 5.0f, 170.0f, vkx::TextOverlay::alignLeft);
-		textOverlay->addText("pos y: " + std::to_string(camera.translation.y), 5.0f, 190.0f, vkx::TextOverlay::alignLeft);
-		textOverlay->addText("pos z: " + std::to_string(camera.translation.z), 5.0f, 210.0f, vkx::TextOverlay::alignLeft);
+
+		textOverlay->addText(title, 5.0f, 5.0f, vkx::TextOverlay::alignLeft);
+
+		std::stringstream ss;
+		//ss << std::fixed << std::setprecision(2) << (frameTimer * 1000.0f) << "ms (" << lastFPS << " fps)";
+		ss << lastFPS << " FPS";
+		textOverlay->addText(ss.str(), 5.0f, 25.0f, vkx::TextOverlay::alignLeft);
+		
+		ss.str("");
+		ss.clear();
+
+		ss << std::fixed << std::setprecision(2) << (frameTimer * 1000.0f) << "ms";
+		textOverlay->addText(ss.str(), 5.0f, 45.0f, vkx::TextOverlay::alignLeft);
+
+
+		ss.str("");
+		ss.clear();
+
+		ss << "Frame #: " << frameCounter;
+		textOverlay->addText(ss.str(), 5.0f, 65.0f, vkx::TextOverlay::alignLeft);
+
+		ss.str("");
+		ss.clear();
+
+
+
+		ss << "GPU: ";
+		ss << deviceProperties.deviceName;
+		textOverlay->addText(ss.str(), 5.0f, 85.0f, vkx::TextOverlay::alignLeft);
+
+
+		// vertical offset
+		float vOffset = 120.0f;
+
+		textOverlay->addText("camera stats:", 5.0f, vOffset, vkx::TextOverlay::alignLeft);
+		textOverlay->addText("rotation(q) w: " + std::to_string(camera.rotation.w), 5.0f, vOffset + 20.0f, vkx::TextOverlay::alignLeft);
+		textOverlay->addText("rotation(q) x: " + std::to_string(camera.rotation.x), 5.0f, vOffset + 40.0f, vkx::TextOverlay::alignLeft);
+		textOverlay->addText("rotation(q) y: " + std::to_string(camera.rotation.y), 5.0f, vOffset + 60.0f, vkx::TextOverlay::alignLeft);
+		textOverlay->addText("rotation(q) z: " + std::to_string(camera.rotation.z), 5.0f, vOffset + 80.0f, vkx::TextOverlay::alignLeft);
+
+		textOverlay->addText("pos x: " + std::to_string(camera.translation.x), 5.0f, vOffset + 100.0f, vkx::TextOverlay::alignLeft);
+		textOverlay->addText("pos y: " + std::to_string(camera.translation.y), 5.0f, vOffset + 120.0f, vkx::TextOverlay::alignLeft);
+		textOverlay->addText("pos z: " + std::to_string(camera.translation.z), 5.0f, vOffset + 140.0f, vkx::TextOverlay::alignLeft);
 	}
 
 };

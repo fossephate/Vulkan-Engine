@@ -119,7 +119,10 @@ namespace vkx
 			float frameTimer{ 1.0f };
 			// Frame counter to display fps
 			uint32_t frameCounter{ 0 };
+			uint32_t frameCounter2{ 0 };
 			uint32_t lastFPS{ 0 };
+
+
 			std::list<UpdateOperation> pendingUpdates;
 
 			// Color buffer format
@@ -145,7 +148,7 @@ namespace vkx
 			// Command buffer pool
 			vk::CommandPool cmdPool;
 
-			// set references to context
+			// initialize and set references to context
 			vkx::Context context{};
 			vk::Device &device = context.device;
 			vk::PhysicalDevice &physicalDevice = context.physicalDevice;

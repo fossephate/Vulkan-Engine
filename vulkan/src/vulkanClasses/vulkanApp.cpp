@@ -226,26 +226,27 @@ void vulkanApp::render() {
 }
 
 void vulkanApp::update(float deltaTime) {
-	frameTimer = deltaTime;
-	++frameCounter;
-	// Convert to clamped timer value
-	if (!paused) {
-		timer += timerSpeed * frameTimer;
-		if (timer > 1.0) {
-			timer -= 1.0f;
-		}
-	}
-	fpsTimer += (float)frameTimer;
-	if (fpsTimer > 1.0f) {
-		if (!enableTextOverlay) {
-			std::string windowTitle = getWindowTitle();
-			SetWindowText(this->windowInfo.info.win.window, windowTitle.c_str());
-		}
-		lastFPS = frameCounter;
-		updateTextOverlay();
-		fpsTimer = 0.0f;
-		frameCounter = 0;
-	}
+
+	//frameTimer = deltaTime;
+	//++frameCounter;
+	//// Convert to clamped timer value
+	//if (!paused) {
+	//	timer += timerSpeed * frameTimer;
+	//	if (timer > 1.0) {
+	//		timer -= 1.0f;
+	//	}
+	//}
+	//fpsTimer += (float)frameTimer;
+	//if (fpsTimer > 1.0f) {
+	//	if (!enableTextOverlay) {
+	//		std::string windowTitle = getWindowTitle();
+	//		SetWindowText(this->windowInfo.info.win.window, windowTitle.c_str());
+	//	}
+	//	lastFPS = frameCounter;
+	//	updateTextOverlay();
+	//	fpsTimer = 0.0f;
+	//	frameCounter = 0;
+	//}
 
 	bool updateView = true;
 
@@ -788,22 +789,74 @@ void vulkanApp::updateKeyboardMouseInfo() {
 //should not be here
 void vulkanApp::renderLoop() {
 
+	// when the frame started
+	auto tFrameStart = std::chrono::high_resolution_clock::now();
+	// the current time
+	auto tCurrent = std::chrono::high_resolution_clock::now();
+	// the time it took for the frame to render, i.e. tCurrent - tFrameStart
+	//auto tFrameTime = std::chrono::high_resolution_clock::now();
 
 	auto tStart = std::chrono::high_resolution_clock::now();
+	//auto tEnd = std::chrono::high_resolution_clock::now();
 
 	while (!quit) {
-		
-		auto tEnd = std::chrono::high_resolution_clock::now();
-		auto tDiff = std::chrono::duration<float, std::milli>(tEnd - tStart).count();
-		auto tDiffSeconds = tDiff / 1000.0f;
-		tStart = tEnd;
 
-		float FPS = 60.0f;
-		float numOfMS = (1000.0f / FPS)*2.0f;// this doesn't seem to work properly
-		if (tDiff < numOfMS) {
-			float extraTime = numOfMS - tDiff;
-			std::this_thread::sleep_for(std::chrono::milliseconds((int)extraTime));
+
+		// get current time
+		tCurrent = std::chrono::high_resolution_clock::now();
+
+
+
+		// number of frames that have been rendered
+		frameCounter++;
+
+		// the time it took to render the frame
+		auto tFrameTime = std::chrono::duration<float, std::milli>(tCurrent - tFrameStart).count();
+		// in ms
+		auto tFrameTimeMS = tFrameTime / 1000.0f;
+
+		// start of frame
+		tFrameStart = tCurrent;
+
+
+
+
+
+
+
+
+		// average over 1 second:
+
+		frameCounter2++;// reset every second
+		
+		// the amount of time that has passed
+		auto tDiff = std::chrono::duration<float, std::milli>(tCurrent - tStart).count();
+
+		auto tDiffMS = tDiff / 1000.0f;
+
+		// if more than a second has passed
+		if (tDiff >= 1000.0f) {
+
+			// get average frame time
+			// 1000 / (number of frames that occured in the last second)
+			frameTimer = tDiffMS / frameCounter2;
+			lastFPS = 1.0f / frameTimer;
+
+			tStart = tCurrent;
+			frameCounter2 = 0;
 		}
+
+		//frameTimer = tFrameTimeMS;
+		//lastFPS = 1.0f / frameTimer;
+
+		
+
+		//float FPS = 60.0f;
+		//float numOfMS = (1000.0f / FPS);// this doesn't seem to work properly
+		//if (tFrameTime < numOfMS) {
+		//	float extraTime = numOfMS - tFrameTime;
+		//	std::this_thread::sleep_for(std::chrono::milliseconds((int)extraTime));
+		//}
 
 
 
@@ -815,7 +868,13 @@ void vulkanApp::renderLoop() {
 		updateDrawCommandBuffers();
 
 		render();
-		update(tDiffSeconds);
+
+
+
+
+
+
+		update(0);
 	
 	}
 	SDL_DestroyWindow(this->SDLWindow);
@@ -861,14 +920,13 @@ void vulkanApp::updateTextOverlay() {
 		return;
 	}
 
+	// begin
 	textOverlay->beginTextUpdate();
-	textOverlay->addText(title, 5.0f, 5.0f, TextOverlay::alignLeft);
 
-	std::stringstream ss;
-	ss << std::fixed << std::setprecision(2) << (frameTimer * 1000.0f) << "ms (" << lastFPS << " fps)";
-	textOverlay->addText(ss.str(), 5.0f, 25.0f, TextOverlay::alignLeft);
-	textOverlay->addText(deviceProperties.deviceName, 5.0f, 45.0f, TextOverlay::alignLeft);
+	// get text
 	getOverlayText(textOverlay);
+
+	// end
 	textOverlay->endTextUpdate();
 
 	context.trashCommandBuffers(textCmdBuffers);
@@ -931,45 +989,6 @@ void vulkanApp::submitFrame() {
 
 
 
-
-//// handle input
-//void vulkanApp::handleInput()
-//{
-//	SDL_Event test_event;
-//	while (SDL_PollEvent(&test_event)) {
-//		if (test_event.type == SDL_QUIT) {
-//			SDL_DestroyWindow(this->SDLWindow);
-//			SDL_Quit();
-//		}
-//	}
-//}
-//	
-///* WINDOWS */
-//#if defined(_WIN32)
-//	// Win32 : Sets up a console window and redirects standard output to it
-//	void vulkanApp::setupConsole(std::string title)
-//	{
-//		AllocConsole();
-//		AttachConsole(GetCurrentProcessId());
-//		FILE *stream;
-//		freopen_s(&stream, "CONOUT$", "w+", stdout);
-//		SetConsoleTitle(TEXT(title.c_str()));
-//	}
-///* LINUX */
-//#elif defined(__linux__)
-//
-//#endif
-
-//void vulkanApp::viewChanged()
-//{
-//	// Can be overrdiden in derived class
-//}
-//
-//void vulkanApp::keyPressed(uint32_t keyCode)
-//{
-//	// Can be overriden in derived class
-//}
-
 void vulkanApp::setupRenderPassBeginInfo() {
 	clearValues.clear();
 	clearValues.push_back(vkx::clearColor(glm::vec4(0.1, 0.1, 0.1, 1.0)));
@@ -1028,277 +1047,3 @@ void vulkanApp::buildCommandBuffers() {
 	}
 	primaryCmdBuffersDirty = false;
 }
-
-//void vulkanApp::createCommandPool()
-//{
-//	vk::CommandPoolCreateInfo cmdPoolInfo;
-//	cmdPoolInfo.queueFamilyIndex = swapChain.queueNodeIndex;
-//	cmdPoolInfo.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
-//	this->cmdPool = device.createCommandPool(cmdPoolInfo);
-//}
-
-//void vulkanApp::setupDepthStencil()
-//{
-//
-//	vk::ImageCreateInfo image;
-//	//image.flags = 0;
-//	image.pNext = NULL;
-//	image.imageType = vk::ImageType::e2D;
-//	image.format = depthFormat;
-//	image.format = vk::Format::eR8G8B8A8Unorm;
-//
-//	image.extent = vk::Extent3D{ width, height, 1 };
-//	image.mipLevels = 1;
-//	image.arrayLayers = 1;
-//	image.samples = vk::SampleCountFlagBits::e1;
-//	image.tiling = vk::ImageTiling::eOptimal;
-//	image.usage = vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eTransferSrc;
-//	
-//
-//	vk::MemoryAllocateInfo mem_alloc;
-//	mem_alloc.pNext = NULL;
-//	mem_alloc.allocationSize = 0;
-//	mem_alloc.memoryTypeIndex = 0;
-//
-//	vk::ImageViewCreateInfo depthStencilView;
-//	depthStencilView.pNext = NULL;
-//	depthStencilView.viewType = vk::ImageViewType::e2D;
-//	depthStencilView.format = depthFormat;
-//	depthStencilView.format = vk::Format::eR8G8B8A8Unorm;
-//	//depthStencilView.flags = 0;
-//	depthStencilView.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
-//	depthStencilView.subresourceRange.baseMipLevel = 0;
-//	depthStencilView.subresourceRange.levelCount = 1;
-//	depthStencilView.subresourceRange.baseArrayLayer = 0;
-//	depthStencilView.subresourceRange.layerCount = 1;
-//
-//	vk::MemoryRequirements memReqs;
-//
-//	//VK_CHECK_RESULT(vkCreateImage(device, &image, nullptr, &depthStencil.image));
-//	device.createImage(&image, nullptr, &depthStencil.image);
-//
-//	//vkGetImageMemoryRequirements(device, depthStencil.image, &memReqs);
-//	device.getImageMemoryRequirements(depthStencil.image, &memReqs);
-//
-//	mem_alloc.allocationSize = memReqs.size;
-//	mem_alloc.memoryTypeIndex = vulkanDevice->getMemoryType(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
-//	//VK_CHECK_RESULT(vkAllocateMemory(device, &mem_alloc, nullptr, &depthStencil.mem));
-//	device.allocateMemory(&mem_alloc, nullptr, &depthStencil.mem);
-//	//VK_CHECK_RESULT(vkBindImageMemory(device, depthStencil.image, depthStencil.mem, 0));
-//	device.bindImageMemory(depthStencil.image, depthStencil.mem, 0);
-//
-//	depthStencilView.image = depthStencil.image;
-//	//VK_CHECK_RESULT(vkCreateImageView(device, &depthStencilView, nullptr, &depthStencil.view));
-//	device.createImageView(&depthStencilView, nullptr, &depthStencil.view);
-//}
-//
-//void vulkanApp::setupFrameBuffer()
-//{
-//	vk::ImageView attachments[2];
-//
-//	// Depth/Stencil attachment is the same for all frame buffers
-//	attachments[1] = depthStencil.view;
-//
-//	vk::FramebufferCreateInfo frameBufferCreateInfo;
-//	frameBufferCreateInfo.pNext = NULL;
-//	frameBufferCreateInfo.renderPass = renderPass;
-//	frameBufferCreateInfo.attachmentCount = 2;
-//	frameBufferCreateInfo.pAttachments = attachments;
-//	frameBufferCreateInfo.width = width;
-//	frameBufferCreateInfo.height = height;
-//	frameBufferCreateInfo.layers = 1;
-//
-//	// Create frame buffers for every swap chain image
-//	frameBuffers.resize(swapChain.imageCount);
-//	for (uint32_t i = 0; i < frameBuffers.size(); i++)
-//	{
-//		attachments[0] = swapChain.scimages[i].view;
-//		//VK_CHECK_RESULT(vkCreateFramebuffer(device, &frameBufferCreateInfo, nullptr, &frameBuffers[i]));
-//		device.createFramebuffer(&frameBufferCreateInfo, nullptr, &frameBuffers[i]);
-//	}
-//}
-
-//void vulkanApp::setupRenderPass()
-//{
-//
-//	if (renderPass) {
-//		device.destroyRenderPass(renderPass);
-//	}
-//
-//	std::vector<vk::AttachmentDescription> attachments;
-//	attachments.resize(2);
-//
-//	// Color attachment
-//	attachments[0].format = colorformat;
-//	attachments[0].loadOp = vk::AttachmentLoadOp::eClear;
-//	attachments[0].storeOp = vk::AttachmentStoreOp::eStore;
-//	attachments[0].initialLayout = vk::ImageLayout::eUndefined;
-//	attachments[0].finalLayout = vk::ImageLayout::ePresentSrcKHR;
-//
-//	// Depth attachment
-//	attachments[1].format = depthFormat;
-//	attachments[1].loadOp = vk::AttachmentLoadOp::eClear;
-//	attachments[1].storeOp = vk::AttachmentStoreOp::eDontCare;
-//	attachments[1].initialLayout = vk::ImageLayout::eUndefined;
-//	attachments[1].finalLayout = vk::ImageLayout::eUndefined;
-//
-//	// Only one depth attachment, so put it first in the references
-//	vk::AttachmentReference depthReference;
-//	depthReference.attachment = 1;
-//	depthReference.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-//
-//	std::vector<vk::AttachmentReference> colorAttachmentReferences;
-//	{
-//		vk::AttachmentReference colorReference;
-//		colorReference.attachment = 0;
-//		colorReference.layout = vk::ImageLayout::eColorAttachmentOptimal;
-//		colorAttachmentReferences.push_back(colorReference);
-//	}
-//
-//	std::vector<vk::SubpassDescription> subpasses;
-//	std::vector<vk::SubpassDependency> subpassDependencies;
-//	{
-//		vk::SubpassDependency dependency;
-//		dependency.srcSubpass = 0;
-//		dependency.dstSubpass = VK_SUBPASS_EXTERNAL;
-//		dependency.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
-//		dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead;
-//		dependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-//		dependency.srcStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
-//		subpassDependencies.push_back(dependency);
-//
-//		vk::SubpassDescription subpass;
-//		subpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
-//		subpass.pDepthStencilAttachment = &depthReference;
-//		subpass.colorAttachmentCount = colorAttachmentReferences.size();
-//		subpass.pColorAttachments = colorAttachmentReferences.data();
-//		subpasses.push_back(subpass);
-//	}
-//
-//	vk::RenderPassCreateInfo renderPassInfo;
-//	renderPassInfo.attachmentCount = attachments.size();
-//	renderPassInfo.pAttachments = attachments.data();
-//	renderPassInfo.subpassCount = subpasses.size();
-//	renderPassInfo.pSubpasses = subpasses.data();
-//	renderPassInfo.dependencyCount = subpassDependencies.size();
-//	renderPassInfo.pDependencies = subpassDependencies.data();
-//
-//	renderPass = device.createRenderPass(renderPassInfo);
-//}
-
-//void vulkanApp::windowResize(const glm::uvec2& newSize)
-//{
-//	if (!prepared) {
-//		return;
-//	}
-//	prepared = false;
-//
-//	queue.waitIdle();
-//	device.waitIdle();
-//
-//	// Recreate swap chain
-//	//width = destWidth;
-//	//height = destHeight;
-//	createSetupCommandBuffer();
-//	//setupSwapChain();
-//	size.width = newSize.x;
-//	size.height = newSize.y;
-//	swapChain.create(size, enableVsync);
-//	camera.setAspectRatio((float)size.width / (float)size.height);
-//
-//	// Recreate the frame buffers
-//
-//	device.destroyImageView(depthStencil.view);
-//	device.destroyImage(depthStencil.image);
-//	device.freeMemory(depthStencil.mem);
-//
-//	setupDepthStencil();
-//	
-//	for (uint32_t i = 0; i < frameBuffers.size(); i++) {
-//		device.destroyFramebuffer(frameBuffers[i]);
-//	}
-//	setupFrameBuffer();
-//
-//	flushSetupCommandBuffer();
-//
-//	// Command buffers need to be recreated as they may store
-//	// references to the recreated frame buffer
-//	destroyCommandBuffers();
-//	createCommandBuffers();
-//	buildCommandBuffers();
-//
-//	if (enableTextOverlay)
-//	{
-//		textOverlay->reallocateCommandBuffers();
-//		updateTextOverlay();
-//	}
-//
-//	
-//
-//	// Notify derived class
-//	windowResized();
-//	viewChanged();
-//
-//	prepared = true;
-//}
-
-//void vulkanApp::windowResized()
-//{
-//	// Can be overriden in derived class
-//}
-
-//void vulkanApp::initSwapchain()
-//{
-//	//// if using SDL2
-//	//#if USE_SDL2
-//	//	/* WINDOWS*/
-//	//	#if defined(_WIN32)
-//	//		swapChain.initSurface(this->windowInstance, this->SDLWindow);
-//	//	/* LINUX */
-//	//	#elif defined(__linux__)
-//	//	
-//	//	/* ANDROID */
-//	//	#elif defined(__ANDROID__)
-//	//	
-//	//	#endif
-//	//#endif
-//
-//	/* OS specific surface creation */
-//	#if defined(_WIN32)
-//		swapChain.initSurface(this->windowInstance, this->windowHandle);
-//	#elif defined(__linux__)
-//		swapChain.initSurface(connection, window);
-//	#elif defined(__ANDROID__)	
-//		swapChain.initSurface(androidApp->window);
-//	#endif
-//}
-
-/*void vulkanApp::setupSwapChain()
-{
-	swapChain.create(size, enableVSync);
-}*/
-
-
-
-//void vulkanApp::run() {
-//	#if defined(_WIN32)
-//		setupWindow();
-//	#elif defined(__ANDROID__)
-//		// Attach vulkan example to global android application state
-//		state->userData = vulkanExample;
-//		state->onAppCmd = VulkanExample::handleAppCommand;
-//		state->onInputEvent = VulkanExample::handleAppInput;
-//		androidApp = state;
-//	#elif defined(__linux__)
-//		setupWindow();
-//	#endif
-//	
-//	#if !defined(__ANDROID__)
-//		prepare();
-//	#endif
-//	renderLoop();
-//
-//	// Once we exit the render loop, wait for everything to become idle before proceeding to the descructor.
-//	queue.waitIdle();
-//	device.waitIdle();
-//}
