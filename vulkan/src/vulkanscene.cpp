@@ -14,12 +14,22 @@
 
 // todo: rename this: // important!
 // vertexLayout has the same name!
+//std::vector<vkx::VertexLayout> meshVertexLayout =
+//{
+//	vkx::VertexLayout::VERTEX_LAYOUT_POSITION,
+//	vkx::VertexLayout::VERTEX_LAYOUT_NORMAL,
+//	vkx::VertexLayout::VERTEX_LAYOUT_UV,
+//	vkx::VertexLayout::VERTEX_LAYOUT_COLOR
+//};
+
 std::vector<vkx::VertexLayout> meshVertexLayout =
 {
 	vkx::VertexLayout::VERTEX_LAYOUT_POSITION,
 	vkx::VertexLayout::VERTEX_LAYOUT_NORMAL,
 	vkx::VertexLayout::VERTEX_LAYOUT_UV,
-	vkx::VertexLayout::VERTEX_LAYOUT_COLOR
+	vkx::VertexLayout::VERTEX_LAYOUT_COLOR,
+	vkx::VertexLayout::VERTEX_LAYOUT_DUMMY_VEC4,
+	vkx::VertexLayout::VERTEX_LAYOUT_DUMMY_VEC4
 };
 
 
@@ -51,14 +61,16 @@ public:
 
 
 
-	vk::PipelineVertexInputStateCreateInfo inputState;
-	std::vector<vk::VertexInputBindingDescription> bindingDescriptions;
-	std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
+
+	struct {
+		vk::PipelineVertexInputStateCreateInfo inputState;
+		std::vector<vk::VertexInputBindingDescription> bindingDescriptions;
+		std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
+	} vertices;
 
 	std::vector<vkx::Mesh> meshes;
 	std::vector<vkx::Model> models;
-
-	vkx::Mesh skyboxMesh;
+	std::vector<vkx::SkinnedMesh> animatedModels;
 
 	struct {
 		vkx::UniformData sceneVS;// scene data
@@ -67,7 +79,7 @@ public:
 	} uniformData;
 
 	struct {
-		glm::mat4 model;// not really needed// todo: remove
+		//glm::mat4 model;// not really needed// todo: remove
 		glm::mat4 view;
 		glm::mat4 projection;
 		
@@ -118,7 +130,6 @@ public:
 		vk::Pipeline animated;
 		vk::Pipeline blending;
 		vk::Pipeline wireframe;
-		//vk::Pipeline skybox;
 	} pipelines;
 
 	vk::PipelineLayout pipelineLayout;
@@ -426,42 +437,97 @@ public:
 
 		}
 
+
+
+
+
+		for (auto &animatedModel : animatedModels) {
+
+		}
+
+
 	}
+
+
+
+
+
+
 
 	void prepareVertices() {
 
-		struct Vertex {
-			float pos[3];
-			float normal[3];
-			float uv[2];
-			float color[3];
+		struct meshVertex {
+			glm::vec3 pos;
+			glm::vec3 normal;
+			glm::vec2 uv;
+			glm::vec3 color;
 		};
 
+		struct animatedModelVertex {
+			glm::vec3 pos;
+			glm::vec3 normal;
+			glm::vec2 uv;
+			glm::vec3 color;
+			// Max. four bones per vertex
+			float boneWeights[4];
+			uint32_t boneIDs[4];
+		};
+
+		//// Binding description
+		//bindingDescriptions.resize(1);
+		//bindingDescriptions[0] =
+		//	vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, sizeof(meshVertex), vk::VertexInputRate::eVertex);
+
+		//// Attribute descriptions
+		//attributeDescriptions.resize(4);
+		//// Location 0 : Position
+		//attributeDescriptions[0] =
+		//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 0, vk::Format::eR32G32B32Sfloat, 0);
+		//// Location 1 : Normal
+		//attributeDescriptions[1] =
+		//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 1, vk::Format::eR32G32B32Sfloat, sizeof(float) * 3);
+		//// Location 2 : UV
+		//attributeDescriptions[2] =
+		//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 2, vk::Format::eR32G32Sfloat, sizeof(float) * 6);
+		//// Location 3 : Color
+		//attributeDescriptions[3] =
+		//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 3, vk::Format::eR32G32B32Sfloat, sizeof(float) * 8);
+
+
 		// Binding description
-		bindingDescriptions.resize(1);
-		bindingDescriptions[0] =
-			vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, sizeof(Vertex), vk::VertexInputRate::eVertex);
+		vertices.bindingDescriptions.resize(1);
+		vertices.bindingDescriptions[0] =
+			vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, sizeof(animatedModelVertex), vk::VertexInputRate::eVertex);
 
 		// Attribute descriptions
-		attributeDescriptions.resize(4);
+		// Describes memory layout and shader positions
+		vertices.attributeDescriptions.resize(6);
 		// Location 0 : Position
-		attributeDescriptions[0] =
+		vertices.attributeDescriptions[0] =
 			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 0, vk::Format::eR32G32B32Sfloat, 0);
 		// Location 1 : Normal
-		attributeDescriptions[1] =
+		vertices.attributeDescriptions[1] =
 			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 1, vk::Format::eR32G32B32Sfloat, sizeof(float) * 3);
 		// Location 2 : Texture coordinates
-		attributeDescriptions[2] =
+		vertices.attributeDescriptions[2] =
 			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 2, vk::Format::eR32G32Sfloat, sizeof(float) * 6);
 		// Location 3 : Color
-		attributeDescriptions[3] =
+		vertices.attributeDescriptions[3] =
 			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 3, vk::Format::eR32G32B32Sfloat, sizeof(float) * 8);
+		// Location 4 : Bone weights
+		vertices.attributeDescriptions[4] =
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 4, vk::Format::eR32G32B32A32Sfloat, sizeof(float) * 11);
+		// Location 5 : Bone IDs
+		vertices.attributeDescriptions[5] =
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 5, vk::Format::eR32G32B32A32Sint, sizeof(float) * 15);
 
-		inputState.vertexBindingDescriptionCount = bindingDescriptions.size();
-		inputState.pVertexBindingDescriptions = bindingDescriptions.data();
 
-		inputState.vertexAttributeDescriptionCount = attributeDescriptions.size();
-		inputState.pVertexAttributeDescriptions = attributeDescriptions.data();
+
+		vertices.inputState.vertexBindingDescriptionCount = vertices.bindingDescriptions.size();
+		vertices.inputState.pVertexBindingDescriptions = vertices.bindingDescriptions.data();
+
+		vertices.inputState.vertexAttributeDescriptionCount = vertices.attributeDescriptions.size();
+		vertices.inputState.pVertexAttributeDescriptions = vertices.attributeDescriptions.data();
 
 
 
@@ -713,14 +779,6 @@ public:
 
 
 
-
-
-
-
-		// Cube map image descriptor
-		//vk::DescriptorImageInfo texDescriptor =
-		//	vkx::descriptorImageInfo(textures.colorMap.sampler, textures.colorMap.view, vk::ImageLayout::eGeneral);
-
 		std::vector<vk::WriteDescriptorSet> writeDescriptorSets =
 		{
 			// set 0
@@ -730,12 +788,6 @@ public:
 				vk::DescriptorType::eUniformBuffer,
 				0,// binding 0
 				&uniformData.sceneVS.descriptor),
-			// Binding 1 : Fragment shader image sampler
-			//vkx::writeDescriptorSet(
-			//	descriptorSets[0],// descriptor set 0
-			//	vk::DescriptorType::eCombinedImageSampler,
-			//	1,// binding 1
-			//	&texDescriptor),
 			
 			// set 1
 			// vertex shader matrix dynamic buffer
@@ -812,7 +864,7 @@ public:
 		vk::GraphicsPipelineCreateInfo pipelineCreateInfo =
 			vkx::pipelineCreateInfo(pipelineLayout, renderPass);
 
-		pipelineCreateInfo.pVertexInputState = &inputState;
+		pipelineCreateInfo.pVertexInputState = &vertices.inputState;
 		pipelineCreateInfo.pInputAssemblyState = &inputAssemblyState;
 		pipelineCreateInfo.pRasterizationState = &rasterizationState;
 		pipelineCreateInfo.pColorBlendState = &colorBlendState;
@@ -1021,11 +1073,11 @@ public:
 		textOverlay->addText(ss.str(), 5.0f, 45.0f, vkx::TextOverlay::alignLeft);
 
 
-		ss.str("");
-		ss.clear();
+		//ss.str("");
+		//ss.clear();
 
-		ss << "Frame #: " << frameCounter;
-		textOverlay->addText(ss.str(), 5.0f, 65.0f, vkx::TextOverlay::alignLeft);
+		//ss << "Frame #: " << frameCounter;
+		//textOverlay->addText(ss.str(), 5.0f, 65.0f, vkx::TextOverlay::alignLeft);
 
 		ss.str("");
 		ss.clear();
@@ -1034,7 +1086,7 @@ public:
 
 		ss << "GPU: ";
 		ss << deviceProperties.deviceName;
-		textOverlay->addText(ss.str(), 5.0f, 85.0f, vkx::TextOverlay::alignLeft);
+		textOverlay->addText(ss.str(), 5.0f, 65.0f, vkx::TextOverlay::alignLeft);
 
 
 		// vertical offset

@@ -32,7 +32,11 @@
 //ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 //POSSIBILITY OF SUCH DAMAGE.
 
-#include "glslang/Include/intermediate.h"
+#if _MSC_VER >= 1900
+    #pragma warning(disable : 4464) // relative include path contains '..'
+#endif
+
+#include "../glslang/Include/intermediate.h"
 
 #include <string>
 #include <vector>

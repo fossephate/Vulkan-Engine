@@ -57,6 +57,7 @@
 #include "vulkanMeshLoader.h"
 #include "vulkanMesh.h"
 #include "vulkanModel.h"
+#include "vulkanSkinnedMesh.h"
 
 #include "vulkanTextOverlay.h"
 #include "vulkanFrameBuffer.h"

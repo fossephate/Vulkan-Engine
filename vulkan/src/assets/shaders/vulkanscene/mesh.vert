@@ -11,7 +11,7 @@ layout (location = 3) in vec3 inColor;
 // scene
 layout (set = 0, binding = 0) uniform sceneBuffer
 {
-	mat4 model;// not used
+	//mat4 model;// not used
 	mat4 view;
 	mat4 projection;
 	mat4 normal;
