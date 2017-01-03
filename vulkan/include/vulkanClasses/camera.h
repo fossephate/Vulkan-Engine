@@ -19,7 +19,7 @@
 #include <algorithm>
 #include "Object3D.h"
 
-class Camera : public vkx::Object3D {
+class Camera {
 	private:
 		const float MAX_PITCH{ (float)M_PI_2 * 0.95f };
 		float fov;
@@ -37,25 +37,25 @@ class Camera : public vkx::Object3D {
 		float movementSpeed = 0.05f;
 
 
-		//struct {
-		//	glm::quat orientation = glm::quat();
-		//	glm::quat &rotation = orientation;
-		//	glm::vec3 euler;
-		//	glm::vec4 angleAxis;
+		struct {
+			glm::quat orientation = glm::quat();
+			glm::quat &rotation = orientation;
+			glm::vec3 euler;
+			glm::vec4 angleAxis;
 
-		//	glm::vec3 translation = glm::vec3();
-		//	glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
+			glm::vec3 translation = glm::vec3();
+			glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
 
-		//
-		//	//glm::mat4 transfMatrix = glm::mat4();
-		//} transform;
+		
+			//glm::mat4 transfMatrix = glm::mat4();
+		} transform;
 
-		//// set refs for convenience
-		//glm::quat & orientation = transform.orientation;
-		//glm::quat &rotation = orientation;
+		// set refs for convenience
+		glm::quat & orientation = transform.orientation;
+		glm::quat &rotation = orientation;
 
-		//glm::vec3 & translation = transform.translation;
-		//glm::vec3 & scale = transform.scale;
+		glm::vec3 & translation = transform.translation;
+		glm::vec3 & scale = transform.scale;
 
 	
 
@@ -83,27 +83,27 @@ class Camera : public vkx::Object3D {
 		//glm::mat4 getViewMatrix();
 
 
-		///* translate */
-		//void translate(glm::vec3 delta);
+		/* translate */
+		void translate(glm::vec3 delta);
 
-		//void translateWorld(glm::vec3 delta);
-		//void translateLocal(glm::vec3 delta);
-		//void setTranslation(glm::vec3 translation);
+		void translateWorld(glm::vec3 delta);
+		void translateLocal(glm::vec3 delta);
+		void setTranslation(glm::vec3 translation);
 
 
-		///* rotate */
-		//void setRotation(glm::quat rotation);
+		/* rotate */
+		void setRotation(glm::quat rotation);
 
-		///* Rotate around world axes */
-		//void rotateWorld(glm::vec3 delta);
+		/* Rotate around world axes */
+		void rotateWorld(glm::vec3 delta);
 
-		///* Convienience functions */
-		//void rotateWorldX(float r);
-		//void rotateWorldY(float r);
-		//void rotateWorldZ(float r);
+		/* Convienience functions */
+		void rotateWorldX(float r);
+		void rotateWorldY(float r);
+		void rotateWorldZ(float r);
 
-		///* Rotate around local axes */
-		//void rotateLocal(glm::vec3 delta);
+		/* Rotate around local axes */
+		void rotateLocal(glm::vec3 delta);
 
 
 
