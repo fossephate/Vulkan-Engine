@@ -20,6 +20,8 @@ namespace vkx {
 				glm::quat &rotation = orientation;
 				glm::vec4 angleAxis;
 				// no euler!
+				glm::vec3 euler;
+
 				glm::vec3 translation = glm::vec3(0.0);
 				glm::vec3 scale = glm::vec3(1.0);
 			} transform;
@@ -33,37 +35,7 @@ namespace vkx {
 
 
 			glm::mat4 transfMatrix;
-
-
-
-
-
-
-
-
-			///* translate */
-			//void setTranslation(glm::vec3 point);
-			//void translateWorld(glm::vec3 delta);
-			//void translateLocal(glm::vec3 delta);
-		
-
-
-			///* rotate */
-			//void setRotation(glm::quat rotation);
-
-			///* Rotate around world axes */
-			//void rotateWorld(glm::vec3 delta);
-
-			///* Convienience functions */
-			//void rotateWorldX(float r);
-			//void rotateWorldY(float r);
-			//void rotateWorldZ(float r);
-
-			///* Rotate around local axes */
-			//void rotateLocal(glm::vec3 delta);
-
-
-			//void updateTransform();
+			glm::mat4 viewMatrix;
 
 
 
@@ -88,9 +60,47 @@ namespace vkx {
 			}
 
 
+
+
 			/* rotation */
 			void setRotation(glm::quat orientation) {
 				this->orientation = orientation;
+				updateTransform();
+			}
+
+
+			void rotateWorld(glm::quat q) {
+				
+				//this->orientation = glm::normalize(glm::quat(delta) * this->rotation);
+				//this->orientation = q*this->orientation;
+				updateTransform();
+			}
+
+			void rotateWorldX(float angle) {
+				glm::vec3 axis(1.0, 0.0, 0.0);
+				this->transform.euler += angle*axis;
+				glm::quat q = glm::angleAxis(angle, axis);
+				this->rotateWorld(q);
+			}
+			void rotateWorldY(float angle) {
+				glm::vec3 axis(0.0, 1.0, 0.0);
+				this->transform.euler += angle*axis;
+				glm::quat q = glm::angleAxis(angle, axis);
+				this->rotateWorld(q);
+			}
+			void rotateWorldZ(float angle) {
+				glm::vec3 axis(0.0, 0.0, 1.0);
+				this->transform.euler += angle*axis;
+				glm::quat q = glm::angleAxis(angle, axis);
+				this->rotateWorld(q);
+			}
+
+
+
+			void rotateLocal(glm::quat angleAxis) {
+
+				//this->orientation = orientation;
+
 				updateTransform();
 			}
 
@@ -108,7 +118,14 @@ namespace vkx {
 
 
 				//this->transfMatrix = rotationMatrix * translationMatrix /** scaleMatrix*/;
-				this->transfMatrix = translationMatrix /** rotationMatrix /** scaleMatrix*/;
+				this->transfMatrix = translationMatrix * rotationMatrix /** scaleMatrix*/;
+
+				this->updateViewMatrix();
+
+
+			}
+
+			virtual void updateViewMatrix() {
 
 			}
 

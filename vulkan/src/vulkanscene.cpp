@@ -171,7 +171,7 @@ public:
 		size.height = 720;
 
 
-		camera.setTranslation({ 0.0f, 1.0f, 5.0f });
+		camera.setTranslation({ -1.0f, -1.0f, 5.0f });
 
 		matrixNodes.resize(100);
 		materialNodes.resize(100);
@@ -270,7 +270,7 @@ public:
 
 
 		//uboScene.lightPos = glm::vec4(cos(globalP), 4.0f, cos(globalP), 0.0f);
-		uboScene.lightPos = glm::vec3(0.0f, 4.0f, 0.0f);
+		uboScene.lightPos = glm::vec3(1.0f, 1.0f, 4.0f);
 
 
 		//matrixNodes[0].model = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, 0.0f));

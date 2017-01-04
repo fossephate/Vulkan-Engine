@@ -80,12 +80,12 @@ void Camera::updateViewMatrix() {
 	glm::vec3 &euler = this->transform.euler;
 
 	// Constrain pitch to ~-PI/2 to ~PI/2
-	if (abs(euler.x) > MAX_PITCH) {
-		euler.x = std::max(std::min(euler.x, MAX_PITCH), -MAX_PITCH);
-	}
-	while (abs(euler.z) > M_PI) {
-		euler.z += 2.0f * (float)((euler.z > 0) ? -M_PI : M_PI);
-	}
+	//if (abs(euler.x) > MAX_PITCH) {
+	//	euler.x = std::max(std::min(euler.x, MAX_PITCH), -MAX_PITCH);
+	//}
+	//while (abs(euler.z) > M_PI) {
+	//	euler.z += 2.0f * (float)((euler.z > 0) ? -M_PI : M_PI);
+	//}
 
 	//if (abs(euler.x) > MAX_PITCH) {
 	//	euler.x = std::max(std::min(euler.x, MAX_PITCH), -MAX_PITCH);
@@ -101,68 +101,27 @@ void Camera::updateViewMatrix() {
 	// rotate around up axis and then right axis
 	glm::quat rot = glm::angleAxis(dir.x, glm::vec3(1.0f, 0.0f, 0.0f)) * glm::angleAxis(dir.z, glm::vec3(0.0f, 1.0f, 0.0f));
 	//glm::quat rot = glm::angleAxis(dir.x, glm::vec3(1.0f, 0.0f, 0.0f)) * glm::angleAxis(dir.z, glm::vec3(0.0f, 0.0f, 1.0f));
+
 	glm::mat4 rotationMatrix = glm::mat4_cast(glm::normalize(rot));
 
-	//glm::mat4 rotationMatrix = glm::mat4_cast(glm::normalize(this->transform.rotation));
-	//glm::mat4 rotationMatrix = glm::mat4();
-	//glm::mat4 rotationMatrix = glm::rotate(glm::mat4(), glm::angle(this->transform.rotation), glm::axis(this->transform.rotation));
-	//rotationMatrix = rotationMatrix * glm::mat4_cast(glm::angleAxis(glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
-	//rotationMatrix = glm::scale(rotationMatrix, glm::vec3(-1.0f, 1.0f, -1.0f));
+	//glm::mat4 rotationMatrix = glm::mat4_cast(glm::normalize(this->orientation));
 
 	glm::mat4 translationMatrix = glm::translate(glm::mat4(), this->transform.translation);
-	//glm::mat4 inverseTranslationMatrix = glm::translate(glm::mat4(), -this->transform.translation);
-	//glm::mat4 inverseTrans = glm::inverse(translationMatrix);
-
-	//this->matrices.transform = (translationMatrix) * (rotationMatrix);
-
-	//this->matrices.view = glm::inverse(this->matrices.transform);
-
-	//glm::mat4 rotationMatrix2 = glm::mat4_cast(glm::normalize(glm::conjugate(rot)));
+	glm::mat4 scaleMatrix = glm::scale(glm::mat4(), this->transform.scale);
 
 	
-	this->matrices.transform = (translationMatrix) * (rotationMatrix);
-	
+	this->matrices.transform = (translationMatrix) * (rotationMatrix) /** (scaleMatrix)*/;
 
+	//this->matrices.view = (rotationMatrix) * (glm::inverse(translationMatrix));
+	this->matrices.view = glm::inverse(this->matrices.transform);
 
+	glm::vec3 dir2 = this->orientation*glm::vec3(0.0, 0.0, -1.0);
 
-	//this->matrices.view = glm::inverse(this->matrices.transform);
-	
-	this->matrices.view = (rotationMatrix) * (glm::inverse(translationMatrix));
-
-
-
-	//this->matrices.view = glm::inverse((translationMatrix) * (rotationMatrix) /* * (scaleMatrix) */);
-	
-	//this->matrices.view = glm::inverse(translationMatrix) * glm::inverse(rotationMatrix);
-
-	
-	
-
-	//this->matrices.view = glm::translate(glm::mat4(), this->transform.translation);
-
-	//glm::vec3 direction(
-	//	cos(dir.x) * sin(dir.z),
-	//	cos(dir.x) * cos(dir.z),
-	//	sin(dir.x)
-	//);
-
-
-	//glm::vec3 direction(
-	//	cos(dir.x) * sin(dir.z),
-	//	sin(dir.x),
-	//	cos(dir.x) * cos(dir.z)
-	//);
-
-	//this->matrices.view = glm::inverse(glm::lookAtRH(
-	//	this->transform.translation,
-	//	this->transform.translation+direction,
-	//	glm::vec3(0.0f, 1.0f, 0.0f)
-	//));
-
-
-
-	//this->matrices.view = glm::mat4_cast(glm::angleAxis(glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f))) * this->matrices.view;
-	//this->matrices.view = glm::scale(this->matrices.view, glm::vec3(1.0f, 1.0f, -1.0f));
+	this->matrices.view = glm::lookAt(
+		this->transform.translation, // Camera is at (4,3,3), in World Space
+		glm::vec3(0, 0, 0), // and looks at the origin
+		glm::vec3(0, 0, 1)  // Head is up (set to 0,-1,0 to look upside-down)
+	);
 
 }
 
@@ -196,8 +155,7 @@ Camera::Camera() {
 
 
 
-void Camera::setProjection(float fov, float aspect, float znear, float zfar)
-{
+void Camera::setProjection(float fov, float aspect, float znear, float zfar) {
 	this->fov = fov;
 	this->znear = znear;
 	this->zfar = zfar;
@@ -205,87 +163,8 @@ void Camera::setProjection(float fov, float aspect, float znear, float zfar)
 	this->matrices.projection = glm::perspectiveRH(glm::radians(fov), aspect, znear, zfar);
 }
 
-void Camera::setAspectRatio(float aspect)
-{
+void Camera::setAspectRatio(float aspect) {
 	this->matrices.projection = glm::perspectiveRH(glm::radians(fov), aspect, znear, zfar);
-}
-
-/* translation */
-void Camera::setTranslation(glm::vec3 point)
-{
-	this->translation = point;
-	updateViewMatrix();
-}
-
-
-void Camera::translateWorld(glm::vec3 delta)
-{
-	this->translation += delta;
-	updateViewMatrix();
-}
-
-void Camera::translateLocal(glm::vec3 delta) {
-
-	this->translation += delta * this->rotation;
-	updateViewMatrix();
-
-}
-
-
-
-
-
-/* rotation */
-
-void Camera::setRotation(glm::quat rotation)
-{
-	this->rotation = rotation;
-	updateViewMatrix();
-}
-
-void Camera::rotateWorld(glm::vec3 delta)
-{
-	
-	
-	this->rotation = glm::normalize(glm::quat(delta) * this->rotation);
-
-	//glm::vec3 up = glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f) * this->rotation);
-
-	//glm::quat rotate = RotationBetweenVectors(glm::vec3(0.0f, 1.0f, 0.0f), up);
-	//glm::quat unrotate = RotationBetweenVectors(up, glm::vec3(0.0f, 1.0f, 0.0f));
-
-	//glm::quat unrotated = glm::normalize(unrotate * this->rotation);
-	//glm::quat temp = glm::normalize(glm::quat(delta) * unrotated);
-
-	//glm::quat rerotate = glm::normalize(rotate * temp);
-
-	//this->transform.rotation = rerotate;
-	
-	//glm::quat temp = glm::quat(delta) * this->rotation;
-
-	this->transform.euler += delta;// remove
-	updateViewMatrix();
-}
-
-
-
-void Camera::rotateWorldX(float r)
-{
-	rotateWorld(glm::vec3(r, 0.0f, 0.0f));
-}
-void Camera::rotateWorldY(float r)
-{
-	rotateWorld(glm::vec3(0.0f, r, 0.0f));
-}
-void Camera::rotateWorldZ(float r)
-{
-	rotateWorld(glm::vec3(0.0f, 0.0f, r));
-}
-
-
-void Camera::rotateLocal(glm::vec3 delta) {
-
-
 }
 
 
@@ -322,33 +201,7 @@ void Camera::decompMatrix() {
 
 
 
-void Camera::update(float deltaTime)
-{
-	if (type == CameraType::firstperson)
-	{
-		//if (moving())
-		//{
-			//glm::vec3 eulerAngles = glm::eulerAngles(this->rotation);
-			//
-			//
-			//glm::vec3 camFront;
-			//camFront.x = -cos(glm::radians(eulerAngles.x)) * sin(glm::radians(eulerAngles.y));
-			//camFront.y = sin(glm::radians(eulerAngles.x));
-			//camFront.z = cos(glm::radians(eulerAngles.x)) * cos(glm::radians(eulerAngles.y));
-			//camFront = glm::normalize(camFront);
-
-			//float moveSpeed = deltaTime * movementSpeed;
-
-			//if (keys.up)
-			//	this->translation += camFront * moveSpeed;
-			//if (keys.down)
-			//	this->translation -= camFront * moveSpeed;
-			//if (keys.left)
-			//	this->translation -= glm::normalize(glm::cross(camFront, glm::vec3(0.0f, 0.0f, 1.0f))) * moveSpeed;
-			//if (keys.right)
-			//	this->translation += glm::normalize(glm::cross(camFront, glm::vec3(0.0f, 0.0f, 1.0f))) * moveSpeed;
-
-			//updateViewMatrix();
-		//}
+void Camera::update(float deltaTime) {
+	if (type == CameraType::firstperson) {
 	}
 }
