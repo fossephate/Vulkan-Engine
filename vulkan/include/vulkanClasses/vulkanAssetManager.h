@@ -77,7 +77,8 @@ namespace vkx {
 			
 			
 			std::vector<Material> loadedMaterials;
-			std::vector<Texture> textures;
+			//std::vector<Texture> textures;
+			std::vector<Texture> loadedTextures;
 
 			vk::DescriptorSetLayout *materialDescriptorSetLayout{ nullptr };
 			vk::DescriptorPool *materialDescriptorPool{ nullptr };

@@ -48,14 +48,15 @@ namespace vkx {
 
 			/* translate along world axes */
 			void translateWorld(glm::vec3 delta) {
+				// world space, not screen space
 				this->translation += delta;
 				updateTransform();
 			}
 
 			/* translate along local axes */
 			void translateLocal(glm::vec3 delta) {
-
-				this->translation += delta * this->transform.rotation;// needs work
+				// screen space, not world space
+				this->translation += this->transform.rotation * delta;// needs work
 				updateTransform();
 			}
 
@@ -72,36 +73,54 @@ namespace vkx {
 			void rotateWorld(glm::quat q) {
 				
 				//this->orientation = glm::normalize(glm::quat(delta) * this->rotation);
-				//this->orientation = q*this->orientation;
+				this->orientation = glm::normalize(q*this->orientation);
+
 				updateTransform();
 			}
 
 			void rotateWorldX(float angle) {
 				glm::vec3 axis(1.0, 0.0, 0.0);
-				this->transform.euler += angle*axis;
+				//this->transform.euler += angle*axis;
 				glm::quat q = glm::angleAxis(angle, axis);
 				this->rotateWorld(q);
 			}
 			void rotateWorldY(float angle) {
 				glm::vec3 axis(0.0, 1.0, 0.0);
-				this->transform.euler += angle*axis;
+				//this->transform.euler += angle*axis;
 				glm::quat q = glm::angleAxis(angle, axis);
 				this->rotateWorld(q);
 			}
 			void rotateWorldZ(float angle) {
 				glm::vec3 axis(0.0, 0.0, 1.0);
-				this->transform.euler += angle*axis;
+				//this->transform.euler += angle*axis;
 				glm::quat q = glm::angleAxis(angle, axis);
 				this->rotateWorld(q);
 			}
 
 
 
-			void rotateLocal(glm::quat angleAxis) {
+			void rotateLocal(glm::quat q) {
 
-				//this->orientation = orientation;
+				//this->orientation = glm::normalize(glm::quat(delta) * this->rotation);
+				this->orientation = glm::normalize(this->orientation*q);
 
 				updateTransform();
+			}
+
+			void rotateLocalX(float angle) {
+				glm::vec3 axis(1.0, 0.0, 0.0);
+				glm::quat q = glm::angleAxis(angle, axis);
+				this->rotateLocal(q);
+			}
+			void rotateLocalY(float angle) {
+				glm::vec3 axis(0.0, 1.0, 0.0);
+				glm::quat q = glm::angleAxis(angle, axis);
+				this->rotateLocal(q);
+			}
+			void rotateLocalZ(float angle) {
+				glm::vec3 axis(0.0, 0.0, 1.0);
+				glm::quat q = glm::angleAxis(angle, axis);
+				this->rotateLocal(q);
 			}
 
 

@@ -73,8 +73,16 @@ vkx::Texture vkx::TextureLoader::loadTexture(const std::string & filename, vk::F
 	free(textureData);
 	#else
 
-	gli::texture2D tex2D(gli::load(filename.c_str()));
-	#endif        
+	std::string ext = filename.substr(filename.length()-3, 3);
+	std::string filenameKTX = filename;
+	if (ext == "png") {
+		filenameKTX = filename.substr(0, filename.length() - 3);
+		filenameKTX = filenameKTX + "ktx";
+	}
+
+	gli::texture2D tex2D(gli::load(filenameKTX.c_str()));
+
+	#endif
 	assert(!tex2D.empty());
 
 	Texture texture;

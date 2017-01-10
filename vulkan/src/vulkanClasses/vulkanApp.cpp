@@ -287,8 +287,8 @@ void vulkanApp::update(float deltaTime) {
 	//}
 
 	if (mouse.leftMouseButton.state) {
-		camera.rotateWorldZ(-mouse.delta.x*camera.rotationSpeed);
-		camera.rotateWorldX(-mouse.delta.y*camera.rotationSpeed);
+		camera.rotateWorldZ(mouse.delta.x*camera.rotationSpeed);
+		camera.rotateLocalX(mouse.delta.y*camera.rotationSpeed);
 
 		//camera.rotateWorld(glm::vec3(-mouse.delta.y*camera.rotationSpeed, 0, -mouse.delta.x*camera.rotationSpeed));
 		//camera.rotateWorld(glm::vec3(-mouse.delta.y*camera.rotationSpeed, 0, -mouse.delta.x*camera.rotationSpeed));
@@ -307,10 +307,10 @@ void vulkanApp::update(float deltaTime) {
 
 	if (!keyStates.shift) {
 		if (keyStates.left_arrow) {
-			camera.rotateWorldZ(camera.rotationSpeed);
+			camera.rotateWorldZ(-camera.rotationSpeed);
 		}
 		if (keyStates.right_arrow) {
-			camera.rotateWorldZ(-camera.rotationSpeed);
+			camera.rotateWorldZ(camera.rotationSpeed);
 		}
 	} else {
 		//if (keyStates.left_arrow) {

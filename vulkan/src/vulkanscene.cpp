@@ -132,6 +132,8 @@ public:
 		vk::Pipeline wireframe;
 	} pipelines;
 
+
+
 	vk::PipelineLayout pipelineLayout;
 
 
@@ -162,7 +164,7 @@ public:
 
 
 	//glm::vec4 lightPos = glm::vec4(2.0f, 2.0f, 5.0f, 0.0f);
-	glm::vec3 lightPos = glm::vec3(1.0f, 2.0f, 0.0f);
+	glm::vec3 lightPos = glm::vec3(1.0f, -2.0f, 2.0f);
 
 	VulkanExample() : vkx::vulkanApp(ENABLE_VALIDATION) {
 		// todo: pick better numbers
@@ -171,7 +173,7 @@ public:
 		size.height = 720;
 
 
-		camera.setTranslation({ -1.0f, -1.0f, 5.0f });
+		camera.setTranslation({ -0.0f, -16.0f, 3.0f });
 
 		matrixNodes.resize(100);
 		materialNodes.resize(100);
@@ -263,14 +265,14 @@ public:
 		//models[1].change();
 
 		//models[1].setTranslation(glm::vec3(3*cos(globalP), 1.0f, 3*sin(globalP)));
-		//models[2].setTranslation(glm::vec3(/*2*cos(globalP)+*/2.0f, 3.0f, 0.0f));
+		//models[2].setTranslation(glm::vec3(2*cos(globalP)+2.0f, 3.0f, 0.0f));
 		//models[3].setTranslation(glm::vec3(cos(globalP)-2.0f, 2.0f, 0.0f));
 		//models[4].setTranslation(glm::vec3(cos(globalP), 3.0f, 0.0f));
 		//models[5].setTranslation(glm::vec3(cos(globalP)-2.0f, 4.0f, 0.0f));
 
 
 		//uboScene.lightPos = glm::vec4(cos(globalP), 4.0f, cos(globalP), 0.0f);
-		uboScene.lightPos = glm::vec3(1.0f, 1.0f, 4.0f);
+		uboScene.lightPos = glm::vec3(1.0f, -2.0f, 4.0*sin(globalP)+4.0);
 
 
 		//matrixNodes[0].model = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, 0.0f));
@@ -965,13 +967,15 @@ public:
 
 
 		vkx::Model planeModel(context, assetManager);
-		planeModel.load(getAssetPath() + "models/plane2.dae");
+		planeModel.load(getAssetPath() + "models/plane.fbx");
 		planeModel.createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
 
+
+
 		//vkx::Model otherModel1(context, assetManager);
-		//otherModel1.load(getAssetPath() + "models/vulkanscenemodels.dae");
-		//otherModel1.createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		//otherModel1.load(getAssetPath() + "models/plane.fbx");
+		//otherModel1.createMeshes(meshVertexLayout, 0.01f, VERTEX_BUFFER_BIND_ID);
 
 
 		//vkx::Model otherModel1(context, assetManager);
@@ -980,11 +984,11 @@ public:
 
 		//vkx::Model otherModel1(context, assetManager);
 		//otherModel1.load(getAssetPath() + "models/sibenik/sibenik.dae");
-		//otherModel1.createMeshes(meshVertexLayout, 0.05f, VERTEX_BUFFER_BIND_ID);
+		//otherModel1.createMeshes(meshVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
 
-		//vkx::Model otherModel2(context, assetManager);
-		//otherModel2.load(getAssetPath() + "models/vulkanscenemodels.dae");
-		//otherModel2.createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		vkx::Model otherModel2(context, assetManager);
+		otherModel2.load(getAssetPath() + "models/cube.fbx");
+		otherModel2.createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
 		//vkx::Model otherModel3(context, assetManager);
 		//otherModel3.load(getAssetPath() + "models/myCube.dae");
@@ -1006,7 +1010,7 @@ public:
 
 		models.push_back(planeModel);
 		//models.push_back(otherModel1);
-		//models.push_back(otherModel2);
+		models.push_back(otherModel2);
 		//models.push_back(otherModel3);
 		//models.push_back(otherModel4);
 		//models.push_back(otherModel5);

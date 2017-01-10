@@ -227,7 +227,7 @@ namespace vkx {
 		memcpy(textDataPointer + 3, shaderSrc.data(), shaderSrc.size());
 		textData[moduleCreateInfo.codeSize - 1] = 0;
 		textData[moduleCreateInfo.codeSize - 2] = 0;
-		shaderModule = device.createShaderModule(moduleCreateInfo, NULL);
+		shaderModule = device.createShaderModule(moduleCreateInfo, nullptr);
 		return shaderModule;
 	}
 

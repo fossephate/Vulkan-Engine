@@ -113,13 +113,15 @@ void Camera::updateViewMatrix() {
 	this->matrices.transform = (translationMatrix) * (rotationMatrix) /** (scaleMatrix)*/;
 
 	//this->matrices.view = (rotationMatrix) * (glm::inverse(translationMatrix));
-	this->matrices.view = glm::inverse(this->matrices.transform);
+	//this->matrices.view = glm::inverse(this->matrices.transform);
 
-	glm::vec3 dir2 = this->orientation*glm::vec3(0.0, 0.0, -1.0);
+	glm::vec3 dir2 = glm::normalize(this->orientation*glm::vec3(0.0, 0.0, -1.0));
+
+
 
 	this->matrices.view = glm::lookAt(
 		this->transform.translation, // Camera is at (4,3,3), in World Space
-		glm::vec3(0, 0, 0), // and looks at the origin
+		this->transform.translation+dir2, // and looks at point
 		glm::vec3(0, 0, 1)  // Head is up (set to 0,-1,0 to look upside-down)
 	);
 
