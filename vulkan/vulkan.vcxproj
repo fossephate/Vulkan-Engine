@@ -30,6 +30,7 @@
     <ClCompile Include="src\vulkanClasses\vulkanMeshLoader.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanModel.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanOffscreen.cpp" />
+    <ClCompile Include="src\vulkanClasses\vulkanSkinnedMesh.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanSwapChain.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTextOverlay.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTextureLoader.cpp" />

@@ -5,8 +5,8 @@
       <author>Blender User</author>
       <authoring_tool>Blender 2.78.0 commit date:2016-10-24, commit time:12:20, hash:e8299c8</authoring_tool>
     </contributor>
-    <created>2017-01-04T14:16:45</created>
-    <modified>2017-01-04T14:16:45</modified>
+    <created>2017-01-12T08:22:06</created>
+    <modified>2017-01-12T08:22:06</modified>
     <unit name="meter" meter="1"/>
     <up_axis>Z_UP</up_axis>
   </asset>
@@ -80,24 +80,10 @@
       </extra>
     </light>
   </library_lights>
-  <library_images>
-    <image id="planeDiffuse" name="planeDiffuse">
-      <init_from>planeDiffuse.ktx</init_from>
-    </image>
-  </library_images>
+  <library_images/>
   <library_effects>
-    <effect id="Material-effect">
+    <effect id="planeMaterial-effect">
       <profile_COMMON>
-        <newparam sid="planeDiffuse-surface">
-          <surface type="2D">
-            <init_from>planeDiffuse</init_from>
-          </surface>
-        </newparam>
-        <newparam sid="planeDiffuse-sampler">
-          <sampler2D>
-            <source>planeDiffuse-surface</source>
-          </sampler2D>
-        </newparam>
         <technique sid="common">
           <phong>
             <emission>
@@ -107,7 +93,7 @@
               <color sid="ambient">0 0 0 1</color>
             </ambient>
             <diffuse>
-              <texture texture="planeDiffuse-sampler" texcoord="UVMap"/>
+              <color sid="diffuse">0.64 0.64 0.64 1</color>
             </diffuse>
             <specular>
               <color sid="specular">0.5 0.5 0.5 1</color>
@@ -124,8 +110,8 @@
     </effect>
   </library_effects>
   <library_materials>
-    <material id="Material-material" name="Material">
-      <instance_effect url="#Material-effect"/>
+    <material id="planeMaterial-material" name="planeMaterial">
+      <instance_effect url="#planeMaterial-effect"/>
     </material>
   </library_materials>
   <library_geometries>
@@ -173,7 +159,7 @@
         <vertices id="Cube-mesh-vertices">
           <input semantic="POSITION" source="#Cube-mesh-positions"/>
         </vertices>
-        <polylist material="Material-material" count="12">
+        <polylist material="planeMaterial-material" count="12">
           <input semantic="VERTEX" source="#Cube-mesh-vertices" offset="0"/>
           <input semantic="NORMAL" source="#Cube-mesh-normals" offset="1"/>
           <input semantic="TEXCOORD" source="#Cube-mesh-map-0" offset="2" set="0"/>
@@ -196,9 +182,7 @@
         <instance_geometry url="#Cube-mesh" name="Cube">
           <bind_material>
             <technique_common>
-              <instance_material symbol="Material-material" target="#Material-material">
-                <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
-              </instance_material>
+              <instance_material symbol="planeMaterial-material" target="#planeMaterial-material"/>
             </technique_common>
           </bind_material>
         </instance_geometry>

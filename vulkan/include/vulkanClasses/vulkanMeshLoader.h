@@ -240,7 +240,7 @@ namespace vkx {
 			vk::PipelineVertexInputStateCreateInfo vi;
 			std::vector<vk::VertexInputBindingDescription> bindingDescriptions;
 			std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
-			vk::Pipeline pipeline;
+			//vk::Pipeline pipeline;
 
 			Assimp::Importer Importer;
 
@@ -250,6 +250,7 @@ namespace vkx {
 			// also not const (needs to be modified: updatedescriptorsets)
 			// circumvented by copying device
 			const vkx::Context &context;
+
 			// copy of device
 			vk::Device device;
 			vk::Queue queue;
@@ -257,7 +258,6 @@ namespace vkx {
 			TextureLoader *textureLoader{ nullptr };
 			const aiScene *pScene{ nullptr };
 
-			//MeshLoader(const vkx::Context &context);
 			MeshLoader(const vkx::Context &context, vkx::AssetManager &assetManager);
 
 			~MeshLoader();

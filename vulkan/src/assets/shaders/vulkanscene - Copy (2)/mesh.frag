@@ -21,6 +21,7 @@
 
 
 // material data
+
 layout (set = 2, binding = 0) uniform materialBuffer
 {
 	vec4 ambient;
@@ -32,12 +33,13 @@ layout (set = 2, binding = 0) uniform materialBuffer
 
 
 
-// diffuse texture (from material)
+//layout (set = 3, binding = 0) uniform sampler2D samplerColorMap;
 layout (set = 3, binding = 0) uniform sampler2D samplerColorMap;
 
 
-layout (location = 0) in vec3 inNormal;
-layout (location = 1) in vec2 inUV;
+
+layout (location = 0) in vec2 inUV;
+layout (location = 1) in vec3 inNormal;
 layout (location = 2) in vec3 inColor;
 layout (location = 3) in vec3 inViewVec;
 layout (location = 4) in vec3 inLightVec;

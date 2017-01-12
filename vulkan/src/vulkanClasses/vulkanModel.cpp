@@ -17,13 +17,6 @@ namespace vkx {
 		//this->meshLoader = new vkx::MeshLoader();
 	}
 
-	//// reference way:
-	//Model::Model(const vkx::Context &context):
-	//	context(context)// init context with reference
-	//{
-	//	this->meshLoader = new vkx::MeshLoader(context);
-	//}
-
 
 
 	// reference way:
@@ -53,16 +46,15 @@ namespace vkx {
 
 		std::vector<MeshBuffer> meshBuffers = this->meshLoader->meshBuffers;
 
-		// copy vector of materials this class
-		//this->materials = this->meshLoader->materials;
-
 		for (int i = 0; i < meshBuffers.size(); ++i) {
-			//vkx::MeshBuffer &mBuffer = meshBuffers[i];
 			vkx::Mesh m(meshBuffers[i]);
-
-			//this->meshes.push_back(vkx::Mesh(mBuffer, this->materials[mBuffer.materialIndex]));
 			this->meshes.push_back(m);
 		}
+		
+		// todo: destroy this->meshLoader->meshBuffers here:
+		//for (int i = 0; i < this->meshLoader->meshBuffers.size(); ++i) {
+		//	// destroy here
+		//}
 
 		//this->materials = this->meshLoader->materials;
 

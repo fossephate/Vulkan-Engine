@@ -22,6 +22,9 @@
 
 namespace vkx {
 
+	// group of meshes
+	// scene?
+	// todo: fix
 	class Model : public Object3D {
 
 		private:
@@ -29,21 +32,19 @@ namespace vkx {
 		public:
 
 			std::vector<Mesh> meshes;
-			//std::vector<Material> materials;
 
 			uint32_t matrixIndex;
 			uint32_t vertexBufferBinding = 0;
+			vk::Pipeline pipeline;
 
 			// reference to meshLoader: // change from pointer to ref?
 			vkx::MeshLoader *meshLoader;
-
 			// reference to context:
 			vkx::Context &context;
-
 			// not constant// its members can change
 			vkx::AssetManager &assetManager;
 
-			vk::Pipeline pipeline;
+			
 
 
 			// constructors:
