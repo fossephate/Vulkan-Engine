@@ -17,7 +17,7 @@
 #include "vulkanMeshLoader.h"
 #include "vulkanAssetManager.h"
 
-#include "../base/Object3D.h"
+#include "Object3D.h"
 
 
 namespace vkx {
@@ -37,11 +37,11 @@ namespace vkx {
 			uint32_t vertexBufferBinding = 0;
 			vk::Pipeline pipeline;
 
-			// reference to meshLoader: // change from pointer to ref?
+			// pointer to meshLoader
 			vkx::MeshLoader *meshLoader;
-			// reference to context:
+			// reference to context
 			vkx::Context &context;
-			// not constant// its members can change
+			// reference to assetManager
 			vkx::AssetManager &assetManager;
 
 			
@@ -51,7 +51,6 @@ namespace vkx {
 
 			// no default constructor
 			Model();
-
 			Model(vkx::Context &context, vkx::AssetManager &assetManager);
 
 			//~Model();
