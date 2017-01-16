@@ -387,9 +387,12 @@ public:
 				//setNum = 2;
 				//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, setNum, 1, &descriptorSets[setNum], 1, &offset2);
 
+				uint32_t offset3 = 100000 * alignedMatrixSize;
+
 				// must make pipeline layout compatible
-				//setNum = 3;
-				//vkx::Material m = this->assetManager.loadedMaterials[mesh.meshBuffer.materialIndex];
+				setNum = 3;
+				vkx::Material m = this->assetManager.loadedMaterials[mesh.meshBuffer.materialIndex];
+				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &m.descriptorSet, 1, &offset3);
 				//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, m.descriptorSet, nullptr);
 
 
