@@ -11,11 +11,25 @@ namespace vkx {
 	//}
 
 
-	vkx::MeshLoader::MeshLoader(/*const */vkx::Context & context, vkx::AssetManager & assetManager) :
-		context(context), assetManager(assetManager)
-	{
+	//vkx::MeshLoader::MeshLoader(/*const */vkx::Context & context, vkx::AssetManager & assetManager) :
+	//	context(context), assetManager(assetManager)
+	//{
+	//	//this->device = context.device;
+	//	this->textureLoader = new vkx::TextureLoader(context);
+	//}
+
+	//vkx::MeshLoader::MeshLoader(/*const */vkx::Context & context, vkx::AssetManager & assetManager) {
+
+	//	//this->device = context.device;
+	//	this->textureLoader = new vkx::TextureLoader(context);
+	//}
+
+	vkx::MeshLoader::MeshLoader(vkx::Context *context, vkx::AssetManager *assetManager) {
+
+		this->context = context;
+		this->assetManager = assetManager;
 		//this->device = context.device;
-		this->textureLoader = new vkx::TextureLoader(context);
+		this->textureLoader = new vkx::TextureLoader(*context);
 	}
 
 	// deconstructor
@@ -172,7 +186,7 @@ namespace vkx {
 
 		//vk::DescriptorSetLayout setLayout3 = context.device.createDescriptorSetLayout(descriptorLayout3);
 
-		if (this->assetManager.materialDescriptorPool == nullptr) {
+		if (this->assetManager->materialDescriptorPool == nullptr) {
 			return;
 		}
 
@@ -187,11 +201,11 @@ namespace vkx {
 			//		1);
 			vk::DescriptorSetAllocateInfo allocInfo =
 				vkx::descriptorSetAllocateInfo(
-					*this->assetManager.materialDescriptorPool,
-					this->assetManager.materialDescriptorSetLayout,
+					*this->assetManager->materialDescriptorPool,
+					this->assetManager->materialDescriptorSetLayout,
 					1);
 
-			tempMaterials[i].descriptorSet = context.device.allocateDescriptorSets(allocInfo)[0];
+			tempMaterials[i].descriptorSet = context->device.allocateDescriptorSets(allocInfo)[0];
 
 			vk::DescriptorImageInfo texDescriptor =
 				vkx::descriptorImageInfo(
@@ -212,9 +226,9 @@ namespace vkx {
 
 			///*context.*/device.updateDescriptorSets(writeDescriptorSets, {});
 
-			context.device.updateDescriptorSets(writeDescriptorSets, {});
+			context->device.updateDescriptorSets(writeDescriptorSets, {});
 
-			this->assetManager.loadedMaterials.push_back(tempMaterials[i]);
+			this->assetManager->loadedMaterials.push_back(tempMaterials[i]);
 		}
 
 	}
@@ -242,7 +256,7 @@ namespace vkx {
 
 			// set material index for this mesh
 
-			int materialIndex = this->assetManager.loadedMaterials.size() - pScene->mNumMaterials + pMesh->mMaterialIndex;
+			int materialIndex = this->assetManager->loadedMaterials.size() - pScene->mNumMaterials + pMesh->mMaterialIndex;
 			m_Entries[index].MaterialIndex = materialIndex;
 
 
@@ -333,7 +347,7 @@ namespace vkx {
 	}
 
 
-	void vkx::MeshLoader::createMeshBuffer(const Context &context, const std::vector<VertexLayout> &layout, float scale) {
+	void vkx::MeshLoader::createMeshBuffer(const std::vector<VertexLayout> &layout, float scale) {
 		std::vector<float> vertexBuffer;
 		for (int m = 0; m < m_Entries.size(); m++) {
 			for (int i = 0; i < m_Entries[m].Vertices.size(); i++) {
@@ -406,9 +420,9 @@ namespace vkx {
 		meshBuffer.indexCount = (uint32_t)indexBuffer.size();
 		// Use staging buffer to move vertex and index buffer to device local memory
 		// Vertex buffer
-		meshBuffer.vertices = context.stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
+		meshBuffer.vertices = context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
 		// Index buffer
-		meshBuffer.indices = context.stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);
+		meshBuffer.indices = context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);
 		meshBuffer.dim = dim.size;
 
 		this->combinedBuffer = meshBuffer;
@@ -416,7 +430,7 @@ namespace vkx {
 
 
 
-	void vkx::MeshLoader::createMeshBuffers(const Context &context, const std::vector<VertexLayout> &layout, float scale) {
+	void vkx::MeshLoader::createMeshBuffers(const std::vector<VertexLayout> &layout, float scale) {
 
 		for (int m = 0; m < m_Entries.size(); m++) {
 
@@ -490,9 +504,9 @@ namespace vkx {
 			meshBuffer.indexCount = (uint32_t)indexBuffer.size();
 			// Use staging buffer to move vertex and index buffer to device local memory
 			// Vertex buffer
-			meshBuffer.vertices = context.stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
+			meshBuffer.vertices = this->context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
 			// Index buffer
-			meshBuffer.indices = context.stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);
+			meshBuffer.indices = this->context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);
 			meshBuffer.dim = dim.size;
 
 			meshBuffer.materialIndex = m_Entries[m].MaterialIndex;

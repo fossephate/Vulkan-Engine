@@ -47,6 +47,19 @@ vkx::TextureLoader::TextureLoader(const Context &context)
 	cmdBuffer = context.device.allocateCommandBuffers(cmdBufInfo)[0];
 }
 
+//vkx::TextureLoader::TextureLoader(Context *context)
+//{
+//
+//	// Create command buffer for submitting image barriers
+//	// and converting tilings
+//	vk::CommandBufferAllocateInfo cmdBufInfo;
+//	cmdBufInfo.commandPool = context.getCommandPool();
+//	cmdBufInfo.level = vk::CommandBufferLevel::ePrimary;
+//	cmdBufInfo.commandBufferCount = 1;
+//
+//	cmdBuffer = context.device.allocateCommandBuffers(cmdBufInfo)[0];
+//}
+
 vkx::TextureLoader::~TextureLoader() {
 	context.device.freeCommandBuffers(context.getCommandPool(), cmdBuffer);
 }

@@ -164,8 +164,8 @@ public:
 
 		camera.setTranslation({ -0.0f, -16.0f, 3.0f });
 
-		matrixNodes.resize(100);
-		materialNodes.resize(100);
+		matrixNodes.resize(50);
+		materialNodes.resize(50);
 
 
 		// todo: move this somewhere else
@@ -254,12 +254,13 @@ public:
 		globalP += 0.005f;
 
 
+		//models[0].setTranslation(glm::vec3(3 * cos(globalP), 1.0f, 3*sin(globalP)));
 
-		//models[1].setTranslation(glm::vec3(3*cos(globalP), 1.0f, 3*sin(globalP)));
-		//models[2].setTranslation(glm::vec3(2*cos(globalP)+2.0f, 3.0f, 0.0f));
-		//models[3].setTranslation(glm::vec3(cos(globalP)-2.0f, 2.0f, 0.0f));
-		//models[4].setTranslation(glm::vec3(cos(globalP), 3.0f, 0.0f));
-		//models[5].setTranslation(glm::vec3(cos(globalP)-2.0f, 4.0f, 0.0f));
+		models[1].setTranslation(glm::vec3(3*cos(globalP), 1.0f, 3*sin(globalP)));
+		models[2].setTranslation(glm::vec3(2*cos(globalP)+2.0f, 3.0f, 0.0f));
+		models[3].setTranslation(glm::vec3(cos(globalP)-2.0f, 2.0f, 0.0f));
+		models[4].setTranslation(glm::vec3(cos(globalP), 3.0f, 0.0f));
+		models[5].setTranslation(glm::vec3(cos(globalP)-2.0f, 4.0f, 0.0f));
 
 
 		//models[1].setTranslation(glm::vec3(0, 0, 2));
@@ -273,13 +274,6 @@ public:
 
 		//matrixNodes[0].model = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, 0.0f));
 		//matrixNodes[1].model = glm::translate(glm::mat4(), glm::vec3(sin(globalP), 1.0f, 0.0f));
-		
-		//updateDescriptorSets();
-		//updateUniformBuffers();
-
-		//for (int i = 0; i < meshes.size(); ++i) {
-		//	matrixNodes[i].model = meshes[i].transfMatrix;// change to use index // todo
-		//}
 
 
 		// todo: fix
@@ -288,8 +282,11 @@ public:
 		}
 
 		// what?
-		glm::mat4 test = glm::translate(glm::mat4(), glm::vec3(sin(globalP) - 2.0f, cos(globalP), 0.0f));
-		matrixNodes[1].model = test;
+		glm::mat4 test = glm::translate(glm::mat4(), glm::vec3(0.01*sin(globalP) - 2.0f, 0.01*cos(globalP), 0.0f));
+		matrixNodes[0].model = test;
+
+		//glm::mat4 test = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, 0.0f));
+		//matrixNodes[0].model = test;
 
 
 		
@@ -391,9 +388,9 @@ public:
 				//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, setNum, 1, &descriptorSets[setNum], 1, &offset2);
 
 				// must make pipeline layout compatible
-				setNum = 3;
-				vkx::Material m = this->assetManager.loadedMaterials[mesh.meshBuffer.materialIndex];
-				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, m.descriptorSet, nullptr);
+				//setNum = 3;
+				//vkx::Material m = this->assetManager.loadedMaterials[mesh.meshBuffer.materialIndex];
+				//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, m.descriptorSet, nullptr);
 
 
 
@@ -1046,8 +1043,7 @@ public:
 
 	void start() {
 
-
-		vkx::Model planeModel(context, assetManager);
+		vkx::Model planeModel(&context, &assetManager);
 		planeModel.load(getAssetPath() + "models/plane.fbx");
 		planeModel.createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
@@ -1067,7 +1063,7 @@ public:
 		//otherModel1.load(getAssetPath() + "models/sibenik/sibenik.dae");
 		//otherModel1.createMeshes(meshVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
 
-		vkx::Model otherModel2(context, assetManager);
+		vkx::Model otherModel2(&context, &assetManager);
 		otherModel2.load(getAssetPath() + "models/monkey.fbx");
 		otherModel2.createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
@@ -1095,6 +1091,15 @@ public:
 		//models.push_back(otherModel3);
 		//models.push_back(otherModel4);
 		//models.push_back(otherModel5);
+
+		for (int i = 0; i < 4; ++i) {
+
+			vkx::Model testModel(&context, &assetManager);
+			testModel.load(getAssetPath() + "models/monkey.fbx");
+			testModel.createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+
+			models.push_back(testModel);
+		}
 
 
 

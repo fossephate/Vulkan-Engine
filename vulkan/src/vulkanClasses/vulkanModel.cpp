@@ -10,24 +10,30 @@ namespace vkx {
 	// constructors
 
 	// don't ever use this constructor
-	Model::Model() :
-		context(vkx::Context()), assetManager(assetManager)
-	{
-		//this->context = nullptr;
-		//this->meshLoader = new vkx::MeshLoader();
-	}
+	//Model::Model() //:
+	//	//context(vkx::Context()), assetManager(assetManager)
+	//{
+	//	//this->context = nullptr;
+	//	//this->meshLoader = new vkx::MeshLoader();
+	//}
 
 
 
-	// reference way:
-	Model::Model(vkx::Context &context, vkx::AssetManager &assetManager) :
-		context(context), assetManager(assetManager)// init context with reference
-	{
+	//// reference way:
+	//Model::Model(vkx::Context &context, vkx::AssetManager &assetManager) :
+	//	context(context), assetManager(assetManager)// init context with reference
+	//{
+	//	this->meshLoader = new vkx::MeshLoader(context, assetManager);
+	//}
+
+	Model::Model(vkx::Context *context, vkx::AssetManager *assetManager) {
 		this->meshLoader = new vkx::MeshLoader(context, assetManager);
 	}
 
 
-	//~Model::Model(){}
+	//~Model::Model(){
+	//	
+	//}
 
 
 
@@ -42,7 +48,7 @@ namespace vkx {
 	// rename to createMeshes?
 	void Model::createMeshes(const std::vector<VertexLayout> &layout, float scale, uint32_t binding) {
 
-		this->meshLoader->createMeshBuffers(this->context, layout, scale);
+		this->meshLoader->createMeshBuffers(layout, scale);
 
 		std::vector<MeshBuffer> meshBuffers = this->meshLoader->meshBuffers;
 

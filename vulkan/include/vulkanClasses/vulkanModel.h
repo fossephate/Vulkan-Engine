@@ -40,9 +40,9 @@ namespace vkx {
 			// pointer to meshLoader
 			vkx::MeshLoader *meshLoader;
 			// reference to context
-			vkx::Context &context;
+			//vkx::Context *context;
 			// reference to assetManager
-			vkx::AssetManager &assetManager;
+			//vkx::AssetManager *assetManager;
 
 			
 
@@ -51,7 +51,7 @@ namespace vkx {
 
 			// no default constructor
 			Model();
-			Model(vkx::Context &context, vkx::AssetManager &assetManager);
+			Model(vkx::Context *context, vkx::AssetManager *assetManager);
 
 			//~Model();
 

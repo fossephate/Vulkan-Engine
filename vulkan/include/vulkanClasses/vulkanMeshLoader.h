@@ -214,12 +214,9 @@ namespace vkx {
 
 			Assimp::Importer Importer;
 
-			// not const
-			vkx::AssetManager &assetManager;
-
-			// also not const (needs to be modified: updatedescriptorsets)
-			// circumvented by copying device
-			/*const */vkx::Context &context;
+			// pointer to assetManager and context
+			vkx::AssetManager *assetManager;
+			vkx::Context *context;
 
 			// copy of device
 			//vk::Device device;
@@ -228,7 +225,7 @@ namespace vkx {
 			TextureLoader *textureLoader{ nullptr };
 			const aiScene *pScene{ nullptr };
 
-			MeshLoader(/*const */vkx::Context &context, vkx::AssetManager &assetManager);
+			MeshLoader(vkx::Context *context, vkx::AssetManager *assetManager);
 
 			~MeshLoader();
 
@@ -245,8 +242,8 @@ namespace vkx {
 
 			// Create vertex and index buffer with given layout
 			// Note : Only does staging if a valid command buffer and transfer queue are passed
-			void createMeshBuffer(const Context &context, const std::vector<VertexLayout> &layout, float scale);
-			void createMeshBuffers(const Context &context, const std::vector<VertexLayout> &layout, float scale);
+			void createMeshBuffer(const std::vector<VertexLayout> &layout, float scale);
+			void createMeshBuffers(const std::vector<VertexLayout> &layout, float scale);
 	};
 
 }
