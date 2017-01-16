@@ -38,7 +38,7 @@ namespace vkx {
 			//vk::Pipeline pipeline;
 
 			// pointer to meshLoader
-			vkx::MeshLoader *meshLoader;
+			vkx::MeshLoader *meshLoader = nullptr;
 			// reference to context
 			//vkx::Context *context;
 			// reference to assetManager

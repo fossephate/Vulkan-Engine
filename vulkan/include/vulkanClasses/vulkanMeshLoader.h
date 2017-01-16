@@ -215,8 +215,8 @@ namespace vkx {
 			Assimp::Importer Importer;
 
 			// pointer to assetManager and context
-			vkx::AssetManager *assetManager;
-			vkx::Context *context;
+			vkx::AssetManager *assetManager = nullptr;
+			vkx::Context *context = nullptr;
 
 			// copy of device
 			//vk::Device device;

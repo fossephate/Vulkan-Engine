@@ -144,10 +144,13 @@ namespace vkx {
 
 			// pointer to meshLoader
 			//vkx::MeshLoader *meshLoader;
+			vkx::MeshLoader const * meshLoader = nullptr;
 			// reference to context
 			//vkx::Context *context = nullptr;
 			// reference to assetManager
-			//vkx::AssetManager *myAssetManager = nullptr;
+			//vkx::AssetManager *assetManager = nullptr;
+
+			//vkx::AssetManager const * myAssetManager = nullptr;
 
 			//std::shared_ptr<Context> context;
 
@@ -166,7 +169,7 @@ namespace vkx {
 
 
 			SkinnedMesh();
-			//SkinnedMesh(vkx::Context *context, vkx::AssetManager *assetManager);
+			SkinnedMesh(vkx::Context *context, vkx::AssetManager *assetManager);
 			//SkinnedMesh(vkx::Context *context, vkx::AssetManager *assetManager);
 
 

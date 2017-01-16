@@ -119,10 +119,20 @@ public:
 
 	struct matrixNode {
 		glm::mat4 model;
-		glm::mat4 normal;
+		glm::mat4 g1;
+		//glm::mat4 g2;
+		//glm::mat4 g3;
 	};
+
 	std::vector<matrixNode> matrixNodes;
 
+	//struct matrixNode2 {
+	//	glm::mat4 *model = nullptr;
+	//} matrixNode2;
+
+	//matrixNode *mNodes = nullptr;
+
+	glm::mat4 *modelMatrices = nullptr;
 
 	// rename to materialPropertiesNode// or something
 	// possibly move
@@ -140,6 +150,8 @@ public:
 
 	unsigned int alignedMatrixSize;
 	unsigned int alignedMaterialSize;
+
+	size_t dynamicAlignment;
 
 	float globalP = 0.0f;
 
@@ -196,6 +208,14 @@ public:
 		// todo: move this somewhere else
 		// it doesn't need to be here
 		unsigned int alignment = (uint32_t)context.deviceProperties.limits.minUniformBufferOffsetAlignment;
+
+		size_t uboAlignment = context.deviceProperties.limits.minUniformBufferOffsetAlignment;
+		dynamicAlignment = (sizeof(glm::mat4) / uboAlignment) * uboAlignment + ((sizeof(glm::mat4) % uboAlignment) > 0 ? uboAlignment : 0);
+
+		// todo: fix
+		size_t bufferSize = 100 * dynamicAlignment;
+		//matrixNode2.model = (glm::mat4*)alignedAlloc(bufferSize, dynamicAlignment);
+		modelMatrices = (glm::mat4*)alignedAlloc(bufferSize, dynamicAlignment);
 
 
 		alignedMatrixSize = (unsigned int)(alignedSize(alignment, sizeof(matrixNode)));
@@ -281,13 +301,13 @@ public:
 
 		//models[0].setTranslation(glm::vec3(3 * cos(globalP), 1.0f, 3*sin(globalP)));
 
-		if (models.size() > 4) {
+		if (models.size() > 3) {
 
 			models[1].setTranslation(glm::vec3(3 * cos(globalP), 1.0f, 3 * sin(globalP)));
-			models[2].setTranslation(glm::vec3(2 * cos(globalP) + 2.0f, 3.0f, 0.0f));
-			models[3].setTranslation(glm::vec3(cos(globalP) - 2.0f, 2.0f, 0.0f));
-			models[4].setTranslation(glm::vec3(cos(globalP), 3.0f, 0.0f));
-			models[5].setTranslation(glm::vec3(cos(globalP) - 2.0f, 4.0f, 0.0f));
+			models[2].setTranslation(glm::vec3(2 * cos(globalP) + 2.0f, sin(globalP)+2.0, 0.0f));
+			models[3].setTranslation(glm::vec3(cos(globalP) - 2.0f, 2.0f, sin(globalP)+2.0f));
+			//models[4].setTranslation(glm::vec3(cos(globalP), 3.0f, 0.0f));
+			//models[5].setTranslation(glm::vec3(cos(globalP) - 2.0f, 4.0f, 0.0f));
 		}
 
 
@@ -306,7 +326,11 @@ public:
 
 		// todo: fix
 		for (auto &model : models) {
-			matrixNodes[model.matrixIndex].model = model.transfMatrix;
+			//matrixNodes[model.matrixIndex].model = model.transfMatrix;
+
+			glm::mat4* modelMat = (glm::mat4*)(((uint64_t)modelMatrices + (model.matrixIndex * dynamicAlignment)));
+			*modelMat = model.transfMatrix;
+
 		}
 
 		// what?
@@ -319,9 +343,7 @@ public:
 
 		
 		updateMatrixBuffer();
-
 		updateMaterialBuffer();
-
 		updateUniformBuffers();
 		
 
@@ -397,13 +419,13 @@ public:
 				// get offset of mesh's material using meshbuffer's material index
 				// and aligned material size
 
-				if (lastMaterialIndex != mesh.meshBuffer.materialIndex) {
+				//if (lastMaterialIndex != mesh.meshBuffer.materialIndex) {
 					lastMaterialIndex = mesh.meshBuffer.materialIndex;
 					uint32_t offset2 = mesh.meshBuffer.materialIndex * static_cast<uint32_t>(alignedMaterialSize);
 					// the third param is the set number!
 					setNum = 2;
 					cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset2);
-				}
+				//}
 
 
 
@@ -419,13 +441,14 @@ public:
 				//setNum = 2;
 				//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, setNum, 1, &descriptorSets[setNum], 1, &offset2);
 
-				uint32_t offset3 = 0 * static_cast<uint32_t>(alignedMatrixSize);
+				
+				uint32_t offset3 = 1000000 * static_cast<uint32_t>(alignedMatrixSize);
 
 				// must make pipeline layout compatible
 				setNum = 3;
 				vkx::Material m = this->assetManager.loadedMaterials[mesh.meshBuffer.materialIndex];
-				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &m.descriptorSet, 1, &offset3);
-				//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, m.descriptorSet, nullptr);
+				//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &m.descriptorSet, 1, &offset3);
+				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, m.descriptorSet, nullptr);
 
 
 
@@ -1016,8 +1039,15 @@ public:
 	void prepareUniformBuffers() {
 		// Vertex shader uniform buffer block
 		uniformData.sceneVS = context.createUniformBuffer(uboScene);
-		uniformData.matrixVS = context.createDynamicUniformBuffer(matrixNodes);
+		//uniformData.matrixVS = context.createDynamicUniformBuffer(matrixNodes);
 		uniformData.materialVS = context.createDynamicUniformBuffer(materialNodes);
+
+		uniformData.matrixVS = context.createDynamicUniformBufferManual(modelMatrices, 100);
+
+
+
+
+		//uniformData.matrixVS = context.createDynamicUniformBuffer(matrixNodes);
 
 		updateUniformBuffers();
 		updateMatrixBuffer();
@@ -1049,7 +1079,18 @@ public:
 
 		// todo:
 
-		uniformData.matrixVS.copy(matrixNodes);
+		//uniformData.matrixVS.copy(matrixNodes);
+		//uniformData.matrixVS.copy(modelMatrices);
+		
+		memcpy(uniformData.matrixVS.mapped, modelMatrices, uniformData.matrixVS.size);
+
+		// not needed bc host coherent flag set
+		//// Flush to make changes visible to the host 
+		//VkMappedMemoryRange memoryRange = vkTools::initializers::mappedMemoryRange();
+		//memoryRange.memory = uniformBuffers.dynamic.memory;
+		//memoryRange.size = sizeof(uboDataDynamic);
+		//vkFlushMappedMemoryRanges(device, 1, &memoryRange);
+
 	}
 
 	void updateUniformBuffers() {
@@ -1066,6 +1107,7 @@ public:
 
 		uniformData.sceneVS.copy(uboScene);
 		//uniformData.matrixVS.copy(matrixNodes);
+
 	}
 
 
@@ -1115,7 +1157,7 @@ public:
 
 		models.push_back(planeModel);
 		//models.push_back(otherModel1);
-		models.push_back(otherModel2);
+		//models.push_back(otherModel2);
 		//models.push_back(otherModel3);
 		//models.push_back(otherModel4);
 		//models.push_back(otherModel5);
@@ -1133,7 +1175,7 @@ public:
 
 
 		//vkx::SkinnedMesh skinnedMesh1;
-		//vkx::SkinnedMesh skinnedMesh1(&context, &assetManager);
+		vkx::SkinnedMesh skinnedMesh1(&context, &assetManager);
 		//skinnedMesh1.load(getAssetPath() + "models/goblin.dae");
 		//skinnedMesh1.createMeshes(skinnedMeshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
