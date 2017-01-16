@@ -35,7 +35,7 @@ namespace vkx {
 
 			uint32_t matrixIndex;
 			uint32_t vertexBufferBinding = 0;
-			vk::Pipeline pipeline;
+			//vk::Pipeline pipeline;
 
 			// pointer to meshLoader
 			vkx::MeshLoader *meshLoader;

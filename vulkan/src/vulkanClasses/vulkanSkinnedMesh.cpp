@@ -5,18 +5,22 @@
 namespace vkx {
 
 
-	//// don't ever use this constructor
-	//SkinnedMesh::SkinnedMesh() :
-	//	context(vkx::Context()), assetManager(assetManager)
-	//{
+	SkinnedMesh::SkinnedMesh() {
+		//this->context = nullptr;
+		//this->assetManager = nullptr;
+	}
 
+	//SkinnedMesh::SkinnedMesh(vkx::Context *context, vkx::AssetManager *assetManager) {
+	//	std::cout << "test" << std::endl;
+	//	//this->context = context;
+	//	//this->assetManager = assetManager;
+	//	//this->meshLoader = new vkx::MeshLoader(context, assetManager);
 	//}
 
-	//// reference way:
-	//SkinnedMesh::SkinnedMesh(vkx::Context &context, vkx::AssetManager &assetManager) :
-	//	context(context), assetManager(assetManager)// init context with reference
+	//SkinnedMesh::SkinnedMesh(vkx::Context *context, vkx::AssetManager *assetManager) :
+	//	context(context), assetManager(assetManager)
 	//{
-	//	this->meshLoader = new vkx::MeshLoader(context, assetManager);
+	//	//this->meshLoader = new vkx::MeshLoader(context, assetManager);
 	//}
 
 

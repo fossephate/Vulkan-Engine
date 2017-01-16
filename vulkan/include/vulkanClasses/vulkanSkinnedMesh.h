@@ -99,9 +99,9 @@ namespace vkx {
 
 	class SkinnedMesh : public Object3D {
 
-		//private:
+		private:
 
-		//public:
+		public:
 
 			//vkx::Mesh mesh;
 
@@ -138,15 +138,20 @@ namespace vkx {
 			// Currently active animation
 			//aiAnimation *pAnimation;
 
+			//http://stackoverflow.com/questions/15648844/using-smart-pointers-for-class-members
 
 
 
-			//// pointer to meshLoader
+			// pointer to meshLoader
 			//vkx::MeshLoader *meshLoader;
-			//// reference to context
-			//vkx::Context &context;
-			//// reference to assetManager
-			//vkx::AssetManager &assetManager;
+			// reference to context
+			//vkx::Context *context = nullptr;
+			// reference to assetManager
+			//vkx::AssetManager *myAssetManager = nullptr;
+
+			//std::shared_ptr<Context> context;
+
+			//std::shared_ptr<AssetManager> assetManager;
 
 
 
@@ -160,8 +165,9 @@ namespace vkx {
 
 
 
-			//SkinnedMesh();
-			//SkinnedMesh(vkx::Context &context, vkx::AssetManager &assetManager);
+			SkinnedMesh();
+			//SkinnedMesh(vkx::Context *context, vkx::AssetManager *assetManager);
+			//SkinnedMesh(vkx::Context *context, vkx::AssetManager *assetManager);
 
 
 

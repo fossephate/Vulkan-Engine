@@ -52,6 +52,31 @@ inline size_t alignedSize(size_t align, size_t sz) {
 
 
 
+// Wrapper functions for aligned memory allocation
+// There is currently no standard for this in C++ that works across all platforms and vendors, so we abstract this
+void* alignedAlloc(size_t size, size_t alignment)
+{
+	void *data = nullptr;
+#if defined(_MSC_VER) || defined(__MINGW32__)
+	data = _aligned_malloc(size, alignment);
+#else 
+	int res = posix_memalign(&data, alignment, size);
+	if (res != 0)
+		data = nullptr;
+#endif
+	return data;
+}
+
+void alignedFree(void* data)
+{
+#if	defined(_MSC_VER) || defined(__MINGW32__)
+	_aligned_free(data);
+#else 
+	free(data);
+#endif
+}
+
+
 
 
 
@@ -256,11 +281,14 @@ public:
 
 		//models[0].setTranslation(glm::vec3(3 * cos(globalP), 1.0f, 3*sin(globalP)));
 
-		models[1].setTranslation(glm::vec3(3*cos(globalP), 1.0f, 3*sin(globalP)));
-		models[2].setTranslation(glm::vec3(2*cos(globalP)+2.0f, 3.0f, 0.0f));
-		models[3].setTranslation(glm::vec3(cos(globalP)-2.0f, 2.0f, 0.0f));
-		models[4].setTranslation(glm::vec3(cos(globalP), 3.0f, 0.0f));
-		models[5].setTranslation(glm::vec3(cos(globalP)-2.0f, 4.0f, 0.0f));
+		if (models.size() > 4) {
+
+			models[1].setTranslation(glm::vec3(3 * cos(globalP), 1.0f, 3 * sin(globalP)));
+			models[2].setTranslation(glm::vec3(2 * cos(globalP) + 2.0f, 3.0f, 0.0f));
+			models[3].setTranslation(glm::vec3(cos(globalP) - 2.0f, 2.0f, 0.0f));
+			models[4].setTranslation(glm::vec3(cos(globalP), 3.0f, 0.0f));
+			models[5].setTranslation(glm::vec3(cos(globalP) - 2.0f, 4.0f, 0.0f));
+		}
 
 
 		//models[1].setTranslation(glm::vec3(0, 0, 2));
@@ -282,8 +310,8 @@ public:
 		}
 
 		// what?
-		glm::mat4 test = glm::translate(glm::mat4(), glm::vec3(0.01*sin(globalP) - 2.0f, 0.01*cos(globalP), 0.0f));
-		matrixNodes[0].model = test;
+		//glm::mat4 test = glm::translate(glm::mat4(), glm::vec3(0.01*sin(globalP) - 2.0f, 0.01*cos(globalP), 0.0f));
+		//matrixNodes[0].model = test;
 
 		//glm::mat4 test = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, 0.0f));
 		//matrixNodes[0].model = test;
@@ -322,6 +350,10 @@ public:
 		//	cmdBuffer.drawIndexed(mesh.meshBuffer.indexCount, 1, 0, 0, 0);
 		//}
 
+
+
+		//https://github.com/SaschaWillems/Vulkan/tree/master/dynamicuniformbuffer
+
 		uint32_t lastMaterialIndex = -1;
 
 
@@ -351,7 +383,7 @@ public:
 
 
 				//uint32_t offset1 = mesh.matrixIndex * alignedMatrixSize;
-				uint32_t offset1 = model.matrixIndex * alignedMatrixSize;
+				uint32_t offset1 = model.matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
 				//https://www.khronos.org/registry/vulkan/specs/1.0/apispec.html#vkCmdBindDescriptorSets
 				// the third param is the set number!
 				setNum = 1;
@@ -367,7 +399,7 @@ public:
 
 				if (lastMaterialIndex != mesh.meshBuffer.materialIndex) {
 					lastMaterialIndex = mesh.meshBuffer.materialIndex;
-					uint32_t offset2 = mesh.meshBuffer.materialIndex * alignedMaterialSize;
+					uint32_t offset2 = mesh.meshBuffer.materialIndex * static_cast<uint32_t>(alignedMaterialSize);
 					// the third param is the set number!
 					setNum = 2;
 					cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset2);
@@ -387,7 +419,7 @@ public:
 				//setNum = 2;
 				//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, setNum, 1, &descriptorSets[setNum], 1, &offset2);
 
-				uint32_t offset3 = 100000 * alignedMatrixSize;
+				uint32_t offset3 = 0 * static_cast<uint32_t>(alignedMatrixSize);
 
 				// must make pipeline layout compatible
 				setNum = 3;
@@ -966,9 +998,9 @@ public:
 		// why do I do this?
 		// just bind pipelines.x at render?
 		// todo: don't do this// just remove this
-		for (auto &model : models) {
-			model.pipeline = pipelines.meshes;
-		}
+		//for (auto &model : models) {
+		//	model.pipeline = pipelines.meshes;
+		//}
 
 		//for (auto &skinnedMesh : skinnedMeshes) {
 		//	skinnedMesh.pipeline = pipelines.skinnedMeshes;
@@ -1029,18 +1061,11 @@ public:
 
 		// ?
 		//uboScene.normal = glm::inverseTranspose(uboScene.view * uboScene.model);// fix this// important
-
 		//uboScene.normal = glm::inverseTranspose(uboScene.view);
-
 		//uboScene.lightPos = lightPos;
 
 		uniformData.sceneVS.copy(uboScene);
-
-
 		//uniformData.matrixVS.copy(matrixNodes);
-
-		// seperate this!// important
-		
 	}
 
 
@@ -1095,7 +1120,7 @@ public:
 		//models.push_back(otherModel4);
 		//models.push_back(otherModel5);
 
-		for (int i = 0; i < 4; ++i) {
+		for (int i = 0; i < 6; ++i) {
 
 			vkx::Model testModel(&context, &assetManager);
 			testModel.load(getAssetPath() + "models/monkey.fbx");
@@ -1108,7 +1133,7 @@ public:
 
 
 		//vkx::SkinnedMesh skinnedMesh1;
-		//vkx::SkinnedMesh skinnedMesh1(context, assetManager);
+		//vkx::SkinnedMesh skinnedMesh1(&context, &assetManager);
 		//skinnedMesh1.load(getAssetPath() + "models/goblin.dae");
 		//skinnedMesh1.createMeshes(skinnedMeshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
