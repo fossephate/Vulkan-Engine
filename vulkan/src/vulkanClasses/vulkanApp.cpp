@@ -250,6 +250,25 @@ void vulkanApp::update(float deltaTime) {
 		if (keyStates.e) {
 			camera.translateLocal(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
 		}
+		/*
+		if (keyStates.w) {
+			camera.translateLocal(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
+		}
+		if (keyStates.s) {
+			camera.translateLocal(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
+		}
+		if (keyStates.a) {
+			camera.translateLocal(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
+		}
+		if (keyStates.d) {
+			camera.translateLocal(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
+		}
+		if (keyStates.q) {
+			camera.translateLocal(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
+		}
+		if (keyStates.e) {
+			camera.translateLocal(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
+		}*/
 	} else {
 		if (keyStates.w) {
 			camera.translateWorld(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
@@ -789,14 +808,11 @@ void vulkanApp::renderLoop() {
 	auto tNow = std::chrono::high_resolution_clock::now();
 	// the time it took for the frame to render, i.e. tCurrent - tFrameStart
 	//auto tFrameTime = std::chrono::high_resolution_clock::now();
-
 	auto tStart = std::chrono::high_resolution_clock::now();
 	//auto tEnd = std::chrono::high_resolution_clock::now();
-
 	auto tStart2 = std::chrono::high_resolution_clock::now();
 	auto tEnd2 = std::chrono::high_resolution_clock::now();
 
-	std::vector<double> times;
 
 	while (!quit) {
 
@@ -805,10 +821,8 @@ void vulkanApp::renderLoop() {
 		tNow = std::chrono::high_resolution_clock::now();
 		// number of frames that have been rendered
 		frameCounter++;
-
 		// the time it took to render the frame
 		auto tFrameTime = std::chrono::duration<float, std::milli>(tNow - tFrameStart);
-		
 		// set FPS
 		double FPS = 60.0;
 		std::chrono::duration<double, std::milli> minWorkTime(1000.0 / FPS);
@@ -816,103 +830,18 @@ void vulkanApp::renderLoop() {
 		//if (tFrameTime < minWorkTime) {
 			std::this_thread::sleep_for(minWorkTime - tFrameTime);
 		//}
-
-
-		
-
-		
-
 		// calculate new frame time after sleeping
 		tNow = std::chrono::high_resolution_clock::now();
 		tFrameTime = std::chrono::duration<double, std::milli>(tNow - tFrameStart);
-
 		frameTimer = tFrameTime.count() / 1000.0;
 		lastFPS = 1.0 / frameTimer;
-
-
 		// start of frame
 		tFrameStart = std::chrono::high_resolution_clock::now();
 
 
 
-		//// the time it took to render the frame
-		//auto tFrameTime = std::chrono::duration<float, std::milli>(tCurrent - tFrameStart).count();
-		//// in ms
-		//auto tFrameTimeMS = tFrameTime / 1000.0f;
-
-		//// start of frame
-		//tFrameStart = tCurrent;
-
-
-
-		
-
-
-
-
-		//// average over 1 second:
-
-		//frameCounter2++;// reset every second
-		//
-		//// the amount of time that has passed
-		//auto tDiff = std::chrono::duration<float, std::milli>(tCurrent - tStart).count();
-
-		//auto tDiffMS = tDiff / 1000.0f;
-
-		//// if more than a second has passed
-		//if (tDiff >= 1000.0f) {
-
-		//	// get average frame time
-		//	// 1000 / (number of frames that occured in the last second)
-		//	frameTimer = tDiffMS / frameCounter2;
-		//	lastFPS = 1.0f / frameTimer;
-
-		//	tStart = tCurrent;
-		//	frameCounter2 = 0;
-		//}
-
-		////frameTimer = tFrameTimeMS;
-		////lastFPS = 1.0f / frameTimer;
-
-		//
-
-		//tStart2 = std::chrono::high_resolution_clock::now();
-
-		//tEnd2 = std::chrono::high_resolution_clock::now();
-
-
-
-
-		//// the time it took to render the frame
-		//auto tFrameTime2 = std::chrono::duration<double, std::milli>(tEnd2 - tStart2)/*.count()*/;
-		//// in ms
-		////auto tFrameTimeMS2 = tFrameTime2 / 1000.0f;
-
-		////frameTimer = tFrameTime2.count() / 100.0;
-
-
-		//double FPS = 60.0;
-		////double numOfMS = (1000.0f / FPS);// this doesn't seem to work properly
-		//std::chrono::duration<double, std::milli> minWorkTime(1000.0 / FPS);
-
-		//if (tFrameTime2 < minWorkTime) {
-		//	//double extraTime = (numOfMS - tFrameTime2) * 100000.0;
-		//	//std::this_thread::sleep_for(std::chrono::microseconds((int)extraTime));
-		//	std::this_thread::sleep_for(minWorkTime - tFrameTime2);
-
-		//}
-
-		//tEnd2 = std::chrono::high_resolution_clock::now();
-
-		//tFrameTime2 = std::chrono::duration<double, std::milli>(tEnd2 - tStart2)/*.count()*/;
-		//// in ms
-		////auto tFrameTimeMS2 = tFrameTime2 / 1000.0f;
-
-		//frameTimer = tFrameTime2.count() / 1000.0;
-
-
-
 		updateKeyboardMouseInfo();
+		// todo: change to gameLogic or add virtual function here
 		update(0);
 
 		//updateTextOverlay();

@@ -135,12 +135,13 @@ public:
 
 
 
-	vk::PipelineLayout pipelineLayout;
+	//vk::PipelineLayout pipelineLayout;
 
 
 
 
 	struct {
+		vk::PipelineLayout basic;
 		vk::PipelineLayout meshes;
 		vk::PipelineLayout skinnedMeshes;
 	} pipelineLayouts;
@@ -151,20 +152,7 @@ public:
 	std::vector<vk::DescriptorSet> descriptorSets;
 	std::vector<vk::DescriptorPool> descriptorPools;
 
-	//descriptorSetLayouts.resize(2);
-	//descriptorSets.resize(2);
-	//descriptorPools.resize(2);
 
-	//vk::DescriptorSetLayout descriptorSetLayouts[2];
-	//vk::DescriptorSet descriptorSets[2];
-	//vk::DescriptorPool descriptorPools[2];
-
-	//vk::DescriptorSetLayout descriptorSetLayout;
-	//vk::DescriptorSet descriptorSet;
-	
-
-
-	//glm::vec4 lightPos = glm::vec4(2.0f, 2.0f, 5.0f, 0.0f);
 	glm::vec3 lightPos = glm::vec3(1.0f, -2.0f, 2.0f);
 
 	VulkanExample() : vkx::vulkanApp(ENABLE_VALIDATION) {
@@ -179,12 +167,6 @@ public:
 		matrixNodes.resize(100);
 		materialNodes.resize(100);
 
-		//materialNodes[0].test = 0.0f;
-		//materialNodes[1].test = 1.0f;
-
-		//matrices[0].model = glm::translate(glm::mat4(), glm::vec3(-5.0f, 0.0f, 0.0f));
-		//matrixNodes[1].model = glm::translate(glm::mat4(), glm::vec3(-5.0f, 0.0f, 0.0f));
-
 
 		// todo: move this somewhere else
 		// it doesn't need to be here
@@ -192,8 +174,6 @@ public:
 
 
 		alignedMatrixSize = (unsigned int)(alignedSize(alignment, sizeof(matrixNode)));
-
-		//unsigned int alignment = (uint32_t)context.deviceProperties.limits.minUniformBufferOffsetAlignment;
 		alignedMaterialSize = (unsigned int)(alignedSize(alignment, sizeof(vkx::materialProperties)));
 
 		//camera.matrixNodes.projection = glm::perspectiveRH(glm::radians(60.0f), (float)size.width / (float)size.height, 0.0001f, 256.0f);
@@ -210,8 +190,9 @@ public:
 
 		// destroy pipelines
 		device.destroyPipeline(pipelines.meshes);
+		device.destroyPipeline(pipelines.skinnedMeshes);
 
-		device.destroyPipelineLayout(pipelineLayout);
+		device.destroyPipelineLayout(pipelineLayouts.basic);
 		//device.destroyDescriptorSetLayout(descriptorSetLayout);
 
 		uniformData.sceneVS.destroy();
@@ -233,7 +214,6 @@ public:
 		//skinnedMesh->meshBuffer.destroy();
 		//delete(skinnedMesh->meshLoader);
 		//delete(skinnedMesh);
-
 		//textures.skybox.destroy();
 
 	}
@@ -273,7 +253,7 @@ public:
 
 		globalP += 0.005f;
 
-		//models[1].change();
+
 
 		//models[1].setTranslation(glm::vec3(3*cos(globalP), 1.0f, 3*sin(globalP)));
 		//models[2].setTranslation(glm::vec3(2*cos(globalP)+2.0f, 3.0f, 0.0f));
@@ -282,13 +262,13 @@ public:
 		//models[5].setTranslation(glm::vec3(cos(globalP)-2.0f, 4.0f, 0.0f));
 
 
-		models[1].setTranslation(glm::vec3(0, 0, 2));
-		glm::quat q = glm::angleAxis(3.14159f/2.0f, glm::vec3(1.0f, 0.0f, 0.0f));
-		models[1].setRotation(q);
+		//models[1].setTranslation(glm::vec3(0, 0, 2));
+		//glm::quat q = glm::angleAxis(3.14159f/2.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+		//models[1].setRotation(q);
 
 
-		//uboScene.lightPos = glm::vec4(cos(globalP), 4.0f, cos(globalP), 0.0f);
-		uboScene.lightPos = glm::vec3(1.0f, -2.0f, 4.0/**sin(globalP*10.0f)*/+4.0);
+		uboScene.lightPos = glm::vec3(cos(globalP), 4.0f, cos(globalP));
+		//uboScene.lightPos = glm::vec3(1.0f, -2.0f, 4.0/**sin(globalP*10.0f)*/+4.0);
 
 
 		//matrixNodes[0].model = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, 0.0f));
@@ -305,43 +285,20 @@ public:
 		// todo: fix
 		for (auto &model : models) {
 			matrixNodes[model.matrixIndex].model = model.transfMatrix;
-			//matrixNodes[model.matrixIndex].
-			//glm::inverseTranspose(uboScene.view * uboScene.model);
-			//matrixNodes[model.matrixIndex].model = glm::mat4();
 		}
 
-
-		//for (auto &mesh : meshes) {
-			//matrixNodes[mesh.matrixIndex].model = mesh.transfMatrix;
-		//}
-		
-		// todo: fix this up
-		// really inefficient
-		// incredibly inefficient
-		// don't do this every frame!!!!
-
-		// make sure there is enough room for the material nodes
-		if (materialNodes.size() != this->assetManager.loadedMaterials.size()) {
-			if (this->assetManager.loadedMaterials.size() == 0) {
-				vkx::materialProperties p;
-				p.ambient = glm::vec4();
-				p.diffuse = glm::vec4();
-				p.specular = glm::vec4();
-				p.opacity = 1.0f;
-				materialNodes[0] = p;
-			} else {
-				materialNodes.resize(this->assetManager.loadedMaterials.size());
-			}
-		}
-
-		for (int i = 0; i < this->assetManager.loadedMaterials.size(); ++i) {
-			materialNodes[i] = this->assetManager.loadedMaterials[i].properties;
-		}
+		// what?
+		glm::mat4 test = glm::translate(glm::mat4(), glm::vec3(sin(globalP) - 2.0f, cos(globalP), 0.0f));
+		matrixNodes[1].model = test;
 
 
 		
+		updateMatrixBuffer();
+
+		updateMaterialBuffer();
 
 		updateUniformBuffers();
+		
 
 
 
@@ -381,9 +338,6 @@ public:
 		// model = group of meshes
 		// todo: add skinned / animated model support
 		for (auto &model : models) {
-
-
-
 			// for each of the model's meshes
 			for (auto &mesh : model.meshes) {
 
@@ -396,7 +350,7 @@ public:
 
 				// bind scene descriptor set
 				setNum = 0;
-				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, setNum, descriptorSets[setNum], nullptr);
+				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, descriptorSets[setNum], nullptr);
 
 
 				//uint32_t offset1 = mesh.matrixIndex * alignedMatrixSize;
@@ -404,7 +358,7 @@ public:
 				//https://www.khronos.org/registry/vulkan/specs/1.0/apispec.html#vkCmdBindDescriptorSets
 				// the third param is the set number!
 				setNum = 1;
-				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, setNum, 1, &descriptorSets[setNum], 1, &offset1);
+				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset1);
 
 
 				// todo:
@@ -419,7 +373,7 @@ public:
 					uint32_t offset2 = mesh.meshBuffer.materialIndex * alignedMaterialSize;
 					// the third param is the set number!
 					setNum = 2;
-					cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, setNum, 1, &descriptorSets[setNum], 1, &offset2);
+					cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset2);
 				}
 
 
@@ -439,7 +393,7 @@ public:
 				// must make pipeline layout compatible
 				setNum = 3;
 				vkx::Material m = this->assetManager.loadedMaterials[mesh.meshBuffer.materialIndex];
-				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, setNum, m.descriptorSet, nullptr);
+				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, m.descriptorSet, nullptr);
 
 
 
@@ -484,14 +438,14 @@ public:
 
 		//	// bind scene descriptor set
 		//	setNum = 0;
-		//	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, setNum, descriptorSets[setNum], nullptr);
+		//	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, descriptorSets[setNum], nullptr);
 
 
 		//	uint32_t offset1 = mesh.matrixIndex * alignedMatrixSize;
 		//	//https://www.khronos.org/registry/vulkan/specs/1.0/apispec.html#vkCmdBindDescriptorSets
 		//	// the third param is the set number!
 		//	setNum = 1;
-		//	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, setNum, 1, &descriptorSets[setNum], 1, &offset1);
+		//	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset1);
 
 
 		//	// todo:
@@ -507,7 +461,7 @@ public:
 		//		uint32_t offset2 = mesh.meshBuffer.materialIndex * alignedMaterialSize;
 		//		// the third param is the set number!
 		//		setNum = 2;
-		//		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, setNum, 1, &descriptorSets[setNum], 1, &offset2);
+		//		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset2);
 		//	}
 
 
@@ -517,7 +471,7 @@ public:
 		//	// must make pipeline layout compatible
 		//	setNum = 3;
 		//	vkx::Material m = this->assetManager.loadedMaterials[mesh.meshBuffer.materialIndex];
-		//	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, setNum, m.descriptorSet, nullptr);
+		//	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, m.descriptorSet, nullptr);
 
 
 
@@ -795,7 +749,7 @@ public:
 		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
 			vkx::pipelineLayoutCreateInfo(descriptorSetLayouts.data(), descriptorSetLayouts.size());
 
-		pipelineLayout = device.createPipelineLayout(pPipelineLayoutCreateInfo);
+		pipelineLayouts.basic = device.createPipelineLayout(pPipelineLayoutCreateInfo);
 
 	}
 
@@ -942,7 +896,7 @@ public:
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/mesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
 
 		vk::GraphicsPipelineCreateInfo pipelineCreateInfo =
-			vkx::pipelineCreateInfo(pipelineLayout, renderPass);
+			vkx::pipelineCreateInfo(pipelineLayouts.basic, renderPass);
 
 		pipelineCreateInfo.pVertexInputState = &vertices.inputState;
 		pipelineCreateInfo.pInputAssemblyState = &inputAssemblyState;
@@ -1008,16 +962,23 @@ public:
 		//for (auto &mesh : meshes) {
 		//	mesh.pipeline = pipelines.meshes;
 		//}
-
+		
+		// why do I do this?
+		// just bind pipelines.x at render?
+		// todo: don't do this// just remove this
 		for (auto &model : models) {
 			model.pipeline = pipelines.meshes;
 		}
 
-		for (auto &skinnedMesh : skinnedMeshes) {
-			skinnedMesh.pipeline = pipelines.skinnedMeshes;
-		}
+		//for (auto &skinnedMesh : skinnedMeshes) {
+		//	skinnedMesh.pipeline = pipelines.skinnedMeshes;
+		//}
 
 	}
+
+
+
+
 
 	// Prepare and initialize uniform buffer containing shader uniforms
 	void prepareUniformBuffers() {
@@ -1027,6 +988,36 @@ public:
 		uniformData.materialVS = context.createDynamicUniformBuffer(materialNodes);
 
 		updateUniformBuffers();
+		updateMatrixBuffer();
+		updateMaterialBuffer();
+	}
+
+	void updateMaterialBuffer() {
+		if (materialNodes.size() != this->assetManager.loadedMaterials.size()) {
+			if (this->assetManager.loadedMaterials.size() == 0) {
+				vkx::materialProperties p;
+				p.ambient = glm::vec4();
+				p.diffuse = glm::vec4();
+				p.specular = glm::vec4();
+				p.opacity = 1.0f;
+				materialNodes[0] = p;
+			} else {
+				materialNodes.resize(this->assetManager.loadedMaterials.size());
+			}
+		}
+
+		for (int i = 0; i < this->assetManager.loadedMaterials.size(); ++i) {
+			materialNodes[i] = this->assetManager.loadedMaterials[i].properties;
+		}
+
+		uniformData.materialVS.copy(materialNodes);
+	}
+
+	void updateMatrixBuffer() {
+
+		// todo:
+
+		uniformData.matrixVS.copy(matrixNodes);
 	}
 
 	void updateUniformBuffers() {
@@ -1045,10 +1036,11 @@ public:
 
 		uniformData.sceneVS.copy(uboScene);
 
-		uniformData.matrixVS.copy(matrixNodes);
+
+		//uniformData.matrixVS.copy(matrixNodes);
 
 		// seperate this!// important
-		uniformData.materialVS.copy(materialNodes);
+		
 	}
 
 
@@ -1083,9 +1075,9 @@ public:
 		//otherModel3.load(getAssetPath() + "models/myCube.dae");
 		//otherModel3.createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
-		//vkx::Model otherModel4(context, assetManager);
-		//otherModel4.load(getAssetPath() + "models/cube.obj");
-		//otherModel4.createMeshes(meshVertexLayout, 0.02f, VERTEX_BUFFER_BIND_ID);
+		//vkx::Model otherModel2(context, assetManager);
+		//otherModel2.load(getAssetPath() + "models/vulkanscenemodels.dae");
+		//otherModel2.createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
 		//vkx::Model otherModel5(context, assetManager);
 		//otherModel5.load(getAssetPath() + "models/cube.obj");
@@ -1105,13 +1097,18 @@ public:
 		//models.push_back(otherModel5);
 
 
-		vkx::SkinnedMesh skinnedMesh1(context, assetManager);
+
+
+		//vkx::SkinnedMesh skinnedMesh1;
+		//vkx::SkinnedMesh skinnedMesh1(context, assetManager);
 		//skinnedMesh1.load(getAssetPath() + "models/goblin.dae");
 		//skinnedMesh1.createMeshes(skinnedMeshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
 		//skinnedMeshes.push_back(skinnedMesh1);
 
-		
+		// after any model loading with materials has occurred, updateMaterialBuffer() must be called
+		// *after any material loading
+		updateMaterialBuffer();
 
 	}
 
@@ -1183,8 +1180,6 @@ public:
 
 		ss.str("");
 		ss.clear();
-
-
 
 		ss << "GPU: ";
 		ss << deviceProperties.deviceName;

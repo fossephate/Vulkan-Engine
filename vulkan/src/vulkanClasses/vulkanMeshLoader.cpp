@@ -11,10 +11,10 @@ namespace vkx {
 	//}
 
 
-	vkx::MeshLoader::MeshLoader(const vkx::Context & context, vkx::AssetManager & assetManager) :
+	vkx::MeshLoader::MeshLoader(/*const */vkx::Context & context, vkx::AssetManager & assetManager) :
 		context(context), assetManager(assetManager)
 	{
-		this->device = context.device;
+		//this->device = context.device;
 		this->textureLoader = new vkx::TextureLoader(context);
 	}
 
@@ -69,7 +69,6 @@ namespace vkx {
 		//	r.d1, r.d2, r.d3, r.d4);
 		//r2 = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(1.0f, 0.0f, 0.0f)) * r2;
 		//glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
-
 		//RootNodeMatrix = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(1.0f, 0.0f, 0.0f)) * RootNodeMatrix;
 
 		if (!pScene) {
@@ -122,7 +121,7 @@ namespace vkx {
 				std::cout << "  Diffuse: \"" << texturefile.C_Str() << "\"" << std::endl;
 				std::string fileName = std::string(texturefile.C_Str());
 				std::replace(fileName.begin(), fileName.end(), '\\', '/');
-				material.diffuse = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc3UnormBlock);
+				material.diffuse = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc3UnormBlock);// this is the texture format! :O
 			} else {
 
 				std::cout << "  Material has no diffuse, using dummy texture!" << std::endl;
@@ -145,17 +144,6 @@ namespace vkx {
 
 		// todo: prevent duplicate materials
 		//http://stackoverflow.com/questions/5740310/no-operator-found-while-comparing-structs-in-c
-
-
-
-
-
-
-
-
-
-
-
 
 		//std::vector<vk::DescriptorPoolSize> poolSizes3 =
 		//{
@@ -222,7 +210,9 @@ namespace vkx {
 
 
 
-			/*context.*/device.updateDescriptorSets(writeDescriptorSets, {});
+			///*context.*/device.updateDescriptorSets(writeDescriptorSets, {});
+
+			context.device.updateDescriptorSets(writeDescriptorSets, {});
 
 			this->assetManager.loadedMaterials.push_back(tempMaterials[i]);
 		}

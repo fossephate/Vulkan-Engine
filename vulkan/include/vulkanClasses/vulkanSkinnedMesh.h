@@ -1,9 +1,5 @@
 #pragma once
 
-#include <assimp/Importer.hpp> 
-#include <assimp/scene.h>     
-#include <assimp/postprocess.h>
-#include <assimp/cimport.h>
 
 #include "vulkanContext.h"
 #include "vulkanMesh.h"
@@ -51,33 +47,50 @@ namespace vkx {
 
 
 
-	// Per-vertex bone IDs and weights
-	struct VertexBoneData {
-		std::array<uint32_t, MAX_BONES_PER_VERTEX> IDs;
-		std::array<float, MAX_BONES_PER_VERTEX> weights;
+	//// Per-vertex bone IDs and weights
+	//struct VertexBoneData {
+	//	std::array<uint32_t, MAX_BONES_PER_VERTEX> IDs;
+	//	std::array<float, MAX_BONES_PER_VERTEX> weights;
 
-		// Add bone weighting to vertex info
-		void add(uint32_t boneID, float weight) {
-			for (uint32_t i = 0; i < MAX_BONES_PER_VERTEX; i++) {
-				if (weights[i] == 0.0f) {
-					IDs[i] = boneID;
-					weights[i] = weight;
-					return;
-				}
-			}
-		}
-	};
+	//	// Add bone weighting to vertex info
+	//	void add(uint32_t boneID, float weight) {
+	//		for (uint32_t i = 0; i < MAX_BONES_PER_VERTEX; i++) {
+	//			if (weights[i] == 0.0f) {
+	//				IDs[i] = boneID;
+	//				weights[i] = weight;
+	//				return;
+	//			}
+	//		}
+	//	}
+	//};
 
-	// Stores information on a single bone
-	struct BoneInfo {
-		aiMatrix4x4 offset;
-		aiMatrix4x4 finalTransformation;
+	//// Per-vertex bone IDs and weights
+	//struct VertexBoneData {
+	//	std::array<uint32_t, 4> IDs;
+	//	std::array<float, 4> weights;
 
-		BoneInfo() {
-			offset = aiMatrix4x4();
-			finalTransformation = aiMatrix4x4();
-		};
-	};
+	//	// Add bone weighting to vertex info
+	//	void add(uint32_t boneID, float weight) {
+	//		for (uint32_t i = 0; i < 4; i++) {
+	//			if (weights[i] == 0.0f) {
+	//				IDs[i] = boneID;
+	//				weights[i] = weight;
+	//				return;
+	//			}
+	//		}
+	//	}
+	//};
+
+	//// Stores information on a single bone
+	//struct BoneInfo {
+	//	aiMatrix4x4 offset;
+	//	aiMatrix4x4 finalTransformation;
+
+	//	//BoneInfo() {
+	//	//	offset = aiMatrix4x4();
+	//	//	finalTransformation = aiMatrix4x4();
+	//	//};
+	//};
 
 
 
@@ -86,15 +99,15 @@ namespace vkx {
 
 	class SkinnedMesh : public Object3D {
 
-		private:
+		//private:
 
-		public:
+		//public:
 
-			vkx::Mesh mesh{};
+			//vkx::Mesh mesh;
 
-			uint32_t matrixIndex;
-			uint32_t vertexBufferBinding = 0;
-			vk::Pipeline pipeline;
+			//uint32_t matrixIndex;
+			//uint32_t vertexBufferBinding = 0;
+			//vk::Pipeline pipeline;
 
 			// if there are too many vector member variables
 			// the program crashes for some reason
@@ -103,34 +116,37 @@ namespace vkx {
 
 			// Bone related stuff
 			// Maps bone name with index
-			std::map<std::string, uint32_t> boneMapping;
+			//std::map<std::string, uint32_t> boneMapping;
 			// Bone details
 			//std::vector<BoneInfo> boneInfo;
+
+			//bool test;
+			//char test2[9000];
+			//std::vector<int> nums;
+			//std::vector<uint32_t> nums2;
+			//std::vector<uint32_t> t;
+			//std::vector<uint32_t> nums2;
+
 			// Number of bones present
-			uint32_t numBones = 0;
+			//uint32_t numBones = 0;
 			// Root inverse transform matrix
-			aiMatrix4x4 globalInverseTransform;
+			//aiMatrix4x4 globalInverseTransform;
 			// Per-vertex bone info
 			//std::vector<VertexBoneData> bones;
 			// Bone transformations
 			//std::vector<aiMatrix4x4> boneTransforms;
 			// Currently active animation
-			aiAnimation *pAnimation;
+			//aiAnimation *pAnimation;
 
 
 
 
-			// pointer to meshLoader
-			vkx::MeshLoader *meshLoader;
-			// reference to context
-			vkx::Context &context;
-			// reference to assetManager
-			vkx::AssetManager &assetManager;
-
-
-
-
-
+			//// pointer to meshLoader
+			//vkx::MeshLoader *meshLoader;
+			//// reference to context
+			//vkx::Context &context;
+			//// reference to assetManager
+			//vkx::AssetManager &assetManager;
 
 
 
@@ -139,8 +155,13 @@ namespace vkx {
 
 
 
-			SkinnedMesh();
-			SkinnedMesh(vkx::Context &context, vkx::AssetManager &assetManager);
+
+
+
+
+
+			//SkinnedMesh();
+			//SkinnedMesh(vkx::Context &context, vkx::AssetManager &assetManager);
 
 
 

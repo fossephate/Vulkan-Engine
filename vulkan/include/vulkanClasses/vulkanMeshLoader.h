@@ -66,6 +66,7 @@ namespace vkx {
 
 	class Model;
 	class Mesh;
+	class SkinnedMesh;
 	class MeshLoader;
 	class AssetManager;
 
@@ -218,16 +219,16 @@ namespace vkx {
 
 			// also not const (needs to be modified: updatedescriptorsets)
 			// circumvented by copying device
-			const vkx::Context &context;
+			/*const */vkx::Context &context;
 
 			// copy of device
-			vk::Device device;
-			vk::Queue queue;
+			//vk::Device device;
+			//vk::Queue queue;
 
 			TextureLoader *textureLoader{ nullptr };
 			const aiScene *pScene{ nullptr };
 
-			MeshLoader(const vkx::Context &context, vkx::AssetManager &assetManager);
+			MeshLoader(/*const */vkx::Context &context, vkx::AssetManager &assetManager);
 
 			~MeshLoader();
 

@@ -57,31 +57,16 @@ namespace vkx {
 		//}
 
 		//this->materials = this->meshLoader->materials;
-
 		//this->attributeDescriptions = this->meshLoader->attributeDescriptions;
 
 		this->vertexBufferBinding = binding;// important
 		//this->setupVertexInputState(layout);// doesn't seem to be necessary/used
-
 		//this->bindingDescription = this->meshLoader->bindingDescriptions[0];// ?
 		//this->pipeline = this->meshLoader->pipeline;// not needed?
 	}
 
 
 	void Model::drawIndexed(const vk::CommandBuffer &cmdBuffer) {
-
-		// todo: add more
-		//if (pipeline) {
-		//	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
-		//}
-
-
-		//if ((pipelineLayout) && (descriptorSet)) {
-		//	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, descriptorSet, nullptr);
-		//}
-		//cmdBuffer.bindVertexBuffers(vertexBufferBinding, meshBuffer.vertices.buffer, vk::DeviceSize());
-		//cmdBuffer.bindIndexBuffer(meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
-		//cmdBuffer.drawIndexed(meshBuffer.indexCount, 1, 0, 0, 0);
 	}
 
 
