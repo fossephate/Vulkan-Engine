@@ -179,6 +179,7 @@ namespace vkx {
 			// fitted to vertex layout && usable to draw
 			MeshBuffer combinedBuffer;
 			std::vector<MeshBuffer> meshBuffers;
+
 			// temporary materials vector
 			std::vector<Material> tempMaterials;
 

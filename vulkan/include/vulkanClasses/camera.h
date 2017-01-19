@@ -58,9 +58,8 @@ class Camera : public vkx::Object3D {
 		//glm::vec3 & scale = transform.scale;
 
 	
-
-		struct
-		{
+		// todo: fix this:
+		struct {
 			glm::mat4 view;
 			glm::mat4 transform;
 			//glm::mat4 & transfMatrix = view;
@@ -79,38 +78,6 @@ class Camera : public vkx::Object3D {
 
 
 		void setAspectRatio(float aspect);
-
-		//glm::mat4 getViewMatrix();
-
-
-		///* translate */
-		//void translate(glm::vec3 delta);
-
-		//void translateWorld(glm::vec3 delta);
-		//void translateLocal(glm::vec3 delta);
-		//void setTranslation(glm::vec3 translation);
-
-
-		///* rotate */
-		//void setRotation(glm::quat rotation);
-
-		///* Rotate around world axes */
-		//void rotateWorld(glm::vec3 delta);
-
-		///* Convienience functions */
-		//void rotateWorldX(float r);
-		//void rotateWorldY(float r);
-		//void rotateWorldZ(float r);
-
-		///* Rotate around local axes */
-		//void rotateLocal(glm::vec3 delta);
-
-
-
-
-		void decompMatrix();
-	
-
 
 
 		void update(float deltaTime);

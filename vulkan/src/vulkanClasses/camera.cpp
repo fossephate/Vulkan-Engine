@@ -115,7 +115,7 @@ void Camera::updateViewMatrix() {
 	//this->matrices.view = (rotationMatrix) * (glm::inverse(translationMatrix));
 	//this->matrices.view = glm::inverse(this->matrices.transform);
 
-	glm::vec3 dir2 = glm::normalize(this->orientation*glm::vec3(0.0, 0.0, -1.0));
+	glm::vec3 dir2 = glm::normalize(this->transform.orientation*glm::vec3(0.0, 0.0, -1.0));
 
 
 
@@ -169,35 +169,6 @@ void Camera::setAspectRatio(float aspect) {
 	this->matrices.projection = glm::perspectiveRH(glm::radians(fov), aspect, znear, zfar);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void Camera::decompMatrix() {
-
-	glm::mat4 transformation; // transformation matrix.
-	//glm::vec3 scale;
-	//glm::quat rotation;
-	//glm::vec3 translation;
-	glm::vec3 skew;
-	glm::vec4 perspective;
-
-	glm::decompose(transformation, scale, this->rotation, this->translation, skew, perspective);
-
-}
 
 
 

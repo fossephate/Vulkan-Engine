@@ -295,6 +295,8 @@ namespace vkx
 			// Setup the vulkan instance, enable required extensions and connect to the physical device (GPU)
 			void initVulkan(bool enableValidation);
 
+			// windows only:
+			void setupConsole(std::string title);
 
 			virtual void setupWindow();
 

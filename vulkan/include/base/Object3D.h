@@ -17,8 +17,10 @@ namespace vkx {
 
 			struct {
 				glm::quat orientation = glm::quat();
-				glm::quat &rotation = orientation;
+				//glm::quat &rotation = orientation;
+
 				glm::vec4 angleAxis;
+
 				// no euler!
 				glm::vec3 euler;
 
@@ -27,11 +29,11 @@ namespace vkx {
 			} transform;
 
 			// set refs for convenience
-			glm::quat &orientation = transform.orientation;
-			glm::quat &rotation = transform.orientation;
+			//glm::quat &orientation = transform.orientation;
+			//glm::quat &rotation = transform.orientation;
 
-			glm::vec3 &translation = transform.translation;
-			glm::vec3 &scale = transform.scale;
+			//glm::vec3 &translation = transform.translation;
+			//glm::vec3 &scale = transform.scale;
 
 
 			glm::mat4 transfMatrix;
@@ -41,7 +43,7 @@ namespace vkx {
 
 			/* translation */
 			void setTranslation(glm::vec3 point) {
-				this->translation = point;
+				this->transform.translation = point;
 				updateTransform();
 			}
 
@@ -49,14 +51,14 @@ namespace vkx {
 			/* translate along world axes */
 			void translateWorld(glm::vec3 delta) {
 				// world space, not screen space
-				this->translation += delta;
+				this->transform.translation += delta;
 				updateTransform();
 			}
 
 			/* translate along local axes */
 			void translateLocal(glm::vec3 delta) {
 				// screen space, not world space
-				this->translation += this->transform.rotation * delta;// needs work
+				this->transform.translation += this->transform.orientation * delta;// needs work
 				updateTransform();
 			}
 
@@ -65,7 +67,7 @@ namespace vkx {
 
 			/* rotation */
 			void setRotation(glm::quat orientation) {
-				this->orientation = orientation;
+				this->transform.orientation = orientation;
 				updateTransform();
 			}
 
@@ -73,7 +75,7 @@ namespace vkx {
 			void rotateWorld(glm::quat q) {
 				
 				//this->orientation = glm::normalize(glm::quat(delta) * this->rotation);
-				this->orientation = glm::normalize(q*this->orientation);
+				this->transform.orientation = glm::normalize(q*this->transform.orientation);
 
 				updateTransform();
 			}
@@ -102,7 +104,7 @@ namespace vkx {
 			void rotateLocal(glm::quat q) {
 
 				//this->orientation = glm::normalize(glm::quat(delta) * this->rotation);
-				this->orientation = glm::normalize(this->orientation*q);
+				this->transform.orientation = glm::normalize(this->transform.orientation*q);
 
 				updateTransform();
 			}
@@ -128,11 +130,11 @@ namespace vkx {
 			void updateTransform() {
 
 
-				glm::mat4 rotationMatrix = glm::mat4_cast(this->orientation);
+				glm::mat4 rotationMatrix = glm::mat4_cast(this->transform.orientation);
 
-				glm::mat4 translationMatrix = glm::translate(glm::mat4(), this->translation);
+				glm::mat4 translationMatrix = glm::translate(glm::mat4(), this->transform.translation);
 
-				glm::mat4 scaleMatrix = glm::scale(this->scale);
+				glm::mat4 scaleMatrix = glm::scale(this->transform.scale);
 
 
 

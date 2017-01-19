@@ -96,6 +96,7 @@ void vulkanApp::run() {
 
 	#if defined(_WIN32)
 		setupWindow();
+		setupConsole("Debug");
 	#elif defined(__ANDROID__)
 		// Attach vulkan example to global android application state
 		state->userData = vulkanExample;
@@ -147,8 +148,78 @@ void vulkanApp::initVulkan(bool enableValidation) {
 
 
 
+#if defined(_WIN32)
+
+void vulkanApp::setupConsole(std::string title) {
+	//AllocConsole();
+	//AttachConsole(GetCurrentProcessId());
+	//FILE *stream;
+	//freopen_s(&stream, "CONOUT$", "w+", stdout);
+	//SetConsoleTitle(TEXT(title.c_str()));
 
 
+
+
+	//int hConHandle;
+	//long lStdHandle;
+	//CONSOLE_SCREEN_BUFFER_INFO coninfo;
+	//FILE *fp;
+
+	//// allocate a console for this app
+	//AllocConsole();
+
+	//// set the screen buffer to be big enough to let us scroll text
+	//GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &coninfo);
+	//coninfo.dwSize.Y = 500;
+	//SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), coninfo.dwSize);
+
+	//// redirect unbuffered STDOUT to the console
+	//lStdHandle = (long)GetStdHandle(STD_OUTPUT_HANDLE);
+	//hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
+
+	//fp = _fdopen(hConHandle, "w");
+
+	//*stdout = *fp;
+	//	
+	//setvbuf(stdout, NULL, _IONBF, 0);
+
+	//// redirect unbuffered STDIN to the console
+
+	//lStdHandle = (long)GetStdHandle(STD_INPUT_HANDLE);
+	//hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
+
+	//fp = _fdopen(hConHandle, "r");
+	//*stdin = *fp;
+	//setvbuf(stdin, NULL, _IONBF, 0);
+
+	//// redirect unbuffered STDERR to the console
+	//lStdHandle = (long)GetStdHandle(STD_ERROR_HANDLE);
+	//hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
+
+	//fp = _fdopen(hConHandle, "w");
+
+	//*stderr = *fp;
+
+	//setvbuf(stderr, NULL, _IONBF, 0);
+
+	//// make cout, wcout, cin, wcin, wcerr, cerr, wclog and clog
+	//// point to console as well
+	//std::ios::sync_with_stdio();
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+#endif
 
 
 
@@ -309,8 +380,19 @@ void vulkanApp::update(float deltaTime) {
 		camera.rotateWorldZ(mouse.delta.x*camera.rotationSpeed);
 		camera.rotateLocalX(mouse.delta.y*camera.rotationSpeed);
 
+
+		SDL_SetRelativeMouseMode((SDL_bool)1);
+
+		//SDL_WarpMouseInWindow(this->SDLWindow, mouse.current.x-mouse.delta.x*2, mouse.current.y-mouse.delta.y*2);
+
 		//camera.rotateWorld(glm::vec3(-mouse.delta.y*camera.rotationSpeed, 0, -mouse.delta.x*camera.rotationSpeed));
 		//camera.rotateWorld(glm::vec3(-mouse.delta.y*camera.rotationSpeed, 0, -mouse.delta.x*camera.rotationSpeed));
+	} else {
+		bool isCursorLocked = (bool)SDL_GetRelativeMouseMode();
+		if (isCursorLocked) {
+			SDL_SetRelativeMouseMode((SDL_bool)0);
+			SDL_WarpMouseInWindow(this->SDLWindow, mouse.leftMouseButton.pressedCoords.x, mouse.leftMouseButton.pressedCoords.y);
+		}
 	}
 
 
@@ -777,6 +859,14 @@ void vulkanApp::updateKeyboardMouseInfo() {
 			// todo: implement pressed and released coords
 			if (e.button.button == SDL_BUTTON_LEFT) {
 				mouse.leftMouseButton.state = state;
+				if (state) {
+					mouse.leftMouseButton.pressedCoords.x = e.motion.x;
+					mouse.leftMouseButton.pressedCoords.y = e.motion.y;
+					//mouse.leftMouseButton.pressedCoords = glm::vec2(e.motion.x, e.motion.y);
+				} else {
+					mouse.leftMouseButton.releasedCoords.x = e.motion.x;
+					mouse.leftMouseButton.releasedCoords.y = e.motion.y;
+				}
 			} else if (e.button.button == SDL_BUTTON_MIDDLE) {
 				mouse.middleMouseButton.state = state;
 			} else if (e.button.button == SDL_BUTTON_RIGHT) {
