@@ -39,8 +39,9 @@ layout (set = 0, binding = 0) uniform sceneBuffer
 layout (set = 1, binding = 0) uniform matrixBuffer
 {
 	mat4 model;
-	mat4 normal;
+	mat4 g1;
 	mat4 bones[MAX_BONES];
+	mat4 g2;
 } matrices;
 
 
@@ -66,7 +67,14 @@ void main()
 	mat4 boneTransform = matrices.bones[inBoneIDs[0]] * inBoneWeights[0];
 	boneTransform     += matrices.bones[inBoneIDs[1]] * inBoneWeights[1];
 	boneTransform     += matrices.bones[inBoneIDs[2]] * inBoneWeights[2];
-	boneTransform     += matrices.bones[inBoneIDs[3]] * inBoneWeights[3];	
+	boneTransform     += matrices.bones[inBoneIDs[3]] * inBoneWeights[3];
+
+	//mat4 boneTransform = matrices.bones[inBoneIDs[0]] * inBoneWeights[0];
+	// boneTransform     += matrices.bones[inBoneIDs[1]] * 0.00001;
+	// boneTransform     += matrices.bones[inBoneIDs[2]] * 0.00001;
+	// boneTransform     += matrices.bones[inBoneIDs[3]] * 0.00001;
+
+	//mat4 boneTransform = mat4(1.0);
 
 	outUV = inUV;
 	outNormal = inNormal;

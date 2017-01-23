@@ -174,12 +174,12 @@ namespace vkx {
 			// load model with custom flags
 			void load(const std::string &filename, int flags);
 
-			void setup();
-
 			//void createMeshes(const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
 
 
 
+
+			void setup(float scale);
 
 			void setAnimation(uint32_t animationIndex);
 

@@ -68,8 +68,8 @@ namespace vkx {
 
 
 
-
-	void SkinnedMesh::setup() {
+	// todo: remove this:
+	void SkinnedMesh::setup(float scale) {
 
 
 		this->setAnimation(0);
@@ -96,7 +96,9 @@ namespace vkx {
 			for (uint32_t i = 0; i < this->meshLoader->m_Entries[m].Vertices.size(); i++) {
 				skinnedMeshVertex vertex;
 
-				vertex.pos = this->meshLoader->m_Entries[m].Vertices[i].m_pos;
+				glm::vec3 pos = this->meshLoader->m_Entries[m].Vertices[i].m_pos;
+
+				vertex.pos = glm::vec3(pos.x*scale, pos.y*scale, pos.z*scale);
 				//vertex.pos.y = -vertex.pos.y;// y was negative// important
 				vertex.normal = this->meshLoader->m_Entries[m].Vertices[i].m_normal;
 				vertex.uv = this->meshLoader->m_Entries[m].Vertices[i].m_tex;
@@ -124,9 +126,10 @@ namespace vkx {
 		uint32_t indexBufferSize = indexBuffer.size() * sizeof(uint32_t);
 		this->meshBuffer.indexCount = indexBuffer.size();
 		this->meshBuffer.vertices = context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
-		//this->meshBuffer.indices = context.stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, indexBuffer);// typo?// important
+		//this->meshBuffer.indices = context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, indexBuffer);// typo?// important
 		this->meshBuffer.indices = context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);// typo?// important
 
+		this->meshBuffer.materialIndex = this->meshLoader->m_Entries[0].MaterialIndex;
 
 	}
 
@@ -204,6 +207,9 @@ namespace vkx {
 			readNodeHierarchy(AnimationTime, meshLoader->pScene->mRootNode, identity);
 
 			for (uint32_t i = 0; i < boneTransforms.size(); i++) {
+				boneTransforms[i];
+				boneInfo[i].finalTransformation;
+
 				boneTransforms[i] = boneInfo[i].finalTransformation;
 			}
 		}

@@ -241,6 +241,10 @@ public:
 
 
 		camera.setTranslation({ -0.0f, -16.0f, 3.0f });
+		glm::quat initialOrientation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		camera.setRotation(initialOrientation);
+
+
 
 		matrixNodes.resize(100);
 		materialNodes.resize(100);
@@ -383,10 +387,18 @@ public:
 		for (auto &skinnedMesh : skinnedMeshes) {
 			matrixNodes[skinnedMesh.matrixIndex].model = skinnedMesh.transfMatrix;
 
-			skinnedMeshes[0].update(globalP);
+			//skinnedMesh.update(globalP*0.0000000f);// slow down animation
+			//skinnedMesh.update(globalP*0.0f);// slow down animation
+			if (keyStates.space) {
+				//skinnedMesh.update(globalP*0.05f);
+				//std::ofstream log("logfile.txt", std::ios_base::app | std::ios_base::out);
+				//log << &skinnedMesh.boneTransforms[i].a1 << "\n";
+			}
 			for (uint32_t i = 0; i < skinnedMesh.boneTransforms.size(); ++i) {
 				//matrixNodes[skinnedMesh.matrixIndex].bones[i] = aiMatrix4x4ToGlm(&skinnedMesh.boneTransforms[i]);
 				matrixNodes[skinnedMesh.matrixIndex].bones[i] = glm::transpose(glm::make_mat4(&skinnedMesh.boneTransforms[i].a1));
+				//std::ofstream log("logfile.txt", std::ios_base::app | std::ios_base::out);
+				//log << skinnedMesh.boneTransforms[i].a1 << "\n";
 			}
 		}
 
@@ -995,7 +1007,7 @@ public:
 		viewportState.scissorCount = 1;
 		viewportState.viewportCount = 1;
 
-		vk::PipelineMultisampleStateCreateInfo multisampleState;
+		vk::PipelineMultisampleStateCreateInfo multisampleState = vkx::pipelineMultisampleStateCreateInfo(vk::SampleCountFlagBits::e1);// added 1/20/17
 
 		std::vector<vk::DynamicState> dynamicStateEnables = {
 			vk::DynamicState::eViewport,
@@ -1010,8 +1022,7 @@ public:
 		// vk::Pipeline for the meshes (armadillo, bunny, etc.)
 		// Load shaders
 		std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStages;
-		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/mesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
-		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/mesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
+
 
 		vk::GraphicsPipelineCreateInfo pipelineCreateInfo =
 			vkx::pipelineCreateInfo(pipelineLayouts.basic, renderPass);
@@ -1027,33 +1038,14 @@ public:
 		pipelineCreateInfo.stageCount = shaderStages.size();
 		pipelineCreateInfo.pStages = shaderStages.data();
 
+
+
+		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/mesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/mesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
 		pipelines.meshes = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo, nullptr)[0];
 
 
-		// vk::Pipeline for the sky box
-		//rasterizationState.cullMode = vk::CullModeFlagBits::eFront; // Inverted culling
-		//depthStencilState.depthWriteEnable = VK_FALSE; // No depth writes
-		//shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/skybox.vert.spv", vk::ShaderStageFlagBits::eVertex);
-		//shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/skybox.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		//pipelines.skybox = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo, nullptr)[0];
 
-
-		// Alpha blended pipeline
-		// transparency
-		rasterizationState.cullMode = vk::CullModeFlagBits::eNone;
-		blendAttachmentState.blendEnable = VK_TRUE;
-		blendAttachmentState.colorBlendOp = vk::BlendOp::eAdd;
-		blendAttachmentState.srcColorBlendFactor = vk::BlendFactor::eSrcColor;
-		blendAttachmentState.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcColor;
-		pipelines.blending = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)[0];
-
-
-		// Wire frame rendering pipeline
-		rasterizationState.cullMode = vk::CullModeFlagBits::eBack;
-		blendAttachmentState.blendEnable = VK_FALSE;
-		rasterizationState.polygonMode = vk::PolygonMode::eLine;
-		rasterizationState.lineWidth = 1.0f;
-		pipelines.wireframe = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)[0];
 
 
 
@@ -1066,6 +1058,30 @@ public:
 
 
 
+		// vk::Pipeline for the sky box
+		//rasterizationState.cullMode = vk::CullModeFlagBits::eFront; // Inverted culling
+		//depthStencilState.depthWriteEnable = VK_FALSE; // No depth writes
+		//shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/skybox.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		//shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/skybox.frag.spv", vk::ShaderStageFlagBits::eFragment);
+		//pipelines.skybox = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo, nullptr)[0];
+
+
+		//// Alpha blended pipeline
+		//// transparency
+		//rasterizationState.cullMode = vk::CullModeFlagBits::eNone;
+		//blendAttachmentState.blendEnable = VK_TRUE;
+		//blendAttachmentState.colorBlendOp = vk::BlendOp::eAdd;
+		//blendAttachmentState.srcColorBlendFactor = vk::BlendFactor::eSrcColor;
+		//blendAttachmentState.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcColor;
+		//pipelines.blending = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)[0];
+
+
+		//// Wire frame rendering pipeline
+		//rasterizationState.cullMode = vk::CullModeFlagBits::eBack;
+		//blendAttachmentState.blendEnable = VK_FALSE;
+		//rasterizationState.polygonMode = vk::PolygonMode::eLine;
+		//rasterizationState.lineWidth = 1.0f;
+		//pipelines.wireframe = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)[0];
 
 
 
@@ -1237,22 +1253,19 @@ public:
 
 
 
-		//vkx::SkinnedMesh skinnedMesh1;
 		vkx::SkinnedMesh skinnedMesh1(&context, &assetManager);
-
-
-		//vkx::SkinnedMesh skinnedMesh2(&context, &assetManager);
 
 		//vkx::SkinnedMesh *skinnedMesh1 = new vkx::SkinnedMesh(&context, &assetManager);
 		//delete skinnedMesh1->meshLoader;
 		//delete skinnedMesh1;
 
-
-		skinnedMesh1.load(getAssetPath() + "models/goblin.dae", 0);
-		skinnedMesh1.setup();
+		int flags = aiProcess_FlipWindingOrder | aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals;
+		skinnedMesh1.load(getAssetPath() + "models/goblin.dae", flags);
+		//skinnedMesh1.load(getAssetPath() + "models/goblin.dae", 0);
+		skinnedMesh1.setup(0.0005f);
+		//skinnedMesh1.setup(1.0f);
 		//skinnedMesh1.createMeshes(skinnedMeshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
-
-		std::cout << skinnedMesh1.meshLoader->pScene->mNumAnimations << std::endl;
+		skinnedMesh1.update(0.0f);
 
 
 

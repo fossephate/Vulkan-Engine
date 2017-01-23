@@ -168,13 +168,3 @@ void Camera::setProjection(float fov, float aspect, float znear, float zfar) {
 void Camera::setAspectRatio(float aspect) {
 	this->matrices.projection = glm::perspectiveRH(glm::radians(fov), aspect, znear, zfar);
 }
-
-
-
-
-
-
-void Camera::update(float deltaTime) {
-	if (type == CameraType::firstperson) {
-	}
-}

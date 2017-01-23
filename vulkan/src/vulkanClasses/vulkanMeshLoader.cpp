@@ -137,7 +137,7 @@ namespace vkx {
 				std::replace(fileName.begin(), fileName.end(), '\\', '/');
 				material.diffuse = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc3UnormBlock);// this is the texture format! :O
 			} else {
-
+				std::string fileName = std::string(texturefile.C_Str());
 				std::cout << "  Material has no diffuse, using dummy texture!" << std::endl;
 				// todo : separate pipeline and layout
 				material.diffuse = textureLoader->loadTexture(assetPath + "dummy.ktx", vk::Format::eBc2UnormBlock);
@@ -431,6 +431,105 @@ namespace vkx {
 
 
 	void vkx::MeshLoader::createMeshBuffers(const std::vector<VertexLayout> &layout, float scale) {
+
+		for (int m = 0; m < m_Entries.size(); m++) {
+
+
+			std::vector<float> vertexBuffer;
+
+			for (int i = 0; i < m_Entries[m].Vertices.size(); i++) {
+				// Push vertex data depending on layout
+				for (auto& layoutDetail : layout) {
+					// Position
+					if (layoutDetail == VERTEX_LAYOUT_POSITION) {
+						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.x * scale);
+						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.y * scale);
+						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.z * scale);
+					}
+					// Normal
+					if (layoutDetail == VERTEX_LAYOUT_NORMAL) {
+						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.x);
+						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.y);// y was negative// important
+						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.z);
+					}
+					// Texture coordinates
+					if (layoutDetail == VERTEX_LAYOUT_UV) {
+						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tex.s);
+						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tex.t);
+					}
+					// Color
+					if (layoutDetail == VERTEX_LAYOUT_COLOR) {
+						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.r);
+						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.g);
+						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.b);
+					}
+					// Tangent
+					if (layoutDetail == VERTEX_LAYOUT_TANGENT) {
+						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.x);
+						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.y);
+						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.z);
+					}
+					// Bitangent
+					if (layoutDetail == VERTEX_LAYOUT_BITANGENT) {
+						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.x);
+						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.y);
+						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.z);
+					}
+					// Dummy layout components for padding
+					if (layoutDetail == VERTEX_LAYOUT_DUMMY_FLOAT) {
+						vertexBuffer.push_back(0.0f);
+					}
+					if (layoutDetail == VERTEX_LAYOUT_DUMMY_VEC4) {
+						vertexBuffer.push_back(0.0f);
+						vertexBuffer.push_back(0.0f);
+						vertexBuffer.push_back(0.0f);
+						vertexBuffer.push_back(0.0f);
+					}
+				}
+			}
+
+			MeshBuffer meshBuffer;
+			meshBuffer.vertices.size = vertexBuffer.size() * sizeof(float);
+
+			dim.min *= scale;
+			dim.max *= scale;
+			dim.size *= scale;
+
+			std::vector<uint32_t> indexBuffer;
+			uint32_t indexBase = (uint32_t)indexBuffer.size();
+			for (uint32_t i = 0; i < m_Entries[m].Indices.size(); i++) {
+				indexBuffer.push_back(m_Entries[m].Indices[i] + indexBase);
+			}
+
+			meshBuffer.indexCount = (uint32_t)indexBuffer.size();
+			// Use staging buffer to move vertex and index buffer to device local memory
+			// Vertex buffer
+			meshBuffer.vertices = this->context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
+			// Index buffer
+			meshBuffer.indices = this->context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);
+			meshBuffer.dim = dim.size;
+
+			meshBuffer.materialIndex = m_Entries[m].MaterialIndex;
+
+
+
+			// set pointer to material used by this mesh
+			//meshBuffer.material = &materials[meshBuffer.materialIndex];
+
+			meshBuffers.push_back(meshBuffer);
+		}
+
+
+	}
+
+
+
+
+
+
+
+
+	void vkx::MeshLoader::createSkinnedMeshBuffer(const std::vector<VertexLayout> &layout, float scale) {
 
 		for (int m = 0; m < m_Entries.size(); m++) {
 

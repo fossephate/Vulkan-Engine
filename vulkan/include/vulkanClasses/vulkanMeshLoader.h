@@ -79,7 +79,9 @@ namespace vkx {
 		VERTEX_LAYOUT_TANGENT = 0x4,
 		VERTEX_LAYOUT_BITANGENT = 0x5,
 		VERTEX_LAYOUT_DUMMY_FLOAT = 0x6,
-		VERTEX_LAYOUT_DUMMY_VEC4 = 0x7
+		VERTEX_LAYOUT_DUMMY_VEC4 = 0x7,
+		VERTEX_LAYOUT_BONE_ID = 0x7,// added 1/20/17
+		VERTEX_LAYOUT_BONE_WEIGHT = 0x7,// added 1/20/17
 	} VertexLayout;
 
 
@@ -245,6 +247,7 @@ namespace vkx {
 			// Note : Only does staging if a valid command buffer and transfer queue are passed
 			void createMeshBuffer(const std::vector<VertexLayout> &layout, float scale);
 			void createMeshBuffers(const std::vector<VertexLayout> &layout, float scale);
+			void createSkinnedMeshBuffer(const std::vector<VertexLayout>& layout, float scale);
 	};
 
 }

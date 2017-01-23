@@ -390,7 +390,7 @@ public:
 	// The other example will use the VulkanMesh loader which has some additional functionality for loading meshes
 	void loadMesh() {
 		skinnedMesh = new SkinnedMesh();
-		skinnedMesh->meshLoader = new vkx::MeshLoader(context, assetManager);
+		skinnedMesh->meshLoader = new vkx::MeshLoader(&context, &assetManager);
 		#if defined(__ANDROID__)
 		skinnedMesh->meshLoader->assetManager = androidApp->activity->assetManager;
 		#endif
