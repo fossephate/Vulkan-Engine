@@ -11,6 +11,10 @@ layout (location = 4) in vec4 inBoneWeights;
 layout (location = 5) in ivec4 inBoneIDs;
 
 
+
+#define MAX_BONES 64
+
+
 // scene
 layout (set = 0, binding = 0) uniform sceneBuffer
 {
@@ -20,10 +24,13 @@ layout (set = 0, binding = 0) uniform sceneBuffer
 
 	vec3 lightPos;
 	vec3 cameraPos;
+
+	mat4 bones[MAX_BONES];
+
 } scene;
 
 
-#define MAX_BONES 64
+
 
 // layout (binding = 0) uniform UBO 
 // {
@@ -39,10 +46,18 @@ layout (set = 0, binding = 0) uniform sceneBuffer
 layout (set = 1, binding = 0) uniform matrixBuffer
 {
 	mat4 model;
-	mat4 g1;
-	mat4 bones[MAX_BONES];
-	mat4 g2;
-} matrices;
+	//int boneIndex;
+	//mat4 g1;
+	//mat4 bones[MAX_BONES];
+	//mat4 g2;
+} instance;
+
+
+// bone data
+layout (set = 4, binding = 0) uniform boneBuffer
+{
+	mat4 bones[/*MAX_BONES*64*/4096];
+} boneData;
 
 
 
@@ -64,15 +79,16 @@ out gl_PerVertex
 void main() 
 {
 
-	mat4 boneTransform = matrices.bones[inBoneIDs[0]] * inBoneWeights[0];
-	boneTransform     += matrices.bones[inBoneIDs[1]] * inBoneWeights[1];
-	boneTransform     += matrices.bones[inBoneIDs[2]] * inBoneWeights[2];
-	boneTransform     += matrices.bones[inBoneIDs[3]] * inBoneWeights[3];
 
-	//mat4 boneTransform = matrices.bones[inBoneIDs[0]] * inBoneWeights[0];
-	// boneTransform     += matrices.bones[inBoneIDs[1]] * 0.00001;
-	// boneTransform     += matrices.bones[inBoneIDs[2]] * 0.00001;
-	// boneTransform     += matrices.bones[inBoneIDs[3]] * 0.00001;
+	mat4 boneTransform = scene.bones[inBoneIDs[0]] * inBoneWeights[0];
+	boneTransform     += scene.bones[inBoneIDs[1]] * inBoneWeights[1];
+	boneTransform     += scene.bones[inBoneIDs[2]] * inBoneWeights[2];
+	boneTransform     += scene.bones[inBoneIDs[3]] * inBoneWeights[3];
+
+	//mat4 boneTransform = instance.bones[inBoneIDs[0]] * inBoneWeights[0];
+	// boneTransform     += instance.bones[inBoneIDs[1]] * 0.00001;
+	// boneTransform     += instance.bones[inBoneIDs[2]] * 0.00001;
+	// boneTransform     += instance.bones[inBoneIDs[3]] * 0.00001;
 
 	//mat4 boneTransform = mat4(1.0);
 
@@ -84,18 +100,53 @@ void main()
 	outCamPos = scene.cameraPos;
 	outLightPos = scene.lightPos;
 
-	mat4 modelView = scene.view * matrices.model;
-	mat4 MVP = scene.projection * scene.view * matrices.model;
+	mat4 modelView = scene.view * instance.model;
+	mat4 MVP = scene.projection * scene.view * instance.model;
 
-	gl_Position = scene.projection * scene.view * matrices.model * boneTransform * vec4(inPos.xyz, 1.0);
+	gl_Position = scene.projection * scene.view * instance.model * boneTransform * vec4(inPos.xyz, 1.0);
 
-	vec4 pos = matrices.model * vec4(inPos, 1.0);
+	vec4 pos = instance.model * vec4(inPos, 1.0);
 
 	// outNormal = mat3(inverse(transpose(ubo.model * boneTransform))) * inNormal;
 	// outLightVec = ubo.lightPos.xyz - pos.xyz;
 	// outViewVec = ubo.viewPos.xyz - pos.xyz;		
 	
-	vec3 lPos = mat3(matrices.model) * scene.lightPos.xyz;
-	outLightVec = lPos - (matrices.model * vec4(inPos.xyz, 0.0)).xyz;
-	outViewVec = -(matrices.model * vec4(inPos.xyz, 0.0)).xyz;
+	vec3 lPos = mat3(instance.model) * scene.lightPos.xyz;
+	outLightVec = lPos - (instance.model * vec4(inPos.xyz, 0.0)).xyz;
+	outViewVec = -(instance.model * vec4(inPos.xyz, 0.0)).xyz;
+
+
+
+
+
+
+
+
+
+	//int offset = instance.boneIndex * 64;
+
+    // mat4 boneTransform = boneData.bones[inBoneIDs[0]*offset] * inBoneWeights[0];
+    // boneTransform     += boneData.bones[inBoneIDs[1]*offset] * inBoneWeights[1];
+    // boneTransform     += boneData.bones[inBoneIDs[2]*offset] * inBoneWeights[2];
+    // boneTransform     += boneData.bones[inBoneIDs[3]*offset] * inBoneWeights[3];
+
+
+ //    mat4 boneTransform = scene.bones[inBoneIDs[0]] * inBoneWeights[0];
+ //    boneTransform     += scene.bones[inBoneIDs[1]] * inBoneWeights[1];
+ //    boneTransform     += scene.bones[inBoneIDs[2]] * inBoneWeights[2];
+ //    boneTransform     += scene.bones[inBoneIDs[3]] * inBoneWeights[3];
+
+ //    //mat4 boneTransform = mat4(1.0);
+
+	
+	// outNormal = inNormal;
+	// outColor = inColor;
+	// outUV = inUV;
+
+	// gl_Position = scene.projection * scene.view * instance.model * boneTransform * vec4(inPos.xyz, 1.0);
+
+ //    vec4 pos = instance.model * vec4(inPos, 1.0);
+	// outNormal = mat3(inverse(transpose(instance.model))) * inNormal;
+ //    outLightVec = scene.lightPos.xyz - pos.xyz;
+ //    outViewVec = scene.cameraPos.xyz - pos.xyz;
 }

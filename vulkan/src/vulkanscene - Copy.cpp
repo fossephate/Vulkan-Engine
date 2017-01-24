@@ -140,27 +140,23 @@ public:
 		vkx::CreateBufferResult sceneVS;// scene data
 		vkx::CreateBufferResult matrixVS;// matrix data
 		vkx::CreateBufferResult materialVS;// material data
-		vkx::CreateBufferResult bonesVS;// bone data for all skinned meshes // max of 1000 skinned meshes w/64 bones/mesh
 	} uniformData;
 
-
-	// static scene uniform buffer
 	struct {
-
+		//glm::mat4 model;// not really needed// todo: remove
 		glm::mat4 view;
 		glm::mat4 projection;
-		glm::mat4 normal;// why is this here?
+		
+		glm::mat4 normal;
+
 		glm::vec3 lightPos;
+
 		glm::vec3 cameraPos;
-
-		glm::mat4 bones[MAX_BONES];
-
 	} uboScene;
 
 
 	struct matrixNode {
 		glm::mat4 model;
-		//int boneIndex;
 		//glm::mat4 bones[MAX_BONES];
 		//glm::mat4 g2;
 		//glm::mat4 g3;
@@ -184,12 +180,6 @@ public:
 	//};
 
 	std::vector<vkx::materialProperties> materialNodes;
-
-
-	// bone data uniform buffer
-	struct {
-		glm::mat4 bones[MAX_BONES*64];
-	} uboBoneData;
 	
 
 
@@ -268,14 +258,14 @@ public:
 
 
 		//dynamicAlignment = (sizeof(glm::mat4) / uboAlignment) * uboAlignment + ((sizeof(glm::mat4) % uboAlignment) > 0 ? uboAlignment : 0);
-		//dynamicAlignment = (sizeof(matrixNode) / uboAlignment) * uboAlignment + ((sizeof(matrixNode) % uboAlignment) > 0 ? uboAlignment : 0);
+		dynamicAlignment = (sizeof(matrixNode) / uboAlignment) * uboAlignment + ((sizeof(matrixNode) % uboAlignment) > 0 ? uboAlignment : 0);
 
 
 		// todo: fix
-		//size_t bufferSize = 100 * dynamicAlignment;
+		size_t bufferSize = 100 * dynamicAlignment;
 		//matrixNode2.model = (glm::mat4*)alignedAlloc(bufferSize, dynamicAlignment);
 		//modelMatrices = (glm::mat4*)alignedAlloc(bufferSize, dynamicAlignment);
-		//modelMatrices = (matrixNode*)alignedAlloc(bufferSize, dynamicAlignment);
+		modelMatrices = (matrixNode*)alignedAlloc(bufferSize, dynamicAlignment);
 
 
 		alignedMatrixSize = (unsigned int)(alignedSize(alignment, sizeof(matrixNode)));
@@ -354,13 +344,7 @@ public:
 		for (int i = 0; i < models.size(); ++i) {
 			models[i].matrixIndex = i;
 		}
-		
-		// todo: fix this
 		skinnedMeshes[0].matrixIndex = 15;
-
-		for (int i = 0; i < skinnedMeshes.size(); ++i) {
-			skinnedMeshes[i].boneIndex = i;
-		}
 		
 
 		globalP += 0.005f;
@@ -383,20 +367,12 @@ public:
 		//models[1].setRotation(q);
 
 
-
-
-		skinnedMeshes[0].setTranslation(glm::vec3(4.0f, sin(globalP) + 2.0, 0.0f));
-
-
 		uboScene.lightPos = glm::vec3(cos(globalP), 4.0f, cos(globalP));
 		//uboScene.lightPos = glm::vec3(1.0f, -2.0f, 4.0/**sin(globalP*10.0f)*/+4.0);
 
 
 		//matrixNodes[0].model = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, 0.0f));
 		//matrixNodes[1].model = glm::translate(glm::mat4(), glm::vec3(sin(globalP), 1.0f, 0.0f));
-
-
-
 
 
 		// todo: fix
@@ -410,7 +386,6 @@ public:
 			//*modelMat = model.transfMatrix;
 
 		}
-
 
 
 		for (auto &skinnedMesh : skinnedMeshes) {
@@ -428,38 +403,6 @@ public:
 				//matrixNodes[skinnedMesh.matrixIndex].bones[i] = glm::transpose(glm::make_mat4(&skinnedMesh.boneTransforms[i].a1));
 				//std::ofstream log("logfile.txt", std::ios_base::app | std::ios_base::out);
 				//log << skinnedMesh.boneTransforms[i].a1 << "\n";
-			}
-		}
-
-
-		// uboBoneData.bones is a large bone data buffer
-		// use offset to store bone data for each skinnedMesh
-		// basically a manual dynamic buffer
-		for (auto &skinnedMesh : skinnedMeshes) {
-
-			matrixNodes[skinnedMesh.matrixIndex].model = skinnedMesh.transfMatrix;
-
-
-			uint32_t boneOffset = skinnedMesh.boneIndex*64;;
-
-			//skinnedMesh.update(globalP*0.0f);// slow down animation
-			//skinnedMesh.update(globalP*0.5f);// slow down animation
-			if (keyStates.space) {
-				//skinnedMesh.update(globalP*0.05f);
-				//std::ofstream log("logfile.txt", std::ios_base::app | std::ios_base::out);
-				//log << &skinnedMesh.boneTransforms[i].a1 << "\n";
-			}
-
-			for (uint32_t i = 0; i < skinnedMesh.boneTransforms.size(); ++i) {
-				
-				//matrixNodes[skinnedMesh.matrixIndex].bones[i] = aiMatrix4x4ToGlm(&skinnedMesh.boneTransforms[i]);
-				//matrixNodes[skinnedMesh.matrixIndex].bones[i] = glm::transpose(glm::make_mat4(&skinnedMesh.boneTransforms[i].a1));
-				//std::ofstream log("logfile.txt", std::ios_base::app | std::ios_base::out);
-				//log << skinnedMesh.boneTransforms[i].a1 << "\n";
-
-				//uboBoneData.bones[boneOffset + i] = glm::transpose(glm::make_mat4(&skinnedMesh.boneTransforms[i].a1));
-				//uboScene.bones[i] = glm::transpose(glm::make_mat4(&skinnedMesh.boneTransforms[i].a1));
-				//uboScene.bones[i] = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, 0.0f));
 			}
 		}
 
@@ -481,9 +424,6 @@ public:
 		updateMatrixBuffer();
 		updateMaterialBuffer();
 		updateUniformBuffers();
-
-
-		//uniformData.bonesVS.copy(uboBoneData);
 		
 
 
@@ -617,6 +557,9 @@ public:
 		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.skinnedMeshes);
 
 		for (auto &skinnedMesh : skinnedMeshes) {
+
+
+			//vkx::SkinnedMesh &mesh = skinnedMesh;
 
 
 			// bind vertex & index buffers
@@ -840,21 +783,6 @@ public:
 		this->assetManager.materialDescriptorPool = &descriptorPools[3];
 
 
-
-
-		//// bone data
-		//std::vector<vk::DescriptorPoolSize> poolSizes4 =
-		//{
-		//	vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 1),// static bone data
-		//};
-
-		//vk::DescriptorPoolCreateInfo descriptorPool4Info =
-		//	vkx::descriptorPoolCreateInfo(poolSizes4.size(), poolSizes4.data(), 1);
-
-		//vk::DescriptorPool descPool4 = device.createDescriptorPool(descriptorPool4Info);
-		//descriptorPools.push_back(descPool4);
-
-
 		
 
 	}
@@ -871,7 +799,7 @@ public:
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBuffer,
 				vk::ShaderStageFlagBits::eVertex,
-				0),// binding 0
+				0),// binding 1
 		};
 
 		vk::DescriptorSetLayoutCreateInfo descriptorLayout0 =
@@ -949,32 +877,6 @@ public:
 		this->assetManager.materialDescriptorSetLayout = &descriptorSetLayouts[3];
 
 
-
-
-
-
-
-		//// descriptor set layout 4
-		//// bone data
-
-		//std::vector<vk::DescriptorSetLayoutBinding> setLayout4Bindings =
-		//{
-		//	// Binding 0 : Vertex shader uniform buffer
-		//	vkx::descriptorSetLayoutBinding(
-		//		vk::DescriptorType::eUniformBuffer,
-		//		vk::ShaderStageFlagBits::eVertex,
-		//		0),// binding 0
-		//};
-
-		//vk::DescriptorSetLayoutCreateInfo descriptorLayout4 =
-		//	vkx::descriptorSetLayoutCreateInfo(setLayout4Bindings.data(), setLayout4Bindings.size());
-
-		//vk::DescriptorSetLayout setLayout4 = device.createDescriptorSetLayout(descriptorLayout4);
-		//descriptorSetLayouts.push_back(setLayout4);
-
-
-
-
 		// use all descriptor set layouts
 		// to form pipeline layout
 
@@ -1045,17 +947,6 @@ public:
 
 
 
-		//// descriptor set 4
-		//// bone data
-		//vk::DescriptorSetAllocateInfo descriptorSetInfo4 =
-		//	vkx::descriptorSetAllocateInfo(descriptorPools[4], &descriptorSetLayouts[4], 1);
-
-		//std::vector<vk::DescriptorSet> descSets4 = device.allocateDescriptorSets(descriptorSetInfo4);
-		//descriptorSets.push_back(descSets4[0]);// descriptor set 4
-
-
-
-
 		std::vector<vk::WriteDescriptorSet> writeDescriptorSets =
 		{
 			// set 0
@@ -1081,27 +972,7 @@ public:
 				descriptorSets[2],// descriptor set 2
 				vk::DescriptorType::eUniformBufferDynamic,
 				0,// binding 0
-				&uniformData.materialVS.descriptor),
-
-
-			// set 3 is set later (textures)
-
-
-			//// set 4
-			//// static bone data buffer
-			//vkx::writeDescriptorSet(
-			//	/*descriptorSets[2]*/descSets4[0],// descriptor set 4
-			//	vk::DescriptorType::eUniformBuffer,// static
-			//	0,// binding 0
-			//	&uniformData.bonesVS.descriptor)
-
-			//// set 4
-			//// static bone data buffer
-			//vkx::writeDescriptorSet(
-			//	descriptorSets[3],// descriptor set 4
-			//	vk::DescriptorType::eUniformBuffer,// static
-			//	0,// binding 0
-			//	&uniformData.bonesVS.descriptor)
+				&uniformData.materialVS.descriptor)
 		};
 
 
@@ -1253,7 +1124,6 @@ public:
 		uniformData.sceneVS = context.createUniformBuffer(uboScene);
 		uniformData.matrixVS = context.createDynamicUniformBuffer(matrixNodes);
 		uniformData.materialVS = context.createDynamicUniformBuffer(materialNodes);
-		uniformData.bonesVS = context.createUniformBuffer(uboBoneData);
 
 		//uniformData.matrixVS = context.createDynamicUniformBufferManual(modelMatrices, 100);
 
@@ -1262,28 +1132,9 @@ public:
 
 		//uniformData.matrixVS = context.createDynamicUniformBuffer(matrixNodes);
 
-		updateUniformBuffers();// update scene ubo
-		updateMatrixBuffer();// update matrix ubo
-		updateMaterialBuffer();// update material ubo
-		// todo: update bonedata ubo
-	}
-
-	void updateMatrixBuffer() {
-
-		// todo:
-
-		uniformData.matrixVS.copy(matrixNodes);
-		//uniformData.matrixVS.copy(modelMatrices);
-
-		//memcpy(uniformData.matrixVS.mapped, modelMatrices, uniformData.matrixVS.size);
-
-		// not needed bc host coherent flag set
-		//// Flush to make changes visible to the host 
-		//VkMappedMemoryRange memoryRange = vkTools::initializers::mappedMemoryRange();
-		//memoryRange.memory = uniformBuffers.dynamic.memory;
-		//memoryRange.size = sizeof(uboDataDynamic);
-		//vkFlushMappedMemoryRanges(device, 1, &memoryRange);
-
+		updateUniformBuffers();
+		updateMatrixBuffer();
+		updateMaterialBuffer();
 	}
 
 	void updateMaterialBuffer() {
@@ -1311,7 +1162,23 @@ public:
 		uniformData.materialVS.copy(materialNodes);
 	}
 
+	void updateMatrixBuffer() {
 
+		// todo:
+
+		uniformData.matrixVS.copy(matrixNodes);
+		//uniformData.matrixVS.copy(modelMatrices);
+		
+		//memcpy(uniformData.matrixVS.mapped, modelMatrices, uniformData.matrixVS.size);
+
+		// not needed bc host coherent flag set
+		//// Flush to make changes visible to the host 
+		//VkMappedMemoryRange memoryRange = vkTools::initializers::mappedMemoryRange();
+		//memoryRange.memory = uniformBuffers.dynamic.memory;
+		//memoryRange.size = sizeof(uboDataDynamic);
+		//vkFlushMappedMemoryRanges(device, 1, &memoryRange);
+
+	}
 
 	void updateUniformBuffers() {
 		uboScene.projection = camera.matrices.projection;
@@ -1401,12 +1268,15 @@ public:
 		//delete skinnedMesh1;
 
 		int flags = aiProcess_FlipWindingOrder | aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals;
-		//skinnedMesh1.load(getAssetPath() + "models/goblin.dae", flags);
-		skinnedMesh1.load(getAssetPath() + "models/goblin.dae", 0);
+		skinnedMesh1.load(getAssetPath() + "models/goblin.dae", flags);
+		//skinnedMesh1.load(getAssetPath() + "models/goblin.dae", 0);
 		skinnedMesh1.setup(0.0005f);
 		//skinnedMesh1.setup(1.0f);
 		//skinnedMesh1.createMeshes(skinnedMeshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
-		//skinnedMesh1.update(0.0f);
+		skinnedMesh1.update(0.0f);
+
+
+
 
 
 		skinnedMeshes.push_back(skinnedMesh1);

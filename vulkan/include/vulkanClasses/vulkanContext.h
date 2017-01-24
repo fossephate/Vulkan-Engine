@@ -369,6 +369,33 @@ namespace vkx {
 		return result;
 	}
 
+	//// todo:
+	//template<typename T>
+	//inline CreateBufferResult Context::createDynamicUniformBufferManualFlush(const T & data, size_t count) const {
+
+	//	//auto alignment = deviceProperties.limits.minUniformBufferOffsetAlignment;
+	//	//auto extra = sizeof(T) % alignment;
+	//	//auto alignedSize = sizeof(T) + (alignment - extra);
+	//	//auto allocatedSize = /*count*/data.size() * alignedSize;
+
+	//	auto alignment = deviceProperties.limits.minUniformBufferOffsetAlignment;
+	//	auto extra = sizeof(T) % alignment;
+	//	auto alignedSize = sizeof(T) + (alignment - extra);
+	//	auto allocatedSize = count * alignedSize;
+
+	//	//https://github.com/SaschaWillems/Vulkan/tree/master/dynamicuniformbuffer
+	//	//(Updates will be flushed manually, the VK_MEMORY_PROPERTY_HOST_COHERENT_BIT flag will isn't used)
+
+	//	CreateBufferResult result = createBuffer(vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst, vk::MemoryPropertyFlagBits::eHostVisible /* | vk::MemoryPropertyFlagBits::eHostCoherent*/, allocatedSize);
+
+	//	result.alignment = alignedSize;
+	//	result.descriptor.range = result.alignment;
+	//	result.map();
+	//	//result.copy(data);
+	//	//result.copy((void*)data.data());
+	//	return result;
+	//}
+
 	template<typename T>
 	inline void Context::copyToMemory(const vk::DeviceMemory & memory, const T & data, size_t offset) const {
 		copyToMemory(memory, &data, sizeof(T), offset);

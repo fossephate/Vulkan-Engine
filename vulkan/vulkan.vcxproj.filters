@@ -63,7 +63,7 @@
     <ClCompile Include="src\vulkanClasses\vulkanSkinnedMesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\vulkanscenetest.cpp">
+    <ClCompile Include="src\vulkanscene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -34,8 +34,8 @@ class Camera : public vkx::Object3D {
 		bool changed = false;
 
 		float rotationSpeed = 1.0f;
-		float movementSpeed = 0.05f;
-
+		//float movementSpeed = 0.05f;
+		float movementSpeed = 5.0f;
 
 		//struct {
 		//	glm::quat orientation = glm::quat();

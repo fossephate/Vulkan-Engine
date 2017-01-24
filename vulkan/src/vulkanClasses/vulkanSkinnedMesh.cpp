@@ -212,6 +212,13 @@ namespace vkx {
 
 				boneTransforms[i] = boneInfo[i].finalTransformation;
 			}
+
+			this->boneInfo;
+			this->bones;
+			this->boneMapping;
+			this->boneTransforms;
+			std::cout << "test" << std::endl;
+
 		}
 
 

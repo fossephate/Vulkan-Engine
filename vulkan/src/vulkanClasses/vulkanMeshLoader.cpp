@@ -140,7 +140,8 @@ namespace vkx {
 				std::string fileName = std::string(texturefile.C_Str());
 				std::cout << "  Material has no diffuse, using dummy texture!" << std::endl;
 				// todo : separate pipeline and layout
-				material.diffuse = textureLoader->loadTexture(assetPath + "dummy.ktx", vk::Format::eBc2UnormBlock);
+				//material.diffuse = textureLoader->loadTexture(assetPath + "dummy.ktx", vk::Format::eBc2UnormBlock);
+				material.diffuse = textureLoader->loadTexture(assetPath + "goblin_bc3.ktx", vk::Format::eBc3UnormBlock);// bc3(was bc2)
 				//material.diffuse = textureLoader->loadTexture(assetPath + "kamen.ktx", vk::Format::eBc2UnormBlock);
 			}
 
@@ -189,6 +190,11 @@ namespace vkx {
 		if (this->assetManager->materialDescriptorPool == nullptr) {
 			return;
 		}
+
+		if (this->assetManager->materialDescriptorSetLayout == nullptr) {
+			return;
+		}
+
 
 		// todo: remove the tempMaterials vector
 		for (int i = 0; i < tempMaterials.size(); ++i) {

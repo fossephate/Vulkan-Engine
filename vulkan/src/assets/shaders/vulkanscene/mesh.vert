@@ -39,6 +39,13 @@ layout (set = 1, binding = 0) uniform matrixBuffer
 // 	matrixNode objectInstance;
 // };
 
+// bone data
+layout (set = 4, binding = 0) uniform boneBuffer
+{
+	mat4 bones[/*MAX_BONES*64*/4096];
+} boneData;
+
+
 
 layout (location = 0) out vec3 outNormal;
 layout (location = 1) out vec2 outUV;

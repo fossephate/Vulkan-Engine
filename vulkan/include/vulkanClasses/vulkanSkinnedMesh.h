@@ -108,11 +108,14 @@ namespace vkx {
 			vkx::MeshBuffer meshBuffer;
 
 			uint32_t matrixIndex;
+			uint32_t boneIndex;
 			uint32_t vertexBufferBinding = 0;
 			//vk::Pipeline pipeline;
 
 			// if there are too many vector member variables
 			// the program crashes for some reason
+
+			float animationSpeed = 0.75f;
 
 
 
