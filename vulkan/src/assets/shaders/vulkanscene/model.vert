@@ -14,7 +14,7 @@ layout (location = 5) in ivec4 inBoneIDs;
 
 #define MAX_BONES 64
 
-#define MAX_SKINNED_MESHES 20
+#define MAX_SKINNED_MESHES 10
 
 
 // scene

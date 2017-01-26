@@ -38,8 +38,8 @@ std::vector<vkx::VertexLayout> skinnedMeshVertexLayout =
 #define MAX_BONES 64
 // Maximum number of bones per vertex
 #define MAX_BONES_PER_VERTEX 4
-// Maximum number of skinned meshes (by uniform 65k limit)
-#define MAX_SKINNED_MESHES 20
+// Maximum number of skinned meshes (by 65k uniform limit)
+#define MAX_SKINNED_MESHES 10
 
 
 
