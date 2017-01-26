@@ -38,7 +38,8 @@ std::vector<vkx::VertexLayout> skinnedMeshVertexLayout =
 #define MAX_BONES 64
 // Maximum number of bones per vertex
 #define MAX_BONES_PER_VERTEX 4
-
+// Maximum number of skinned meshes (by uniform 65k limit)
+#define MAX_SKINNED_MESHES 20
 
 
 
@@ -161,13 +162,15 @@ public:
 		glm::vec4 lightPos;
 		glm::vec4 cameraPos;
 
-		glm::mat4 bones[MAX_BONES];
+		glm::mat4 bones[MAX_BONES*MAX_SKINNED_MESHES];
 
 	} uboScene;
 
-
+	// todo: fix this
 	struct matrixNode {
 		glm::mat4 model;
+		glm::mat4 boneIndex;
+		//glm::vec4 padding[3];
 		//int boneIndex;
 		//glm::mat4 bones[MAX_BONES];
 		//glm::mat4 g2;
@@ -196,7 +199,7 @@ public:
 
 	// bone data uniform buffer
 	struct {
-		glm::mat4 bones[MAX_BONES*64];
+		glm::mat4 bones[1];
 	} uboBoneData;
 	
 
@@ -360,15 +363,25 @@ public:
 
 
 		// todo: fix this// important
+		// stop doing this every frame
+		// only when necessary
 		for (int i = 0; i < models.size(); ++i) {
 			models[i]->matrixIndex = i;
 		}
-		
-		// todo: fix this
-		skinnedMeshes[0]->matrixIndex = 15;
+
+
+		// uses matrix indices directly after meshes' indices
+		for (int i = 0; i < skinnedMeshes.size(); ++i) {
+			skinnedMeshes[i]->matrixIndex = models.size()+i;
+		}
 
 		for (int i = 0; i < skinnedMeshes.size(); ++i) {
 			skinnedMeshes[i]->boneIndex = i;
+			// todo: set 4x4 matrix bone index
+		}
+
+		for (int i = 0; i < matrixNodes.size(); ++i) {
+			matrixNodes[i].boneIndex[0][0] = i;
 		}
 		
 
@@ -392,15 +405,23 @@ public:
 		//models[1].setRotation(q);
 
 
+		skinnedMeshes[0]->setTranslation(glm::vec3(2.0f, sin(globalP), 1.0f));
 
-		if (skinnedMeshes.size() > 3) {
-			skinnedMeshes[1]->setTranslation(glm::vec3(-2.0, 8.0*sin(globalP), 1.0));
-			skinnedMeshes[2]->setTranslation(glm::vec3(0.0, 8.0*sin(globalP), 1.0));
-			skinnedMeshes[3]->setTranslation(glm::vec3(2.0, 8.0*sin(globalP), 1.0));
+		if (skinnedMeshes.size() > 1) {
+			//skinnedMeshes[1]->setTranslation(glm::vec3(-1.0f, 4.0f*sin(globalP), 1.0f));
+			//skinnedMeshes[2]->setTranslation(glm::vec3(0.0, 8.0*sin(globalP), 1.0));
+			//skinnedMeshes[3]->setTranslation(glm::vec3(2.0, 8.0*sin(globalP), 1.0));
+			glm::vec3 point = skinnedMeshes[1]->transform.translation;
+			skinnedMeshes[1]->setTranslation(glm::vec3(point.x, point.y, 1.0f));
+			skinnedMeshes[1]->translateLocal(glm::vec3(0.0f, 0.05f, 0.0f));
+			skinnedMeshes[1]->rotateLocalZ(0.014f);
 		}
 
 
-		skinnedMeshes[0]->setTranslation(glm::vec3(4.0f, sin(globalP) + 2.0, 0.0f));
+		
+
+		skinnedMeshes[0]->animationSpeed = 1.0f;
+		skinnedMeshes[1]->animationSpeed = 1.5f;
 
 
 		//uboScene.lightPos = glm::vec3(cos(globalP), 4.0f, cos(globalP));
@@ -437,16 +458,17 @@ public:
 
 			matrixNodes[skinnedMesh->matrixIndex].model = skinnedMesh->transfMatrix;
 
+			
 
-			uint32_t boneOffset = skinnedMesh->boneIndex*64;
+			skinnedMesh->update(globalP*skinnedMesh->animationSpeed);// update animation / interpolated
 
-			//skinnedMesh.update(globalP*0.0f);// slow down animation
-			skinnedMesh->update(globalP*0.5f);// slow down animation
 			if (keyStates.space) {
 				//skinnedMesh.update(globalP*0.05f);
 				//std::ofstream log("logfile.txt", std::ios_base::app | std::ios_base::out);
 				//log << &skinnedMesh.boneTransforms[i].a1 << "\n";
 			}
+
+			uint32_t boneOffset = skinnedMesh->boneIndex*MAX_BONES;
 
 			for (uint32_t i = 0; i < skinnedMesh->boneTransforms.size(); ++i) {
 				
@@ -455,9 +477,10 @@ public:
 				//std::ofstream log("logfile.txt", std::ios_base::app | std::ios_base::out);
 				//log << skinnedMesh.boneTransforms[i].a1 << "\n";
 
-				//uboBoneData.bones[boneOffset + i] = glm::transpose(glm::make_mat4(&skinnedMesh.boneTransforms[i].a1));
-				uboScene.bones[i] = glm::transpose(glm::make_mat4(&skinnedMesh->boneTransforms[i].a1));
-				//uboScene.bones[i] = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, 0.0f));
+				//uboBoneData.bones[boneOffset + i] = glm::transpose(glm::make_mat4(&skinnedMesh->boneTransforms[i].a1));
+				//uboScene.bones[i] = glm::transpose(glm::make_mat4(&skinnedMesh->boneTransforms[i].a1));
+				uboScene.bones[boneOffset + i] = glm::transpose(glm::make_mat4(&skinnedMesh->boneTransforms[i].a1));
+				
 			}
 		}
 
@@ -1417,14 +1440,14 @@ public:
 		//skinnedMesh2->load(getAssetPath() + "models/goblin.dae");
 		//skinnedMesh2->setup(0.0005f);
 
-		//for (int i = 0; i < 6; ++i) {
+		for (int i = 0; i < 1; ++i) {
 
-		//	auto testSkinnedMesh = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
-		//	testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");
-		//	testSkinnedMesh->setup(0.0005f);
+			auto testSkinnedMesh = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
+			testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");
+			testSkinnedMesh->setup(0.0005f);
 
-		//	skinnedMeshes.push_back(testSkinnedMesh);
-		//}
+			skinnedMeshes.push_back(testSkinnedMesh);
+		}
 
 
 
@@ -1521,12 +1544,12 @@ public:
 		//textOverlay->addText("camera stats:", 5.0f, vOffset, vkx::TextOverlay::alignLeft);
 
 		//textOverlay->addText("log: ", 5.0f, vOffset + 20.0f, vkx::TextOverlay::alignLeft);
-		textOverlay->addText(consoleLog.c_str(), 5.0f, vOffset + 40.0f, vkx::TextOverlay::alignLeft);
+		//textOverlay->addText(consoleLog.c_str(), 5.0f, vOffset + 40.0f, vkx::TextOverlay::alignLeft);
 
-		if (models.size() > 4) {
-			textOverlay->addText(std::to_string(models[2]->transform.translation.x), 5.0f, vOffset + 60.0f, vkx::TextOverlay::alignLeft);
-			textOverlay->addText(std::to_string(models[3]->transform.translation.x), 5.0f, vOffset + 80.0f, vkx::TextOverlay::alignLeft);
-		}
+		//if (models.size() > 4) {
+		//	textOverlay->addText(std::to_string(frameTimer), 5.0f, vOffset + 60.0f, vkx::TextOverlay::alignLeft);
+		//	textOverlay->addText(std::to_string(models[3]->transform.translation.x), 5.0f, vOffset + 80.0f, vkx::TextOverlay::alignLeft);
+		//}
 
 		//textOverlay->addText("rotation(q) w: " + std::to_string(camera.rotation.w), 5.0f, vOffset + 20.0f, vkx::TextOverlay::alignLeft);
 		//textOverlay->addText("rotation(q) x: " + std::to_string(camera.rotation.x), 5.0f, vOffset + 40.0f, vkx::TextOverlay::alignLeft);

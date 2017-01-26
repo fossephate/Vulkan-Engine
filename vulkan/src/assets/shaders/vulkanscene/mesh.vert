@@ -21,35 +21,30 @@ struct matrixNode {
 // scene
 layout (set = 0, binding = 0) uniform sceneBuffer
 {
-
-	//mat4 model;// todo: remove this
-
 	mat4 view;
 	mat4 projection;
-	
-	//mat4 normal;
 
 	vec3 lightPos;
 	vec3 cameraPos;
-
-
 	// todo: definitely remove this
 	mat4 bones[MAX_BONES];
-
 } scene;
 
 // matrix data
 layout (set = 1, binding = 0) uniform matrixBuffer
 {
 	mat4 model;
+	//mat4 boneIndex;
+	//vec4 boneIndex;
+	//vec4 padding[3];
 	mat4 g1;
 	//mat4 garbage2;
 	//mat4 garbage3;
-} objectInstance;
+} instance;
 
 // layout (set = 1, binding = 0) uniform matrixBuffer
 // {
-// 	matrixNode objectInstance;
+// 	matrixNode instance;
 // };
 
 // bone data
@@ -76,28 +71,26 @@ layout (location = 7) out vec3 outLightPos;
 void main() 
 {
 	outUV = inUV;
-	//outNormal = normalize(mat3(objectInstance.normal) * inNormal);
+	//outNormal = normalize(mat3(instance.normal) * inNormal);
 	outNormal = inNormal;// uncommented for blinn-phong
 	outColor = inColor;
 
 	outPos = inPos.xyz;
 	outCamPos = scene.cameraPos;
 	outLightPos = scene.lightPos;
-
-
 	
-	mat4 modelView = scene.view * objectInstance.model;
-	mat4 MVP = scene.projection * scene.view * objectInstance.model;
+	mat4 modelView = scene.view * instance.model;
+	mat4 MVP = scene.projection * scene.view * instance.model;
 
 	gl_Position = MVP * vec4(inPos.xyz, 1.0);
 
 	vec4 pos = modelView * vec4(inPos.xyz, 0.0);
-	//outNormal = mat3(objectInstance.model) * inNormal;// commented out for blinn-phong
+	//outNormal = mat3(instance.model) * inNormal;// commented out for blinn-phong
 
 
-	vec3 lPos = mat3(objectInstance.model) * scene.lightPos.xyz;
-	outLightVec = lPos - (objectInstance.model * vec4(inPos.xyz, 0.0)).xyz;
-	outViewVec = -(objectInstance.model * vec4(inPos.xyz, 0.0)).xyz;
+	vec3 lPos = mat3(instance.model) * scene.lightPos.xyz;
+	outLightVec = lPos - (instance.model * vec4(inPos.xyz, 0.0)).xyz;
+	outViewVec = -(instance.model * vec4(inPos.xyz, 0.0)).xyz;
 
 	// FragPos = vec3(model * vec4(position, 1.0f));
 
@@ -115,16 +108,16 @@ void main()
 	// outColor = inColor;
 	// outUV = inUV;
 
-	// mat4 modelView = scene.view * objectInstance.model;
+	// mat4 modelView = scene.view * instance.model;
 
-	// gl_Position = scene.projection * scene.view * objectInstance.model * vec4(inPos.xyz, 1.0);
+	// gl_Position = scene.projection * scene.view * instance.model * vec4(inPos.xyz, 1.0);
 	
 	// vec4 pos = modelView * inPos;
-	// outNormal = mat3(objectInstance.model) * inNormal;
-	// vec3 lPos = mat3(objectInstance.model) * scene.lightPos.xyz;
+	// outNormal = mat3(instance.model) * inNormal;
+	// vec3 lPos = mat3(instance.model) * scene.lightPos.xyz;
 
-	// outLightVec = lPos - (objectInstance.model * vec4(inPos.xyz, 0.0)).xyz;
-	// outViewVec = -(objectInstance.model * vec4(inPos.xyz, 0.0)).xyz;
+	// outLightVec = lPos - (instance.model * vec4(inPos.xyz, 0.0)).xyz;
+	// outViewVec = -(instance.model * vec4(inPos.xyz, 0.0)).xyz;
 
 
 

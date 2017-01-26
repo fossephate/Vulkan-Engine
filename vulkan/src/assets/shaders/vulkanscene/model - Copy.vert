@@ -14,8 +14,6 @@ layout (location = 5) in ivec4 inBoneIDs;
 
 #define MAX_BONES 64
 
-#define MAX_SKINNED_MESHES 20
-
 
 // scene
 layout (set = 0, binding = 0) uniform sceneBuffer
@@ -30,7 +28,7 @@ layout (set = 0, binding = 0) uniform sceneBuffer
 	vec4 lightPos;
 	vec4 cameraPos;
 
-	mat4 bones[MAX_BONES*MAX_SKINNED_MESHES];
+	mat4 bones[MAX_BONES];
 
 } scene;
 
@@ -51,9 +49,7 @@ layout (set = 0, binding = 0) uniform sceneBuffer
 layout (set = 1, binding = 0) uniform matrixBuffer
 {
 	mat4 model;
-	mat4 boneIndex;
-	//vec4 boneIndex;
-	//vec4 padding[3];
+	//int boneIndex;
 	//mat4 g1;
 	//mat4 bones[MAX_BONES];
 	//mat4 g2;
@@ -63,7 +59,7 @@ layout (set = 1, binding = 0) uniform matrixBuffer
 // bone data
 layout (set = 4, binding = 0) uniform boneBuffer
 {
-	mat4 bones[MAX_BONES];
+	mat4 bones[/*MAX_BONES*64*/4096];
 } boneData;
 
 
@@ -86,23 +82,11 @@ out gl_PerVertex
 void main() 
 {
 
-	int offset;
-	int index = int(instance.boneIndex[0][0]);
 
-	if( index == 7 ) {
-		offset = 0;
-	} else {
-		offset = 64;
-	}
-
-
-	//offset = int(instance.boneIndex[0][0])*MAX_BONES;
-	//int offset = 0;
-
-	mat4 boneTransform = scene.bones[inBoneIDs[0]+offset] * inBoneWeights[0];
-	boneTransform     += scene.bones[inBoneIDs[1]+offset] * inBoneWeights[1];
-	boneTransform     += scene.bones[inBoneIDs[2]+offset] * inBoneWeights[2];
-	boneTransform     += scene.bones[inBoneIDs[3]+offset] * inBoneWeights[3];
+	mat4 boneTransform = scene.bones[inBoneIDs[0]] * inBoneWeights[0];
+	boneTransform     += scene.bones[inBoneIDs[1]] * inBoneWeights[1];
+	boneTransform     += scene.bones[inBoneIDs[2]] * inBoneWeights[2];
+	boneTransform     += scene.bones[inBoneIDs[3]] * inBoneWeights[3];
 
 	//mat4 boneTransform = instance.bones[inBoneIDs[0]] * inBoneWeights[0];
 	// boneTransform     += instance.bones[inBoneIDs[1]] * 0.00001;
@@ -124,6 +108,7 @@ void main()
 
 	gl_Position = scene.projection * scene.view * instance.model * boneTransform * vec4(inPos.xyz, 1.0);
 	//gl_Position = scene.projection * scene.model * boneTransform * vec4(inPos.xyz, 1.0);
+
 
 
 	vec4 pos = instance.model * vec4(inPos, 1.0);
