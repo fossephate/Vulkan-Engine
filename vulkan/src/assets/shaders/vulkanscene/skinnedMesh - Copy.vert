@@ -15,13 +15,13 @@ layout (location = 5) in ivec4 inBoneIDs;
 layout (binding = 0) uniform UBO 
 {
 	mat4 model;
-	mat4 view;
+	//mat4 view;
 	mat4 projection;
 
 	//vec4 lightPos;
 	//vec4 viewPos;
-	vec4 lightPos;
-	vec4 cameraPos;
+	vec3 lightPos;
+	vec3 cameraPos;
 
 	mat4 bones[MAX_BONES];
 } ubo;
@@ -49,11 +49,11 @@ void main()
 	outUV = inUV;
 
 
-	gl_Position = ubo.projection * ubo.view * ubo.model * boneTransform * vec4(inPos.xyz, 1.0);
+	gl_Position = ubo.projection * ubo.model * boneTransform * vec4(inPos.xyz, 1.0);
 	//gl_Position = ubo.projection * ubo.view * ubo.model * boneTransform * vec4(inPos.xyz, 1.0);
 
     vec4 pos = ubo.model * vec4(inPos, 1.0);
 	outNormal = mat3(inverse(transpose(ubo.model))) * inNormal;
-    //outLightVec = ubo.lightPos.xyz - pos.xyz;
-    //outViewVec = ubo.cameraPos.xyz - pos.xyz;
+    outLightVec = ubo.lightPos.xyz - pos.xyz;
+    outViewVec = ubo.cameraPos.xyz - pos.xyz;
 }

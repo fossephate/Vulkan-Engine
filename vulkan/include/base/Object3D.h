@@ -139,7 +139,7 @@ namespace vkx {
 
 
 				//this->transfMatrix = rotationMatrix * translationMatrix /** scaleMatrix*/;
-				this->transfMatrix = translationMatrix * rotationMatrix /** scaleMatrix*/;
+				this->transfMatrix = translationMatrix * rotationMatrix * scaleMatrix;
 
 				this->updateViewMatrix();
 

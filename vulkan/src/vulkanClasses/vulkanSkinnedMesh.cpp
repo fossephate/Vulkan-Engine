@@ -26,43 +26,14 @@ namespace vkx {
 
 
 	void SkinnedMesh::load(const std::string &filename) {
-		this->meshLoader->load(filename);
+		// default flags are different for skinned meshes
+		int flags = aiProcess_FlipWindingOrder | aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals;
+		this->meshLoader->load(filename, flags);
 	}
 
 	void SkinnedMesh::load(const std::string &filename, int flags) {
 		this->meshLoader->load(filename, flags);
 	}
-
-	//void SkinnedMesh::createMeshes(const std::vector<VertexLayout> &layout, float scale, uint32_t binding) {
-
-	//	this->meshLoader->createMeshBuffers(this->context, layout, scale);
-
-
-	//	std::vector<MeshBuffer> meshBuffers = this->meshLoader->meshBuffers;
-
-	//	//this->mesh = vkx::Mesh(meshBuffers[0]);
-
-	//	// copy vector of materials this class
-	//	//this->materials = this->meshLoader->materials;
-
-	//	for (int i = 0; i < meshBuffers.size(); ++i) {
-	//		//vkx::Mesh m(meshBuffers[i]);
-	//		//this->meshes.push_back(m);
-	//	}
-
-	//	//this->mesh = this->meshes[0];
-
-	//	//this->materials = this->meshLoader->materials;
-
-	//	//this->attributeDescriptions = this->meshLoader->attributeDescriptions;
-
-	//	this->vertexBufferBinding = binding;// important
-
-	//	//this->setupVertexInputState(layout);// doesn't seem to be necessary/used
-
-	//	//this->bindingDescription = this->meshLoader->bindingDescriptions[0];// ?
-	//	//this->pipeline = this->meshLoader->pipeline;// not needed?
-	//}
 
 
 
@@ -73,6 +44,7 @@ namespace vkx {
 
 
 		this->setAnimation(0);
+		
 
 		// Setup bones
 		// One vertex bone info structure per vertex
@@ -80,11 +52,18 @@ namespace vkx {
 		// Store global inverse transform matrix of root node 
 		this->globalInverseTransform = this->meshLoader->pScene->mRootNode->mTransformation;
 		this->globalInverseTransform.Inverse();
+
+		aiMatrix4x4 scaleMatrix;
+		aiMatrix4x4::Scaling(aiVector3D(scale, scale, scale), scaleMatrix);
+
+		this->globalInverseTransform = this->globalInverseTransform * scaleMatrix;
+
+
 		// Load bones (weights and IDs)
 		for (uint32_t m = 0; m < this->meshLoader->m_Entries.size(); m++) {
 			aiMesh *paiMesh = this->meshLoader->pScene->mMeshes[m];
 			if (paiMesh->mNumBones > 0) {
-				this->loadBones(m, paiMesh, this->bones);
+				this->loadBones(m, paiMesh, this->bones/*, scale*/);
 			}
 		}
 
@@ -98,7 +77,8 @@ namespace vkx {
 
 				glm::vec3 pos = this->meshLoader->m_Entries[m].Vertices[i].m_pos;
 
-				vertex.pos = glm::vec3(pos.x*scale, pos.y*scale, pos.z*scale);
+				//vertex.pos = glm::vec3(pos.x*scale, pos.y*scale, pos.z*scale);
+				vertex.pos = glm::vec3(pos.x, pos.y, pos.z);
 				//vertex.pos.y = -vertex.pos.y;// y was negative// important
 				vertex.normal = this->meshLoader->m_Entries[m].Vertices[i].m_normal;
 				vertex.uv = this->meshLoader->m_Entries[m].Vertices[i].m_tex;
@@ -126,11 +106,9 @@ namespace vkx {
 		uint32_t indexBufferSize = indexBuffer.size() * sizeof(uint32_t);
 		this->meshBuffer.indexCount = indexBuffer.size();
 		this->meshBuffer.vertices = context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
-		//this->meshBuffer.indices = context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, indexBuffer);// typo?// important
-		this->meshBuffer.indices = context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);// typo?// important
+		this->meshBuffer.indices = context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);
 
 		this->meshBuffer.materialIndex = this->meshLoader->m_Entries[0].MaterialIndex;
-
 	}
 
 
@@ -169,7 +147,7 @@ namespace vkx {
 		}
 
 		// Load bone information from ASSIMP mesh
-		void SkinnedMesh::loadBones(uint32_t meshIndex, const aiMesh* pMesh, std::vector<VertexBoneData>& Bones) {
+		void SkinnedMesh::loadBones(uint32_t meshIndex, const aiMesh *pMesh, std::vector<VertexBoneData> &Bones/*, float scale*/) {
 			for (uint32_t i = 0; i < pMesh->mNumBones; i++) {
 				uint32_t index = 0;
 
@@ -183,8 +161,18 @@ namespace vkx {
 					numBones++;
 					BoneInfo bone;
 					boneInfo.push_back(bone);
+					
+					// todo: fix this
+					//aiMatrix4x4 offset = pMesh->mBones[i]->mOffsetMatrix;
+					//aiMatrix4x4 scaleMatrix;
+					//aiMatrix4x4::Scaling(aiVector3D(scale, scale, scale), scaleMatrix);
+					//offset = offset * scaleMatrix;
+					//boneInfo[index].offset = offset;
+
 					boneInfo[index].offset = pMesh->mBones[i]->mOffsetMatrix;
+
 					boneMapping[name] = index;
+
 				} else {
 					index = boneMapping[name];
 				}
@@ -207,9 +195,6 @@ namespace vkx {
 			readNodeHierarchy(AnimationTime, meshLoader->pScene->mRootNode, identity);
 
 			for (uint32_t i = 0; i < boneTransforms.size(); i++) {
-				boneTransforms[i];
-				boneInfo[i].finalTransformation;
-
 				boneTransforms[i] = boneInfo[i].finalTransformation;
 			}
 

@@ -186,7 +186,9 @@ namespace vkx {
 
 			void setAnimation(uint32_t animationIndex);
 
-			void loadBones(uint32_t meshIndex, const aiMesh * pMesh, std::vector<VertexBoneData>& Bones);
+			//void loadBones(uint32_t meshIndex, const aiMesh * pMesh, std::vector<VertexBoneData>& Bones, float scale=1.0f);
+
+			void loadBones(uint32_t meshIndex, const aiMesh *pMesh, std::vector<VertexBoneData> &Bones);
 
 			void update(float time);
 
@@ -195,15 +197,15 @@ namespace vkx {
 
 			private:
 
-			const aiNodeAnim * findNodeAnim(const aiAnimation * animation, const std::string nodeName);
+			const aiNodeAnim * findNodeAnim(const aiAnimation *animation, const std::string nodeName);
 
-			aiMatrix4x4 interpolateTranslation(float time, const aiNodeAnim * pNodeAnim);
+			aiMatrix4x4 interpolateTranslation(float time, const aiNodeAnim *pNodeAnim);
 
-			aiMatrix4x4 interpolateRotation(float time, const aiNodeAnim * pNodeAnim);
+			aiMatrix4x4 interpolateRotation(float time, const aiNodeAnim *pNodeAnim);
 
-			aiMatrix4x4 interpolateScale(float time, const aiNodeAnim * pNodeAnim);
+			aiMatrix4x4 interpolateScale(float time, const aiNodeAnim *pNodeAnim);
 
-			void readNodeHierarchy(float AnimationTime, const aiNode * pNode, const aiMatrix4x4 & ParentTransform);
+			void readNodeHierarchy(float AnimationTime, const aiNode *pNode, const aiMatrix4x4 &ParentTransform);
 
 
 

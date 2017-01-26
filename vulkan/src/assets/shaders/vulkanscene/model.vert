@@ -18,12 +18,15 @@ layout (location = 5) in ivec4 inBoneIDs;
 // scene
 layout (set = 0, binding = 0) uniform sceneBuffer
 {
+	//mat4 model;// todo: remove this
+	
 	mat4 view;
 	mat4 projection;
-	mat4 normal;
 
-	vec3 lightPos;
-	vec3 cameraPos;
+
+
+	vec4 lightPos;
+	vec4 cameraPos;
 
 	mat4 bones[MAX_BONES];
 
@@ -97,13 +100,16 @@ void main()
 	outColor = inColor;
 
 	outPos = inPos.xyz;
-	outCamPos = scene.cameraPos;
-	outLightPos = scene.lightPos;
+	outCamPos = scene.cameraPos.xyz;
+	outLightPos = scene.lightPos.xyz;
 
 	mat4 modelView = scene.view * instance.model;
 	mat4 MVP = scene.projection * scene.view * instance.model;
 
 	gl_Position = scene.projection * scene.view * instance.model * boneTransform * vec4(inPos.xyz, 1.0);
+	//gl_Position = scene.projection * scene.model * boneTransform * vec4(inPos.xyz, 1.0);
+
+
 
 	vec4 pos = instance.model * vec4(inPos, 1.0);
 

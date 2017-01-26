@@ -8,6 +8,9 @@ layout (location = 1) in vec3 inNormal;
 layout (location = 2) in vec2 inUV;
 layout (location = 3) in vec3 inColor;
 
+
+#define MAX_BONES 64
+
 struct matrixNode {
 	mat4 model;
 	//mat4 g1;
@@ -18,11 +21,21 @@ struct matrixNode {
 // scene
 layout (set = 0, binding = 0) uniform sceneBuffer
 {
+
+	//mat4 model;// todo: remove this
+
 	mat4 view;
 	mat4 projection;
-	mat4 normal;
+	
+	//mat4 normal;
+
 	vec3 lightPos;
 	vec3 cameraPos;
+
+
+	// todo: definitely remove this
+	mat4 bones[MAX_BONES];
+
 } scene;
 
 // matrix data

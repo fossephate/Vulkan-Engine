@@ -316,14 +316,13 @@ public:
 	} uniformData;
 
 	struct UboVS {
-
 		glm::mat4 model;
-		glm::mat4 view;
+		//glm::mat4 view;
 		glm::mat4 projection;
+
 		
-		
-		glm::vec4 lightPos = glm::vec4(0.0f, -250.0f, 250.0f, 1.0);
-		glm::vec4 cameraPos;
+		glm::vec3 lightPos = glm::vec3(0.0f, -250.0f, 250.0f);
+		glm::vec3 cameraPos;
 
 		glm::mat4 bones[MAX_BONES];
 	} uboVS;
@@ -680,14 +679,20 @@ public:
 		if (viewChanged) {
 			
 			uboVS.model = glm::scale(glm::rotate(camera.matrices.view, glm::radians(90.0f), glm::vec3(1, 0, 0)), glm::vec3(0.025f));
-			uboVS.view = glm::mat4();
+			//uboVS.view = camera.matrices.view;
 			uboVS.projection = camera.matrices.projection;
-			
-			uboVS.cameraPos = glm::vec4(-camera.transform.translation.x, -camera.transform.translation.y, -camera.transform.translation.z, 0.0f);
+			//uboVS.model = glm::scale(glm::rotate(camera.matrices.view, glm::radians(90.0f), glm::vec3(1, 0, 0)), glm::vec3(0.025f));
 			
 
-			uboFloor.model = glm::scale(glm::rotate(camera.matrices.view, glm::radians(90.0f), glm::vec3(1, 0, 0)), glm::vec3(0.025f));
+
+			//uboVS.cameraPos = camera.transform.translation;
+			uboVS.cameraPos = glm::vec3(-camera.transform.translation.x, -camera.transform.translation.y, -camera.transform.translation.z);
+			
+			//uboVS.viewPos = glm::vec4(-camera.transform.translation.x, -camera.transform.translation.y, -camera.transform.translation.z, 0.0f);
+			
+
 			uboFloor.projection = camera.matrices.projection;
+			uboFloor.model = glm::scale(glm::rotate(camera.matrices.view, glm::radians(90.0f), glm::vec3(1, 0, 0)), glm::vec3(0.025f));
 			uboFloor.viewPos = glm::vec4(-camera.transform.translation.x, -camera.transform.translation.y, -camera.transform.translation.z, 0.0f);
 			uboFloor.model = glm::translate(uboFloor.model, glm::vec3(0.0f, 0.0f, -1800.0f));
 		}

@@ -129,7 +129,7 @@ void Camera::updateViewMatrix() {
 
 
 Camera::Camera() {
-	glm::vec2 size = glm::vec2(1280, 720);// remove this
+	glm::vec2 size = glm::vec2(1280, 720);// todo: remove this
 
 	this->matrices.projection = glm::perspectiveRH(glm::radians(60.0f), (float)size.x / (float)size.y, 0.0001f, 256.0f);
 	/*
