@@ -85,7 +85,7 @@ namespace vkx {
 	} VertexLayout;
 
 
-	/*extern */struct materialProperties;
+	/*extern */struct MaterialProperties;
 	/*extern */struct Material;
 
 	struct MeshBuffer {

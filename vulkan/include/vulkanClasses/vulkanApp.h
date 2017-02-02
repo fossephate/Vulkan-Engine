@@ -23,6 +23,7 @@
 	#include "vulkanAndroid.h"
 #endif
 
+#include <stdio.h>
 #include <iostream>
 #include <chrono>
 #include <memory>
@@ -43,6 +44,10 @@
 	#include <SDL2/SDL.h>
 	#include <SDL2/SDL_syswm.h>
 #endif
+
+// bullet physics
+#include "bulletClasses/PhysicsManager.h"
+#include "bulletClasses/PhysicsObject.h"
 
 #include <vulkan/vulkan.hpp>
 
@@ -180,6 +185,12 @@ namespace vkx
 			// Simple texture loader
 			vkx::TextureLoader *textureLoader{ nullptr };
 
+			// asset manager
+			vkx::AssetManager assetManager;
+			// physics manager
+			vkx::PhysicsManager physicsManager;
+
+
 			// Returns the base asset path (for shaders, models, textures) depending on the os
 			const std::string& getAssetPath();
 
@@ -188,14 +199,12 @@ namespace vkx
 
 		public:
 
-			vkx::AssetManager assetManager;
+			
 
 			bool prepared = false;
 			vk::Extent2D size{ 1280, 720 };
 
 			vk::ClearColorValue defaultClearColor = std::array<float, 4>{0.025f, 0.025f, 0.025f, 1.0f};
-
-			float zoom = 0;
 
 			// Defines a frame rate independent timer value clamped from -1.0...1.0
 			// For use in animations, rotations, etc.
@@ -208,23 +217,13 @@ namespace vkx
 			bool enableTextOverlay = true;
 			vkx::TextOverlay *textOverlay;
 
-			// Use to adjust mouse rotation speed
-			float rotationSpeed = 1.0f;
-			// Use to adjust mouse zoom speed
-			float zoomSpeed = 1.0f;
 
 			Camera camera;
-
-			//glm::vec3 rotation = glm::vec3();
-			//glm::vec3 cameraPos = glm::vec3();
-			glm::vec2 mousePos;
 
 			std::string title = "Vulkan Application";
 			std::string name = "vulkanApplication";
 
 			CreateImageResult depthStencil;
-
-			//enum keyState {down, up};
 
 			struct {
 				bool w = false;
@@ -246,8 +245,6 @@ namespace vkx
 				bool u = false;
 				bool o = false;
 			} keyStates;
-
-			glm::vec3 lookAtPoint = glm::vec3(0.0f, 0.0f, 0.0f);// not used
 
 			struct {
 				glm::vec2 current;
@@ -307,6 +304,8 @@ namespace vkx
 			virtual void render();
 
 			virtual void update(float deltaTime);
+
+			virtual void updatePhysics();
 
 			// Called when view change occurs
 			// Can be overriden in derived class to e.g. update uniform buffers 
@@ -399,5 +398,3 @@ namespace vkx
 		};
 
 }
-
-//MessageBox(NULL, filename.c_str(), NULL, NULL);

@@ -22,7 +22,7 @@ namespace vkx {
 				glm::vec4 angleAxis;
 
 				// no euler!
-				glm::vec3 euler;
+				//glm::vec3 euler;
 
 				glm::vec3 translation = glm::vec3(0.0f, 0.0f, 0.0f);
 				glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -41,7 +41,7 @@ namespace vkx {
 
 
 
-			/* translation */
+			/* TRANSLATION */
 			void setTranslation(glm::vec3 point) {
 				this->transform.translation = point;
 				updateTransform();
@@ -65,7 +65,7 @@ namespace vkx {
 
 
 
-			/* rotation */
+			/* ROTATION */
 			void setRotation(glm::quat orientation) {
 				this->transform.orientation = orientation;
 				updateTransform();
@@ -102,10 +102,7 @@ namespace vkx {
 
 
 			void rotateLocal(glm::quat q) {
-
-				//this->orientation = glm::normalize(glm::quat(delta) * this->rotation);
 				this->transform.orientation = glm::normalize(this->transform.orientation*q);
-
 				updateTransform();
 			}
 

@@ -39,10 +39,6 @@ namespace vkx {
 
 			// pointer to meshLoader
 			vkx::MeshLoader *meshLoader = nullptr;
-			// reference to context
-			//vkx::Context *context;
-			// reference to assetManager
-			//vkx::AssetManager *assetManager;
 
 			
 

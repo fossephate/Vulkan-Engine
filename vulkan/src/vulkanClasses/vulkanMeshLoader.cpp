@@ -2,28 +2,6 @@
 
 namespace vkx {
 
-	//vkx::MeshLoader::MeshLoader() {
-	//	this->textureLoader = nullptr;
-	//}
-
-	//vkx::MeshLoader::MeshLoader(const vkx::Context &context) {
-	//	this->textureLoader = new vkx::TextureLoader(context);
-	//}
-
-
-	//vkx::MeshLoader::MeshLoader(/*const */vkx::Context & context, vkx::AssetManager & assetManager) :
-	//	context(context), assetManager(assetManager)
-	//{
-	//	//this->device = context.device;
-	//	this->textureLoader = new vkx::TextureLoader(context);
-	//}
-
-	//vkx::MeshLoader::MeshLoader(/*const */vkx::Context & context, vkx::AssetManager & assetManager) {
-
-	//	//this->device = context.device;
-	//	this->textureLoader = new vkx::TextureLoader(context);
-	//}
-
 	vkx::MeshLoader::MeshLoader(vkx::Context *context, vkx::AssetManager *assetManager) {
 
 		this->context = context;
@@ -96,7 +74,8 @@ namespace vkx {
 	void vkx::MeshLoader::loadMaterials(const aiScene *pScene) {
 
 		// fix all my problems by commenting this line out:
-		//tempMaterials.resize(pScene->mNumMaterials);
+		//tempMaterials.
+		(pScene->mNumMaterials);
 
 		for (size_t i = 0; i < pScene->mNumMaterials; i++) {
 

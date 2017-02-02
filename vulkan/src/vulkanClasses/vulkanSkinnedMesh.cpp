@@ -11,7 +11,7 @@ namespace vkx {
 	}
 
 	SkinnedMesh::SkinnedMesh(vkx::Context *context, vkx::AssetManager *assetManager) {
-		//std::cout << "test" << std::endl;
+
 		this->context = context;
 		//this->assetManager = assetManager;
 		this->meshLoader = new vkx::MeshLoader(context, assetManager);
@@ -198,12 +198,11 @@ namespace vkx {
 				boneTransforms[i] = boneInfo[i].finalTransformation;
 			}
 
-			this->boneInfo;
-			this->bones;
-			this->boneMapping;
-			this->boneTransforms;
-			std::cout << "test" << std::endl;
+		}
 
+		void SkinnedMesh::destroy() {
+			this->meshBuffer.destroy();
+			delete this->meshLoader;
 		}
 
 

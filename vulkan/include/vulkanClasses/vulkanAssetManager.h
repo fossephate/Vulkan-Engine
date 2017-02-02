@@ -33,7 +33,7 @@ namespace vkx {
 
 
 
-	struct materialProperties {
+	struct MaterialProperties {
 		glm::vec4 ambient;
 		glm::vec4 diffuse;
 		glm::vec4 specular;
@@ -45,7 +45,7 @@ namespace vkx {
 		// name
 		std::string name;
 		// Material properties
-		materialProperties properties;
+		MaterialProperties properties;
 		// The example only uses a diffuse channel
 		// todo: add more
 		Texture diffuse;

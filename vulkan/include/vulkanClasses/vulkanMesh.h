@@ -8,7 +8,7 @@
 
 namespace vkx {
 
-	//extern struct materialProperties;
+	//extern struct MaterialProperties;
 	//extern struct Material;
 
 

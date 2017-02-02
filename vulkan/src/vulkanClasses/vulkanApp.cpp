@@ -97,14 +97,14 @@ void vulkanApp::run() {
 	#if defined(_WIN32)
 		setupWindow();
 		setupConsole("Debug");
+	#elif defined(__linux__)
+		setupWindow();
 	#elif defined(__ANDROID__)
 		// Attach vulkan example to global android application state
 		state->userData = vulkanExample;
 		state->onAppCmd = VulkanExample::handleAppCommand;
 		state->onInputEvent = VulkanExample::handleAppInput;
 		androidApp = state;
-		#elif defined(__linux__)
-		setupWindow();
 	#endif
 
 	#if !defined(__ANDROID__)
@@ -151,72 +151,12 @@ void vulkanApp::initVulkan(bool enableValidation) {
 #if defined(_WIN32)
 
 void vulkanApp::setupConsole(std::string title) {
-	//AllocConsole();
-	//AttachConsole(GetCurrentProcessId());
-	//FILE *stream;
-	//freopen_s(&stream, "CONOUT$", "w+", stdout);
-	//SetConsoleTitle(TEXT(title.c_str()));
-
-
-
-
-	//int hConHandle;
-	//long lStdHandle;
-	//CONSOLE_SCREEN_BUFFER_INFO coninfo;
-	//FILE *fp;
-
-	//// allocate a console for this app
-	//AllocConsole();
-
-	//// set the screen buffer to be big enough to let us scroll text
-	//GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &coninfo);
-	//coninfo.dwSize.Y = 500;
-	//SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), coninfo.dwSize);
-
-	//// redirect unbuffered STDOUT to the console
-	//lStdHandle = (long)GetStdHandle(STD_OUTPUT_HANDLE);
-	//hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
-
-	//fp = _fdopen(hConHandle, "w");
-
-	//*stdout = *fp;
-	//	
-	//setvbuf(stdout, NULL, _IONBF, 0);
-
-	//// redirect unbuffered STDIN to the console
-
-	//lStdHandle = (long)GetStdHandle(STD_INPUT_HANDLE);
-	//hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
-
-	//fp = _fdopen(hConHandle, "r");
-	//*stdin = *fp;
-	//setvbuf(stdin, NULL, _IONBF, 0);
-
-	//// redirect unbuffered STDERR to the console
-	//lStdHandle = (long)GetStdHandle(STD_ERROR_HANDLE);
-	//hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
-
-	//fp = _fdopen(hConHandle, "w");
-
-	//*stderr = *fp;
-
-	//setvbuf(stderr, NULL, _IONBF, 0);
-
-	//// make cout, wcout, cin, wcin, wcerr, cerr, wclog and clog
-	//// point to console as well
-	//std::ios::sync_with_stdio();
-
-
-
-
-
-
-
-
-
-
-
-
+	// setup console
+	AllocConsole();
+	freopen("conin$", "r", stdin);
+	freopen("conout$", "w", stdout);
+	freopen("conout$", "w", stderr);
+	printf("Debugging Window:\n");
 }
 
 #endif
@@ -225,8 +165,7 @@ void vulkanApp::setupConsole(std::string title) {
 
 /* CROSS PLATFORM */
 
-void vulkanApp::setupWindow()
-{
+void vulkanApp::setupWindow() {
 
 	SDL_Window *mySDLWindow;
 	SDL_SysWMinfo windowInfo;
@@ -298,8 +237,6 @@ void vulkanApp::render() {
 
 void vulkanApp::update(float deltaTime) {
 
-	bool updateView = true;
-
 	
 	// z-up translations
 	if (!keyStates.shift) {
@@ -321,25 +258,6 @@ void vulkanApp::update(float deltaTime) {
 		if (keyStates.e) {
 			camera.translateLocal(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
 		}
-		/*
-		if (keyStates.w) {
-			camera.translateLocal(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
-		}
-		if (keyStates.s) {
-			camera.translateLocal(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
-		}
-		if (keyStates.a) {
-			camera.translateLocal(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
-		}
-		if (keyStates.d) {
-			camera.translateLocal(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
-		}
-		if (keyStates.q) {
-			camera.translateLocal(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
-		}
-		if (keyStates.e) {
-			camera.translateLocal(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
-		}*/
 	} else {
 		if (keyStates.w) {
 			camera.translateWorld(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
@@ -366,25 +284,13 @@ void vulkanApp::update(float deltaTime) {
 	// z-up rotations
 	camera.rotationSpeed = -0.005f;
 
-	//if (mouse.leftMouseButton.state) {
-	//	float angle = -mouse.delta.x*camera.rotationSpeed;
-	//	glm::vec3 axis(0.0, 0.0, 1.0);
-	//	glm::quat q = glm::angleAxis(angle, axis);
-
-	//	angle = -mouse.delta.x*camera.rotationSpeed;
-	//	glm
-	//	camera.rotateWorld(q);
-	//}
-
 	if (mouse.leftMouseButton.state) {
 		camera.rotateWorldZ(mouse.delta.x*camera.rotationSpeed);
 		camera.rotateLocalX(mouse.delta.y*camera.rotationSpeed);
 
-
 		SDL_SetRelativeMouseMode((SDL_bool)1);
 
 		//SDL_WarpMouseInWindow(this->SDLWindow, mouse.current.x-mouse.delta.x*2, mouse.current.y-mouse.delta.y*2);
-
 		//camera.rotateWorld(glm::vec3(-mouse.delta.y*camera.rotationSpeed, 0, -mouse.delta.x*camera.rotationSpeed));
 		//camera.rotateWorld(glm::vec3(-mouse.delta.y*camera.rotationSpeed, 0, -mouse.delta.x*camera.rotationSpeed));
 	} else {
@@ -400,10 +306,10 @@ void vulkanApp::update(float deltaTime) {
 
 	
 	if (keyStates.up_arrow) {
-		//camera.rotateLocal(glm::vec3(camera.rotationSpeed, 0, 0));
+		camera.rotateLocalX(camera.rotationSpeed);
 	}
 	if (keyStates.down_arrow) {
-		//camera.rotateLocal(glm::vec3(-camera.rotationSpeed, 0, 0));
+		camera.rotateLocalX(-camera.rotationSpeed);
 	}
 
 	if (!keyStates.shift) {
@@ -422,15 +328,35 @@ void vulkanApp::update(float deltaTime) {
 		//}
 	}
 
-
-
-	/*if (camera.changed) {
-		camera.update();
-	}*/
 	
-	if (updateView) {
-		viewChanged();
-	}
+	//viewChanged();
+
+	//if (updateView) {
+	//	viewChanged();
+	//}
+
+}
+
+void vkx::vulkanApp::updatePhysics() {
+
+	//this->physicsManager.dynamicsWorld->stepSimulation(1.f / 60.f, 10);
+
+
+	////print positions of all objects
+	//for (int i = 0; i < this->physicsManager.dynamicsWorld->getNumCollisionObjects(); ++i) {
+	//	btCollisionObject* obj = this->physicsManager.dynamicsWorld->getCollisionObjectArray()[i];
+	//	btRigidBody* body = btRigidBody::upcast(obj);
+	//	btTransform trans;
+	//	if (body && body->getMotionState()) {
+	//		body->getMotionState()->getWorldTransform(trans);
+	//	} else {
+	//		trans = obj->getWorldTransform();
+	//	}
+
+	//	//models
+
+	//	printf("world pos object %d = %f,%f,%f\n", i, float(trans.getOrigin().getX()), float(trans.getOrigin().getY()), float(trans.getOrigin().getZ()));
+	//}
 
 }
 
@@ -934,19 +860,17 @@ void vulkanApp::renderLoop() {
 		// todo: change to gameLogic or add virtual function here
 		update(0);
 
-		//updateTextOverlay();
+		updatePhysics();
+
 
 		// actually draw models
 		updateDrawCommandBuffers();
 
 		render();
 
-
-
-		
-		
 	
 	}
+
 	SDL_DestroyWindow(this->SDLWindow);
 	SDL_Quit();
 

@@ -19,6 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\bulletClasses\PhysicsManager.cpp" />
+    <ClCompile Include="src\bulletClasses\PhysicsObject.cpp" />
     <ClCompile Include="src\vulkanClasses\camera.cpp" />
     <ClCompile Include="src\vulkanClasses\shapes.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanAndroid.cpp" />
@@ -39,6 +41,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\base\Object3D.h" />
+    <ClInclude Include="include\bulletClasses\PhysicsManager.h" />
+    <ClInclude Include="include\bulletClasses\PhysicsObject.h" />
     <ClInclude Include="include\vulkanClasses\camera.h" />
     <ClInclude Include="include\vulkanClasses\common.h" />
     <ClInclude Include="include\vulkanClasses\easings.h" />
@@ -139,12 +143,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;VK_USE_PLATFORM_WIN32_KHR;_USE_MATH_DEFINES;NOMINMAX;_CRT_SECURE_NO_WARNINGS;_DEBUG</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\include\vulkanClasses;$(SolutionDir)\$(ProjectName)\include\external\openvr</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\include\vulkanClasses;$(SolutionDir)\$(ProjectName)\include\external\openvr;$(SolutionDir)\$(ProjectName)\include\external\bullet</AdditionalIncludeDirectories>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>vulkan/$(Platform)/vulkan-1.lib;SDL2/$(Platform)/SDL2.lib;assimp/assimp.lib;//glfw/$(Platform)/glfw3.lib;glslang/$(Platform)/$(Configuration)/glslang.lib;glslang/$(Platform)/$(Configuration)/glslang-default-resource-limits.lib;SPIRV/$(Platform)/$(Configuration)/SPIRV.lib;HLSL/$(Platform)/$(Configuration)/HLSL.lib;openvr/$(Platform)/openvr_api.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>vulkan/$(Platform)/vulkan-1.lib;SDL2/$(Platform)/SDL2.lib;assimp/assimp.lib;//glfw/$(Platform)/glfw3.lib;glslang/$(Platform)/$(Configuration)/glslang.lib;glslang/$(Platform)/$(Configuration)/glslang-default-resource-limits.lib;SPIRV/$(Platform)/$(Configuration)/SPIRV.lib;HLSL/$(Platform)/$(Configuration)/HLSL.lib;openvr/$(Platform)/openvr_api.lib;bullet/$(Platform)/$(Configuration)/Bullet2FileLoader_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/Bullet3Collision_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/Bullet3Common_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/Bullet3Dynamics_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/Bullet3Geometry_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/Bullet3OpenCL_clew_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletCollision_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletDynamics_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/BulletExampleBrowserLib_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletFileLoader_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletInverseDynamics_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletInverseDynamicsUtils_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletSoftBody_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletWorldImporter_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/BussIK_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/ConvexDecomposition_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/enet_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/gtest_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/gwen_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/HACD_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/LinearMath_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/OpenGL_Window_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/vhacd_vs2010_x64_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>NotSet</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -153,12 +158,13 @@
       <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
       <OpenMPSupport>true</OpenMPSupport>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\include\vulkanClasses;$(SolutionDir)\$(ProjectName)\include\external\openvr</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\include\vulkanClasses;$(SolutionDir)\$(ProjectName)\include\external\openvr;$(SolutionDir)\$(ProjectName)\include\external\bullet</AdditionalIncludeDirectories>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>vulkan/$(Platform)/vulkan-1.lib;SDL2/$(Platform)/SDL2.lib;assimp/assimp.lib;//glfw/$(Platform)/glfw3.lib;glslang/$(Platform)/$(Configuration)/glslang.lib;glslang/$(Platform)/$(Configuration)/glslang-default-resource-limits.lib;SPIRV/$(Platform)/$(Configuration)/SPIRV.lib;HLSL/$(Platform)/$(Configuration)/HLSL.lib;openvr/$(Platform)/openvr_api.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>vulkan/$(Platform)/vulkan-1.lib;SDL2/$(Platform)/SDL2.lib;assimp/assimp.lib;//glfw/$(Platform)/glfw3.lib;glslang/$(Platform)/$(Configuration)/glslang.lib;glslang/$(Platform)/$(Configuration)/glslang-default-resource-limits.lib;SPIRV/$(Platform)/$(Configuration)/SPIRV.lib;HLSL/$(Platform)/$(Configuration)/HLSL.lib;openvr/$(Platform)/openvr_api.lib;bullet/$(Platform)/$(Configuration)/Bullet2FileLoader_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/Bullet3Collision_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/Bullet3Common_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/Bullet3Dynamics_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/Bullet3Geometry_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/Bullet3OpenCL_clew_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletCollision_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletDynamics_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/BulletExampleBrowserLib_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletFileLoader_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletInverseDynamics_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletInverseDynamicsUtils_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletSoftBody_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletWorldImporter_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/BussIK_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/ConvexDecomposition_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/enet_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/gtest_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/gwen_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/HACD_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/LinearMath_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/OpenGL_Window_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/vhacd_vs2010_x64_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>NotSet</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -168,14 +174,14 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;VK_USE_PLATFORM_WIN32_KHR;_USE_MATH_DEFINES;NOMINMAX;_CRT_SECURE_NO_WARNINGS;NDEBUG</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\include\vulkanClasses;$(SolutionDir)\$(ProjectName)\include\external\openvr</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\include\vulkanClasses;$(SolutionDir)\$(ProjectName)\include\external\openvr;$(SolutionDir)\$(ProjectName)\include\external\bullet</AdditionalIncludeDirectories>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>vulkan/$(Platform)/vulkan-1.lib;SDL2/$(Platform)/SDL2.lib;assimp/assimp.lib;//glfw/$(Platform)/glfw3.lib;glslang/$(Platform)/$(Configuration)/glslang.lib;glslang/$(Platform)/$(Configuration)/glslang-default-resource-limits.lib;SPIRV/$(Platform)/$(Configuration)/SPIRV.lib;HLSL/$(Platform)/$(Configuration)/HLSL.lib;openvr/$(Platform)/openvr_api.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>vulkan/$(Platform)/vulkan-1.lib;SDL2/$(Platform)/SDL2.lib;assimp/assimp.lib;//glfw/$(Platform)/glfw3.lib;glslang/$(Platform)/$(Configuration)/glslang.lib;glslang/$(Platform)/$(Configuration)/glslang-default-resource-limits.lib;SPIRV/$(Platform)/$(Configuration)/SPIRV.lib;HLSL/$(Platform)/$(Configuration)/HLSL.lib;openvr/$(Platform)/openvr_api.lib;bullet/$(Platform)/$(Configuration)/Bullet2FileLoader_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/Bullet3Collision_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/Bullet3Common_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/Bullet3Dynamics_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/Bullet3Geometry_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/Bullet3OpenCL_clew_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletCollision_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletDynamics_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/BulletExampleBrowserLib_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletFileLoader_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletInverseDynamics_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletInverseDynamicsUtils_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletSoftBody_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletWorldImporter_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/BussIK_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/ConvexDecomposition_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/enet_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/gtest_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/gwen_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/HACD_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/LinearMath_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/OpenGL_Window_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/vhacd_vs2010_x64_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>NotSet</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -183,14 +189,14 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PreprocessorDefinitions>WIN32;_WINDOWS;VK_USE_PLATFORM_WIN32_KHR;_USE_MATH_DEFINES;NOMINMAX;_CRT_SECURE_NO_WARNINGS;NDEBUG</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\include\vulkanClasses;$(SolutionDir)\$(ProjectName)\include\external\openvr</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\include\vulkanClasses;$(SolutionDir)\$(ProjectName)\include\external\openvr;$(SolutionDir)\$(ProjectName)\include\external\bullet</AdditionalIncludeDirectories>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>vulkan/$(Platform)/vulkan-1.lib;SDL2/$(Platform)/SDL2.lib;assimp/assimp.lib;//glfw/$(Platform)/glfw3.lib;glslang/$(Platform)/$(Configuration)/glslang.lib;glslang/$(Platform)/$(Configuration)/glslang-default-resource-limits.lib;SPIRV/$(Platform)/$(Configuration)/SPIRV.lib;HLSL/$(Platform)/$(Configuration)/HLSL.lib;openvr/$(Platform)/openvr_api.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>vulkan/$(Platform)/vulkan-1.lib;SDL2/$(Platform)/SDL2.lib;assimp/assimp.lib;//glfw/$(Platform)/glfw3.lib;glslang/$(Platform)/$(Configuration)/glslang.lib;glslang/$(Platform)/$(Configuration)/glslang-default-resource-limits.lib;SPIRV/$(Platform)/$(Configuration)/SPIRV.lib;HLSL/$(Platform)/$(Configuration)/HLSL.lib;openvr/$(Platform)/openvr_api.lib;bullet/$(Platform)/$(Configuration)/Bullet2FileLoader_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/Bullet3Collision_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/Bullet3Common_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/Bullet3Dynamics_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/Bullet3Geometry_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/Bullet3OpenCL_clew_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletCollision_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletDynamics_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/BulletExampleBrowserLib_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletFileLoader_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletInverseDynamics_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletInverseDynamicsUtils_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletSoftBody_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/BulletWorldImporter_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/BussIK_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/ConvexDecomposition_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/enet_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/gtest_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/gwen_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/HACD_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/LinearMath_vs2010_x64_debug.lib;//bullet/$(Platform)/$(Configuration)/OpenGL_Window_vs2010_x64_debug.lib;bullet/$(Platform)/$(Configuration)/vhacd_vs2010_x64_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>NotSet</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

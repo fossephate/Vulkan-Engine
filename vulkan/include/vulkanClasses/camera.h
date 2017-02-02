@@ -19,67 +19,42 @@
 #include <algorithm>
 #include "Object3D.h"
 
-class Camera : public vkx::Object3D {
-	private:
-		const float MAX_PITCH{ (float)M_PI_2 * 0.95f };
-		float fov;
-		float znear, zfar;
 
-		void updateViewMatrix();
+namespace vkx {
 
-	public:
-		enum CameraType { lookat, firstperson };
-		CameraType type = CameraType::firstperson;
+	class Camera : public Object3D {
+		private:
+			const float MAX_PITCH{ (float)M_PI_2 * 0.95f };
+			float fov;
+			float znear, zfar;
 
-		bool changed = false;
+			void updateViewMatrix();
 
-		float rotationSpeed = 1.0f;
-		float movementSpeed = 0.05f;
-		//float movementSpeed = 5.0f;
+		public:
+			enum CameraType { lookat, firstperson };
+			CameraType type = CameraType::firstperson;
 
-		//struct {
-		//	glm::quat orientation = glm::quat();
-		//	glm::quat &rotation = orientation;
-		//	glm::vec3 euler;
-		//	glm::vec4 angleAxis;
+			//bool moved = false;
 
-		//	glm::vec3 translation = glm::vec3();
-		//	glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
-
-		//
-		//	//glm::mat4 transfMatrix = glm::mat4();
-		//} transform;
-
-		//// set refs for convenience
-		//glm::quat & orientation = transform.orientation;
-		//glm::quat &rotation = orientation;
-
-		//glm::vec3 & translation = transform.translation;
-		//glm::vec3 & scale = transform.scale;
+			float rotationSpeed = 1.0f;
+			float movementSpeed = 0.05f;
 
 	
-		// todo: fix this:
-		struct {
-			glm::mat4 view;
-			glm::mat4 transform;
-			//glm::mat4 & transfMatrix = view;
-			glm::mat4 projection;
-
-		} matrices;
-
-		//glm::mat4 & transfMatrix = matrices.transfMatrix;
-		glm::mat4 & projection = matrices.projection;
+			// todo: fix this:
+			struct {
+				glm::mat4 view;
+				glm::mat4 transform;
+				glm::mat4 projection;
+			} matrices;
 
 
-		Camera();
+			Camera();
 
 
-		void setProjection(float fov, float aspect, float znear, float zfar);
+			void setProjection(float fov, float aspect, float znear, float zfar);
 
 
-		void setAspectRatio(float aspect);
+			void setAspectRatio(float aspect);
 
-
-		void update(float deltaTime);
-
-};
+	};
+}

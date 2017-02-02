@@ -21,7 +21,6 @@ layout (location = 5) in ivec4 inBoneIDs;
 layout (set = 0, binding = 0) uniform sceneBuffer
 {
 	//mat4 model;// todo: remove this
-	
 	mat4 view;
 	mat4 projection;
 
@@ -83,31 +82,17 @@ out gl_PerVertex
 	vec4 gl_Position;   
 };
 
-void main() 
-{
+void main() {
 
-	int offset;
+
 	int index = int(instance.boneIndex[0][0]);
 
-	if( index == 7 ) {
-		offset = 0;
-	} else {
-		offset = 64;
-	}
-
-
-	//offset = int(instance.boneIndex[0][0])*MAX_BONES;
-	//int offset = 0;
+	int offset = index*MAX_BONES;
 
 	mat4 boneTransform = scene.bones[inBoneIDs[0]+offset] * inBoneWeights[0];
 	boneTransform     += scene.bones[inBoneIDs[1]+offset] * inBoneWeights[1];
 	boneTransform     += scene.bones[inBoneIDs[2]+offset] * inBoneWeights[2];
 	boneTransform     += scene.bones[inBoneIDs[3]+offset] * inBoneWeights[3];
-
-	//mat4 boneTransform = instance.bones[inBoneIDs[0]] * inBoneWeights[0];
-	// boneTransform     += instance.bones[inBoneIDs[1]] * 0.00001;
-	// boneTransform     += instance.bones[inBoneIDs[2]] * 0.00001;
-	// boneTransform     += instance.bones[inBoneIDs[3]] * 0.00001;
 
 	//mat4 boneTransform = mat4(1.0);
 
