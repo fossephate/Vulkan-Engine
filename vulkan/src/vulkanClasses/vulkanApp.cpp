@@ -235,105 +235,101 @@ void vulkanApp::render() {
 	draw();
 }
 
-void vulkanApp::update(float deltaTime) {
-
-	
-	// z-up translations
-	if (!keyStates.shift) {
-		if (keyStates.w) {
-			camera.translateLocal(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
-		}
-		if (keyStates.s) {
-			camera.translateLocal(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
-		}
-		if (keyStates.a) {
-			camera.translateLocal(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
-		}
-		if (keyStates.d) {
-			camera.translateLocal(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
-		}
-		if (keyStates.q) {
-			camera.translateLocal(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
-		}
-		if (keyStates.e) {
-			camera.translateLocal(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
-		}
-	} else {
-		if (keyStates.w) {
-			camera.translateWorld(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
-		}
-		if (keyStates.s) {
-			camera.translateWorld(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
-		}
-		if (keyStates.a) {
-			camera.translateWorld(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
-		}
-		if (keyStates.d) {
-			camera.translateWorld(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
-		}
-		if (keyStates.q) {
-			camera.translateWorld(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
-		}
-		if (keyStates.e) {
-			camera.translateWorld(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
-		}
-	}
-
-
-
-	// z-up rotations
-	camera.rotationSpeed = -0.005f;
-
-	if (mouse.leftMouseButton.state) {
-		camera.rotateWorldZ(mouse.delta.x*camera.rotationSpeed);
-		camera.rotateLocalX(mouse.delta.y*camera.rotationSpeed);
-
-		SDL_SetRelativeMouseMode((SDL_bool)1);
-
-		//SDL_WarpMouseInWindow(this->SDLWindow, mouse.current.x-mouse.delta.x*2, mouse.current.y-mouse.delta.y*2);
-		//camera.rotateWorld(glm::vec3(-mouse.delta.y*camera.rotationSpeed, 0, -mouse.delta.x*camera.rotationSpeed));
-		//camera.rotateWorld(glm::vec3(-mouse.delta.y*camera.rotationSpeed, 0, -mouse.delta.x*camera.rotationSpeed));
-	} else {
-		bool isCursorLocked = (bool)SDL_GetRelativeMouseMode();
-		if (isCursorLocked) {
-			SDL_SetRelativeMouseMode((SDL_bool)0);
-			SDL_WarpMouseInWindow(this->SDLWindow, mouse.leftMouseButton.pressedCoords.x, mouse.leftMouseButton.pressedCoords.y);
-		}
-	}
-
-
-	camera.rotationSpeed = -0.02f;
-
-	
-	if (keyStates.up_arrow) {
-		camera.rotateLocalX(camera.rotationSpeed);
-	}
-	if (keyStates.down_arrow) {
-		camera.rotateLocalX(-camera.rotationSpeed);
-	}
-
-	if (!keyStates.shift) {
-		if (keyStates.left_arrow) {
-			camera.rotateWorldZ(-camera.rotationSpeed);
-		}
-		if (keyStates.right_arrow) {
-			camera.rotateWorldZ(camera.rotationSpeed);
-		}
-	} else {
-		//if (keyStates.left_arrow) {
-		//	camera.rotateWorldY(-camera.rotationSpeed);
-		//}
-		//if (keyStates.right_arrow) {
-		//	camera.rotateWorldY(camera.rotationSpeed);
-		//}
-	}
-
-	
-	//viewChanged();
-
-	//if (updateView) {
-	//	viewChanged();
+void vulkanApp::updateWorld() {
+	//// z-up translations
+	//if (!keyStates.shift) {
+	//	if (keyStates.w) {
+	//		camera.translateLocal(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
+	//	}
+	//	if (keyStates.s) {
+	//		camera.translateLocal(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
+	//	}
+	//	if (keyStates.a) {
+	//		camera.translateLocal(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
+	//	}
+	//	if (keyStates.d) {
+	//		camera.translateLocal(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
+	//	}
+	//	if (keyStates.q) {
+	//		camera.translateLocal(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
+	//	}
+	//	if (keyStates.e) {
+	//		camera.translateLocal(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
+	//	}
+	//} else {
+	//	if (keyStates.w) {
+	//		camera.translateWorld(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
+	//	}
+	//	if (keyStates.s) {
+	//		camera.translateWorld(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
+	//	}
+	//	if (keyStates.a) {
+	//		camera.translateWorld(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
+	//	}
+	//	if (keyStates.d) {
+	//		camera.translateWorld(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
+	//	}
+	//	if (keyStates.q) {
+	//		camera.translateWorld(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
+	//	}
+	//	if (keyStates.e) {
+	//		camera.translateWorld(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
+	//	}
 	//}
+
+	//// z-up rotations
+	//camera.rotationSpeed = -0.005f;
+
+	//if (mouse.leftMouseButton.state) {
+	//	camera.rotateWorldZ(mouse.delta.x*camera.rotationSpeed);
+	//	camera.rotateLocalX(mouse.delta.y*camera.rotationSpeed);
+
+	//	SDL_SetRelativeMouseMode((SDL_bool)1);
+
+	//	//SDL_WarpMouseInWindow(this->SDLWindow, mouse.current.x-mouse.delta.x*2, mouse.current.y-mouse.delta.y*2);
+	//	//camera.rotateWorld(glm::vec3(-mouse.delta.y*camera.rotationSpeed, 0, -mouse.delta.x*camera.rotationSpeed));
+	//	//camera.rotateWorld(glm::vec3(-mouse.delta.y*camera.rotationSpeed, 0, -mouse.delta.x*camera.rotationSpeed));
+	//} else {
+	//	bool isCursorLocked = (bool)SDL_GetRelativeMouseMode();
+	//	if (isCursorLocked) {
+	//		SDL_SetRelativeMouseMode((SDL_bool)0);
+	//		SDL_WarpMouseInWindow(this->SDLWindow, mouse.leftMouseButton.pressedCoords.x, mouse.leftMouseButton.pressedCoords.y);
+	//	}
+	//}
+
+
+	//camera.rotationSpeed = -0.02f;
+
+	//
+	//if (keyStates.up_arrow) {
+	//	camera.rotateLocalX(camera.rotationSpeed);
+	//}
+	//if (keyStates.down_arrow) {
+	//	camera.rotateLocalX(-camera.rotationSpeed);
+	//}
+
+	//if (!keyStates.shift) {
+	//	if (keyStates.left_arrow) {
+	//		camera.rotateWorldZ(-camera.rotationSpeed);
+	//	}
+	//	if (keyStates.right_arrow) {
+	//		camera.rotateWorldZ(camera.rotationSpeed);
+	//	}
+	//} else {
+	//	//if (keyStates.left_arrow) {
+	//	//	camera.rotateWorldY(-camera.rotationSpeed);
+	//	//}
+	//	//if (keyStates.right_arrow) {
+	//	//	camera.rotateWorldY(camera.rotationSpeed);
+	//	//}
+	//}
+
+	//
+	////viewChanged();
+
+	////if (updateView) {
+	////	viewChanged();
+	////}
 
 }
 
@@ -675,21 +671,22 @@ void vulkanApp::prepare() {
 	}
 }
 
-// todo: remove this
-MeshBuffer vulkanApp::loadMesh(const std::string& filename, const std::vector<VertexLayout>& vertexLayout, float scale) {
-	MeshLoader loader(&this->context, &this->assetManager);
-	#if defined(__ANDROID__)
-	loader.assetManager = androidApp->activity->assetManager;
-	#endif
-	loader.load(filename);
-	assert(loader.m_Entries.size() > 0);
-	loader.createMeshBuffer(vertexLayout, scale);
-	return loader.combinedBuffer;
-}
+//// todo: remove this
+//MeshBuffer vulkanApp::loadMesh(const std::string& filename, const std::vector<VertexLayout>& vertexLayout, float scale) {
+//	MeshLoader loader(&this->context, &this->assetManager);
+//	#if defined(__ANDROID__)
+//	loader.assetManager = androidApp->activity->assetManager;
+//	#endif
+//	loader.load(filename);
+//	assert(loader.m_Entries.size() > 0);
+//	loader.createMeshBuffer(vertexLayout, scale);
+//	return loader.combinedBuffer;
+//}
 
 
-void vulkanApp::updateKeyboardMouseInfo() {
+void vulkanApp::updateInputInfo() {
 
+	// poll keyboard / mouse
 	
 	// todo: move this somewhere else
 	SDL_Event e;
@@ -743,6 +740,15 @@ void vulkanApp::updateKeyboardMouseInfo() {
 					break;
 				case SDLK_LSHIFT:
 					keyStates.shift = state;
+					break;
+				case SDLK_f:
+					keyStates.f = state;
+					break;
+				case SDLK_r:
+					keyStates.r = state;
+					break;
+				case SDLK_t:
+					keyStates.t = state;
 					break;
 				// another wsadqe
 				case SDLK_i:
@@ -856,16 +862,19 @@ void vulkanApp::renderLoop() {
 
 
 
-		updateKeyboardMouseInfo();
-		// todo: change to gameLogic or add virtual function here
-		update(0);
+		// poll keyboard / mouse
+		updateInputInfo();
+		// update world, // use input
+		updateWorld();
 
+		// update physics / interpolate meshes
 		updatePhysics();
 
 
-		// actually draw models
+		// record / update draw command buffers
 		updateDrawCommandBuffers();
 
+		// render
 		render();
 
 	

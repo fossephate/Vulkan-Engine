@@ -28,13 +28,25 @@ namespace vkx {
 			float fov;
 			float znear, zfar;
 
-			void updateViewMatrix();
-
 		public:
-			enum CameraType { lookat, firstperson };
+			enum CameraType { follow, firstperson };
 			CameraType type = CameraType::firstperson;
 
 			//bool moved = false;
+
+			bool isFirstPerson = true;
+
+			struct {
+				uint32_t index = 0;
+				glm::vec3 point = glm::vec3(0.0f, 0.0f, 0.0f);
+				glm::vec3 offset = glm::vec3(0.0f, 0.0f, 0.0f);
+			} followOpts;
+
+			struct {
+				float distance = 5.0f;
+				float phi = 0.0f;
+				float theta = 0.0f;
+			} sphericalCoords;
 
 			float rotationSpeed = 1.0f;
 			float movementSpeed = 0.05f;
@@ -49,6 +61,8 @@ namespace vkx {
 
 
 			Camera();
+
+			void updateViewMatrix();
 
 
 			void setProjection(float fov, float aspect, float znear, float zfar);

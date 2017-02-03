@@ -63,13 +63,13 @@
     <ClCompile Include="src\vulkanClasses\vulkanSkinnedMesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\vulkanscene.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\bulletClasses\PhysicsObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\bulletClasses\PhysicsManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\deferred.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

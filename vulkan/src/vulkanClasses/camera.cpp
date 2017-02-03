@@ -6,6 +6,26 @@
 namespace vkx {
 
 
+	Camera::Camera() {
+		glm::vec2 size = glm::vec2(1280, 720);// todo: remove this
+
+		this->matrices.projection = glm::perspectiveRH(glm::radians(60.0f), (float)size.x / (float)size.y, 0.0001f, 256.0f);
+		/*
+		// //not// fixed by GLM_FORCE_DEPTH_ZERO_TO_ONE
+		https://vulkan-tutorial.com/Uniform_buffers
+		ubo.proj[1][1] *= -1;
+		GLM was originally designed for OpenGL, where the Y coordinate of the clip coordinates is inverted.
+		The easiest way to compensate for that is to flip the sign on the scaling factor of the Y axis in the projection matrix.
+		If you don't do this, then the image will be rendered upside down.
+		*/
+
+
+		this->matrices.projection[1][1] *= -1;// faster
+
+
+	}
+
+
 
 	void Camera::updateViewMatrix() {
 
@@ -26,33 +46,34 @@ namespace vkx {
 
 		//this->matrices.view = (rotationMatrix) * (glm::inverse(translationMatrix));
 
-		glm::vec3 dir2 = glm::normalize(this->transform.orientation*glm::vec3(0.0, 0.0, -1.0));
+		if (this->isFirstPerson) {
 
-		this->matrices.view = glm::lookAt(
-			this->transform.translation, // Camera is at (4,3,3), in World Space
-			this->transform.translation + dir2, // and looks at point
-			glm::vec3(0, 0, 1)  // Head is up (set to 0,-1,0 to look upside-down)
-		);
+			glm::vec3 dir2 = glm::normalize(this->transform.orientation*glm::vec3(0.0, 0.0, -1.0));
 
-	}
+			this->matrices.view = glm::lookAt(
+				this->transform.translation, // camera position
+				this->transform.translation + dir2, // point to look at
+				glm::vec3(0, 0, 1)  // up vector
+			);
+		} else {
 
+			float theta = this->sphericalCoords.theta;
+			float phi = this->sphericalCoords.phi;
+			float distance = this->sphericalCoords.distance;
 
-	Camera::Camera() {
-		glm::vec2 size = glm::vec2(1280, 720);// todo: remove this
+			
+			float orbitX = distance*cos(theta);
+			float orbitY = distance*sin(theta);
+			float orbitZ = distance*sin(phi);
+			this->transform.translation = glm::vec3(orbitX, orbitY, orbitZ);
 
-		this->matrices.projection = glm::perspectiveRH(glm::radians(60.0f), (float)size.x / (float)size.y, 0.0001f, 256.0f);
-		/*
-		// //not// fixed by GLM_FORCE_DEPTH_ZERO_TO_ONE
-		https://vulkan-tutorial.com/Uniform_buffers
-		ubo.proj[1][1] *= -1;
-		GLM was originally designed for OpenGL, where the Y coordinate of the clip coordinates is inverted.
-		The easiest way to compensate for that is to flip the sign on the scaling factor of the Y axis in the projection matrix.
-		If you don't do this, then the image will be rendered upside down.
-		*/
+			this->matrices.view = glm::lookAt(
+				this->followOpts.point + this->transform.translation, // camera position
+				this->followOpts.point, // point to look at
+				glm::vec3(0, 0, 1)  // up vector
+			);
 
-
-		this->matrices.projection[1][1] *= -1;// faster
-
+		}
 
 	}
 

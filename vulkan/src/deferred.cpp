@@ -165,7 +165,9 @@ public:
         vk::DeviceSize offsets = { 0 };
         offscreenCmdBuffer.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, meshes.example.vertices.buffer, { 0 });
         offscreenCmdBuffer.bindIndexBuffer(meshes.example.indices.buffer, 0, vk::IndexType::eUint32);
-        //offscreenCmdBuffer.drawIndexed(meshes.example.indexCount, 1, 0, 0, 0);
+        offscreenCmdBuffer.drawIndexed(meshes.example.indexCount, 1, 0, 0, 0);
+
+
         offscreenCmdBuffer.endRenderPass();
         offscreenCmdBuffer.end();
     }
@@ -217,7 +219,13 @@ public:
     }
 
     void loadMeshes() {
-        meshes.example = loadMesh(getAssetPath() + "models/armor/armor.dae", vertexLayout, 1.0f);
+		//meshes.example = loadMesh(getAssetPath() + "models/armor/armor.dae", vertexLayout, 1.0f);
+
+		vkx::MeshLoader loader(&this->context, &this->assetManager);
+		loader.load(getAssetPath() + "models/armor/armor.dae");
+		loader.createMeshBuffer(vertexLayout, 1.0f);
+		meshes.example = loader.combinedBuffer;
+
     }
 
     void generateQuads() {
@@ -358,15 +366,12 @@ public:
 
         // vk::Image descriptor for the offscreen texture targets
         vk::DescriptorImageInfo texDescriptorPosition =
-            //vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[0].colors[0].view, vk::ImageLayout::eGeneral);
 			vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[0].colors[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 
         vk::DescriptorImageInfo texDescriptorNormal =
-            //vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[1].sampler, offscreen.framebuffers[0].colors[1].view, vk::ImageLayout::eGeneral);
 			vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[1].sampler, offscreen.framebuffers[0].colors[1].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 
         vk::DescriptorImageInfo texDescriptorAlbedo =
-            //vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[2].sampler, offscreen.framebuffers[0].colors[2].view, vk::ImageLayout::eGeneral);
 			vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[2].sampler, offscreen.framebuffers[0].colors[2].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 
         std::vector<vk::WriteDescriptorSet> writeDescriptorSets =
@@ -576,7 +581,7 @@ public:
         uboFragmentLights.lights[4].quadraticFalloff = 0.6f;
 
         // Current view position
-        uboFragmentLights.viewPos = glm::vec4(0.0f, 0.0f, -camera.translation.z, 0.0f);
+        uboFragmentLights.viewPos = glm::vec4(0.0f, 0.0f, -camera.transform.translation.z, 0.0f);
 
         uniformData.fsLights.copy(uboFragmentLights);
     }

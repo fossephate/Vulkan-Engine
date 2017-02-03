@@ -294,358 +294,6 @@ public:
 
 	}
 
-	void updateDrawCommandBuffer(const vk::CommandBuffer &cmdBuffer) {
-		cmdBuffer.setViewport(0, vkx::viewport(size));
-		cmdBuffer.setScissor(0, vkx::rect2D(size));
-
-
-		//https://github.com/nvpro-samples/gl_vk_threaded_cadscene/blob/master/doc/vulkan_uniforms.md
-
-
-		// left:
-		//vk::Viewport viewport = vkx::viewport((float)size.width / 3, (float)size.height, 0.0f, 1.0f);
-		//cmdBuffer.setViewport(0, viewport);
-		// center
-		//viewport.x += viewport.width;
-		//cmdBuffer.setViewport(0, viewport);
-
-
-
-		// todo: fix this// important
-		// stop doing this every frame
-		// only when necessary
-		// actually not that bad, since it makes pushing to vector easy
-		for (int i = 0; i < models.size(); ++i) {
-			models[i]->matrixIndex = i;
-		}
-
-
-		// uses matrix indices directly after meshes' indices
-		for (int i = 0; i < skinnedMeshes.size(); ++i) {
-			skinnedMeshes[i]->matrixIndex = models.size()+i;
-		}
-
-		for (int i = 0; i < skinnedMeshes.size(); ++i) {
-			skinnedMeshes[i]->boneIndex = i;
-			// todo: set 4x4 matrix bone index
-		}
-
-		//for (int i = 0; i < matrixNodes.size(); ++i) {
-		//	matrixNodes[i].boneIndex[0][0] = i;
-		//}
-		
-
-		globalP += 0.005f;
-
-
-
-		if (models.size() > 3) {
-
-			//models[1]->setTranslation(glm::vec3(3 * cos(globalP), 1.0f, 3 * sin(globalP)));
-			models[2]->setTranslation(glm::vec3(2 * cos(globalP) + 2.0f, sin(globalP)+2.0, 0.0f));
-			models[3]->setTranslation(glm::vec3(cos(globalP) - 2.0f, 2.0f, sin(globalP)+2.0f));
-			//models[4].setTranslation(glm::vec3(cos(globalP), 3.0f, 0.0f));
-			//models[5].setTranslation(glm::vec3(cos(globalP) - 2.0f, 4.0f, 0.0f));
-		}
-
-		//if (keyStates.space) {
-		//	auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
-		//	testModel->load(getAssetPath() + "models/monkey.fbx");
-		//	testModel->createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
-		//	testModel->matrixIndex = 0;
-
-		//	models.push_back(testModel);
-		//}
-
-		if (models.size() > 6) {
-			models[4]->setTranslation(glm::vec3(cos(globalP), 3.0f, 0.0f));
-		}
-
-
-		//models[1].setTranslation(glm::vec3(0, 0, 2));
-		//glm::quat q = glm::angleAxis(3.14159f/2.0f, glm::vec3(1.0f, 0.0f, 0.0f));
-		//models[1].setRotation(q);
-
-		
-		
-
-		if (skinnedMeshes.size() > 1) {
-			skinnedMeshes[0]->setTranslation(glm::vec3(2.0f, sin(globalP), 1.0f));
-			//skinnedMeshes[1]->setTranslation(glm::vec3(-1.0f, 4.0f*sin(globalP), 1.0f));
-			//skinnedMeshes[2]->setTranslation(glm::vec3(0.0, 8.0*sin(globalP), 1.0));
-			//skinnedMeshes[3]->setTranslation(glm::vec3(2.0, 8.0*sin(globalP), 1.0));
-			glm::vec3 point = skinnedMeshes[1]->transform.translation;
-			skinnedMeshes[1]->setTranslation(glm::vec3(point.x, point.y, 1.0f));
-			skinnedMeshes[1]->translateLocal(glm::vec3(0.0f, 0.05f, 0.0f));
-			skinnedMeshes[1]->rotateLocalZ(0.014f);
-		}
-
-
-		
-		if (skinnedMeshes.size() > 1) {
-			skinnedMeshes[0]->animationSpeed = 1.0f;
-			skinnedMeshes[1]->animationSpeed = 3.5f;
-		}
-
-
-		//uboScene.lightPos = glm::vec3(cos(globalP), 4.0f, cos(globalP));
-		uboScene.lightPos = glm::vec4(cos(globalP), 4.0f, cos(globalP), 1.0f);
-		//uboScene.lightPos = glm::vec3(1.0f, -2.0f, 4.0/**sin(globalP*10.0f)*/+4.0);
-
-
-		//matrixNodes[0].model = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, 0.0f));
-		//matrixNodes[1].model = glm::translate(glm::mat4(), glm::vec3(sin(globalP), 1.0f, 0.0f));
-
-
-
-
-		if (keyStates.space) {
-			physicsObjects[1]->rigidBody->activate();
-			//physicsObjects[1]->rigidBody->setLinearVelocity(btVector3(0.0f, 0.0f, 12.0f));
-			physicsObjects[1]->rigidBody->applyCentralForce(btVector3(0.0f, sin(globalP)*0.1f, 0.05f));
-		}
-
-
-
-
-
-		// todo: fix
-		for (auto &model : models) {
-			
-			//consoleLog = std::to_string(model.transform.translation.x);
-
-			matrixNodes[model->matrixIndex].model = model->transfMatrix;
-
-			//glm::mat4* modelMat = (glm::mat4*)(((uint64_t)modelMatrices + (model.matrixIndex * dynamicAlignment)));
-			//*modelMat = model.transfMatrix;
-
-		}
-
-
-
-
-		// uboBoneData.bones is a large bone data buffer
-		// use offset to store bone data for each skinnedMesh
-		// basically a manual dynamic buffer
-		for (auto &skinnedMesh : skinnedMeshes) {
-
-			matrixNodes[skinnedMesh->matrixIndex].model = skinnedMesh->transfMatrix;
-			matrixNodes[skinnedMesh->matrixIndex].boneIndex[0][0] = skinnedMesh->boneIndex;
-			
-			// performance optimization needed here:
-			skinnedMesh->update(globalP*skinnedMesh->animationSpeed);// update animation / interpolated
-
-
-			uint32_t boneOffset = skinnedMesh->boneIndex*MAX_BONES;
-
-			for (uint32_t i = 0; i < skinnedMesh->boneTransforms.size(); ++i) {
-				
-				//matrixNodes[skinnedMesh.matrixIndex].bones[i] = aiMatrix4x4ToGlm(&skinnedMesh.boneTransforms[i]);
-				//matrixNodes[skinnedMesh.matrixIndex].bones[i] = glm::transpose(glm::make_mat4(&skinnedMesh.boneTransforms[i].a1));
-				//std::ofstream log("logfile.txt", std::ios_base::app | std::ios_base::out);
-				//log << skinnedMesh.boneTransforms[i].a1 << "\n";
-
-				//uboBoneData.bones[boneOffset + i] = glm::transpose(glm::make_mat4(&skinnedMesh->boneTransforms[i].a1));
-				//uboScene.bones[i] = glm::transpose(glm::make_mat4(&skinnedMesh->boneTransforms[i].a1));
-				
-				
-				uboScene.bones[boneOffset + i] = glm::transpose(glm::make_mat4(&skinnedMesh->boneTransforms[i].a1));
-				
-			}
-		}
-
-
-		updateSceneBuffer();
-		updateMatrixBuffer();
-		updateMaterialBuffer();
-		
-		updateTextOverlay();
-
-		//uniformData.bonesVS.copy(uboBoneData);
-		
-
-
-		uint32_t lastMaterialIndex = -1;
-
-
-
-		//// for each of the model's meshes
-		//for (auto &mesh : meshes) {
-
-		//	// bind vertex & index buffers
-		//	cmdBuffer.bindVertexBuffers(mesh->vertexBufferBinding, mesh->meshBuffer.vertices.buffer, vk::DeviceSize());
-		//	cmdBuffer.bindIndexBuffer(mesh->meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
-
-		//	uint32_t setNum;
-
-		//	// bind scene descriptor set
-		//	setNum = 0;
-		//	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, descriptorSets[setNum], nullptr);
-
-
-		//	//uint32_t offset1 = mesh.matrixIndex * alignedMatrixSize;
-		//	uint32_t offset1 = mesh->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
-		//	//https://www.khronos.org/registry/vulkan/specs/1.0/apispec.html#vkCmdBindDescriptorSets
-		//	// the third param is the set number!
-		//	setNum = 1;
-		//	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset1);
-
-
-		//	if (lastMaterialIndex != mesh->meshBuffer.materialIndex) {
-		//		lastMaterialIndex = mesh->meshBuffer.materialIndex;
-		//		uint32_t offset2 = mesh->meshBuffer.materialIndex * static_cast<uint32_t>(alignedMaterialSize);
-		//		// the third param is the set number!
-		//		setNum = 2;
-		//		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset2);
-		//	//}
-
-
-		//	//if (lastMaterialIndex != mesh->meshBuffer.materialIndex) {
-		//		lastMaterialIndex = mesh->meshBuffer.materialIndex;
-
-		//		// must make pipeline layout compatible
-		//		setNum = 3;
-		//		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, m.descriptorSet, nullptr);
-		//	}
-
-		//	// draw:
-		//	cmdBuffer.drawIndexed(mesh->meshBuffer.indexCount, 1, 0, 0, 0);
-		//}
-
-
-
-		//https://github.com/SaschaWillems/Vulkan/tree/master/dynamicuniformbuffer
-
-
-
-
-		// MODELS:
-
-		// bind mesh pipeline
-		// don't have to do this for every mesh
-		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.meshes);
-
-		// for each model
-		// model = group of meshes
-		// todo: add skinned / animated model support
-		for (auto &model : models) {
-			// for each of the model's meshes
-			for (auto &mesh : model->meshes) {
-
-
-				// bind vertex & index buffers
-				cmdBuffer.bindVertexBuffers(mesh.vertexBufferBinding, mesh.meshBuffer.vertices.buffer, vk::DeviceSize());
-				cmdBuffer.bindIndexBuffer(mesh.meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
-
-				// descriptor set #
-				uint32_t setNum;
-
-				// bind scene descriptor set
-				setNum = 0;
-				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, descriptorSets[setNum], nullptr);
-
-
-				//uint32_t offset1 = mesh.matrixIndex * alignedMatrixSize;
-				uint32_t offset1 = model->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
-				//https://www.khronos.org/registry/vulkan/specs/1.0/apispec.html#vkCmdBindDescriptorSets
-				// the third param is the set number!
-				setNum = 1;
-				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset1);
-
-
-				if (lastMaterialIndex != mesh.meshBuffer.materialIndex) {
-					lastMaterialIndex = mesh.meshBuffer.materialIndex;
-					uint32_t offset2 = mesh.meshBuffer.materialIndex * static_cast<uint32_t>(alignedMaterialSize);
-					// the third param is the set number!
-					setNum = 2;
-					cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset2);
-				//}
-
-				//if (lastMaterialIndex != mesh.meshBuffer.materialIndex) {
-					lastMaterialIndex = mesh.meshBuffer.materialIndex;
-
-					// must make pipeline layout compatible
-					vkx::Material m = this->assetManager.loadedMaterials[mesh.meshBuffer.materialIndex];
-					setNum = 3;
-					cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, m.descriptorSet, nullptr);
-				}
-
-
-				// draw:
-				cmdBuffer.drawIndexed(mesh.meshBuffer.indexCount, 1, 0, 0, 0);
-			}
-
-		}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		// SKINNED MESHES:
-
-		// bind skinned mesh pipeline
-		// don't have to do this for every skinned mesh// bind once
-		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.skinnedMeshes);
-
-		for (auto &skinnedMesh : skinnedMeshes) {
-
-
-			// bind vertex & index buffers
-			cmdBuffer.bindVertexBuffers(skinnedMesh->vertexBufferBinding, skinnedMesh->meshBuffer.vertices.buffer, vk::DeviceSize());
-			cmdBuffer.bindIndexBuffer(skinnedMesh->meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
-
-
-			uint32_t setNum;
-			//uint32_t offset;
-
-			// bind scene descriptor set
-			setNum = 0;
-			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, descriptorSets[setNum], nullptr);
-
-
-			uint32_t offset1 = skinnedMesh->matrixIndex * alignedMatrixSize;
-			//https://www.khronos.org/registry/vulkan/specs/1.0/apispec.html#vkCmdBindDescriptorSets
-			// the third param is the set number!
-			setNum = 1;
-			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset1);
-
-
-			if (lastMaterialIndex != skinnedMesh->meshBuffer.materialIndex) {
-
-				lastMaterialIndex = skinnedMesh->meshBuffer.materialIndex;
-				uint32_t offset2 = skinnedMesh->meshBuffer.materialIndex * alignedMaterialSize;
-				// the third param is the set number!
-				setNum = 2;
-				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset2);
-			//}
-
-
-
-
-			//if (lastMaterialIndex != skinnedMesh->meshBuffer.materialIndex) {
-				// must make pipeline layout compatible
-				vkx::Material m = this->assetManager.loadedMaterials[skinnedMesh->meshBuffer.materialIndex];
-				setNum = 3;
-				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, m.descriptorSet, nullptr);
-			}
-
-
-			// draw:
-			cmdBuffer.drawIndexed(skinnedMesh->meshBuffer.indexCount, 1, 0, 0, 0);
-		}
-
-
-	}
-
 
 
 
@@ -1219,6 +867,9 @@ public:
 
 
 	void updateSceneBuffer() {
+		
+		camera.updateViewMatrix();
+
 		uboScene.view = camera.matrices.view;
 		uboScene.projection = camera.matrices.projection;
 		//uboScene.cameraPos = camera.transform.translation;
@@ -1487,6 +1138,146 @@ public:
 	}
 
 
+
+
+
+
+
+
+
+	void updateWorld() {
+
+
+		// z-up translations
+		if (!keyStates.shift) {
+			if (keyStates.w) {
+				camera.translateLocal(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
+			}
+			if (keyStates.s) {
+				camera.translateLocal(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
+			}
+			if (keyStates.a) {
+				camera.translateLocal(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
+			}
+			if (keyStates.d) {
+				camera.translateLocal(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
+			}
+			if (keyStates.q) {
+				camera.translateLocal(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
+			}
+			if (keyStates.e) {
+				camera.translateLocal(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
+			}
+		} else {
+			if (keyStates.w) {
+				camera.translateWorld(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
+			}
+			if (keyStates.s) {
+				camera.translateWorld(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
+			}
+			if (keyStates.a) {
+				camera.translateWorld(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
+			}
+			if (keyStates.d) {
+				camera.translateWorld(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
+			}
+			if (keyStates.q) {
+				camera.translateWorld(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
+			}
+			if (keyStates.e) {
+				camera.translateWorld(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
+			}
+		}
+
+
+
+		// z-up rotations
+		camera.rotationSpeed = -0.005f;
+
+		if (mouse.leftMouseButton.state) {
+			camera.rotateWorldZ(mouse.delta.x*camera.rotationSpeed);
+			camera.rotateLocalX(mouse.delta.y*camera.rotationSpeed);
+
+			if (!camera.isFirstPerson) {
+				camera.sphericalCoords.theta += mouse.delta.x*camera.rotationSpeed;
+				camera.sphericalCoords.phi -= mouse.delta.y*camera.rotationSpeed;
+			}
+
+
+			SDL_SetRelativeMouseMode((SDL_bool)1);
+		} else {
+			bool isCursorLocked = (bool)SDL_GetRelativeMouseMode();
+			if (isCursorLocked) {
+				SDL_SetRelativeMouseMode((SDL_bool)0);
+				SDL_WarpMouseInWindow(this->SDLWindow, mouse.leftMouseButton.pressedCoords.x, mouse.leftMouseButton.pressedCoords.y);
+			}
+		}
+
+
+		camera.rotationSpeed = -0.02f;
+
+
+		if (keyStates.up_arrow) {
+			camera.rotateLocalX(camera.rotationSpeed);
+		}
+		if (keyStates.down_arrow) {
+			camera.rotateLocalX(-camera.rotationSpeed);
+		}
+
+		if (!keyStates.shift) {
+			if (keyStates.left_arrow) {
+				camera.rotateWorldZ(-camera.rotationSpeed);
+			}
+			if (keyStates.right_arrow) {
+				camera.rotateWorldZ(camera.rotationSpeed);
+			}
+		} else {
+			//if (keyStates.left_arrow) {
+			//	camera.rotateWorldY(-camera.rotationSpeed);
+			//}
+			//if (keyStates.right_arrow) {
+			//	camera.rotateWorldY(camera.rotationSpeed);
+			//}
+		}
+
+		if (keyStates.t) {
+			camera.isFirstPerson = !camera.isFirstPerson;
+		}
+
+		if (!camera.isFirstPerson) {
+			camera.followOpts.point = models[1]->transform.translation;
+		}
+
+		
+		if (keyStates.i) {
+			physicsObjects[1]->rigidBody->activate();
+			physicsObjects[1]->rigidBody->applyCentralForce(btVector3(0.0f, 0.1f, 0.0f));
+		}
+		if (keyStates.k) {
+			physicsObjects[1]->rigidBody->activate();
+			physicsObjects[1]->rigidBody->applyCentralForce(btVector3(0.0f, -0.1f, 0.0f));
+		}
+		if (keyStates.j) {
+			physicsObjects[1]->rigidBody->activate();
+			physicsObjects[1]->rigidBody->applyCentralForce(btVector3(-0.1f, 0.0f, 0.0f));
+		}
+		if (keyStates.l) {
+			physicsObjects[1]->rigidBody->activate();
+			physicsObjects[1]->rigidBody->applyCentralForce(btVector3(0.1f, 0.0f, 0.0f));
+		}
+
+		//camera.follow();
+
+
+
+
+	}
+
+
+
+
+
+
 	void updatePhysics() {
 
 		//this->physicsManager.dynamicsWorld->stepSimulation(1.f / 60.f, 10);
@@ -1529,6 +1320,382 @@ public:
 		//}
 
 	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	void updateDrawCommandBuffer(const vk::CommandBuffer &cmdBuffer) {
+		cmdBuffer.setViewport(0, vkx::viewport(size));
+		cmdBuffer.setScissor(0, vkx::rect2D(size));
+
+
+		//https://github.com/nvpro-samples/gl_vk_threaded_cadscene/blob/master/doc/vulkan_uniforms.md
+
+
+		// left:
+		//vk::Viewport viewport = vkx::viewport((float)size.width / 3, (float)size.height, 0.0f, 1.0f);
+		//cmdBuffer.setViewport(0, viewport);
+		// center
+		//viewport.x += viewport.width;
+		//cmdBuffer.setViewport(0, viewport);
+
+
+
+		// todo: fix this// important
+		// stop doing this every frame
+		// only when necessary
+		// actually not that bad, since it makes pushing to vector easy
+		for (int i = 0; i < models.size(); ++i) {
+			models[i]->matrixIndex = i;
+		}
+
+
+		// uses matrix indices directly after meshes' indices
+		for (int i = 0; i < skinnedMeshes.size(); ++i) {
+			skinnedMeshes[i]->matrixIndex = models.size() + i;
+		}
+
+		for (int i = 0; i < skinnedMeshes.size(); ++i) {
+			skinnedMeshes[i]->boneIndex = i;
+			// todo: set 4x4 matrix bone index
+		}
+
+		//for (int i = 0; i < matrixNodes.size(); ++i) {
+		//	matrixNodes[i].boneIndex[0][0] = i;
+		//}
+
+
+		globalP += 0.005f;
+
+
+
+		if (models.size() > 3) {
+
+			//models[1]->setTranslation(glm::vec3(3 * cos(globalP), 1.0f, 3 * sin(globalP)));
+			models[2]->setTranslation(glm::vec3(2 * cos(globalP) + 2.0f, sin(globalP) + 2.0, 0.0f));
+			models[3]->setTranslation(glm::vec3(cos(globalP) - 2.0f, 2.0f, sin(globalP) + 2.0f));
+			//models[4].setTranslation(glm::vec3(cos(globalP), 3.0f, 0.0f));
+			//models[5].setTranslation(glm::vec3(cos(globalP) - 2.0f, 4.0f, 0.0f));
+		}
+
+		//if (keyStates.space) {
+		//	auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
+		//	testModel->load(getAssetPath() + "models/monkey.fbx");
+		//	testModel->createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		//	testModel->matrixIndex = 0;
+
+		//	models.push_back(testModel);
+		//}
+
+		if (models.size() > 6) {
+			models[4]->setTranslation(glm::vec3(cos(globalP), 3.0f, 0.0f));
+		}
+
+
+		//models[1].setTranslation(glm::vec3(0, 0, 2));
+		//glm::quat q = glm::angleAxis(3.14159f/2.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+		//models[1].setRotation(q);
+
+
+
+
+		if (skinnedMeshes.size() > 1) {
+			skinnedMeshes[0]->setTranslation(glm::vec3(2.0f, sin(globalP), 1.0f));
+			//skinnedMeshes[1]->setTranslation(glm::vec3(-1.0f, 4.0f*sin(globalP), 1.0f));
+			//skinnedMeshes[2]->setTranslation(glm::vec3(0.0, 8.0*sin(globalP), 1.0));
+			//skinnedMeshes[3]->setTranslation(glm::vec3(2.0, 8.0*sin(globalP), 1.0));
+			glm::vec3 point = skinnedMeshes[1]->transform.translation;
+			skinnedMeshes[1]->setTranslation(glm::vec3(point.x, point.y, 1.0f));
+			skinnedMeshes[1]->translateLocal(glm::vec3(0.0f, 0.05f, 0.0f));
+			skinnedMeshes[1]->rotateLocalZ(0.014f);
+		}
+
+
+
+		if (skinnedMeshes.size() > 1) {
+			skinnedMeshes[0]->animationSpeed = 1.0f;
+			skinnedMeshes[1]->animationSpeed = 3.5f;
+		}
+
+
+		//uboScene.lightPos = glm::vec3(cos(globalP), 4.0f, cos(globalP));
+		uboScene.lightPos = glm::vec4(cos(globalP), 4.0f, cos(globalP), 1.0f);
+		//uboScene.lightPos = glm::vec3(1.0f, -2.0f, 4.0/**sin(globalP*10.0f)*/+4.0);
+
+
+		//matrixNodes[0].model = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, 0.0f));
+		//matrixNodes[1].model = glm::translate(glm::mat4(), glm::vec3(sin(globalP), 1.0f, 0.0f));
+
+
+
+
+		if (keyStates.space) {
+			physicsObjects[1]->rigidBody->activate();
+			//physicsObjects[1]->rigidBody->setLinearVelocity(btVector3(0.0f, 0.0f, 12.0f));
+			physicsObjects[1]->rigidBody->applyCentralForce(btVector3(0.0f, sin(globalP)*0.1f, 0.05f));
+		}
+
+
+
+
+
+		// todo: fix
+		for (auto &model : models) {
+
+			//consoleLog = std::to_string(model.transform.translation.x);
+
+			matrixNodes[model->matrixIndex].model = model->transfMatrix;
+
+			//glm::mat4* modelMat = (glm::mat4*)(((uint64_t)modelMatrices + (model.matrixIndex * dynamicAlignment)));
+			//*modelMat = model.transfMatrix;
+
+		}
+
+
+
+
+		// uboBoneData.bones is a large bone data buffer
+		// use offset to store bone data for each skinnedMesh
+		// basically a manual dynamic buffer
+		for (auto &skinnedMesh : skinnedMeshes) {
+
+			matrixNodes[skinnedMesh->matrixIndex].model = skinnedMesh->transfMatrix;
+			matrixNodes[skinnedMesh->matrixIndex].boneIndex[0][0] = skinnedMesh->boneIndex;
+
+			// performance optimization needed here:
+			skinnedMesh->update(globalP*skinnedMesh->animationSpeed);// update animation / interpolated
+
+
+			uint32_t boneOffset = skinnedMesh->boneIndex*MAX_BONES;
+
+			for (uint32_t i = 0; i < skinnedMesh->boneTransforms.size(); ++i) {
+
+				//matrixNodes[skinnedMesh.matrixIndex].bones[i] = aiMatrix4x4ToGlm(&skinnedMesh.boneTransforms[i]);
+				//matrixNodes[skinnedMesh.matrixIndex].bones[i] = glm::transpose(glm::make_mat4(&skinnedMesh.boneTransforms[i].a1));
+				//std::ofstream log("logfile.txt", std::ios_base::app | std::ios_base::out);
+				//log << skinnedMesh.boneTransforms[i].a1 << "\n";
+
+				//uboBoneData.bones[boneOffset + i] = glm::transpose(glm::make_mat4(&skinnedMesh->boneTransforms[i].a1));
+				//uboScene.bones[i] = glm::transpose(glm::make_mat4(&skinnedMesh->boneTransforms[i].a1));
+
+
+				uboScene.bones[boneOffset + i] = glm::transpose(glm::make_mat4(&skinnedMesh->boneTransforms[i].a1));
+
+			}
+		}
+
+
+		updateSceneBuffer();
+		updateMatrixBuffer();
+		updateMaterialBuffer();
+
+		updateTextOverlay();
+
+		//uniformData.bonesVS.copy(uboBoneData);
+
+
+
+		uint32_t lastMaterialIndex = -1;
+
+
+
+		//// for each of the model's meshes
+		//for (auto &mesh : meshes) {
+
+		//	// bind vertex & index buffers
+		//	cmdBuffer.bindVertexBuffers(mesh->vertexBufferBinding, mesh->meshBuffer.vertices.buffer, vk::DeviceSize());
+		//	cmdBuffer.bindIndexBuffer(mesh->meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
+
+		//	uint32_t setNum;
+
+		//	// bind scene descriptor set
+		//	setNum = 0;
+		//	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, descriptorSets[setNum], nullptr);
+
+
+		//	//uint32_t offset1 = mesh.matrixIndex * alignedMatrixSize;
+		//	uint32_t offset1 = mesh->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
+		//	//https://www.khronos.org/registry/vulkan/specs/1.0/apispec.html#vkCmdBindDescriptorSets
+		//	// the third param is the set number!
+		//	setNum = 1;
+		//	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset1);
+
+
+		//	if (lastMaterialIndex != mesh->meshBuffer.materialIndex) {
+		//		lastMaterialIndex = mesh->meshBuffer.materialIndex;
+		//		uint32_t offset2 = mesh->meshBuffer.materialIndex * static_cast<uint32_t>(alignedMaterialSize);
+		//		// the third param is the set number!
+		//		setNum = 2;
+		//		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset2);
+		//	//}
+
+
+		//	//if (lastMaterialIndex != mesh->meshBuffer.materialIndex) {
+		//		lastMaterialIndex = mesh->meshBuffer.materialIndex;
+
+		//		// must make pipeline layout compatible
+		//		setNum = 3;
+		//		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, m.descriptorSet, nullptr);
+		//	}
+
+		//	// draw:
+		//	cmdBuffer.drawIndexed(mesh->meshBuffer.indexCount, 1, 0, 0, 0);
+		//}
+
+
+
+		//https://github.com/SaschaWillems/Vulkan/tree/master/dynamicuniformbuffer
+
+
+
+
+		// MODELS:
+
+		// bind mesh pipeline
+		// don't have to do this for every mesh
+		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.meshes);
+
+		// for each model
+		// model = group of meshes
+		// todo: add skinned / animated model support
+		for (auto &model : models) {
+			// for each of the model's meshes
+			for (auto &mesh : model->meshes) {
+
+
+				// bind vertex & index buffers
+				cmdBuffer.bindVertexBuffers(mesh.vertexBufferBinding, mesh.meshBuffer.vertices.buffer, vk::DeviceSize());
+				cmdBuffer.bindIndexBuffer(mesh.meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
+
+				// descriptor set #
+				uint32_t setNum;
+
+				// bind scene descriptor set
+				setNum = 0;
+				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, descriptorSets[setNum], nullptr);
+
+
+				//uint32_t offset1 = mesh.matrixIndex * alignedMatrixSize;
+				uint32_t offset1 = model->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
+				//https://www.khronos.org/registry/vulkan/specs/1.0/apispec.html#vkCmdBindDescriptorSets
+				// the third param is the set number!
+				setNum = 1;
+				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset1);
+
+
+				if (lastMaterialIndex != mesh.meshBuffer.materialIndex) {
+					lastMaterialIndex = mesh.meshBuffer.materialIndex;
+					uint32_t offset2 = mesh.meshBuffer.materialIndex * static_cast<uint32_t>(alignedMaterialSize);
+					// the third param is the set number!
+					setNum = 2;
+					cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset2);
+					//}
+
+					//if (lastMaterialIndex != mesh.meshBuffer.materialIndex) {
+					lastMaterialIndex = mesh.meshBuffer.materialIndex;
+
+					// must make pipeline layout compatible
+					vkx::Material m = this->assetManager.loadedMaterials[mesh.meshBuffer.materialIndex];
+					setNum = 3;
+					cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, m.descriptorSet, nullptr);
+				}
+
+
+				// draw:
+				cmdBuffer.drawIndexed(mesh.meshBuffer.indexCount, 1, 0, 0, 0);
+			}
+
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		// SKINNED MESHES:
+
+		// bind skinned mesh pipeline
+		// don't have to do this for every skinned mesh// bind once
+		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.skinnedMeshes);
+
+		for (auto &skinnedMesh : skinnedMeshes) {
+
+
+			// bind vertex & index buffers
+			cmdBuffer.bindVertexBuffers(skinnedMesh->vertexBufferBinding, skinnedMesh->meshBuffer.vertices.buffer, vk::DeviceSize());
+			cmdBuffer.bindIndexBuffer(skinnedMesh->meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
+
+
+			uint32_t setNum;
+			//uint32_t offset;
+
+			// bind scene descriptor set
+			setNum = 0;
+			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, descriptorSets[setNum], nullptr);
+
+
+			uint32_t offset1 = skinnedMesh->matrixIndex * alignedMatrixSize;
+			//https://www.khronos.org/registry/vulkan/specs/1.0/apispec.html#vkCmdBindDescriptorSets
+			// the third param is the set number!
+			setNum = 1;
+			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset1);
+
+
+			if (lastMaterialIndex != skinnedMesh->meshBuffer.materialIndex) {
+
+				lastMaterialIndex = skinnedMesh->meshBuffer.materialIndex;
+				uint32_t offset2 = skinnedMesh->meshBuffer.materialIndex * alignedMaterialSize;
+				// the third param is the set number!
+				setNum = 2;
+				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset2);
+				//}
+
+
+
+
+				//if (lastMaterialIndex != skinnedMesh->meshBuffer.materialIndex) {
+				// must make pipeline layout compatible
+				vkx::Material m = this->assetManager.loadedMaterials[skinnedMesh->meshBuffer.materialIndex];
+				setNum = 3;
+				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, m.descriptorSet, nullptr);
+			}
+
+
+			// draw:
+			cmdBuffer.drawIndexed(skinnedMesh->meshBuffer.indexCount, 1, 0, 0, 0);
+		}
+
+
+	}
+
+
+
+
+
+
+
+
+
+
+
 
 
 

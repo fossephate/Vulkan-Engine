@@ -244,6 +244,9 @@ namespace vkx
 				bool l = false;
 				bool u = false;
 				bool o = false;
+				bool f = false;
+				bool r = false;
+				bool t = false;
 			} keyStates;
 
 			struct {
@@ -303,7 +306,9 @@ namespace vkx
 			// Pure virtual render function (override in derived class)
 			virtual void render();
 
-			virtual void update(float deltaTime);
+			virtual void updateWorld();
+
+			//virtual void update(float deltaTime);
 
 			virtual void updatePhysics();
 
@@ -364,7 +369,7 @@ namespace vkx
 				const std::vector<VertexLayout> &vertexLayout,
 				float scale = 1.0f);
 
-			void updateKeyboardMouseInfo();
+			void updateInputInfo();
 
 
 			// Start the main render loop
