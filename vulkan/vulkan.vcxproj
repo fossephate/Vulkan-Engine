@@ -21,7 +21,7 @@
   <ItemGroup>
     <ClCompile Include="src\bulletClasses\PhysicsManager.cpp" />
     <ClCompile Include="src\bulletClasses\PhysicsObject.cpp" />
-    <ClCompile Include="src\deferred.cpp" />
+    <ClCompile Include="src\deferred3.cpp" />
     <ClCompile Include="src\vulkanClasses\camera.cpp" />
     <ClCompile Include="src\vulkanClasses\shapes.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanAndroid.cpp" />
@@ -32,7 +32,6 @@
     <ClCompile Include="src\vulkanClasses\vulkanMesh.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanMeshLoader.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanModel.cpp" />
-    <ClCompile Include="src\vulkanClasses\vulkanOffscreen.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanSkinnedMesh.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanSwapChain.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTextOverlay.cpp" />

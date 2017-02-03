@@ -543,7 +543,7 @@ public:
     void updateUniformBufferDeferredMatrices() {
         uboOffscreenVS.projection = camera.matrices.projection;
         uboOffscreenVS.view = camera.matrices.view;
-        uboOffscreenVS.model = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.25f, 0.0f));
+		uboOffscreenVS.model = glm::mat4();
         uniformData.vsOffscreen.copy(uboOffscreenVS);
     }
 
@@ -632,8 +632,6 @@ public:
     //    }
     //}
 };
-
-VulkanExample *vulkanExample;
 
 int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow) {
 	VulkanExample* example = new VulkanExample();

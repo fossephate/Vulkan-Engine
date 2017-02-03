@@ -10,6 +10,8 @@ namespace vkx {
 		glm::vec2 size = glm::vec2(1280, 720);// todo: remove this
 
 		this->matrices.projection = glm::perspectiveRH(glm::radians(60.0f), (float)size.x / (float)size.y, 0.0001f, 256.0f);
+
+
 		/*
 		// //not// fixed by GLM_FORCE_DEPTH_ZERO_TO_ONE
 		https://vulkan-tutorial.com/Uniform_buffers

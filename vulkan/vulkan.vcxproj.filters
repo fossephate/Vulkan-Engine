@@ -45,9 +45,6 @@
     <ClCompile Include="src\vulkanClasses\vulkanContext.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\vulkanClasses\vulkanOffscreen.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\vulkanClasses\shapes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -69,7 +66,7 @@
     <ClCompile Include="src\bulletClasses\PhysicsManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\deferred.cpp">
+    <ClCompile Include="src\deferred3.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
