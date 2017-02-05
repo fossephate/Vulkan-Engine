@@ -12,7 +12,7 @@
 
 
 // Texture properties
-#define TEX_DIM 1024
+#define TEX_DIM 4096
 
 // Vertex layout for this example
 std::vector<vkx::VertexLayout> vertexLayout =
@@ -293,47 +293,8 @@ public:
 		updateUniformBufferDeferredMatrices();
 		updateUniformBufferDeferredLights();
 
-		updateTextOverlay();
-
-		//if (!camera.isFirstPerson) {
-		//	camera.followOpts.point = models[1]->transform.translation;
-		//}
-
-
-		//if (keyStates.i) {
-		//	physicsObjects[1]->rigidBody->activate();
-		//	physicsObjects[1]->rigidBody->applyCentralForce(btVector3(0.0f, 0.1f, 0.0f));
-		//}
-		//if (keyStates.k) {
-		//	physicsObjects[1]->rigidBody->activate();
-		//	physicsObjects[1]->rigidBody->applyCentralForce(btVector3(0.0f, -0.1f, 0.0f));
-		//}
-		//if (keyStates.j) {
-		//	physicsObjects[1]->rigidBody->activate();
-		//	physicsObjects[1]->rigidBody->applyCentralForce(btVector3(-0.1f, 0.0f, 0.0f));
-		//}
-		//if (keyStates.l) {
-		//	physicsObjects[1]->rigidBody->activate();
-		//	physicsObjects[1]->rigidBody->applyCentralForce(btVector3(0.1f, 0.0f, 0.0f));
-		//}
-		//camera.follow();
-
-
-
-
+		//updateTextOverlay();
 	}
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -711,12 +672,6 @@ public:
 		camera.updateViewMatrix();
 
 		uboOffscreenVS.projection = camera.matrices.projection;
-		//uboOffscreenVS.view = camera.matrices.view;
-		//uboOffscreenVS.model = glm::mat4();
-
-		//uboOffscreenVS.model = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.25f, 0.0f));
-		//uboOffscreenVS.model = glm::translate(glm::mat4(), camera.transform.translation);
-		//uboOffscreenVS.model = glm::inverse(camera.matrices.view);
 
 		uboOffscreenVS.view = camera.matrices.view;
 		

@@ -15,9 +15,9 @@
 std::vector<vkx::VertexLayout> meshVertexLayout =
 {
 	vkx::VertexLayout::VERTEX_LAYOUT_POSITION,
-	vkx::VertexLayout::VERTEX_LAYOUT_NORMAL,
 	vkx::VertexLayout::VERTEX_LAYOUT_UV,
 	vkx::VertexLayout::VERTEX_LAYOUT_COLOR,
+	vkx::VertexLayout::VERTEX_LAYOUT_NORMAL,
 	vkx::VertexLayout::VERTEX_LAYOUT_DUMMY_VEC4,
 	vkx::VertexLayout::VERTEX_LAYOUT_DUMMY_VEC4
 };
@@ -26,9 +26,9 @@ std::vector<vkx::VertexLayout> meshVertexLayout =
 std::vector<vkx::VertexLayout> skinnedMeshVertexLayout =
 {
 	vkx::VertexLayout::VERTEX_LAYOUT_POSITION,
-	vkx::VertexLayout::VERTEX_LAYOUT_NORMAL,
 	vkx::VertexLayout::VERTEX_LAYOUT_UV,
 	vkx::VertexLayout::VERTEX_LAYOUT_COLOR,
+	vkx::VertexLayout::VERTEX_LAYOUT_NORMAL,
 	vkx::VertexLayout::VERTEX_LAYOUT_DUMMY_VEC4,
 	vkx::VertexLayout::VERTEX_LAYOUT_DUMMY_VEC4
 };
@@ -173,16 +173,22 @@ public:
 	struct {
 		vk::Pipeline meshes;
 		vk::Pipeline skinnedMeshes;
-		vk::Pipeline blending;// todo: make seperate for models and meshes, just meshes for now
+		vk::Pipeline blending;
 		vk::Pipeline wireframe;
+
+		
+		vk::Pipeline deferred;
+		vk::Pipeline offscreen;
+		vk::Pipeline debug;
 	} pipelines;
 
 
 
 	struct {
 		vk::PipelineLayout basic;
-		vk::PipelineLayout meshes;
-		vk::PipelineLayout skinnedMeshes;
+		
+		vk::PipelineLayout deferred;
+		vk::PipelineLayout offscreen;
 	} pipelineLayouts;
 
 
@@ -198,7 +204,25 @@ public:
 	} vertices;
 
 
+	struct {
+		glm::mat4 projection;
+		glm::mat4 model;
+		glm::mat4 view;
+	} uboVS, uboOffscreenVS;
 
+	struct Light {
+		glm::vec4 position;
+		glm::vec4 color;
+		float radius;
+		float quadraticFalloff;
+		float linearFalloff;
+		float _pad;
+	};
+
+	struct {
+		Light lights[5];
+		glm::vec4 viewPos;
+	} uboFSLights;
 
 
 
@@ -256,6 +280,8 @@ public:
 		device.destroyPipeline(pipelines.skinnedMeshes);
 
 		device.destroyPipelineLayout(pipelineLayouts.basic);
+
+
 		//device.destroyDescriptorSetLayout(descriptorSetLayout);
 
 		uniformData.sceneVS.destroy();
@@ -304,16 +330,17 @@ public:
 
 		struct meshVertex {
 			glm::vec3 pos;
-			glm::vec3 normal;
 			glm::vec2 uv;
 			glm::vec3 color;
+			glm::vec3 normal;
 		};
 
 		struct skinnedMeshVertex {
 			glm::vec3 pos;
-			glm::vec3 normal;
 			glm::vec2 uv;
 			glm::vec3 color;
+			glm::vec3 normal;
+
 			// Max. four bones per vertex
 			float boneWeights[4];
 			uint32_t boneIDs[4];
@@ -351,13 +378,13 @@ public:
 		// Location 0 : Position
 		vertices.attributeDescriptions[0] =
 			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 0, vk::Format::eR32G32B32Sfloat, 0);
-		// Location 1 : Normal
+		// Location 1 : (UV) Texture coordinates
 		vertices.attributeDescriptions[1] =
-			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 1, vk::Format::eR32G32B32Sfloat, sizeof(float) * 3);
-		// Location 2 : (UV) Texture coordinates
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 1, vk::Format::eR32G32Sfloat, sizeof(float) * 3);
+		// Location 2 : Color
 		vertices.attributeDescriptions[2] =
-			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 2, vk::Format::eR32G32Sfloat, sizeof(float) * 6);
-		// Location 3 : Color
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 2, vk::Format::eR32G32B32Sfloat, sizeof(float) * 5);
+		// Location 3 : Normal
 		vertices.attributeDescriptions[3] =
 			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 3, vk::Format::eR32G32B32Sfloat, sizeof(float) * 8);
 		// Location 4 : Bone weights
@@ -804,8 +831,8 @@ public:
 
 
 		// skinned meshes:
-		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/model.vert.spv", vk::ShaderStageFlagBits::eVertex);
-		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/model.frag.spv", vk::ShaderStageFlagBits::eFragment);
+		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/skinnedMesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/skinnedMesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
 		pipelines.skinnedMeshes = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo, nullptr)[0];
 
 

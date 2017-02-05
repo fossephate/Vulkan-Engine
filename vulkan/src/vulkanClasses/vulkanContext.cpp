@@ -307,11 +307,11 @@ CreateImageResult vkx::Context::stageToDeviceImage(vk::ImageCreateInfo imageCrea
 	return result;
 }
 
-CreateImageResult vkx::Context::stageToDeviceImage(const vk::ImageCreateInfo & imageCreateInfo, const vk::MemoryPropertyFlags & memoryPropertyFlags, const gli::texture2D & tex2D) const {
+CreateImageResult vkx::Context::stageToDeviceImage(const vk::ImageCreateInfo & imageCreateInfo, const vk::MemoryPropertyFlags & memoryPropertyFlags, const gli::texture2d & tex2D) const {
 	std::vector<MipData> mips;
 	for (size_t i = 0; i < imageCreateInfo.mipLevels; ++i) {
 		const auto& mip = tex2D[i];
-		const auto dims = mip.dimensions();
+		const auto dims = mip.extent();
 		mips.push_back({ vk::Extent3D{ (uint32_t)dims.x, (uint32_t)dims.y, 1 }, (uint32_t)mip.size() });
 	}
 	return stageToDeviceImage(imageCreateInfo, memoryPropertyFlags, (vk::DeviceSize)tex2D.size(), tex2D.data(), mips);

@@ -20,7 +20,7 @@ using namespace vkx;
 
 
 
-vulkanApp::vulkanApp(bool enableValidation) {
+vulkanApp::vulkanApp(bool enableValidation) : swapChain(this->context) {
 	// Check for validation command line flag
 	#if defined(_WIN32)
 		for (int32_t i = 0; i < __argc; i++) {
@@ -120,7 +120,6 @@ void vulkanApp::run() {
 
 void vulkanApp::initVulkan(bool enableValidation) {
 	context.createContext(enableValidation);
-	swapChain.setContext(this->context);
 
 	// Find a suitable depth format
 	depthFormat = getSupportedDepthFormat(physicalDevice);
@@ -193,13 +192,6 @@ void vulkanApp::setupWindow() {
 
 	/* WINDOWS */
 	#if defined(_WIN32)
-		// get hinstance from sdl window
-		//HINSTANCE SDLhinstance = GetModuleHandle(NULL);// not sure how this works? (gets current window?) might limit number of windows later
-		//this->windowInstance = SDLhinstance;
-
-		// get window handle from sdl window
-		//HWND SDLhandle = windowInfo.info.win.window;
-		//this->windowHandle = SDLhandle;
 
 	#elif defined(__linux__)
 		// TODO
@@ -236,132 +228,73 @@ void vulkanApp::render() {
 }
 
 void vulkanApp::updateWorld() {
-	//// z-up translations
-	//if (!keyStates.shift) {
-	//	if (keyStates.w) {
-	//		camera.translateLocal(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
-	//	}
-	//	if (keyStates.s) {
-	//		camera.translateLocal(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
-	//	}
-	//	if (keyStates.a) {
-	//		camera.translateLocal(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
-	//	}
-	//	if (keyStates.d) {
-	//		camera.translateLocal(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
-	//	}
-	//	if (keyStates.q) {
-	//		camera.translateLocal(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
-	//	}
-	//	if (keyStates.e) {
-	//		camera.translateLocal(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
-	//	}
-	//} else {
-	//	if (keyStates.w) {
-	//		camera.translateWorld(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
-	//	}
-	//	if (keyStates.s) {
-	//		camera.translateWorld(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
-	//	}
-	//	if (keyStates.a) {
-	//		camera.translateWorld(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
-	//	}
-	//	if (keyStates.d) {
-	//		camera.translateWorld(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
-	//	}
-	//	if (keyStates.q) {
-	//		camera.translateWorld(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
-	//	}
-	//	if (keyStates.e) {
-	//		camera.translateWorld(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
-	//	}
-	//}
-
-	//// z-up rotations
-	//camera.rotationSpeed = -0.005f;
-
-	//if (mouse.leftMouseButton.state) {
-	//	camera.rotateWorldZ(mouse.delta.x*camera.rotationSpeed);
-	//	camera.rotateLocalX(mouse.delta.y*camera.rotationSpeed);
-
-	//	SDL_SetRelativeMouseMode((SDL_bool)1);
-
-	//	//SDL_WarpMouseInWindow(this->SDLWindow, mouse.current.x-mouse.delta.x*2, mouse.current.y-mouse.delta.y*2);
-	//	//camera.rotateWorld(glm::vec3(-mouse.delta.y*camera.rotationSpeed, 0, -mouse.delta.x*camera.rotationSpeed));
-	//	//camera.rotateWorld(glm::vec3(-mouse.delta.y*camera.rotationSpeed, 0, -mouse.delta.x*camera.rotationSpeed));
-	//} else {
-	//	bool isCursorLocked = (bool)SDL_GetRelativeMouseMode();
-	//	if (isCursorLocked) {
-	//		SDL_SetRelativeMouseMode((SDL_bool)0);
-	//		SDL_WarpMouseInWindow(this->SDLWindow, mouse.leftMouseButton.pressedCoords.x, mouse.leftMouseButton.pressedCoords.y);
-	//	}
-	//}
-
-
-	//camera.rotationSpeed = -0.02f;
-
-	//
-	//if (keyStates.up_arrow) {
-	//	camera.rotateLocalX(camera.rotationSpeed);
-	//}
-	//if (keyStates.down_arrow) {
-	//	camera.rotateLocalX(-camera.rotationSpeed);
-	//}
-
-	//if (!keyStates.shift) {
-	//	if (keyStates.left_arrow) {
-	//		camera.rotateWorldZ(-camera.rotationSpeed);
-	//	}
-	//	if (keyStates.right_arrow) {
-	//		camera.rotateWorldZ(camera.rotationSpeed);
-	//	}
-	//} else {
-	//	//if (keyStates.left_arrow) {
-	//	//	camera.rotateWorldY(-camera.rotationSpeed);
-	//	//}
-	//	//if (keyStates.right_arrow) {
-	//	//	camera.rotateWorldY(camera.rotationSpeed);
-	//	//}
-	//}
-
-	//
-	////viewChanged();
-
-	////if (updateView) {
-	////	viewChanged();
-	////}
-
+	// overridden
 }
 
 void vkx::vulkanApp::updatePhysics() {
-
-	//this->physicsManager.dynamicsWorld->stepSimulation(1.f / 60.f, 10);
-
-
-	////print positions of all objects
-	//for (int i = 0; i < this->physicsManager.dynamicsWorld->getNumCollisionObjects(); ++i) {
-	//	btCollisionObject* obj = this->physicsManager.dynamicsWorld->getCollisionObjectArray()[i];
-	//	btRigidBody* body = btRigidBody::upcast(obj);
-	//	btTransform trans;
-	//	if (body && body->getMotionState()) {
-	//		body->getMotionState()->getWorldTransform(trans);
-	//	} else {
-	//		trans = obj->getWorldTransform();
-	//	}
-
-	//	//models
-
-	//	printf("world pos object %d = %f,%f,%f\n", i, float(trans.getOrigin().getX()), float(trans.getOrigin().getY()), float(trans.getOrigin().getZ()));
-	//}
-
+	// overridden
 }
 
 
 void vulkanApp::viewChanged() {
 }
 
-void vulkanApp::windowResized() {
+void vulkanApp::windowResized(const glm::uvec2 &newSize) {
+
+	if (!prepared) {
+		return;
+	}
+	prepared = false;
+
+	// Ensure all operations on the device have been finished before destroying resources
+	queue.waitIdle();
+	device.waitIdle();
+
+
+	// Recreate swap chain
+	this->size.width = newSize.x;
+	this->size.height = newSize.y;
+	swapChain.create(this->size, this->settings.vsync);
+
+	camera.matrices.projection = glm::perspectiveRH(glm::radians(camera.fov), (float)this->size.width / (float)this->size.height, camera.znear, camera.zfar);
+	camera.matrices.projection[1][1] *= -1;
+
+	//camera.setAspectRatio((float)this->size.width / (float)this->size.height);
+
+	//glm::vec2 defaultSize = glm::vec2(1280, 720);
+	//camera.matrices.projection = glm::perspectiveRH(glm::radians(60.0f), (float)this->size.width / (float)defaultSize.y, 0.0001f, 256.0f);
+	//camera.matrices.projection[1][1] *= -1;
+
+
+	// Recreate the frame buffers
+	setupDepthStencil();
+
+	setupFrameBuffer();
+
+	if (enableTextOverlay) {
+		//updateTextOverlay();
+	}
+
+	//setupRenderPassBeginInfo();
+
+	// Can be overriden in derived class
+	//updateDrawCommandBuffers();
+
+	// Command buffers need to be recreated as they may store
+	// references to the recreated frame buffer
+	//buildCommandBuffers();
+
+	
+
+	// Notify derived class
+	// todo: remove?
+	windowResized();
+	viewChanged();
+
+	prepared = true;
 }
+
+void vulkanApp::windowResized() {}
 
 
 void vulkanApp::setupDepthStencil() {
@@ -432,7 +365,6 @@ void vulkanApp::setupRenderPass() {
 	attachments.resize(2);
 
 	// Color attachment
-	//attachments[0].format = colorformat;
 	attachments[0].format = swapChain.colorFormat;
 	attachments[0].loadOp = vk::AttachmentLoadOp::eClear;
 	attachments[0].storeOp = vk::AttachmentStoreOp::eStore;
@@ -637,15 +569,16 @@ void vulkanApp::executePendingTransfers(vk::Semaphore transferPending) {
 
 //prepare goes here
 void vulkanApp::prepare() {
-	if (enableValidation) {
+	if (this->settings.validation) {
 		debug::setupDebugging(instance, vk::DebugReportFlagBitsEXT::eError | vk::DebugReportFlagBitsEXT::eWarning);
 	}
-	if (enableDebugMarkers) {
+	if (this->settings.debugMarkers) {
 		debug::marker::setup(device);
 	}
 	cmdPool = context.getCommandPool();
 
-	swapChain.create(size, enableVsync);
+	swapChain.create(this->size, this->settings.vsync);
+
 	setupDepthStencil();
 	setupRenderPass();
 	setupRenderPassBeginInfo();
@@ -663,25 +596,22 @@ void vulkanApp::prepare() {
 	#endif
 	if (enableTextOverlay) {
 		// Load the text rendering shaders
-		textOverlay = new TextOverlay(this->context,
-			size.width,
-			size.height,
-			renderPass);
+		textOverlay = new TextOverlay(this->context, size.width, size.height, renderPass);
 		updateTextOverlay();
 	}
 }
 
-//// todo: remove this
-//MeshBuffer vulkanApp::loadMesh(const std::string& filename, const std::vector<VertexLayout>& vertexLayout, float scale) {
-//	MeshLoader loader(&this->context, &this->assetManager);
-//	#if defined(__ANDROID__)
-//	loader.assetManager = androidApp->activity->assetManager;
-//	#endif
-//	loader.load(filename);
-//	assert(loader.m_Entries.size() > 0);
-//	loader.createMeshBuffer(vertexLayout, scale);
-//	return loader.combinedBuffer;
-//}
+// todo: remove this
+MeshBuffer vulkanApp::loadMesh(const std::string& filename, const std::vector<VertexLayout>& vertexLayout, float scale) {
+	MeshLoader loader(&this->context, &this->assetManager);
+	#if defined(__ANDROID__)
+	loader.assetManager = androidApp->activity->assetManager;
+	#endif
+	loader.load(filename);
+	assert(loader.m_Entries.size() > 0);
+	loader.createMeshBuffer(vertexLayout, scale);
+	return loader.combinedBuffer;
+}
 
 
 void vulkanApp::updateInputInfo() {
@@ -693,10 +623,24 @@ void vulkanApp::updateInputInfo() {
 	
 	// poll events
 	while (SDL_PollEvent(&e)) {
+
+		
+
 		if (e.type == SDL_QUIT) {
 			quit = true;
 			//SDL_DestroyWindow(this->SDLWindow);
 			//SDL_Quit();
+		}
+
+
+		if (e.type == SDL_WINDOWEVENT) {
+			switch (e.window.event) {
+				case SDL_WINDOWEVENT_RESIZED:
+					glm::vec2 newSize(e.window.data1, e.window.data2);
+					windowResized(newSize);
+					break;
+
+			}
 		}
 
 		if (e.type == SDL_KEYDOWN || e.type == SDL_KEYUP) {
@@ -844,9 +788,9 @@ void vulkanApp::renderLoop() {
 		// number of frames that have been rendered
 		frameCounter++;
 		// the time it took to render the frame
-		auto tFrameTime = std::chrono::duration<float, std::milli>(tNow - tFrameStart);
+		auto tFrameTime = std::chrono::duration<double, std::milli>(tNow - tFrameStart);
 		// set FPS
-		double FPS = 60.0;
+		double FPS = 60000.0;
 		std::chrono::duration<double, std::milli> minWorkTime(1000.0 / FPS);
 
 		//if (tFrameTime < minWorkTime) {
@@ -857,6 +801,16 @@ void vulkanApp::renderLoop() {
 		tFrameTime = std::chrono::duration<double, std::milli>(tNow - tFrameStart);
 		frameTimer = tFrameTime.count() / 1000.0;
 		lastFPS = 1.0 / frameTimer;
+
+
+		fpsTimer += (float)tFrameTime.count();
+		if (fpsTimer > 1000.0f) {
+			lastFPS = frameCounter;
+			updateTextOverlay();
+			fpsTimer = 0.0f;
+			frameCounter = 0;
+		}
+
 		// start of frame
 		tFrameStart = std::chrono::high_resolution_clock::now();
 

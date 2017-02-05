@@ -7,34 +7,10 @@ namespace vkx {
 	//http://stackoverflow.com/questions/12927169/how-can-i-initialize-c-object-member-variables-in-the-constructor
 	//http://stackoverflow.com/questions/14169584/passing-and-storing-a-const-reference-via-a-constructor
 
-	// constructors
-
-	// don't ever use this constructor
-	//Model::Model() //:
-	//	//context(vkx::Context()), assetManager(assetManager)
-	//{
-	//	//this->context = nullptr;
-	//	//this->meshLoader = new vkx::MeshLoader();
-	//}
-
-
-
-	//// reference way:
-	//Model::Model(vkx::Context &context, vkx::AssetManager &assetManager) :
-	//	context(context), assetManager(assetManager)// init context with reference
-	//{
-	//	this->meshLoader = new vkx::MeshLoader(context, assetManager);
-	//}
 
 	Model::Model(vkx::Context *context, vkx::AssetManager *assetManager) {
 		this->meshLoader = new vkx::MeshLoader(context, assetManager);
 	}
-
-
-	//~Model::Model(){
-	//	
-	//}
-
 
 
 	void Model::load(const std::string &filename) {

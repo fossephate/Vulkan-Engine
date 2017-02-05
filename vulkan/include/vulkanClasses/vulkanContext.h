@@ -127,7 +127,7 @@ namespace vkx {
 
 		CreateImageResult stageToDeviceImage(vk::ImageCreateInfo imageCreateInfo, const vk::MemoryPropertyFlags& memoryPropertyFlags, vk::DeviceSize size, const void* data, const std::vector<MipData>& mipData = {}) const;
 
-		CreateImageResult stageToDeviceImage(const vk::ImageCreateInfo& imageCreateInfo, const vk::MemoryPropertyFlags& memoryPropertyFlags, const gli::texture2D& tex2D) const;
+		CreateImageResult stageToDeviceImage(const vk::ImageCreateInfo& imageCreateInfo, const vk::MemoryPropertyFlags& memoryPropertyFlags, const gli::texture2d& tex2D) const;
 
 		CreateBufferResult createBuffer(const vk::BufferUsageFlags& usageFlags, const vk::MemoryPropertyFlags& memoryPropertyFlags, vk::DeviceSize size, const void * data = nullptr) const;
 
@@ -221,12 +221,12 @@ namespace vkx {
 
     // Template specialization for texture objects
     template <>
-    inline CreateBufferResult Context::createBuffer(const vk::BufferUsageFlags& usage, const gli::textureCube& texture) const {
+    inline CreateBufferResult Context::createBuffer(const vk::BufferUsageFlags& usage, const gli::texture_cube& texture) const {
         return createBuffer(usage, (vk::DeviceSize)texture.size(), texture.data());
     }
 
     template <>
-    inline CreateBufferResult Context::createBuffer(const vk::BufferUsageFlags& usage, const gli::texture2D& texture) const {
+    inline CreateBufferResult Context::createBuffer(const vk::BufferUsageFlags& usage, const gli::texture2d& texture) const {
         return createBuffer(usage, (vk::DeviceSize)texture.size(), texture.data());
     }
 

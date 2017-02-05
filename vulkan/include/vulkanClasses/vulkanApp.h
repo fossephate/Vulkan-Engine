@@ -92,10 +92,10 @@ namespace vkx
 
 	class vulkanApp {
 		private:
-			// Set to true when example is created with enabled validation layers
-			bool enableValidation{ false };
-			// Set to true when the debug marker extension is detected
-			bool enableDebugMarkers{ false };
+			//// Set to true when example is created with enabled validation layers
+			//bool enableValidation{ false };
+			//// Set to true when the debug marker extension is detected
+			//bool enableDebugMarkers{ false };
 
 			// fps timer (one second interval)
 			float fpsTimer = 0.0f;
@@ -199,6 +199,17 @@ namespace vkx
 
 		public:
 
+			/** @brief Example settings that can be changed e.g. by command line arguments */
+			struct Settings {
+				/** @brief Activates validation layers (and message output) when set to true */
+				bool validation = false;
+				/** @brief Set to true when the debug marker extension is detected */
+				bool debugMarkers = false;
+				/** @brief Set to true if fullscreen mode has been requested via command line */
+				bool fullscreen = false;
+				/** @brief Set to true if v-sync will be forced for the swapchain */
+				bool vsync = false;
+			} settings;
 			
 
 			bool prepared = false;
@@ -317,9 +328,13 @@ namespace vkx
 			// Containing view dependant matrices
 			virtual void viewChanged();
 
+			
+
 			// Called when the window has been resized
 			// Can be overriden in derived class to recreate or rebuild resources attached to the frame buffer / swapchain
-			virtual void windowResized();
+			virtual void windowResized(const glm::uvec2 &newSize);
+			// todo: fix
+			void windowResized();
 
 			// Setup default depth and stencil views
 			void setupDepthStencil();

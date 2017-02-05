@@ -24,17 +24,21 @@ namespace vkx {
 
 	class Camera : public Object3D {
 		private:
-			const float MAX_PITCH{ (float)M_PI_2 * 0.95f };
-			float fov;
-			float znear, zfar;
 
 		public:
 			enum CameraType { follow, firstperson };
 			CameraType type = CameraType::firstperson;
 
-			//bool moved = false;
 
 			bool isFirstPerson = true;
+
+			const float MAX_PITCH{ (float)M_PI_2 * 0.95f };
+			
+			float fov = 60.0f;
+			float aspect;
+			float znear;
+			float zfar;
+			
 
 			struct {
 				uint32_t index = 0;

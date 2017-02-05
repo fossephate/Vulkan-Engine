@@ -81,7 +81,7 @@ vkx::Texture vkx::TextureLoader::loadTexture(const std::string & filename, vk::F
 	AAsset_read(asset, textureData, size);
 	AAsset_close(asset);
 
-	gli::texture2D tex2D(gli::load((const char*)textureData, size));
+	gli::texture2d tex2D(gli::load((const char*)textureData, size));
 
 	free(textureData);
 	#else
@@ -93,7 +93,7 @@ vkx::Texture vkx::TextureLoader::loadTexture(const std::string & filename, vk::F
 		filenameKTX = filenameKTX + "ktx";
 	}
 
-	gli::texture2D tex2D(gli::load(filenameKTX.c_str()));
+	gli::texture2d tex2D(gli::load(filenameKTX.c_str()));
 
 	#endif
 	assert(!tex2D.empty());
@@ -101,8 +101,8 @@ vkx::Texture vkx::TextureLoader::loadTexture(const std::string & filename, vk::F
 	Texture texture;
 	texture.device = this->context.device;
 
-	texture.extent.width = (uint32_t)tex2D[0].dimensions().x;
-	texture.extent.height = (uint32_t)tex2D[0].dimensions().y;
+	texture.extent.width = (uint32_t)tex2D[0].extent().x;
+	texture.extent.height = (uint32_t)tex2D[0].extent().y;
 	texture.mipLevels = tex2D.levels();
 
 	// Get device properites for the requested texture format
@@ -144,8 +144,8 @@ vkx::Texture vkx::TextureLoader::loadTexture(const std::string & filename, vk::F
 		bufferCopyRegion.imageExtent.depth = 1;
 
 		for (uint32_t i = 0; i < texture.mipLevels; i++) {
-			bufferCopyRegion.imageExtent.width = tex2D[i].dimensions().x;
-			bufferCopyRegion.imageExtent.height = tex2D[i].dimensions().y;
+			bufferCopyRegion.imageExtent.width = tex2D[i].extent().x;
+			bufferCopyRegion.imageExtent.height = tex2D[i].extent().y;
 			bufferCopyRegion.imageSubresource.mipLevel = i;
 			bufferCopyRegion.bufferOffset = offset;
 			bufferCopyRegions.push_back(bufferCopyRegion);
@@ -309,12 +309,12 @@ vkx::Texture vkx::TextureLoader::loadCubemap(const std::string & filename, vk::F
 
 	free(textureData);
 	#else
-	gli::textureCube texCube(gli::load(filename));
+	gli::texture_cube texCube(gli::load(filename));
 	#endif    
 	Texture texture;
 	assert(!texCube.empty());
-	texture.extent.width = (uint32_t)texCube[0].dimensions().x;
-	texture.extent.height = (uint32_t)texCube[0].dimensions().y;
+	texture.extent.width = (uint32_t)texCube[0].extent().x;
+	texture.extent.height = (uint32_t)texCube[0].extent().y;
 	texture.mipLevels = texCube.levels();
 	texture.layerCount = 6;
 
@@ -373,8 +373,8 @@ vkx::Texture vkx::TextureLoader::loadCubemap(const std::string & filename, vk::F
 				bufferCopyRegion.imageSubresource.baseArrayLayer = face;
 				for (uint32_t level = 0; level < texture.mipLevels; ++level) {
 					bufferCopyRegion.imageSubresource.mipLevel = level;
-					bufferCopyRegion.imageExtent.width = texCube[face][level].dimensions().x;
-					bufferCopyRegion.imageExtent.height = texCube[face][level].dimensions().y;
+					bufferCopyRegion.imageExtent.width = texCube[face][level].extent().x;
+					bufferCopyRegion.imageExtent.height = texCube[face][level].extent().y;
 					bufferCopyRegions.push_back(bufferCopyRegion);
 					// Increase offset into staging buffer for next level / face
 					bufferCopyRegion.bufferOffset += texCube[face][level].size();
@@ -438,11 +438,11 @@ vkx::Texture vkx::TextureLoader::loadTextureArray(const std::string & filename, 
 	AAsset_read(asset, textureData, size);
 	AAsset_close(asset);
 
-	gli::texture2DArray tex2DArray(gli::load((const char*)textureData, size));
+	gli::texture2dArray tex2DArray(gli::load((const char*)textureData, size));
 
 	free(textureData);
 	#else
-	gli::texture2DArray tex2DArray(gli::load(filename));
+	gli::texture2d_array tex2DArray(gli::load(filename));
 	#endif
 
 	
@@ -450,8 +450,8 @@ vkx::Texture vkx::TextureLoader::loadTextureArray(const std::string & filename, 
 	Texture texture;
 	assert(!tex2DArray.empty());
 
-	texture.extent.width = tex2DArray.dimensions().x;
-	texture.extent.height = tex2DArray.dimensions().y;
+	texture.extent.width = tex2DArray.extent().x;
+	texture.extent.height = tex2DArray.extent().y;
 	texture.layerCount = tex2DArray.layers();
 
 	// This buffer is used as a transfer source for the buffer copy
@@ -464,7 +464,7 @@ vkx::Texture vkx::TextureLoader::loadTextureArray(const std::string & filename, 
 	// Check if all array layers have the same dimesions
 	bool sameDims = true;
 	for (uint32_t layer = 0; layer < texture.layerCount; layer++) {
-		if (tex2DArray[layer].dimensions().x != texture.extent.width || tex2DArray[layer].dimensions().y != texture.extent.height) {
+		if (tex2DArray[layer].extent().x != texture.extent.width || tex2DArray[layer].extent().y != texture.extent.height) {
 			sameDims = false;
 			break;
 		}
@@ -477,8 +477,8 @@ vkx::Texture vkx::TextureLoader::loadTextureArray(const std::string & filename, 
 		bufferCopyRegion.imageSubresource.mipLevel = 0;
 		bufferCopyRegion.imageSubresource.baseArrayLayer = 0;
 		bufferCopyRegion.imageSubresource.layerCount = texture.layerCount;
-		bufferCopyRegion.imageExtent.width = tex2DArray[0].dimensions().x;
-		bufferCopyRegion.imageExtent.height = tex2DArray[0].dimensions().y;
+		bufferCopyRegion.imageExtent.width = tex2DArray[0].extent().x;
+		bufferCopyRegion.imageExtent.height = tex2DArray[0].extent().y;
 		bufferCopyRegion.imageExtent.depth = 1;
 		bufferCopyRegion.bufferOffset = offset;
 
@@ -491,8 +491,8 @@ vkx::Texture vkx::TextureLoader::loadTextureArray(const std::string & filename, 
 			bufferCopyRegion.imageSubresource.mipLevel = 0;
 			bufferCopyRegion.imageSubresource.baseArrayLayer = layer;
 			bufferCopyRegion.imageSubresource.layerCount = 1;
-			bufferCopyRegion.imageExtent.width = tex2DArray[layer].dimensions().x;
-			bufferCopyRegion.imageExtent.height = tex2DArray[layer].dimensions().y;
+			bufferCopyRegion.imageExtent.width = tex2DArray[layer].extent().x;
+			bufferCopyRegion.imageExtent.height = tex2DArray[layer].extent().y;
 			bufferCopyRegion.imageExtent.depth = 1;
 			bufferCopyRegion.bufferOffset = offset;
 

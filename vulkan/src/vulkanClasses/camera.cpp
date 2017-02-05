@@ -7,10 +7,25 @@ namespace vkx {
 
 
 	Camera::Camera() {
-		glm::vec2 size = glm::vec2(1280, 720);// todo: remove this
 
-		this->matrices.projection = glm::perspectiveRH(glm::radians(60.0f), (float)size.x / (float)size.y, 0.0001f, 256.0f);
+		// todo: remove this
+		glm::vec2 defaultSize = glm::vec2(1280, 720);
 
+		this->fov = 60.0f;
+		this->aspect = (float)defaultSize.x / (float)defaultSize.y;
+		this->znear = 0.0001f;
+		this->zfar = 256.0f;
+
+		this->matrices.projection = glm::perspectiveRH(glm::radians(this->fov), this->aspect, this->znear, this->zfar);
+		this->matrices.projection[1][1] *= -1;
+		
+		//this->setProjection(glm::radians(60.0f), (float)defaultSize.x / (float)defaultSize.y, 0.0001f, 256.0f);
+
+		//this->matrices.projection = glm::perspectiveRH(glm::radians(60.0f), (float)defaultSize.x / (float)defaultSize.y, 0.0001f, 256.0f);
+		//this->matrices.projection[1][1] *= -1;
+
+		//this->setProjection(glm::radians(60.0f), (float)defaultSize.x / (float)defaultSize.y, 0.0001f, 256.0f);
+		//this->matrices.projection[1][1] *= -1;
 
 		/*
 		// //not// fixed by GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -22,7 +37,7 @@ namespace vkx {
 		*/
 
 
-		this->matrices.projection[1][1] *= -1;// faster
+		
 
 
 	}
@@ -82,15 +97,17 @@ namespace vkx {
 
 
 	void Camera::setProjection(float fov, float aspect, float znear, float zfar) {
-		this->fov = fov;
-		this->znear = znear;
-		this->zfar = zfar;
+		//this->fov = fov;
+		//this->aspect = aspect;
+		//this->znear = znear;
+		//this->zfar = zfar;
 
-		this->matrices.projection = glm::perspectiveRH(glm::radians(fov), aspect, znear, zfar);
+		//this->matrices.projection = glm::perspectiveRH(glm::radians(this->fov), this->aspect, this->znear, this->zfar);
+		//this->matrices.projection[1][1] *= -1;
 	}
 
-	void Camera::setAspectRatio(float aspect) {
-		this->matrices.projection = glm::perspectiveRH(glm::radians(fov), aspect, znear, zfar);
+	void Camera::setAspectRatio(float newAspect) {
+		//this->setProjection(glm::radians(this->fov), newAspect, this->znear, this->zfar);
 	}
 
 }

@@ -81,16 +81,10 @@ namespace vkx
 		vk::Fence fence;
 	};
 
-	class VulkanSwapChain
-	{
+	class VulkanSwapChain {
 	private:
 
-		vkx::Context SCContext;
-
-		vk::Instance &instance = SCContext.instance;
-		vk::Device &device = SCContext.device;
-		vk::PhysicalDevice &physicalDevice = SCContext.physicalDevice;
-		vk::Queue &queue = SCContext.queue;
+		const vkx::Context &context;
 
 		vk::SurfaceKHR surface;
 		vk::SwapchainKHR swapChain;
@@ -109,7 +103,6 @@ namespace vkx
 
 	public:
 		std::vector<SwapChainImage> scimages;
-		//std::vector<SwapChainBuffer> buffers;
 
 		std::vector<vk::Image> images;
 		
@@ -126,7 +119,9 @@ namespace vkx
 
 
 
-		void setContext(vkx::Context ctx);
+		//void setContext(vkx::Context ctx);
+
+		VulkanSwapChain(const vkx::Context &context);
 
 		// Creates an os specific surface
 		/**
@@ -158,16 +153,6 @@ namespace vkx
 		//#elif defined(__ANDROID__)
 		//	ANativeWindow* window
 		//#endif
-		
-		/**
-		* Set instance, physical and logical device to use for the swpachain and get all required function pointers
-		*
-		* @param instance Vulkan instance to use
-		* @param physicalDevice Physical device used to query properties and formats relevant to the swapchain
-		* @param device Logical representation of the device to create the swapchain for
-		*
-		*/
-		void connect(vk::Instance instance, vk::PhysicalDevice physicalDevice, vk::Device device);
 
 		/**
 		* Create the swapchain and get it's images with given width and height
