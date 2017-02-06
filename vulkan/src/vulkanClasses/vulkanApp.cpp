@@ -256,15 +256,7 @@ void vulkanApp::windowResized(const glm::uvec2 &newSize) {
 	this->size.height = newSize.y;
 	swapChain.create(this->size, this->settings.vsync);
 
-	camera.matrices.projection = glm::perspectiveRH(glm::radians(camera.fov), (float)this->size.width / (float)this->size.height, camera.znear, camera.zfar);
-	camera.matrices.projection[1][1] *= -1;
-
-	//camera.setAspectRatio((float)this->size.width / (float)this->size.height);
-
-	//glm::vec2 defaultSize = glm::vec2(1280, 720);
-	//camera.matrices.projection = glm::perspectiveRH(glm::radians(60.0f), (float)this->size.width / (float)defaultSize.y, 0.0001f, 256.0f);
-	//camera.matrices.projection[1][1] *= -1;
-
+	camera.setAspectRatio((float)this->size.width / (float)this->size.height);
 
 	// Recreate the frame buffers
 	setupDepthStencil();
@@ -272,19 +264,17 @@ void vulkanApp::windowResized(const glm::uvec2 &newSize) {
 	setupFrameBuffer();
 
 	if (enableTextOverlay) {
-		//updateTextOverlay();
+		updateTextOverlay();
 	}
 
-	//setupRenderPassBeginInfo();
+	setupRenderPassBeginInfo();
 
 	// Can be overriden in derived class
-	//updateDrawCommandBuffers();
+	updateDrawCommandBuffers();
 
 	// Command buffers need to be recreated as they may store
 	// references to the recreated frame buffer
-	//buildCommandBuffers();
-
-	
+	buildCommandBuffers();
 
 	// Notify derived class
 	// todo: remove?

@@ -7,39 +7,9 @@ namespace vkx {
 
 
 	Camera::Camera() {
-
 		// todo: remove this
 		glm::vec2 defaultSize = glm::vec2(1280, 720);
-
-		this->fov = 60.0f;
-		this->aspect = (float)defaultSize.x / (float)defaultSize.y;
-		this->znear = 0.0001f;
-		this->zfar = 256.0f;
-
-		this->matrices.projection = glm::perspectiveRH(glm::radians(this->fov), this->aspect, this->znear, this->zfar);
-		this->matrices.projection[1][1] *= -1;
-		
-		//this->setProjection(glm::radians(60.0f), (float)defaultSize.x / (float)defaultSize.y, 0.0001f, 256.0f);
-
-		//this->matrices.projection = glm::perspectiveRH(glm::radians(60.0f), (float)defaultSize.x / (float)defaultSize.y, 0.0001f, 256.0f);
-		//this->matrices.projection[1][1] *= -1;
-
-		//this->setProjection(glm::radians(60.0f), (float)defaultSize.x / (float)defaultSize.y, 0.0001f, 256.0f);
-		//this->matrices.projection[1][1] *= -1;
-
-		/*
-		// //not// fixed by GLM_FORCE_DEPTH_ZERO_TO_ONE
-		https://vulkan-tutorial.com/Uniform_buffers
-		ubo.proj[1][1] *= -1;
-		GLM was originally designed for OpenGL, where the Y coordinate of the clip coordinates is inverted.
-		The easiest way to compensate for that is to flip the sign on the scaling factor of the Y axis in the projection matrix.
-		If you don't do this, then the image will be rendered upside down.
-		*/
-
-
-		
-
-
+		this->setProjection(80.0f, (float)defaultSize.x / (float)defaultSize.y, 0.0001f, 256.0f);
 	}
 
 
@@ -97,17 +67,24 @@ namespace vkx {
 
 
 	void Camera::setProjection(float fov, float aspect, float znear, float zfar) {
-		//this->fov = fov;
-		//this->aspect = aspect;
-		//this->znear = znear;
-		//this->zfar = zfar;
+		this->fov = fov;
+		this->aspect = aspect;
+		this->znear = znear;
+		this->zfar = zfar;
 
-		//this->matrices.projection = glm::perspectiveRH(glm::radians(this->fov), this->aspect, this->znear, this->zfar);
-		//this->matrices.projection[1][1] *= -1;
+		this->matrices.projection = glm::perspectiveRH(glm::radians(fov), aspect, znear, zfar);
+		/*
+		https://vulkan-tutorial.com/Uniform_buffers
+		ubo.proj[1][1] *= -1;
+		GLM was originally designed for OpenGL, where the Y coordinate of the clip coordinates is inverted.
+		The easiest way to compensate for that is to flip the sign on the scaling factor of the Y axis in the projection matrix.
+		If you don't do this, then the image will be rendered upside down.
+		*/
+		this->matrices.projection[1][1] *= -1;
 	}
 
-	void Camera::setAspectRatio(float newAspect) {
-		//this->setProjection(glm::radians(this->fov), newAspect, this->znear, this->zfar);
+	void Camera::setAspectRatio(float aspect) {
+		this->setProjection(this->fov, aspect, this->znear, this->zfar);
 	}
 
 }
