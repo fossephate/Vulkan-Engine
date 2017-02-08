@@ -44,9 +44,7 @@ namespace vkx {
 
 		Mesh(vkx::MeshBuffer meshBuffer);
 
-		//void createMeshBuffer(const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
-		//void setupVertexInputState(const std::vector<VertexLayout> &layout);
-		//void drawIndexed(const vk::CommandBuffer& cmdBuffer);
+		void destroy();
 
 
 	};

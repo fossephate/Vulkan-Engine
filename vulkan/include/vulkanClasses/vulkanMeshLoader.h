@@ -115,11 +115,14 @@ namespace vkx {
 		for (auto& layoutDetail : layout) {
 			switch (layoutDetail) {
 				// UV only has two components
-			case VERTEX_LAYOUT_UV:
-				vSize += 2 * sizeof(float);
-				break;
-			default:
-				vSize += 3 * sizeof(float);
+				case VERTEX_LAYOUT_UV:
+					vSize += 2 * sizeof(float);
+					break;
+				case VERTEX_LAYOUT_DUMMY_VEC4:
+					vSize += 4 * sizeof(float);
+					break;
+				default:
+					vSize += 3 * sizeof(float);
 			}
 		}
 		return vSize;

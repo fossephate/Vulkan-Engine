@@ -51,6 +51,15 @@ namespace vkx {
 	void Model::drawIndexed(const vk::CommandBuffer &cmdBuffer) {
 	}
 
+	void Model::destroy() {
+		for (auto &mesh : this->meshes) {
+			mesh.meshBuffer.destroy();
+		}
+		// todo:
+		// more to delete:
+		delete this->meshLoader;
+	}
+
 
 
 }

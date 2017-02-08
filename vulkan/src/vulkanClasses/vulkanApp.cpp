@@ -614,8 +614,6 @@ void vulkanApp::updateInputInfo() {
 	// poll events
 	while (SDL_PollEvent(&e)) {
 
-		
-
 		if (e.type == SDL_QUIT) {
 			quit = true;
 			//SDL_DestroyWindow(this->SDLWindow);
@@ -780,7 +778,7 @@ void vulkanApp::renderLoop() {
 		// the time it took to render the frame
 		auto tFrameTime = std::chrono::duration<double, std::milli>(tNow - tFrameStart);
 		// set FPS
-		double FPS = 60000.0;
+		double FPS = 60.0;
 		std::chrono::duration<double, std::milli> minWorkTime(1000.0 / FPS);
 
 		//if (tFrameTime < minWorkTime) {

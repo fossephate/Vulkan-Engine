@@ -5,4 +5,5 @@ glslangvalidator -V deferred.frag -o deferred.frag.spv
 glslangvalidator -V mrt.vert -o mrt.vert.spv
 glslangvalidator -V mrt.frag -o mrt.frag.spv
 
+
 pause

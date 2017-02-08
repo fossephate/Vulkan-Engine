@@ -17,4 +17,8 @@ namespace vkx {
 		this->meshBuffer = meshBuffer;
 	}
 
+	void Mesh::destroy() {
+		this->meshBuffer.destroy();
+	}
+
 }

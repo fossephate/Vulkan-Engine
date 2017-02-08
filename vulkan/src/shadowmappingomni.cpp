@@ -637,6 +637,128 @@ public:
 		uniformData.offscreen.copy(uboOffscreenVS);
 	}
 
+
+
+
+
+
+
+
+
+
+
+
+
+	void updateWorld() {
+
+
+		// z-up translations
+		if (!keyStates.shift) {
+			if (keyStates.w) {
+				camera.translateLocal(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
+			}
+			if (keyStates.s) {
+				camera.translateLocal(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
+			}
+			if (keyStates.a) {
+				camera.translateLocal(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
+			}
+			if (keyStates.d) {
+				camera.translateLocal(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
+			}
+			if (keyStates.q) {
+				camera.translateLocal(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
+			}
+			if (keyStates.e) {
+				camera.translateLocal(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
+			}
+		} else {
+			if (keyStates.w) {
+				camera.translateWorld(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
+			}
+			if (keyStates.s) {
+				camera.translateWorld(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
+			}
+			if (keyStates.a) {
+				camera.translateWorld(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
+			}
+			if (keyStates.d) {
+				camera.translateWorld(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
+			}
+			if (keyStates.q) {
+				camera.translateWorld(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
+			}
+			if (keyStates.e) {
+				camera.translateWorld(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
+			}
+		}
+
+
+
+		// z-up rotations
+		camera.rotationSpeed = -0.005f;
+
+		if (mouse.leftMouseButton.state) {
+			camera.rotateWorldZ(mouse.delta.x*camera.rotationSpeed);
+			camera.rotateLocalX(mouse.delta.y*camera.rotationSpeed);
+
+			if (!camera.isFirstPerson) {
+				camera.sphericalCoords.theta += mouse.delta.x*camera.rotationSpeed;
+				camera.sphericalCoords.phi -= mouse.delta.y*camera.rotationSpeed;
+			}
+
+
+			SDL_SetRelativeMouseMode((SDL_bool)1);
+		} else {
+			bool isCursorLocked = (bool)SDL_GetRelativeMouseMode();
+			if (isCursorLocked) {
+				SDL_SetRelativeMouseMode((SDL_bool)0);
+				SDL_WarpMouseInWindow(this->SDLWindow, mouse.leftMouseButton.pressedCoords.x, mouse.leftMouseButton.pressedCoords.y);
+			}
+		}
+
+
+		camera.rotationSpeed = -0.02f;
+
+
+		if (keyStates.up_arrow) {
+			camera.rotateLocalX(camera.rotationSpeed);
+		}
+		if (keyStates.down_arrow) {
+			camera.rotateLocalX(-camera.rotationSpeed);
+		}
+
+		if (!keyStates.shift) {
+			if (keyStates.left_arrow) {
+				camera.rotateWorldZ(-camera.rotationSpeed);
+			}
+			if (keyStates.right_arrow) {
+				camera.rotateWorldZ(camera.rotationSpeed);
+			}
+		} else {
+			//if (keyStates.left_arrow) {
+			//	camera.rotateWorldY(-camera.rotationSpeed);
+			//}
+			//if (keyStates.right_arrow) {
+			//	camera.rotateWorldY(camera.rotationSpeed);
+			//}
+		}
+
+
+
+
+	}
+
+
+
+
+
+
+
+
+
+
+
 	void prepare() {
 		offscreen.size = glm::uvec2(TEX_DIM);
 		offscreen.colorFormats = { { vk::Format::eR32Sfloat } };

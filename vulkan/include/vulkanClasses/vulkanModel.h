@@ -64,6 +64,8 @@ namespace vkx {
 			//void setupVertexInputState(const std::vector<VertexLayout> &layout);
 
 			void drawIndexed(const vk::CommandBuffer& cmdBuffer);
+
+			void destroy();
 	};
 
 }

@@ -106,6 +106,10 @@ namespace vkx {
 			vk::DescriptorSetLayout *materialDescriptorSetLayout{ nullptr };
 			vk::DescriptorPool *materialDescriptorPool{ nullptr };
 
+
+			vk::DescriptorSetLayout *materialDescriptorSetLayoutDeferred{ nullptr };
+			vk::DescriptorPool *materialDescriptorPoolDeferred{ nullptr };
+
 			//vkx::Context &context;
 
 

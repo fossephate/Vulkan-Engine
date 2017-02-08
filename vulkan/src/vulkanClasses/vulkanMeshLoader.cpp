@@ -224,11 +224,6 @@ namespace vkx {
 
 	void vkx::MeshLoader::loadMeshes(const aiScene *pScene) {
 
-		//for (int i = 0; i < m_Entries.size(); ++i) {
-
-		//}
-
-
 		// init each entry with mesh data
 		for (unsigned int index = 0; index < m_Entries.size(); ++index) {
 

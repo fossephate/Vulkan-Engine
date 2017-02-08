@@ -11,6 +11,24 @@
 */
 
 #include "vulkanApp.h"
+#include "vulkanOffscreenExampleBase.hpp"
+
+
+
+
+// Maximum number of bones per mesh
+// Must not be higher than same const in skinning shader
+#define MAX_BONES 64
+// Maximum number of bones per vertex
+#define MAX_BONES_PER_VERTEX 4
+// Maximum number of skinned meshes (by 65k uniform limit)
+#define MAX_SKINNED_MESHES 10
+// Texture properties
+#define TEX_DIM 1024
+
+
+
+
 
 std::vector<vkx::VertexLayout> meshVertexLayout =
 {
@@ -33,13 +51,14 @@ std::vector<vkx::VertexLayout> skinnedMeshVertexLayout =
 	vkx::VertexLayout::VERTEX_LAYOUT_DUMMY_VEC4
 };
 
-// Maximum number of bones per mesh
-// Must not be higher than same const in skinning shader
-#define MAX_BONES 64
-// Maximum number of bones per vertex
-#define MAX_BONES_PER_VERTEX 4
-// Maximum number of skinned meshes (by 65k uniform limit)
-#define MAX_SKINNED_MESHES 10
+
+std::vector<vkx::VertexLayout> deferredVertexLayout =
+{
+	vkx::VertexLayout::VERTEX_LAYOUT_POSITION,
+	vkx::VertexLayout::VERTEX_LAYOUT_UV,
+	vkx::VertexLayout::VERTEX_LAYOUT_COLOR,
+	vkx::VertexLayout::VERTEX_LAYOUT_NORMAL
+};
 
 
 
@@ -64,29 +83,29 @@ inline glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4* from) {
 // There is currently no standard for this in C++ that works across all platforms and vendors, so we abstract this
 void* alignedAlloc(size_t size, size_t alignment) {
 	void *data = nullptr;
-	#if defined(_MSC_VER) || defined(__MINGW32__)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 	data = _aligned_malloc(size, alignment);
-	#else 
+#else 
 	int res = posix_memalign(&data, alignment, size);
 	if (res != 0)
 		data = nullptr;
-	#endif
+#endif
 	return data;
 }
 
 void alignedFree(void* data) {
-	#if	defined(_MSC_VER) || defined(__MINGW32__)
+#if	defined(_MSC_VER) || defined(__MINGW32__)
 	_aligned_free(data);
-	#else 
+#else 
 	free(data);
-	#endif
+#endif
 }
 
 
 
 
 
-class VulkanExample : public vkx::vulkanApp {
+class VulkanExample : public vkx::OffscreenExampleBase {
 
 public:
 
@@ -97,7 +116,10 @@ public:
 
 	std::vector<std::shared_ptr<vkx::PhysicsObject>> physicsObjects;
 
-	//std::vector<std::shared_ptr<vkx::SkinnedMesh>> skinnedMeshes;
+	struct {
+		vkx::MeshBuffer example;
+		vkx::MeshBuffer quad;
+	} meshBuffers;
 
 
 	struct {
@@ -114,8 +136,6 @@ public:
 		glm::mat4 view;
 		glm::mat4 projection;
 
-		//glm::vec3 lightPos;
-		//glm::vec3 cameraPos;
 		glm::vec4 lightPos;
 		glm::vec4 cameraPos;
 		glm::mat4 bones[MAX_BONES*MAX_SKINNED_MESHES];
@@ -125,19 +145,9 @@ public:
 	struct MatrixNode {
 		glm::mat4 model;
 		glm::mat4 boneIndex;
-		//glm::vec4 padding[3];
-		//int boneIndex;
-		//glm::mat4 bones[MAX_BONES];
-		//glm::mat4 g2;
-		//glm::mat4 g3;
 	};
 
 	std::vector<MatrixNode> matrixNodes;
-
-	//MatrixNode *mNodes = nullptr;
-
-	//glm::mat4 *modelMatrices = nullptr;
-	MatrixNode *modelMatrices = nullptr;
 
 	// material properties not defined here
 	std::vector<vkx::MaterialProperties> materialNodes;
@@ -147,7 +157,7 @@ public:
 	struct {
 		glm::mat4 bones[1];
 	} uboBoneData;
-	
+
 
 
 	unsigned int alignedMatrixSize;
@@ -156,6 +166,8 @@ public:
 	size_t dynamicAlignment;
 
 	float globalP = 0.0f;
+
+	bool debugDisplay = false;
 
 	//glm::vec3 lightPos = glm::vec3(1.0f, -2.0f, 2.0f);
 	glm::vec4 lightPos = glm::vec4(1.0f, -2.0f, 2.0f, 1.0f);
@@ -170,13 +182,16 @@ public:
 		vkx::Texture floor;
 	} textures;
 
+
+
+
 	struct {
 		vk::Pipeline meshes;
 		vk::Pipeline skinnedMeshes;
 		vk::Pipeline blending;
 		vk::Pipeline wireframe;
 
-		
+
 		vk::Pipeline deferred;
 		vk::Pipeline offscreen;
 		vk::Pipeline debug;
@@ -186,8 +201,9 @@ public:
 
 	struct {
 		vk::PipelineLayout basic;
-		
+
 		vk::PipelineLayout deferred;
+
 		vk::PipelineLayout offscreen;
 	} pipelineLayouts;
 
@@ -197,11 +213,20 @@ public:
 	std::vector<vk::DescriptorSet> descriptorSets;
 	std::vector<vk::DescriptorPool> descriptorPools;
 
+
 	struct {
 		vk::PipelineVertexInputStateCreateInfo inputState;
 		std::vector<vk::VertexInputBindingDescription> bindingDescriptions;
 		std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
 	} vertices;
+
+	struct {
+		vk::PipelineVertexInputStateCreateInfo inputState;
+		std::vector<vk::VertexInputBindingDescription> bindingDescriptions;
+		std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
+	} verticesDeferred;
+
+
 
 
 	struct {
@@ -225,8 +250,40 @@ public:
 	} uboFSLights;
 
 
+	vk::DescriptorPool descriptorPoolDeferred;
+	vk::DescriptorSetLayout descriptorSetLayoutDeferred;
 
-	VulkanExample() : vkx::vulkanApp(ENABLE_VALIDATION) {
+	struct {
+		vk::DescriptorSet basic;
+
+		vk::DescriptorSet offscreen;
+	} descriptorSetsDeferred;
+
+
+
+	struct {
+		vkx::UniformData vsFullScreen;
+		vkx::UniformData vsOffscreen;
+		vkx::UniformData fsLights;
+	} uniformDataDeferred;
+
+	vk::CommandBuffer offscreenCmdBuffer;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	VulkanExample() : /*vkx::vulkanApp*/ vkx::OffscreenExampleBase(ENABLE_VALIDATION)/*, offscreen(context)*/ {
 		// todo: pick better numbers
 		// or pick based on screen size
 		size.width = 1280;
@@ -275,32 +332,52 @@ public:
 
 		// todo: fix this all up
 
+
+		//offscreen.destroy();
+
 		// destroy pipelines
 		device.destroyPipeline(pipelines.meshes);
 		device.destroyPipeline(pipelines.skinnedMeshes);
 
+
+		device.destroyPipeline(pipelines.deferred);
+		device.destroyPipeline(pipelines.offscreen);
+		device.destroyPipeline(pipelines.debug);
+
+
+
+		// destroy pipeline layouts
 		device.destroyPipelineLayout(pipelineLayouts.basic);
+
+		device.destroyPipelineLayout(pipelineLayouts.deferred);
+		device.destroyPipelineLayout(pipelineLayouts.offscreen);
 
 
 		//device.destroyDescriptorSetLayout(descriptorSetLayout);
 
+		// destroy uniform buffers
 		uniformData.sceneVS.destroy();
 
+		// destroy offscreen uniform buffers
+		uniformDataDeferred.vsOffscreen.destroy();
+		uniformDataDeferred.vsFullScreen.destroy();
+		uniformDataDeferred.fsLights.destroy();
+
+		// destroy offscreen command buffer
+		device.freeCommandBuffers(cmdPool, offscreenCmdBuffer);
+
+
+
 		for (auto &mesh : meshes) {
-			//device.destroyBuffer(mesh->meshBuffer.vertices.buffer);
-			//device.freeMemory(mesh->meshBuffer.vertices.memory);
-			//device.destroyBuffer(mesh->meshBuffer.indices.buffer);
-			//device.freeMemory(mesh->meshBuffer.indices.memory);
-			mesh->meshBuffer.destroy();
+			mesh->destroy();
+		}
+
+		for (auto &model : models) {
+			model->destroy();
 		}
 
 
 		for (auto &skinnedMesh : skinnedMeshes) {
-			//device.destroyBuffer(skinnedMesh->meshBuffer.vertices.buffer);
-			//device.freeMemory(skinnedMesh->meshBuffer.vertices.memory);
-			//device.destroyBuffer(skinnedMesh->meshBuffer.indices.buffer);
-			//device.freeMemory(skinnedMesh->meshBuffer.indices.memory);
-			//skinnedMesh->meshBuffer.destroy();
 			skinnedMesh->destroy();
 		}
 
@@ -310,7 +387,9 @@ public:
 
 		//textures.colorMap.destroy();
 
-		//uniformData.vsScene.destroy();
+		uniformDataDeferred.vsOffscreen.destroy();
+		uniformDataDeferred.vsFullScreen.destroy();
+		uniformDataDeferred.fsLights.destroy();
 
 		//// Destroy and free mesh resources 
 		//skinnedMesh->meshBuffer.destroy();
@@ -326,7 +405,7 @@ public:
 
 
 
-	void prepareVertices() {
+	void prepareVertexDescriptions() {
 
 		struct meshVertex {
 			glm::vec3 pos;
@@ -346,31 +425,15 @@ public:
 			uint32_t boneIDs[4];
 		};
 
-		//// Binding description
-		//bindingDescriptions.resize(1);
-		//bindingDescriptions[0] =
-		//	vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, sizeof(meshVertex), vk::VertexInputRate::eVertex);
 
-		//// Attribute descriptions
-		//attributeDescriptions.resize(4);
-		//// Location 0 : Position
-		//attributeDescriptions[0] =
-		//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 0, vk::Format::eR32G32B32Sfloat, 0);
-		//// Location 1 : Normal
-		//attributeDescriptions[1] =
-		//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 1, vk::Format::eR32G32B32Sfloat, sizeof(float) * 3);
-		//// Location 2 : UV
-		//attributeDescriptions[2] =
-		//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 2, vk::Format::eR32G32Sfloat, sizeof(float) * 6);
-		//// Location 3 : Color
-		//attributeDescriptions[3] =
-		//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 3, vk::Format::eR32G32B32Sfloat, sizeof(float) * 8);
 
+		/* not deferred */
 
 		// Binding description
 		vertices.bindingDescriptions.resize(1);
 		vertices.bindingDescriptions[0] =
 			vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, sizeof(skinnedMeshVertex), vk::VertexInputRate::eVertex);
+			//vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, vkx::vertexSize(skinnedMeshVertexLayout), vk::VertexInputRate::eVertex);
 
 		// Attribute descriptions
 		// Describes memory layout and shader positions
@@ -408,82 +471,106 @@ public:
 
 
 
+		/* deferred */
+
+		// Binding description
+		verticesDeferred.bindingDescriptions.resize(1);
+		verticesDeferred.bindingDescriptions[0] =
+			vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, vkx::vertexSize(deferredVertexLayout), vk::VertexInputRate::eVertex);
+			//vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, sizeof(meshVertex), vk::VertexInputRate::eVertex);
+
+		// Attribute descriptions
+		// Describes memory layout and shader positions
+		verticesDeferred.attributeDescriptions.resize(4);
+		// Location 0 : Position
+		verticesDeferred.attributeDescriptions[0] =
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 0, vk::Format::eR32G32B32Sfloat, 0);
+		// Location 1 : (UV) Texture coordinates
+		verticesDeferred.attributeDescriptions[1] =
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 1, vk::Format::eR32G32Sfloat, sizeof(float) * 3);
+		// Location 2 : Color
+		verticesDeferred.attributeDescriptions[2] =
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 2, vk::Format::eR32G32B32Sfloat, sizeof(float) * 5);
+		// Location 3 : Normal
+		verticesDeferred.attributeDescriptions[3] =
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 3, vk::Format::eR32G32B32Sfloat, sizeof(float) * 8);
+		//// Location 4 : Bone weights
+		//verticesDeferred.attributeDescriptions[4] =
+		//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 4, vk::Format::eR32G32B32A32Sfloat, sizeof(float) * 11);
+		//// Location 5 : Bone IDs
+		//verticesDeferred.attributeDescriptions[5] =
+		//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 5, vk::Format::eR32G32B32A32Sint, sizeof(float) * 15);
 
 
 
+		verticesDeferred.inputState.vertexBindingDescriptionCount = verticesDeferred.bindingDescriptions.size();
+		verticesDeferred.inputState.pVertexBindingDescriptions = verticesDeferred.bindingDescriptions.data();
 
+		verticesDeferred.inputState.vertexAttributeDescriptionCount = verticesDeferred.attributeDescriptions.size();
+		verticesDeferred.inputState.pVertexAttributeDescriptions = verticesDeferred.attributeDescriptions.data();
 
 	}
 
 
-
-
-
-
-
-
-
-
-
 	void setupDescriptorPool() {
-		
+
 		// scene data
-		std::vector<vk::DescriptorPoolSize> poolSizes0 =
+		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes0 =
 		{
 			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 1),// mostly static data
 		};
 
-		vk::DescriptorPoolCreateInfo descriptorPool0Info =
-			vkx::descriptorPoolCreateInfo(poolSizes0.size(), poolSizes0.data(), 1);
+		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo0 =
+			vkx::descriptorPoolCreateInfo(descriptorPoolSizes0.size(), descriptorPoolSizes0.data(), 1);
 
 
-		vk::DescriptorPool descPool0 = device.createDescriptorPool(descriptorPool0Info);
-		descriptorPools.push_back(descPool0);
+		vk::DescriptorPool descriptorPool0 = device.createDescriptorPool(descriptorPoolCreateInfo0);
+		descriptorPools.push_back(descriptorPool0);
 
 
 
 
 		// matrix data
-		std::vector<vk::DescriptorPoolSize> poolSizes1 =
+		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes1 =
 		{
 			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1),// non-static data
 		};
 
 		vk::DescriptorPoolCreateInfo descriptorPool1Info =
-			vkx::descriptorPoolCreateInfo(poolSizes1.size(), poolSizes1.data(), 1);
+			vkx::descriptorPoolCreateInfo(descriptorPoolSizes1.size(), descriptorPoolSizes1.data(), 1);
 
-		vk::DescriptorPool descPool1 = device.createDescriptorPool(descriptorPool1Info);
-		descriptorPools.push_back(descPool1);
+		vk::DescriptorPool descriptorPool1 = device.createDescriptorPool(descriptorPool1Info);
+		descriptorPools.push_back(descriptorPool1);
 
 
 
 		// material data
-		std::vector<vk::DescriptorPoolSize> poolSizes2 =
+		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes2 =
 		{
 			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1),
 		};
 
-		vk::DescriptorPoolCreateInfo descriptorPool2Info =
-			vkx::descriptorPoolCreateInfo(poolSizes2.size(), poolSizes2.data(), 1);
+		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo2 =
+			vkx::descriptorPoolCreateInfo(descriptorPoolSizes2.size(), descriptorPoolSizes2.data(), 1);
 
 
-		vk::DescriptorPool descPool2 = device.createDescriptorPool(descriptorPool2Info);
-		descriptorPools.push_back(descPool2);
+		vk::DescriptorPool descriptorPool2 = device.createDescriptorPool(descriptorPoolCreateInfo2);
+		descriptorPools.push_back(descriptorPool2);
 
 
 
 		// combined image sampler
-		std::vector<vk::DescriptorPoolSize> poolSizes3 =
+		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes3 =
 		{
 			vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 10000),
 		};
 
-		vk::DescriptorPoolCreateInfo descriptorPool3Info =
-			vkx::descriptorPoolCreateInfo(poolSizes3.size(), poolSizes3.data(), 10000);
+		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo3 =
+			vkx::descriptorPoolCreateInfo(descriptorPoolSizes3.size(), descriptorPoolSizes3.data(), 10000);
 
 
-		vk::DescriptorPool descPool3 = device.createDescriptorPool(descriptorPool3Info);
-		descriptorPools.push_back(descPool3);
+		vk::DescriptorPool descriptorPool3 = device.createDescriptorPool(descriptorPoolCreateInfo3);
+		descriptorPools.push_back(descriptorPool3);
 
 		this->assetManager.materialDescriptorPool = &descriptorPools[3];
 
@@ -491,19 +578,31 @@ public:
 
 
 		//// bone data
-		//std::vector<vk::DescriptorPoolSize> poolSizes4 =
+		//std::vector<vk::DescriptorPoolSize> descriptorPoolSizes4 =
 		//{
 		//	vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 1),// static bone data
 		//};
 
-		//vk::DescriptorPoolCreateInfo descriptorPool4Info =
-		//	vkx::descriptorPoolCreateInfo(poolSizes4.size(), poolSizes4.data(), 1);
+		//vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo4 =
+		//	vkx::descriptorPoolCreateInfo(descriptorPoolSizes4.size(), descriptorPoolSizes4.data(), 1);
 
-		//vk::DescriptorPool descPool4 = device.createDescriptorPool(descriptorPool4Info);
-		//descriptorPools.push_back(descPool4);
+		//vk::DescriptorPool descriptorPool4 = device.createDescriptorPool(descriptorPoolCreateInfo4);
+		//descriptorPools.push_back(descriptorPool4);
 
 
-		
+		std::vector<vk::DescriptorPoolSize> descriptorPoolSizesDeferred =
+		{
+			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 8),
+			vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 8)
+		};
+
+		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfoDeferred =
+			vkx::descriptorPoolCreateInfo(descriptorPoolSizesDeferred.size(), descriptorPoolSizesDeferred.data(), 2);
+
+		descriptorPoolDeferred = device.createDescriptorPool(descriptorPoolCreateInfoDeferred);
+
+
+
 
 	}
 
@@ -513,7 +612,7 @@ public:
 		// descriptor set layout 0
 		// scene data
 
-		std::vector<vk::DescriptorSetLayoutBinding> setLayout0Bindings =
+		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings0 =
 		{
 			// Binding 0 : Vertex shader uniform buffer
 			vkx::descriptorSetLayoutBinding(
@@ -522,19 +621,18 @@ public:
 				0),// binding 0
 		};
 
-		vk::DescriptorSetLayoutCreateInfo descriptorLayout0 =
-			vkx::descriptorSetLayoutCreateInfo(setLayout0Bindings.data(), setLayout0Bindings.size());
+		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo0 =
+			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings0.data(), descriptorSetLayoutBindings0.size());
 
-		vk::DescriptorSetLayout setLayout0 = device.createDescriptorSetLayout(descriptorLayout0);
-
-		descriptorSetLayouts.push_back(setLayout0);
+		vk::DescriptorSetLayout descriptorSetLayout0 = device.createDescriptorSetLayout(descriptorSetLayoutCreateInfo0);
+		descriptorSetLayouts.push_back(descriptorSetLayout0);
 
 
 
 		// descriptor set layout 1
 		// matrix data
 
-		std::vector<vk::DescriptorSetLayoutBinding> setLayout1Bindings =
+		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings1 =
 		{
 			// Binding 0 : Vertex shader dynamic uniform buffer
 			vkx::descriptorSetLayoutBinding(
@@ -543,12 +641,11 @@ public:
 				0),// binding 0
 		};
 
-		vk::DescriptorSetLayoutCreateInfo descriptorLayout1 =
-			vkx::descriptorSetLayoutCreateInfo(setLayout1Bindings.data(), setLayout1Bindings.size());
+		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo1 =
+			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings1.data(), descriptorSetLayoutBindings1.size());
 
-		vk::DescriptorSetLayout setLayout1 = device.createDescriptorSetLayout(descriptorLayout1);
-
-		descriptorSetLayouts.push_back(setLayout1);
+		vk::DescriptorSetLayout descriptorSetLayout1 = device.createDescriptorSetLayout(descriptorSetLayoutCreateInfo1);
+		descriptorSetLayouts.push_back(descriptorSetLayout1);
 
 
 
@@ -557,7 +654,7 @@ public:
 		// descriptor set layout 2
 		// material data
 
-		std::vector<vk::DescriptorSetLayoutBinding> setLayout2Bindings =
+		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings2 =
 		{
 			// Binding 0 : Vertex shader dynamic uniform buffer
 			vkx::descriptorSetLayoutBinding(
@@ -566,19 +663,19 @@ public:
 				0),// binding 0
 		};
 
-		vk::DescriptorSetLayoutCreateInfo descriptorLayout2 =
-			vkx::descriptorSetLayoutCreateInfo(setLayout2Bindings.data(), setLayout2Bindings.size());
+		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo2 =
+			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings2.data(), descriptorSetLayoutBindings2.size());
 
-		vk::DescriptorSetLayout setLayout2 = device.createDescriptorSetLayout(descriptorLayout2);
+		vk::DescriptorSetLayout descriptorSetLayout2 = device.createDescriptorSetLayout(descriptorSetLayoutCreateInfo2);
 
-		descriptorSetLayouts.push_back(setLayout2);
+		descriptorSetLayouts.push_back(descriptorSetLayout2);
 
 
 
 		// descriptor set layout 3
 		// combined image sampler
 
-		std::vector<vk::DescriptorSetLayoutBinding> setLayout3Bindings =
+		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings3 =
 		{
 			// Binding 0 : Fragment shader color map image sampler
 			vkx::descriptorSetLayoutBinding(
@@ -587,12 +684,11 @@ public:
 				0),// binding 0
 		};
 
-		vk::DescriptorSetLayoutCreateInfo descriptorLayout3 =
-			vkx::descriptorSetLayoutCreateInfo(setLayout3Bindings.data(), setLayout3Bindings.size());
+		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo3 =
+			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings3.data(), descriptorSetLayoutBindings3.size());
 
-		vk::DescriptorSetLayout setLayout3 = device.createDescriptorSetLayout(descriptorLayout3);
-
-		descriptorSetLayouts.push_back(setLayout3);
+		vk::DescriptorSetLayout descriptorSetLayout3 = device.createDescriptorSetLayout(descriptorSetLayoutCreateInfo3);
+		descriptorSetLayouts.push_back(descriptorSetLayout3);
 
 		this->assetManager.materialDescriptorSetLayout = &descriptorSetLayouts[3];
 
@@ -605,7 +701,7 @@ public:
 		//// descriptor set layout 4
 		//// bone data
 
-		//std::vector<vk::DescriptorSetLayoutBinding> setLayout4Bindings =
+		//std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings4 =
 		//{
 		//	// Binding 0 : Vertex shader uniform buffer
 		//	vkx::descriptorSetLayoutBinding(
@@ -614,11 +710,11 @@ public:
 		//		0),// binding 0
 		//};
 
-		//vk::DescriptorSetLayoutCreateInfo descriptorLayout4 =
-		//	vkx::descriptorSetLayoutCreateInfo(setLayout4Bindings.data(), setLayout4Bindings.size());
+		//vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo4 =
+		//	vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings4.data(), descriptorSetLayoutBindings4.size());
 
-		//vk::DescriptorSetLayout setLayout4 = device.createDescriptorSetLayout(descriptorLayout4);
-		//descriptorSetLayouts.push_back(setLayout4);
+		//vk::DescriptorSetLayout descriptorSetLayout4 = device.createDescriptorSetLayout(descriptorSetLayoutCreateInfo4);
+		//descriptorSetLayouts.push_back(descriptorSetLayout4);
 
 
 
@@ -631,33 +727,80 @@ public:
 
 		pipelineLayouts.basic = device.createPipelineLayout(pPipelineLayoutCreateInfo);
 
+
+
+
+
+
+
+
+		// Deferred shading layout
+		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindingsDeferred =
+		{
+			// Binding 0 : Vertex shader uniform buffer
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eUniformBuffer,
+				vk::ShaderStageFlagBits::eVertex,
+				0),
+			// Binding 1 : Position texture target / Scene colormap
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eCombinedImageSampler,
+				vk::ShaderStageFlagBits::eFragment,
+				1),
+			// Binding 2 : Normals texture target
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eCombinedImageSampler,
+				vk::ShaderStageFlagBits::eFragment,
+				2),
+			// Binding 3 : Albedo texture target
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eCombinedImageSampler,
+				vk::ShaderStageFlagBits::eFragment,
+				3),
+			// Binding 4 : Fragment shader uniform buffer
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eUniformBuffer,
+				vk::ShaderStageFlagBits::eFragment,
+				4),
+		};
+
+
+		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfoDeferred =
+			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindingsDeferred.data(), descriptorSetLayoutBindingsDeferred.size());
+
+		descriptorSetLayoutDeferred = device.createDescriptorSetLayout(descriptorSetLayoutCreateInfoDeferred);
+
+
+
+
+
+
+
+		// use all descriptor set layouts
+		// to form pipeline layout
+
+		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfoDeferred =
+			vkx::pipelineLayoutCreateInfo(&descriptorSetLayoutDeferred, 1);
+
+		pipelineLayouts.deferred = device.createPipelineLayout(pPipelineLayoutCreateInfoDeferred);
+
+
+		// Offscreen (scene) rendering pipeline layout
+		pipelineLayouts.offscreen = device.createPipelineLayout(pPipelineLayoutCreateInfoDeferred);
+
+
+
 	}
 
 	void setupDescriptorSet() {
-
-		/*for (int i = 0; i < descriptorPools.size(); ++i) {
-			vk::DescriptorSetAllocateInfo allocInfo =
-				vkx::descriptorSetAllocateInfo(descriptorPools[i], &descriptorSetLayouts[i], 1);
-
-			vk::DescriptorSet descSet = device.allocateDescriptorSets(allocInfo)[0];
-			descriptorSets.push_back(descSet);
-		}*/
-
-		//std::vector<vk::DescriptorSetAllocateInfo> descAllocInfos = {
-		//	vkx::descriptorSetAllocateInfo(descriptorPools[0], &descriptorSetLayouts[0], 1),
-		//	vkx::descriptorSetAllocateInfo(descriptorPools[1], &descriptorSetLayouts[1], 1),
-		//};
-
-
-
 
 		// descriptor set 0
 		// scene data
 		vk::DescriptorSetAllocateInfo descriptorSetInfo0 =
 			vkx::descriptorSetAllocateInfo(descriptorPools[0], &descriptorSetLayouts[0], 1);
 
-		std::vector<vk::DescriptorSet> descSets0 = device.allocateDescriptorSets(descriptorSetInfo0);
-		descriptorSets.push_back(descSets0[0]);// descriptor set 0
+		std::vector<vk::DescriptorSet> descriptorSets0 = device.allocateDescriptorSets(descriptorSetInfo0);
+		descriptorSets.push_back(descriptorSets0[0]);// descriptor set 0
 
 
 
@@ -667,8 +810,8 @@ public:
 		vk::DescriptorSetAllocateInfo descriptorSetInfo1 =
 			vkx::descriptorSetAllocateInfo(descriptorPools[1], &descriptorSetLayouts[1], 1);
 
-		std::vector<vk::DescriptorSet> descSets1 = device.allocateDescriptorSets(descriptorSetInfo1);
-		descriptorSets.push_back(descSets1[0]);// descriptor set 1
+		std::vector<vk::DescriptorSet> descriptorSets1 = device.allocateDescriptorSets(descriptorSetInfo1);
+		descriptorSets.push_back(descriptorSets1[0]);// descriptor set 1
 
 
 
@@ -677,8 +820,8 @@ public:
 		vk::DescriptorSetAllocateInfo descriptorSetInfo2 =
 			vkx::descriptorSetAllocateInfo(descriptorPools[2], &descriptorSetLayouts[2], 1);
 
-		std::vector<vk::DescriptorSet> descSets2 = device.allocateDescriptorSets(descriptorSetInfo2);
-		descriptorSets.push_back(descSets2[0]);// descriptor set 2
+		std::vector<vk::DescriptorSet> descriptorSets2 = device.allocateDescriptorSets(descriptorSetInfo2);
+		descriptorSets.push_back(descriptorSets2[0]);// descriptor set 2
 
 
 
@@ -687,8 +830,8 @@ public:
 		//vk::DescriptorSetAllocateInfo descriptorSetInfo3 =
 		//	vkx::descriptorSetAllocateInfo(descriptorPools[3], &descriptorSetLayouts[3], 1);
 
-		//std::vector<vk::DescriptorSet> descSets3 = device.allocateDescriptorSets(descriptorSetInfo3);
-		//descriptorSets.push_back(descSets3[0]);// descriptor set 3
+		//std::vector<vk::DescriptorSet> descriptorSets3 = device.allocateDescriptorSets(descriptorSetInfo3);
+		//descriptorSets.push_back(descriptorSets3[0]);// descriptor set 3
 
 
 
@@ -713,7 +856,7 @@ public:
 				vk::DescriptorType::eUniformBuffer,
 				0,// binding 0
 				&uniformData.sceneVS.descriptor),
-			
+
 			// set 1
 			// vertex shader matrix dynamic buffer
 			vkx::writeDescriptorSet(
@@ -755,7 +898,106 @@ public:
 
 		device.updateDescriptorSets(writeDescriptorSets, nullptr);
 
-		//updateDescriptorSets();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		// Textured quad descriptor set
+		vk::DescriptorSetAllocateInfo allocInfo = vkx::descriptorSetAllocateInfo(descriptorPoolDeferred, &descriptorSetLayoutDeferred, 1);
+
+
+		// first descriptorset
+		descriptorSetsDeferred.basic = device.allocateDescriptorSets(allocInfo)[0];
+
+		// Offscreen (scene)?????
+		descriptorSetsDeferred.offscreen = device.allocateDescriptorSets(allocInfo)[0];
+
+		// vk::Image descriptor for the offscreen texture targets
+		vk::DescriptorImageInfo texDescriptorPosition =
+			vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[0].colors[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+		vk::DescriptorImageInfo texDescriptorNormal =
+			vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[1].sampler, offscreen.framebuffers[0].colors[1].view, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+		vk::DescriptorImageInfo texDescriptorAlbedo =
+			vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[2].sampler, offscreen.framebuffers[0].colors[2].view, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+		std::vector<vk::WriteDescriptorSet> writeDescriptorSets2 =
+		{
+			// Binding 0 : Vertex shader uniform buffer
+			vkx::writeDescriptorSet(
+				descriptorSetsDeferred.basic,
+				vk::DescriptorType::eUniformBuffer,
+				0,
+				&uniformDataDeferred.vsFullScreen.descriptor),
+			// Binding 1 : Position texture target
+			vkx::writeDescriptorSet(
+				descriptorSetsDeferred.basic,
+				vk::DescriptorType::eCombinedImageSampler,
+				1,
+				&texDescriptorPosition),
+			// Binding 2 : Normals texture target
+			vkx::writeDescriptorSet(
+				descriptorSetsDeferred.basic,
+				vk::DescriptorType::eCombinedImageSampler,
+				2,
+				&texDescriptorNormal),
+			// Binding 3 : Albedo texture target
+			vkx::writeDescriptorSet(
+				descriptorSetsDeferred.basic,
+				vk::DescriptorType::eCombinedImageSampler,
+				3,
+				&texDescriptorAlbedo),
+			// Binding 4 : Fragment shader uniform buffer
+			vkx::writeDescriptorSet(
+				descriptorSetsDeferred.basic,
+				vk::DescriptorType::eUniformBuffer,
+				4,
+				&uniformDataDeferred.fsLights.descriptor),
+		};
+
+		device.updateDescriptorSets(writeDescriptorSets2, nullptr);
+
+		vk::DescriptorImageInfo texDescriptorSceneColormap = vkx::descriptorImageInfo(textures.colorMap.sampler, textures.colorMap.view, vk::ImageLayout::eGeneral);
+
+		std::vector<vk::WriteDescriptorSet> offscreenWriteDescriptorSets =
+		{
+			// Binding 0 : Vertex shader uniform buffer
+			vkx::writeDescriptorSet(
+				descriptorSetsDeferred.offscreen,
+				vk::DescriptorType::eUniformBuffer,
+				0,
+				&uniformDataDeferred.vsOffscreen.descriptor),
+			// Binding 1 : Scene color map
+			vkx::writeDescriptorSet(
+				descriptorSetsDeferred.offscreen,
+				vk::DescriptorType::eCombinedImageSampler,
+				1,
+				&texDescriptorSceneColormap)
+		};
+		device.updateDescriptorSets(offscreenWriteDescriptorSets, nullptr);
+
+
+
+
 	}
 
 
@@ -821,8 +1063,8 @@ public:
 
 
 
-		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/mesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
-		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/mesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
+		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/mesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/mesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
 		pipelines.meshes = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo, nullptr)[0];
 
 
@@ -831,8 +1073,8 @@ public:
 
 
 		// skinned meshes:
-		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/skinnedMesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
-		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/skinnedMesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
+		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/skinnedMesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/skinnedMesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
 		pipelines.skinnedMeshes = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo, nullptr)[0];
 
 
@@ -867,6 +1109,88 @@ public:
 	}
 
 
+	void prepareDeferredPipelines() {
+		vk::PipelineInputAssemblyStateCreateInfo inputAssemblyState =
+			vkx::pipelineInputAssemblyStateCreateInfo(vk::PrimitiveTopology::eTriangleList);
+
+		vk::PipelineRasterizationStateCreateInfo rasterizationState =
+			vkx::pipelineRasterizationStateCreateInfo(vk::PolygonMode::eFill, vk::CullModeFlagBits::eNone, vk::FrontFace::eClockwise);
+
+		vk::PipelineColorBlendAttachmentState blendAttachmentState =
+			vkx::pipelineColorBlendAttachmentState();
+
+		vk::PipelineColorBlendStateCreateInfo colorBlendState =
+			vkx::pipelineColorBlendStateCreateInfo(1, &blendAttachmentState);
+
+		vk::PipelineDepthStencilStateCreateInfo depthStencilState =
+			vkx::pipelineDepthStencilStateCreateInfo(VK_TRUE, VK_TRUE, vk::CompareOp::eLessOrEqual);
+
+		vk::PipelineViewportStateCreateInfo viewportState =
+			vkx::pipelineViewportStateCreateInfo(1, 1);
+
+		vk::PipelineMultisampleStateCreateInfo multisampleState;
+
+		std::vector<vk::DynamicState> dynamicStateEnables = {
+			vk::DynamicState::eViewport,
+			vk::DynamicState::eScissor
+		};
+		vk::PipelineDynamicStateCreateInfo dynamicState;
+		dynamicState.dynamicStateCount = dynamicStateEnables.size();
+		dynamicState.pDynamicStates = dynamicStateEnables.data();
+
+		// Final fullscreen pass pipeline
+		std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStages;
+
+		vk::GraphicsPipelineCreateInfo pipelineCreateInfo = vkx::pipelineCreateInfo(pipelineLayouts.deferred, renderPass);
+		pipelineCreateInfo.pVertexInputState = &verticesDeferred.inputState;
+		pipelineCreateInfo.pInputAssemblyState = &inputAssemblyState;
+		pipelineCreateInfo.pRasterizationState = &rasterizationState;
+		pipelineCreateInfo.pColorBlendState = &colorBlendState;
+		pipelineCreateInfo.pMultisampleState = &multisampleState;
+		pipelineCreateInfo.pViewportState = &viewportState;
+		pipelineCreateInfo.pDepthStencilState = &depthStencilState;
+		pipelineCreateInfo.pDynamicState = &dynamicState;
+		pipelineCreateInfo.stageCount = shaderStages.size();
+		pipelineCreateInfo.pStages = shaderStages.data();
+
+
+		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/deferred.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/deferred.frag.spv", vk::ShaderStageFlagBits::eFragment);
+		pipelines.deferred = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo, nullptr)[0];
+
+
+		// Debug display pipeline
+		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/debug.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/debug.frag.spv", vk::ShaderStageFlagBits::eFragment);
+		pipelines.debug = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo, nullptr)[0];
+
+
+		// Offscreen pipeline
+		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/mrt.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/mrt.frag.spv", vk::ShaderStageFlagBits::eFragment);
+
+		// Separate render pass
+		pipelineCreateInfo.renderPass = offscreen.renderPass;
+
+		// Separate layout
+		pipelineCreateInfo.layout = pipelineLayouts.offscreen;
+
+		// Blend attachment states required for all color attachments
+		// This is important, as color write mask will otherwise be 0x0 and you
+		// won't see anything rendered to the attachment
+		std::array<vk::PipelineColorBlendAttachmentState, 3> blendAttachmentStates = {
+			vkx::pipelineColorBlendAttachmentState(),
+			vkx::pipelineColorBlendAttachmentState(),
+			vkx::pipelineColorBlendAttachmentState()
+		};
+
+		colorBlendState.attachmentCount = blendAttachmentStates.size();
+		colorBlendState.pAttachments = blendAttachmentStates.data();
+
+		pipelines.offscreen = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo, nullptr)[0];
+	}
+
+
 
 
 
@@ -894,7 +1218,7 @@ public:
 
 
 	void updateSceneBuffer() {
-		
+
 		camera.updateViewMatrix();
 
 		uboScene.view = camera.matrices.view;
@@ -945,43 +1269,90 @@ public:
 	}
 
 
+
+	// Prepare and initialize uniform buffer containing shader uniforms
+	void prepareUniformBuffersDeferred() {
+		// Fullscreen vertex shader
+		uniformDataDeferred.vsFullScreen = context.createUniformBuffer(uboVS);
+		// Deferred vertex shader
+		uniformDataDeferred.vsOffscreen = context.createUniformBuffer(uboOffscreenVS);
+		// Deferred fragment shader
+		uniformDataDeferred.fsLights = context.createUniformBuffer(uboFSLights);
+
+		// Update
+		updateUniformBuffersScreen();
+		updateUniformBufferDeferredMatrices();
+		updateUniformBufferDeferredLights();
+	}
+
+	void updateUniformBuffersScreen() {
+		if (debugDisplay) {
+			uboVS.projection = glm::ortho(0.0f, 2.0f, 0.0f, 2.0f, -1.0f, 1.0f);
+		} else {
+			uboVS.projection = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, -1.0f, 1.0f);
+		}
+		uboVS.model = glm::mat4();
+		//uboVS.model = camera.matrices.view;
+		uniformDataDeferred.vsFullScreen.copy(uboVS);
+	}
+
+	void updateUniformBufferDeferredMatrices() {
+		camera.updateViewMatrix();
+		uboOffscreenVS.projection = camera.matrices.projection;
+		uboOffscreenVS.view = camera.matrices.view;
+		uniformDataDeferred.vsOffscreen.copy(uboOffscreenVS);
+	}
+
+	// Update fragment shader light position uniform block
+	void updateUniformBufferDeferredLights() {
+		// White light from above
+		uboFSLights.lights[0].position = glm::vec4(0.0f, 4.0f*sin(globalP), 3.0f, 0.0f);
+		uboFSLights.lights[0].color = glm::vec4(1.5f);
+		uboFSLights.lights[0].radius = 15.0f;
+		uboFSLights.lights[0].linearFalloff = 0.3f;
+		uboFSLights.lights[0].quadraticFalloff = 0.4f;
+		// Red light
+		uboFSLights.lights[1].position = glm::vec4(2.0f*cos(globalP) - 2.0f, 0.0f, 0.0f, 0.0f);
+		uboFSLights.lights[1].color = glm::vec4(1.5f, 0.0f, 0.0f, 0.0f);
+		uboFSLights.lights[1].radius = 15.0f;
+		uboFSLights.lights[1].linearFalloff = 0.4f;
+		uboFSLights.lights[1].quadraticFalloff = 0.3f;
+		// Blue light
+		uboFSLights.lights[2].position = glm::vec4(2.0f, 1.0f, 0.0f, 0.0f);
+		uboFSLights.lights[2].color = glm::vec4(0.0f, 0.0f, 2.5f, 0.0f);
+		uboFSLights.lights[2].radius = 10.0f;
+		uboFSLights.lights[2].linearFalloff = 0.45f;
+		uboFSLights.lights[2].quadraticFalloff = 0.35f;
+		// Belt glow
+		uboFSLights.lights[3].position = glm::vec4(0.0f, 0.7f, 0.5f, 0.0f);
+		uboFSLights.lights[3].color = glm::vec4(2.5f, 2.5f, 0.0f, 0.0f);
+		uboFSLights.lights[3].radius = 5.0f;
+		uboFSLights.lights[3].linearFalloff = 8.0f;
+		uboFSLights.lights[3].quadraticFalloff = 6.0f;
+		// Green light
+		uboFSLights.lights[4].position = glm::vec4(3.0f, 2.0f, 1.0f, 0.0f);
+		uboFSLights.lights[4].color = glm::vec4(0.0f, 1.5f, 0.0f, 0.0f);
+		uboFSLights.lights[4].radius = 10.0f;
+		uboFSLights.lights[4].linearFalloff = 0.8f;
+		uboFSLights.lights[4].quadraticFalloff = 0.6f;
+
+		// Current view position
+		//uboFragmentLights.viewPos = glm::vec4(0.0f, 0.0f, -camera.transform.translation.z, 0.0f);
+		//uboFragmentLights.viewPos = glm::vec4(-camera.transform.translation.x, -camera.transform.translation.y, -camera.transform.translation.z, 0.0f);
+		uboFSLights.viewPos = glm::vec4(camera.transform.translation, 0.0f) * glm::vec4(-1.0f, -1.0f, -1.0f, 1.0f);
+
+		uniformDataDeferred.fsLights.copy(uboFSLights);
+	}
+
+
+	void toggleDebugDisplay() {
+		debugDisplay = !debugDisplay;
+		updateDrawCommandBuffers();
+		buildOffscreenCommandBuffer();
+		updateUniformBuffersScreen();
+	}
+
 	void start() {
-
-		//vkx::Model planeModel(&context, &assetManager);
-		//planeModel.load(getAssetPath() + "models/plane.fbx");
-		//planeModel.createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
-
-
-
-
-		////vkx::Model otherModel1(context, assetManager);
-		////otherModel1.load(getAssetPath() + "models/plane.fbx");
-		////otherModel1.createMeshes(meshVertexLayout, 0.01f, VERTEX_BUFFER_BIND_ID);
-
-
-		////vkx::Model otherModel1(context, assetManager);
-		////otherModel1.load(getAssetPath() + "models/vulkanscenemodels.dae");
-		////otherModel1.createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
-
-		////vkx::Model otherModel1(context, assetManager);
-		////otherModel1.load(getAssetPath() + "models/sibenik/sibenik.dae");
-		////otherModel1.createMeshes(meshVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
-
-		//vkx::Model otherModel2(&context, &assetManager);
-		//otherModel2.load(getAssetPath() + "models/monkey.fbx");
-		//otherModel2.createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
-
-		//vkx::Model otherModel3(context, assetManager);
-		//otherModel3.load(getAssetPath() + "models/myCube.dae");
-		//otherModel3.createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
-
-		//vkx::Model otherModel2(context, assetManager);
-		//otherModel2.load(getAssetPath() + "models/vulkanscenemodels.dae");
-		//otherModel2.createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
-
-		//vkx::Model otherModel5(context, assetManager);
-		//otherModel5.load(getAssetPath() + "models/cube.obj");
-		//otherModel5.createMeshes(meshVertexLayout, 0.02f, VERTEX_BUFFER_BIND_ID);
 
 
 		auto planeModel = std::make_shared<vkx::Model>(&context, &assetManager);
@@ -1028,36 +1399,12 @@ public:
 			//skinnedMeshes.push_back(testSkinnedMesh);
 		}
 
-
-
-
-
-
-		//skinnedMeshes.push_back(skinnedMesh1);
-		//skinnedMeshes.push_back(skinnedMesh2);
-
-
-
-		//std::shared_ptr<vkx::Object3D> pPlaneObject3D = models[0];
-
 		auto physicsPlane = std::make_shared<vkx::PhysicsObject>(&physicsManager, models[0]);
 
 
 
 
 		auto physicsBall = std::make_shared<vkx::PhysicsObject>(&physicsManager, models[1]);
-
-
-
-
-
-
-
-
-
-
-
-
 
 		//the ground is a cube of side 100 at position y = -56.
 		//the sphere will hit it at y = -6, with center at -5
@@ -1091,18 +1438,6 @@ public:
 			this->physicsManager.dynamicsWorld->addRigidBody(body);
 		}
 
-
-
-
-
-
-
-
-
-
-
-
-
 		{
 			//create a dynamic rigidbody
 
@@ -1133,24 +1468,9 @@ public:
 				physicsBall->rigidBody = body;
 
 				this->physicsManager.dynamicsWorld->addRigidBody(body);
-				
+
 			}
 		}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 		physicsObjects.push_back(physicsPlane);
 		physicsObjects.push_back(physicsBall);
@@ -1271,11 +1591,21 @@ public:
 			camera.isFirstPerson = !camera.isFirstPerson;
 		}
 
+		if (keyStates.r) {
+			toggleDebugDisplay();
+		}
+
+		camera.updateViewMatrix();
+		//// todo: definitely remove this from here
+		updateUniformBuffersScreen();
+		updateUniformBufferDeferredMatrices();
+		updateUniformBufferDeferredLights();
+
 		if (!camera.isFirstPerson) {
 			camera.followOpts.point = models[1]->transform.translation;
 		}
 
-		
+
 		if (keyStates.i) {
 			physicsObjects[1]->rigidBody->activate();
 			physicsObjects[1]->rigidBody->applyCentralForce(btVector3(0.0f, 0.1f, 0.0f));
@@ -1293,11 +1623,6 @@ public:
 			physicsObjects[1]->rigidBody->applyCentralForce(btVector3(0.1f, 0.0f, 0.0f));
 		}
 
-		//camera.follow();
-
-
-
-
 	}
 
 
@@ -1306,46 +1631,12 @@ public:
 
 
 	void updatePhysics() {
-
 		//this->physicsManager.dynamicsWorld->stepSimulation(1.f / 60.f, 10);
 		this->physicsManager.dynamicsWorld->stepSimulation(1.f / (frameTimer*1000.0f), 10);
 
-
 		for (int i = 0; i < this->physicsObjects.size(); ++i) {
-			//auto &p = this->physicsObjects[i];
 			this->physicsObjects[i]->sync();
-			
-			//btTransform trans;
-			//// not needed here // todo: remove
-			//if (p->rigidBody && p->rigidBody->getMotionState()) {
-			//	p->rigidBody->getMotionState()->getWorldTransform(trans);
-			//} else {
-			//	//trans = p->rigidBody->getWorldTransform();
-			//}
-
-			//// physics object position
-			//glm::vec3 pos = glm::vec3(float(trans.getOrigin().getX()), float(trans.getOrigin().getY()), float(trans.getOrigin().getZ()));
-			//// physics object rotation
-			//glm::quat rot = glm::quat(trans.getRotation().getW(), trans.getRotation().getX(), trans.getRotation().getY(), trans.getRotation().getZ());
-			//
-			//// update info at pointer in physics object
-			//p->object3D->setTranslation(pos);
-			//p->object3D->setRotation(rot);
 		}
-
-		////print positions of all objects
-		//for (int i = 0; i < this->physicsManager.dynamicsWorld->getNumCollisionObjects(); ++i) {
-		//	btCollisionObject* obj = this->physicsManager.dynamicsWorld->getCollisionObjectArray()[i];
-		//	btRigidBody* body = btRigidBody::upcast(obj);
-		//	btTransform trans;
-		//	if (body && body->getMotionState()) {
-		//		body->getMotionState()->getWorldTransform(trans);
-		//	} else {
-		//		trans = obj->getWorldTransform();
-		//	}
-		//	printf("world pos object %d = %f,%f,%f\n", i, float(trans.getOrigin().getX()), float(trans.getOrigin().getY()), float(trans.getOrigin().getZ()));
-		//}
-
 	}
 
 
@@ -1370,8 +1661,8 @@ public:
 
 
 		// left:
-		//vk::Viewport viewport = vkx::viewport((float)size.width / 3, (float)size.height, 0.0f, 1.0f);
-		//cmdBuffer.setViewport(0, viewport);
+		//vk::Viewport testViewport = vkx::viewport((float)size.width / 3, (float)size.height, 0.0f, 1.0f);
+		//cmdBuffer.setViewport(0, testViewport);
 		// center
 		//viewport.x += viewport.width;
 		//cmdBuffer.setViewport(0, viewport);
@@ -1429,16 +1720,10 @@ public:
 		}
 
 
-		//models[1].setTranslation(glm::vec3(0, 0, 2));
-		//glm::quat q = glm::angleAxis(3.14159f/2.0f, glm::vec3(1.0f, 0.0f, 0.0f));
-		//models[1].setRotation(q);
-
-
 
 
 		if (skinnedMeshes.size() > 1) {
 			skinnedMeshes[0]->setTranslation(glm::vec3(2.0f, sin(globalP), 1.0f));
-			//skinnedMeshes[1]->setTranslation(glm::vec3(-1.0f, 4.0f*sin(globalP), 1.0f));
 
 			glm::vec3 point = skinnedMeshes[1]->transform.translation;
 			skinnedMeshes[1]->setTranslation(glm::vec3(point.x, point.y, 1.0f));
@@ -1463,8 +1748,6 @@ public:
 		//matrixNodes[1].model = glm::translate(glm::mat4(), glm::vec3(sin(globalP), 1.0f, 0.0f));
 
 
-
-
 		if (keyStates.space) {
 			physicsObjects[1]->rigidBody->activate();
 			//physicsObjects[1]->rigidBody->setLinearVelocity(btVector3(0.0f, 0.0f, 12.0f));
@@ -1473,15 +1756,11 @@ public:
 
 
 
-
-
 		// todo: fix
 		for (auto &model : models) {
 
 			//consoleLog = std::to_string(model.transform.translation.x);
-
 			matrixNodes[model->matrixIndex].model = model->transfMatrix;
-
 			//glm::mat4* modelMat = (glm::mat4*)(((uint64_t)modelMatrices + (model.matrixIndex * dynamicAlignment)));
 			//*modelMat = model.transfMatrix;
 
@@ -1513,7 +1792,6 @@ public:
 
 				//uboBoneData.bones[boneOffset + i] = glm::transpose(glm::make_mat4(&skinnedMesh->boneTransforms[i].a1));
 				//uboScene.bones[i] = glm::transpose(glm::make_mat4(&skinnedMesh->boneTransforms[i].a1));
-
 
 				uboScene.bones[boneOffset + i] = glm::transpose(glm::make_mat4(&skinnedMesh->boneTransforms[i].a1));
 
@@ -1563,11 +1841,6 @@ public:
 		//		// the third param is the set number!
 		//		setNum = 2;
 		//		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset2);
-		//	//}
-
-
-		//	//if (lastMaterialIndex != mesh->meshBuffer.materialIndex) {
-		//		lastMaterialIndex = mesh->meshBuffer.materialIndex;
 
 		//		// must make pipeline layout compatible
 		//		setNum = 3;
@@ -1627,7 +1900,6 @@ public:
 					cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset2);
 					//}
 
-					//if (lastMaterialIndex != mesh.meshBuffer.materialIndex) {
 					lastMaterialIndex = mesh.meshBuffer.materialIndex;
 
 					// must make pipeline layout compatible
@@ -1710,6 +1982,95 @@ public:
 		}
 
 
+
+
+
+
+
+
+		updateUniformBufferDeferredLights();
+
+
+
+
+		vk::Viewport viewport = vkx::viewport(size);
+		cmdBuffer.setViewport(0, viewport);
+		cmdBuffer.setScissor(0, vkx::rect2D(size));
+
+
+		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.deferred, 0, descriptorSetsDeferred.basic, nullptr);
+		if (debugDisplay) {
+			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.debug);
+			cmdBuffer.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, meshBuffers.quad.vertices.buffer, { 0 });
+			cmdBuffer.bindIndexBuffer(meshBuffers.quad.indices.buffer, 0, vk::IndexType::eUint32);
+			cmdBuffer.drawIndexed(meshBuffers.quad.indexCount, 1, 0, 0, 1);
+			// Move viewport to display final composition in lower right corner
+			viewport.x = viewport.width * 0.5f;
+			viewport.y = viewport.height * 0.5f;
+		}
+
+		viewport.x = viewport.width * 0.5f;
+		viewport.y = viewport.height * 0.5f;
+
+		cmdBuffer.setViewport(0, viewport);
+		// Final composition as full screen quad
+		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.deferred);
+		cmdBuffer.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, meshBuffers.quad.vertices.buffer, { 0 });
+		cmdBuffer.bindIndexBuffer(meshBuffers.quad.indices.buffer, 0, vk::IndexType::eUint32);
+		cmdBuffer.drawIndexed(6, 1, 0, 0, 1);
+
+
+	}
+
+
+
+
+	// Build command buffer for rendering the scene to the offscreen frame buffer 
+	// and blitting it to the different texture targets
+	void buildOffscreenCommandBuffer() override {
+		// Create separate command buffer for offscreen 
+		// rendering
+		if (!offscreenCmdBuffer) {
+			vk::CommandBufferAllocateInfo cmd = vkx::commandBufferAllocateInfo(cmdPool, vk::CommandBufferLevel::ePrimary, 1);
+			offscreenCmdBuffer = device.allocateCommandBuffers(cmd)[0];
+		}
+
+		vk::CommandBufferBeginInfo cmdBufInfo;
+		cmdBufInfo.flags = vk::CommandBufferUsageFlagBits::eSimultaneousUse;
+
+		// Clear values for all attachments written in the fragment shader
+		std::array<vk::ClearValue, 4> clearValues;
+		clearValues[0].color = vkx::clearColor({ 0.0f, 0.0f, 0.0f, 0.0f });
+		clearValues[1].color = vkx::clearColor({ 0.0f, 0.0f, 0.0f, 0.0f });
+		clearValues[2].color = vkx::clearColor({ 0.0f, 0.0f, 0.0f, 0.0f });
+		clearValues[3].depthStencil = { 1.0f, 0 };
+
+		vk::RenderPassBeginInfo renderPassBeginInfo;
+		renderPassBeginInfo.renderPass = offscreen.renderPass;
+		renderPassBeginInfo.framebuffer = offscreen.framebuffers[0].framebuffer;
+		renderPassBeginInfo.renderArea.extent.width = offscreen.size.x;
+		renderPassBeginInfo.renderArea.extent.height = offscreen.size.y;
+		renderPassBeginInfo.clearValueCount = clearValues.size();
+		renderPassBeginInfo.pClearValues = clearValues.data();
+
+		offscreenCmdBuffer.begin(cmdBufInfo);
+		offscreenCmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
+
+		vk::Viewport viewport = vkx::viewport(offscreen.size);
+		offscreenCmdBuffer.setViewport(0, viewport);
+
+		vk::Rect2D scissor = vkx::rect2D(offscreen.size);
+		offscreenCmdBuffer.setScissor(0, scissor);
+
+		offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.offscreen, 0, descriptorSetsDeferred.offscreen, nullptr);
+		offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.offscreen);
+
+		vk::DeviceSize offsets = { 0 };
+		offscreenCmdBuffer.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, meshBuffers.example.vertices.buffer, { 0 });
+		offscreenCmdBuffer.bindIndexBuffer(meshBuffers.example.indices.buffer, 0, vk::IndexType::eUint32);
+		offscreenCmdBuffer.drawIndexed(meshBuffers.example.indexCount, 1, 0, 0, 0);
+		offscreenCmdBuffer.endRenderPass();
+		offscreenCmdBuffer.end();
 	}
 
 
@@ -1725,31 +2086,143 @@ public:
 
 
 
-	void prepare() {
+	void viewChanged() override {
+		updateUniformBufferDeferredMatrices();
+	}
 
-		vulkanApp::prepare();
 
-		
-		prepareVertices();
 
-		
+
+
+
+	void loadTextures() {
+		textures.colorMap = textureLoader->loadTexture(
+			getAssetPath() + "models/armor/colormap.ktx",
+			vk::Format::eBc3UnormBlock);
+	}
+
+	void loadMeshes() {
+		//meshes.example = loadMesh(getAssetPath() + "models/armor/armor.dae", vertexLayout, 1.0f);
+
+		vkx::MeshLoader loader(&this->context, &this->assetManager);
+		loader.load(getAssetPath() + "models/armor/armor.dae");
+		loader.createMeshBuffer(deferredVertexLayout, 1.0f);
+		meshBuffers.example = loader.combinedBuffer;
+	}
+
+	void generateQuads() {
+		// Setup vertices for multiple screen aligned quads
+		// Used for displaying final result and debug 
+		struct Vertex {
+			float pos[3];
+			float uv[2];
+			float col[3];
+			float normal[3];
+		};
+
+		std::vector<Vertex> vertexBuffer;
+
+		float x = 0.0f;
+		float y = 0.0f;
+		for (uint32_t i = 0; i < 3; i++) {
+			// Last component of normal is used for debug display sampler index
+			vertexBuffer.push_back({ { x + 1.0f, y + 1.0f, 0.0f },{ 1.0f, 1.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, (float)i } });
+			vertexBuffer.push_back({ { x,      y + 1.0f, 0.0f },{ 0.0f, 1.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, (float)i } });
+			vertexBuffer.push_back({ { x,      y,      0.0f },{ 0.0f, 0.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, (float)i } });
+			vertexBuffer.push_back({ { x + 1.0f, y,      0.0f },{ 1.0f, 0.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, (float)i } });
+			x += 1.0f;
+			if (x > 1.0f) {
+				x = 0.0f;
+				y += 1.0f;
+			}
+		}
+		meshBuffers.quad.vertices = context.stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
+
+		// Setup indices
+		std::vector<uint32_t> indexBuffer = { 0,1,2, 2,3,0 };
+		for (uint32_t i = 0; i < 3; ++i) {
+			uint32_t indices[6] = { 0,1,2, 2,3,0 };
+			for (auto index : indices) {
+				indexBuffer.push_back(i * 4 + index);
+			}
+		}
+		meshBuffers.quad.indexCount = indexBuffer.size();
+		meshBuffers.quad.indices = context.stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+	void prepare() override {
+
+
+		offscreen.size = glm::uvec2(TEX_DIM);
+		offscreen.colorFormats = std::vector<vk::Format>{ {
+				vk::Format::eR16G16B16A16Sfloat,
+				vk::Format::eR16G16B16A16Sfloat,
+				vk::Format::eR8G8B8A8Unorm
+			} };
+
+		//vulkanApp::prepare();
+		//offscreen.prepare();
+
+		OffscreenExampleBase::prepare();
+
+
+
+		loadTextures();
+		generateQuads();
+		loadMeshes();
+
+
+		prepareVertexDescriptions();
+
+
 
 		prepareUniformBuffers();
+		prepareUniformBuffersDeferred();
 
 		setupDescriptorSetLayout();
 		setupDescriptorPool();
 		setupDescriptorSet();
 
 		preparePipelines();
+		prepareDeferredPipelines();
 
 		start();
 
 
 		updateDrawCommandBuffers();
+		buildOffscreenCommandBuffer();
 
-		
+
 
 		prepared = true;
+	}
+
+	void draw() override {
+		prepareFrame();
+		{
+			vk::SubmitInfo submitInfo;
+			submitInfo.pWaitDstStageMask = this->submitInfo.pWaitDstStageMask;
+			submitInfo.commandBufferCount = 1;
+			submitInfo.pCommandBuffers = &offscreenCmdBuffer;
+			submitInfo.waitSemaphoreCount = 1;
+			submitInfo.pWaitSemaphores = &semaphores.acquireComplete;
+			submitInfo.signalSemaphoreCount = 1;
+			submitInfo.pSignalSemaphores = &offscreen.renderComplete;
+			queue.submit(submitInfo, VK_NULL_HANDLE);
+		}
+		drawCurrentCommandBuffer(offscreen.renderComplete);
+		submitFrame();
 	}
 
 	virtual void render() {
@@ -1759,10 +2232,6 @@ public:
 		draw();
 	}
 
-	//virtual void viewChanged() {
-	//	updateTextOverlay(); // todo: remove this
-	//	updateUniformBuffers();
-	//}
 
 	virtual void getOverlayText(vkx::TextOverlay *textOverlay) {
 
@@ -1773,7 +2242,7 @@ public:
 		//ss << std::fixed << std::setprecision(2) << (frameTimer * 1000.0f) << "ms (" << lastFPS << " fps)";
 		ss << lastFPS << " FPS";
 		textOverlay->addText(ss.str(), 5.0f, 25.0f, vkx::TextOverlay::alignLeft);
-		
+
 		ss.str("");
 		ss.clear();
 
@@ -1798,21 +2267,6 @@ public:
 		// vertical offset
 		float vOffset = 120.0f;
 		float spacing = 20.0f;
-
-		//textOverlay->addText("camera stats:", 5.0f, vOffset, vkx::TextOverlay::alignLeft);
-
-		//textOverlay->addText("log: ", 5.0f, vOffset + 20.0f, vkx::TextOverlay::alignLeft);
-		//textOverlay->addText(consoleLog.c_str(), 5.0f, vOffset + 40.0f, vkx::TextOverlay::alignLeft);
-
-		//if (models.size() > 4) {
-		//	textOverlay->addText(std::to_string(frameTimer), 5.0f, vOffset + 60.0f, vkx::TextOverlay::alignLeft);
-		//	textOverlay->addText(std::to_string(models[3]->transform.translation.x), 5.0f, vOffset + 80.0f, vkx::TextOverlay::alignLeft);
-		//}
-
-		//textOverlay->addText("rotation(q) w: " + std::to_string(camera.rotation.w), 5.0f, vOffset + 20.0f, vkx::TextOverlay::alignLeft);
-		//textOverlay->addText("rotation(q) x: " + std::to_string(camera.rotation.x), 5.0f, vOffset + 40.0f, vkx::TextOverlay::alignLeft);
-		//textOverlay->addText("rotation(q) y: " + std::to_string(camera.rotation.y), 5.0f, vOffset + 60.0f, vkx::TextOverlay::alignLeft);
-		//textOverlay->addText("rotation(q) z: " + std::to_string(camera.rotation.z), 5.0f, vOffset + 80.0f, vkx::TextOverlay::alignLeft);
 
 		textOverlay->addText("pos x: " + std::to_string(camera.transform.translation.x), 5.0f, vOffset + 100.0f, vkx::TextOverlay::alignLeft);
 		textOverlay->addText("pos y: " + std::to_string(camera.transform.translation.y), 5.0f, vOffset + 120.0f, vkx::TextOverlay::alignLeft);
