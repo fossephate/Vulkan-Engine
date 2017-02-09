@@ -100,6 +100,8 @@ namespace vkx {
 		uint32_t indexCount{ 0 };
 		uint32_t materialIndex{ 0 };
 
+		std::string materialName;
+
 		void destroy() {
 			vertices.destroy();
 			indices.destroy();
@@ -167,6 +169,7 @@ namespace vkx {
 				uint32_t NumIndices;
 				uint32_t MaterialIndex;
 				uint32_t vertexBase;// offset (for indexed draw)? p sure
+				std::string materialName;
 
 				std::vector<Vertex> Vertices;
 				std::vector<uint32_t> Indices;

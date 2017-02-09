@@ -1,6 +1,8 @@
 #pragma once
 
 
+#include <unordered_map>
+
 #include <vulkan/vulkan.hpp>
 
 #include <glm/glm.hpp>
@@ -46,9 +48,18 @@ namespace vkx {
 		std::string name;
 		// Material properties
 		MaterialProperties properties;
-		// The example only uses a diffuse channel
-		// todo: add more
-		Texture diffuse;
+
+
+		// Diffuse, specular, and bump channels
+		vkx::Texture diffuse;
+		vkx::Texture specular;
+		vkx::Texture bump;
+
+		bool hasAlpha = false;
+		bool hasBump = false;
+		bool hasSpecular = false;
+
+
 		// The material's descriptor set
 		// this is inefficient, but works on all vulkan capable hardware
 		
@@ -92,6 +103,41 @@ namespace vkx {
 
 
 
+
+	//template <typename T>
+	//class VulkanResourceList
+	//{
+	//public:
+	//	vk::Device &device;
+	//	std::unordered_map<std::string, T> resources;
+	//	VulkanResourceList(VkDevice &dev) : device(dev) {};
+	//	const T get(std::string name)
+	//	{
+	//		return resources[name];
+	//	}
+	//	T *getPtr(std::string name)
+	//	{
+	//		return &resources[name];
+	//	}
+	//	bool present(std::string name)
+	//	{
+	//		return resources.find(name) != resources.end();
+	//	}
+	//};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	//struct Material;
 
 	class AssetManager {
@@ -99,9 +145,11 @@ namespace vkx {
 		public:
 			
 			
-			std::vector<Material> loadedMaterials;
-			//std::vector<Texture> textures;
-			std::vector<Texture> loadedTextures;
+			//std::vector<Material> loadedMaterials;
+			//std::vector<Texture> loadedTextures;
+
+			
+
 
 			vk::DescriptorSetLayout *materialDescriptorSetLayout{ nullptr };
 			vk::DescriptorPool *materialDescriptorPool{ nullptr };
@@ -110,14 +158,51 @@ namespace vkx {
 			vk::DescriptorSetLayout *materialDescriptorSetLayoutDeferred{ nullptr };
 			vk::DescriptorPool *materialDescriptorPoolDeferred{ nullptr };
 
-			//vkx::Context &context;
+
+			struct {
+				//std::unordered_map<std::string, Material> loadedMaterials;
+				// need order
+				std::map<std::string, Material> loadedMaterials;
+
+				const Material get(std::string name) {
+					return loadedMaterials[name];
+				}
+
+				void add(std::string name, Material material) {
+					loadedMaterials[name] = material;
+				}
+
+				Material* getPtr(std::string name) {
+					return &loadedMaterials[name];
+				}
+
+				bool doExist(std::string name) {
+					return loadedMaterials.find(name) != loadedMaterials.end();
+				}
+			} materials;
 
 
-			//AssetManager(vkx::Context &context) :
-			//	context(context)
-			//{
 
-			//}
+			struct {
+				std::unordered_map<std::string, vkx::Texture> loadedTextures;
+
+				const vkx::Texture get(std::string name) {
+					return loadedTextures[name];
+				}
+
+				void add(std::string name, vkx::Texture texture) {
+					loadedTextures[name] = texture;
+				}
+
+				vkx::Texture* getPtr(std::string name) {
+					return &loadedTextures[name];
+				}
+
+				bool doExist(std::string name) {
+					return loadedTextures.find(name) != loadedTextures.end();
+				}
+			} textures;
+
 
 
 

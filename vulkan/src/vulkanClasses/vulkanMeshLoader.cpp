@@ -73,9 +73,7 @@ namespace vkx {
 
 	void vkx::MeshLoader::loadMaterials(const aiScene *pScene) {
 
-		// fix all my problems by commenting this line out:
-		//tempMaterials.
-		(pScene->mNumMaterials);
+
 
 		for (size_t i = 0; i < pScene->mNumMaterials; i++) {
 
@@ -83,6 +81,15 @@ namespace vkx {
 
 			aiString name;
 			pScene->mMaterials[i]->Get(AI_MATKEY_NAME, name);
+
+			material.name = name.C_Str();
+			std::cout << "Material \"" << material.name << "\"" << std::endl;
+
+			// if a material with the same name has already been loaded, continue
+			if (this->assetManager->materials.doExist(material.name)) {
+				// skip this material
+				continue;
+			}
 
 			// Properties
 			aiColor4D color;
@@ -95,116 +102,138 @@ namespace vkx {
 			pScene->mMaterials[i]->Get(AI_MATKEY_COLOR_SPECULAR, color);
 			material.properties.specular = glm::make_vec4(&color.r);
 
-			pScene->mMaterials[i]->Get(AI_MATKEY_OPACITY, /*tempMaterials[i]*/material.properties.opacity);
+			pScene->mMaterials[i]->Get(AI_MATKEY_OPACITY, material.properties.opacity);
 
 			if ((material.properties.opacity) > 0.0f) {
 				material.properties.specular = glm::vec4(0.0f);
 			}
 
-			material.name = name.C_Str();
-			std::cout << "Material \"" << material.name << "\"" << std::endl;
+
 
 			// Textures
 			aiString texturefile;
 			std::string assetPath = getAssetPath() + "models/";
 
-			// Diffuse
+			// get diffuse texture
 			pScene->mMaterials[i]->GetTexture(aiTextureType_DIFFUSE, 0, &texturefile);
 			if (pScene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
 				std::cout << "  Diffuse: \"" << texturefile.C_Str() << "\"" << std::endl;
 				std::string fileName = std::string(texturefile.C_Str());
 				std::replace(fileName.begin(), fileName.end(), '\\', '/');
-				material.diffuse = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc3UnormBlock);// this is the texture format! :O
+
+				// if the texture has already been loaded previously
+				// use it instead of loading it again
+				if (this->assetManager->textures.doExist(fileName)) {
+					// get from memory
+					material.diffuse = assetManager->textures.get(fileName);
+				} else {
+					// load from file
+					vkx::Texture tex = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc3UnormBlock);// this is the texture format! :O
+					this->assetManager->textures.add(fileName, tex);
+					material.diffuse = tex;
+				}
 			} else {
 				std::string fileName = std::string(texturefile.C_Str());
 				std::cout << "  Material has no diffuse, using dummy texture!" << std::endl;
 				// todo : separate pipeline and layout
-				//material.diffuse = textureLoader->loadTexture(assetPath + "dummy.ktx", vk::Format::eBc2UnormBlock);
-				material.diffuse = textureLoader->loadTexture(assetPath + "goblin_bc3.ktx", vk::Format::eBc3UnormBlock);// bc3(was bc2)
-				//material.diffuse = textureLoader->loadTexture(assetPath + "kamen.ktx", vk::Format::eBc2UnormBlock);
+				material.diffuse = textureLoader->loadTexture(assetPath + "dummy.ktx", vk::Format::eBc2UnormBlock);
 			}
 
-			// For scenes with multiple textures per material we would need to check for additional texture types, e.g.:
-			// aiTextureType_HEIGHT, aiTextureType_OPACITY, aiTextureType_SPECULAR, etc.
-
-			// Assign pipeline
-			//materials[i].pipeline = (materials[i].properties.opacity == 0.0f) ? &pipelines.solid : &pipelines.blending;
-
-			tempMaterials.push_back(material);
-
-			// add materials to global materials vector
-			//globalMaterials.push_back(material);
-		}
-
-		// todo: prevent duplicate materials
-		//http://stackoverflow.com/questions/5740310/no-operator-found-while-comparing-structs-in-c
-
-		//std::vector<vk::DescriptorPoolSize> poolSizes3 =
-		//{
-		//	vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 10000),
-		//	//vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, static_cast<uint32_t>(tempMaterials.size())),
-		//};
-
-		//vk::DescriptorPoolCreateInfo descriptorPool3Info =
-		//	//vkx::descriptorPoolCreateInfo(poolSizes3.size(), poolSizes3.data(), tempMaterials.size()+1);
-		//	vkx::descriptorPoolCreateInfo(poolSizes3.size(), poolSizes3.data(), 10000);
-
-		//vk::DescriptorPool descPool3 = context.device.createDescriptorPool(descriptorPool3Info);
 
 
-		//std::vector<vk::DescriptorSetLayoutBinding> setLayout3Bindings =
-		//{
-		//	// Binding 0 : Fragment shader color map image sampler
-		//	vkx::descriptorSetLayoutBinding(
-		//		vk::DescriptorType::eCombinedImageSampler,
-		//		vk::ShaderStageFlagBits::eFragment,
-		//		0),// binding 0
-		//};
+			// get specular texture
+			pScene->mMaterials[i]->GetTexture(aiTextureType_SPECULAR, 0, &texturefile);
+			if (pScene->mMaterials[i]->GetTextureCount(aiTextureType_SPECULAR) > 0) {
+				std::cout << "  Specular: \"" << texturefile.C_Str() << "\"" << std::endl;
+				std::string fileName = std::string(texturefile.C_Str());
+				std::replace(fileName.begin(), fileName.end(), '\\', '/');
 
-		//vk::DescriptorSetLayoutCreateInfo descriptorLayout3 =
-		//	vkx::descriptorSetLayoutCreateInfo(setLayout3Bindings.data(), setLayout3Bindings.size());
+				//material.hasSpecular = true;
 
-		//vk::DescriptorSetLayout setLayout3 = context.device.createDescriptorSetLayout(descriptorLayout3);
+				// if the texture has already been loaded previously
+				// use it instead of loading it again
+				if (this->assetManager->textures.doExist(fileName)) {
+					// get from memory
+					material.specular = assetManager->textures.get(fileName);
+				} else {
+					// load from file
+					vkx::Texture tex = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc3UnormBlock);// this is the texture format! :O
+					this->assetManager->textures.add(fileName, tex);
+					material.specular = tex;
+				}
+			} else {
+				std::string fileName = std::string(texturefile.C_Str());
+				std::cout << "  Material has no specular, using dummy texture!" << std::endl;
+				// todo : separate pipeline and layout
+				material.specular = textureLoader->loadTexture(assetPath + "dummy.ktx", vk::Format::eBc2UnormBlock);
+			}
 
-		if (this->assetManager->materialDescriptorPool == nullptr) {
-			return;
-		}
-
-		if (this->assetManager->materialDescriptorSetLayout == nullptr) {
-			return;
-		}
 
 
-		// todo: remove the tempMaterials vector
-		for (int i = 0; i < tempMaterials.size(); ++i) {
+			// get bump map
+			pScene->mMaterials[i]->GetTexture(aiTextureType_NORMALS, 0, &texturefile);
+			if (pScene->mMaterials[i]->GetTextureCount(aiTextureType_NORMALS) > 0) {
+				std::cout << "  Bump: \"" << texturefile.C_Str() << "\"" << std::endl;
+				std::string fileName = std::string(texturefile.C_Str());
+				std::replace(fileName.begin(), fileName.end(), '\\', '/');
 
-			// Descriptor set
-			//vk::DescriptorSetAllocateInfo allocInfo =
-			//	vkx::descriptorSetAllocateInfo(
-			//		descPool3,
-			//		&setLayout3,
-			//		1);
+				material.hasBump = true;
+
+				// if the texture has already been loaded previously
+				// use it instead of loading it again
+				if (this->assetManager->textures.doExist(fileName)) {
+					// get from memory
+					material.bump = assetManager->textures.get(fileName);
+				} else {
+					// load from file
+					vkx::Texture tex = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc3UnormBlock);// this is the texture format! :O
+					this->assetManager->textures.add(fileName, tex);
+					material.bump = tex;
+				}
+			} else {
+				std::string fileName = std::string(texturefile.C_Str());
+				std::cout << "  Material has no bump, using dummy texture!" << std::endl;
+				// todo : separate pipeline and layout
+				material.bump = textureLoader->loadTexture(assetPath + "dummy.ktx", vk::Format::eBc2UnormBlock);
+			}
+
+			// Mask
+			if (pScene->mMaterials[i]->GetTextureCount(aiTextureType_OPACITY) > 0) {
+				std::cout << "  Material has opacity, enabling alpha test" << std::endl;
+				material.hasAlpha = true;
+			}
+
+
+			if (this->assetManager->materialDescriptorPool == nullptr) {
+				return;
+			}
+
+			if (this->assetManager->materialDescriptorSetLayout == nullptr) {
+				return;
+			}
+
+
 			vk::DescriptorSetAllocateInfo allocInfo =
 				vkx::descriptorSetAllocateInfo(
 					*this->assetManager->materialDescriptorPool,
 					this->assetManager->materialDescriptorSetLayout,
 					1);
 
-			tempMaterials[i].descriptorSet = context->device.allocateDescriptorSets(allocInfo)[0];
+			material.descriptorSet = context->device.allocateDescriptorSets(allocInfo)[0];
 
-			vk::DescriptorImageInfo texDescriptor =
-				vkx::descriptorImageInfo(
-					tempMaterials[i].diffuse.sampler,
-					tempMaterials[i].diffuse.view,
-					vk::ImageLayout::eGeneral);
+			//vk::DescriptorImageInfo texDescriptor =
+			//	vkx::descriptorImageInfo(
+			//		material.diffuse.sampler,
+			//		material.diffuse.view,
+			//		vk::ImageLayout::eGeneral);
 
 			std::vector<vk::WriteDescriptorSet> writeDescriptorSets =
 			{
 				vkx::writeDescriptorSet(
-					tempMaterials[i].descriptorSet,
+					material.descriptorSet,
 					vk::DescriptorType::eCombinedImageSampler,
 					0,
-					&texDescriptor),
+					&material.diffuse.descriptor),
 			};
 
 
@@ -213,7 +242,10 @@ namespace vkx {
 
 			context->device.updateDescriptorSets(writeDescriptorSets, {});
 
-			this->assetManager->loadedMaterials.push_back(tempMaterials[i]);
+			this->assetManager->materials.add(material.name, material);
+
+			//this->assetManager->loadedMaterials.push_back(tempMaterials[i]);
+
 		}
 
 	}
@@ -227,17 +259,27 @@ namespace vkx {
 		// init each entry with mesh data
 		for (unsigned int index = 0; index < m_Entries.size(); ++index) {
 
-			// pointer to mesh
-			const aiMesh *pMesh = pScene->mMeshes[index];
 
 			// reference to corresponding mesh entry
 			MeshEntry &meshEntry = m_Entries[index];
 
+			// pointer to corresponding mesh
+			const aiMesh *pMesh = pScene->mMeshes[index];
 
-			// set material index for this mesh
 
-			int materialIndex = this->assetManager->loadedMaterials.size() - pScene->mNumMaterials + pMesh->mMaterialIndex;
-			m_Entries[index].MaterialIndex = materialIndex;
+
+
+
+
+
+			// set material name for this mesh
+			//int materialIndex = this->assetManager->loadedMaterials.size() - pScene->mNumMaterials + pMesh->mMaterialIndex;
+			//m_Entries[index].MaterialIndex = materialIndex;
+			
+			aiString name;
+			pScene->mMaterials[pMesh->mMaterialIndex]->Get(AI_MATKEY_NAME, name);
+
+			m_Entries[index].materialName = name.C_Str();
 
 
 			// get the color of this mesh's material
@@ -328,6 +370,9 @@ namespace vkx {
 
 
 	void vkx::MeshLoader::createMeshBuffer(const std::vector<VertexLayout> &layout, float scale) {
+
+		// combined mesh buffer
+
 		std::vector<float> vertexBuffer;
 		for (int m = 0; m < m_Entries.size(); m++) {
 			for (int i = 0; i < m_Entries[m].Vertices.size(); i++) {
@@ -490,11 +535,9 @@ namespace vkx {
 			meshBuffer.dim = dim.size;
 
 			meshBuffer.materialIndex = m_Entries[m].MaterialIndex;
+			
+			meshBuffer.materialName = m_Entries[m].materialName;
 
-
-
-			// set pointer to material used by this mesh
-			//meshBuffer.material = &materials[meshBuffer.materialIndex];
 
 			meshBuffers.push_back(meshBuffer);
 		}
@@ -589,6 +632,8 @@ namespace vkx {
 			meshBuffer.dim = dim.size;
 
 			meshBuffer.materialIndex = m_Entries[m].MaterialIndex;
+			
+			meshBuffer.materialName = m_Entries[m].materialName;
 
 
 

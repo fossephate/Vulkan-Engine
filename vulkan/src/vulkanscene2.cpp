@@ -1244,8 +1244,25 @@ public:
 	}
 
 	void updateMaterialBuffer() {
-		if (materialNodes.size() != this->assetManager.loadedMaterials.size()) {
-			if (this->assetManager.loadedMaterials.size() == 0) {
+		//if (materialNodes.size() != this->assetManager.loadedMaterials.size()) {
+		//	if (this->assetManager.loadedMaterials.size() == 0) {
+		//		vkx::MaterialProperties p;
+		//		p.ambient = glm::vec4();
+		//		p.diffuse = glm::vec4();
+		//		p.specular = glm::vec4();
+		//		p.opacity = 1.0f;
+		//		materialNodes[0] = p;
+		//	} else {
+		//		materialNodes.resize(this->assetManager.loadedMaterials.size());
+		//	}
+		//}
+
+		//for (int i = 0; i < this->assetManager.loadedMaterials.size(); ++i) {
+		//	materialNodes[i] = this->assetManager.loadedMaterials[i].properties;
+		//}
+
+		if (materialNodes.size() != this->assetManager.materials.loadedMaterials.size()) {
+			if (this->assetManager.materials.loadedMaterials.size() == 0) {
 				vkx::MaterialProperties p;
 				p.ambient = glm::vec4();
 				p.diffuse = glm::vec4();
@@ -1253,13 +1270,17 @@ public:
 				p.opacity = 1.0f;
 				materialNodes[0] = p;
 			} else {
-				materialNodes.resize(this->assetManager.loadedMaterials.size());
+				materialNodes.resize(this->assetManager.materials.loadedMaterials.size());
 			}
 		}
 
-		for (int i = 0; i < this->assetManager.loadedMaterials.size(); ++i) {
-			materialNodes[i] = this->assetManager.loadedMaterials[i].properties;
-		}
+		//for (int i = 0; i < this->assetManager.materials.loadedMaterials.size(); ++i) {
+		//auto &map = this->assetManager.materials.loadedMaterials;
+		//for (auto mat = map.begin(); mat != map.end(); ++mat) {
+		//	//materialNodes[i] = this->assetManager.materials.loadedMaterials[i].properties;
+		//	//materialNodes[mat.m] = mat;
+		//}
+
 
 		// todo: don't update the whole buffer each time
 		// use map memory range and flush
@@ -1810,7 +1831,7 @@ public:
 
 
 		uint32_t lastMaterialIndex = -1;
-
+		std::string lastMaterialName;
 
 
 		//// for each of the model's meshes
@@ -1892,8 +1913,8 @@ public:
 				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset1);
 
 
-				if (lastMaterialIndex != mesh.meshBuffer.materialIndex) {
-					lastMaterialIndex = mesh.meshBuffer.materialIndex;
+				if (lastMaterialName != mesh.meshBuffer.materialName) {
+					lastMaterialName = mesh.meshBuffer.materialName;
 					uint32_t offset2 = mesh.meshBuffer.materialIndex * static_cast<uint32_t>(alignedMaterialSize);
 					// the third param is the set number!
 					setNum = 2;
@@ -1903,7 +1924,8 @@ public:
 					lastMaterialIndex = mesh.meshBuffer.materialIndex;
 
 					// must make pipeline layout compatible
-					vkx::Material m = this->assetManager.loadedMaterials[mesh.meshBuffer.materialIndex];
+					//vkx::Material m = this->assetManager.loadedMaterials[mesh.meshBuffer.materialIndex];
+					vkx::Material m = this->assetManager.materials.get(mesh.meshBuffer.materialName);
 					setNum = 3;
 					cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, m.descriptorSet, nullptr);
 				}
@@ -1957,6 +1979,7 @@ public:
 			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset1);
 
 
+			//if (lastMaterialIndex != skinnedMesh->meshBuffer.materialIndex) {
 			if (lastMaterialIndex != skinnedMesh->meshBuffer.materialIndex) {
 
 				lastMaterialIndex = skinnedMesh->meshBuffer.materialIndex;
@@ -1971,7 +1994,8 @@ public:
 
 				//if (lastMaterialIndex != skinnedMesh->meshBuffer.materialIndex) {
 				// must make pipeline layout compatible
-				vkx::Material m = this->assetManager.loadedMaterials[skinnedMesh->meshBuffer.materialIndex];
+				//vkx::Material m = this->assetManager.loadedMaterials[skinnedMesh->meshBuffer.materialIndex];
+				vkx::Material m = this->assetManager.materials.get(skinnedMesh->meshBuffer.materialName);
 				setNum = 3;
 				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, m.descriptorSet, nullptr);
 			}
