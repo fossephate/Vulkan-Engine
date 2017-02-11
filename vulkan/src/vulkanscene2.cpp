@@ -245,7 +245,7 @@ public:
 	};
 
 	struct {
-		Light lights[5];
+		Light lights[50];
 		glm::vec4 viewPos;
 	} uboFSLights;
 
@@ -976,22 +976,25 @@ public:
 
 		device.updateDescriptorSets(writeDescriptorSets2, nullptr);
 
-		vk::DescriptorImageInfo texDescriptorSceneColormap = vkx::descriptorImageInfo(textures.colorMap.sampler, textures.colorMap.view, vk::ImageLayout::eGeneral);
+
+
+		//vk::DescriptorImageInfo texDescriptorSceneColormap = vkx::descriptorImageInfo(textures.colorMap.sampler, textures.colorMap.view, vk::ImageLayout::eGeneral);
 
 		std::vector<vk::WriteDescriptorSet> offscreenWriteDescriptorSets =
 		{
-			// Binding 0 : Vertex shader uniform buffer
+			// Set 0: Binding 0 : Vertex shader uniform buffer
 			vkx::writeDescriptorSet(
 				descriptorSetsDeferred.offscreen,
 				vk::DescriptorType::eUniformBuffer,
 				0,
 				&uniformDataDeferred.vsOffscreen.descriptor),
-			// Binding 1 : Scene color map
+			// Set 0: Binding 1 : Scene color map
 			vkx::writeDescriptorSet(
 				descriptorSetsDeferred.offscreen,
 				vk::DescriptorType::eCombinedImageSampler,
 				1,
-				&texDescriptorSceneColormap)
+				&textures.colorMap.descriptor)
+				//&texDescriptorSceneColormap)
 		};
 		device.updateDescriptorSets(offscreenWriteDescriptorSets, nullptr);
 
@@ -1356,6 +1359,26 @@ public:
 		uboFSLights.lights[4].radius = 10.0f;
 		uboFSLights.lights[4].linearFalloff = 0.8f;
 		uboFSLights.lights[4].quadraticFalloff = 0.6f;
+
+		for (int i = 5; i < 50; ++i) {
+
+			std::random_device rd;
+			std::mt19937 gen(rd());
+			std::uniform_real_distribution<> dis(0, 0.8f);
+			float rnd = dis(gen);
+			float rnd1 = dis(gen);
+			float rnd2 = dis(gen);
+			float rnd3 = dis(gen);
+
+			uboFSLights.lights[i].position = glm::vec4(sin(globalP)*i, cos(globalP)*i, 3.0f*sin(globalP+i), 0.0f);
+			uboFSLights.lights[i].color = glm::vec4(sin(globalP)+(i*2), cos(globalP)+i, sin(globalP)*i, 0.0f) * glm::vec4(1.5f);
+			uboFSLights.lights[i].radius = 15.0f;
+			uboFSLights.lights[i].linearFalloff = 0.3f;
+			uboFSLights.lights[i].quadraticFalloff = 0.4f;
+
+		}
+
+
 
 		// Current view position
 		//uboFragmentLights.viewPos = glm::vec4(0.0f, 0.0f, -camera.transform.translation.z, 0.0f);

@@ -227,14 +227,30 @@ namespace vkx {
 			//		material.diffuse.view,
 			//		vk::ImageLayout::eGeneral);
 
+
 			std::vector<vk::WriteDescriptorSet> writeDescriptorSets =
 			{
+				// image bindings
+				// binding 0: diffuse
 				vkx::writeDescriptorSet(
 					material.descriptorSet,
 					vk::DescriptorType::eCombinedImageSampler,
 					0,
 					&material.diffuse.descriptor),
+				//// binding 1: specular
+				//vkx::writeDescriptorSet(
+				//	material.descriptorSet,
+				//	vk::DescriptorType::eCombinedImageSampler,
+				//	1,
+				//	&material.specular.descriptor),
+				//// binding 2: normal
+				//vkx::writeDescriptorSet(
+				//	material.descriptorSet,
+				//	vk::DescriptorType::eCombinedImageSampler,
+				//	2,
+				//	&material.bump.descriptor)
 			};
+			// need to update shaders to reflect new bindings
 
 
 

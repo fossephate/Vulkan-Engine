@@ -3,7 +3,7 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 
-layout (set = 0, binding = 1) uniform sampler2D samplerposition;
+layout (set = 0, binding = 1) uniform sampler2D samplerPosition;
 layout (set = 0, binding = 2) uniform sampler2D samplerNormal;
 layout (set = 0, binding = 3) uniform sampler2D samplerAlbedo;
 
@@ -19,7 +19,7 @@ struct Light {
 
 layout (set = 0, binding = 4) uniform UBO 
 {
-    Light lights[6];
+    Light lights[51];
     vec4 viewPos;
 } ubo;
 
@@ -35,11 +35,11 @@ layout (location = 0) out vec4 outFragcolor;
 void main() 
 {
     // Get G-Buffer values
-    vec3 fragPos = texture(samplerposition, inUV).rgb;
+    vec3 fragPos = texture(samplerPosition, inUV).rgb;
     vec3 normal = texture(samplerNormal, inUV).rgb;
     vec4 albedo = texture(samplerAlbedo, inUV);
     
-	#define lightCount 5
+	#define lightCount 50
 	#define ambient 0.05
 	#define specularStrength 0.15
 	
