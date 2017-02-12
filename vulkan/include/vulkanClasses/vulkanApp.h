@@ -209,6 +209,8 @@ namespace vkx
 				bool fullscreen = false;
 				/** @brief Set to true if v-sync will be forced for the swapchain */
 				bool vsync = false;
+				/** @brief Set to true to cap fps */
+				bool capFPS = true;
 			} settings;
 			
 

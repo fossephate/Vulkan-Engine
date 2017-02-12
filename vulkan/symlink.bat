@@ -2,7 +2,7 @@
 
 
 
-mklink /D ".\assets" "src\assets"
+rem mklink /D ".\assets" "src\assets"
 
 mklink /D "./build\x64\Debug\assets" "..\..\..\src\assets"
 

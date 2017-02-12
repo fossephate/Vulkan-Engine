@@ -407,24 +407,6 @@ public:
 
 	void prepareVertexDescriptions() {
 
-		struct meshVertex {
-			glm::vec3 pos;
-			glm::vec2 uv;
-			glm::vec3 color;
-			glm::vec3 normal;
-		};
-
-		struct skinnedMeshVertex {
-			glm::vec3 pos;
-			glm::vec2 uv;
-			glm::vec3 color;
-			glm::vec3 normal;
-
-			// Max. four bones per vertex
-			float boneWeights[4];
-			uint32_t boneIDs[4];
-		};
-
 
 
 		/* not deferred */
@@ -432,7 +414,7 @@ public:
 		// Binding description
 		vertices.bindingDescriptions.resize(1);
 		vertices.bindingDescriptions[0] =
-			vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, sizeof(skinnedMeshVertex), vk::VertexInputRate::eVertex);
+			vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, vkx::vertexSize(skinnedMeshVertexLayout), vk::VertexInputRate::eVertex);
 			//vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, vkx::vertexSize(skinnedMeshVertexLayout), vk::VertexInputRate::eVertex);
 
 		// Attribute descriptions
