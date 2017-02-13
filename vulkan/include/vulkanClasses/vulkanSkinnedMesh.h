@@ -99,115 +99,109 @@ namespace vkx {
 
 	class SkinnedMesh : public Object3D {
 
-	private:
+		private:
 
-	public:
+		public:
 
-		//vkx::Mesh mesh;
+			//vkx::Mesh mesh;
 
-		vkx::MeshBuffer meshBuffer;
+			vkx::MeshBuffer meshBuffer;
 
-		uint32_t matrixIndex;
-		uint32_t boneIndex;
-		uint32_t vertexBufferBinding = 0;
-		//vk::Pipeline pipeline;
+			uint32_t matrixIndex;
+			uint32_t boneIndex;
+			uint32_t vertexBufferBinding = 0;
+			//vk::Pipeline pipeline;
 
-		// if there are too many vector member variables
-		// the program crashes for some reason
+			// if there are too many vector member variables
+			// the program crashes for some reason
 
-		float animationSpeed = 0.75f;
-
-
-
-		// Bone related stuff
-		// Maps bone name with index
-		std::map<std::string, uint32_t> boneMapping;
-		// Bone details
-		std::vector<BoneInfo> boneInfo;
-
-
-		// Number of bones present
-		uint32_t numBones = 0;
-		// Root inverse transform matrix
-		aiMatrix4x4 globalInverseTransform;
-		// Per-vertex bone info
-		std::vector<VertexBoneData> bones;
-		// Bone transformations
-		std::vector<aiMatrix4x4> boneTransforms;
-		// Currently active animation
-		aiAnimation *pAnimation;
-
-		//http://stackoverflow.com/questions/15648844/using-smart-pointers-for-class-members
+			float animationSpeed = 0.75f;
 
 
 
-		// pointer to meshLoader
-		//vkx::MeshLoader /*const */ *meshLoader = nullptr;
-		vkx::MeshLoader *meshLoader = nullptr;
-
-		vkx::Context *context = nullptr;
-
-
+			//// Bone related stuff
+			//// Maps bone name with index
+			//std::map<std::string, uint32_t> boneMapping;
+			//// Bone details
+			//std::vector<BoneInfo> boneInfo;
 
 
-		struct skinnedMeshVertex {
-			glm::vec3 pos;
-			glm::vec3 normal;
-			glm::vec2 uv;
-			glm::vec3 color;
-			// Max. four bones per vertex
-			float boneWeights[4];
-			uint32_t boneIDs[4];
-		};
+			//// Number of bones present
+			//uint32_t numBones = 0;
+			//// Root inverse transform matrix
+			//aiMatrix4x4 globalInverseTransform;
+			//// Per-vertex bone info
+			//std::vector<VertexBoneData> bones;
+			//// Bone transformations
+			//std::vector<aiMatrix4x4> boneTransforms;
+			//// Currently active animation
+			//aiAnimation *pAnimation;
+
+			//http://stackoverflow.com/questions/15648844/using-smart-pointers-for-class-members
+
+
+
+			// pointer to meshLoader
+			//vkx::MeshLoader /*const */ *meshLoader = nullptr;
+			vkx::MeshLoader *meshLoader = nullptr;
+
+			vkx::Context *context = nullptr;
 
 
 
 
-
-
-		SkinnedMesh();
-		SkinnedMesh(vkx::Context *context, vkx::AssetManager *assetManager);
-		//SkinnedMesh(vkx::Context *context, vkx::AssetManager *assetManager);
-
-
-
-
-		// load model
-		void load(const std::string &filename);
-		// load model with custom flags
-		void load(const std::string &filename, int flags);
-
-		//void createMeshes(const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
+			//struct skinnedMeshVertex {
+			//	glm::vec3 pos;
+			//	glm::vec3 normal;
+			//	glm::vec2 uv;
+			//	glm::vec3 color;
+			//	// Max. four bones per vertex
+			//	float boneWeights[4];
+			//	uint32_t boneIDs[4];
+			//};
 
 
 
 
-		void setup(float scale);
 
-		void setAnimation(uint32_t animationIndex);
 
-		//void loadBones(uint32_t meshIndex, const aiMesh * pMesh, std::vector<VertexBoneData>& Bones, float scale=1.0f);
-
-		void loadBones(uint32_t meshIndex, const aiMesh *pMesh, std::vector<VertexBoneData> &Bones);
-
-		void update(float time);
-
-		void destroy();
+			SkinnedMesh();
+			SkinnedMesh(vkx::Context *context, vkx::AssetManager *assetManager);
+			//SkinnedMesh(vkx::Context *context, vkx::AssetManager *assetManager);
 
 
 
 
-	private:
+			// load model
+			void load(const std::string &filename);
+			// load model with custom flags
+			void load(const std::string &filename, int flags);
 
-		const aiNodeAnim * findNodeAnim(const aiAnimation *animation, const std::string nodeName);
+			void createSkinnedMeshBuffer(const std::vector<VertexLayout> &layout, float scale);
 
-		aiMatrix4x4 interpolateTranslation(float time, const aiNodeAnim *pNodeAnim);
+			//void setup(const std::vector<VertexLayout> &layout, float scale);
+			//void setup(float scale);
 
-		aiMatrix4x4 interpolateRotation(float time, const aiNodeAnim *pNodeAnim);
+			void setAnimation(uint32_t animationIndex);
 
-		aiMatrix4x4 interpolateScale(float time, const aiNodeAnim *pNodeAnim);
+			void update(float time);
 
-		void readNodeHierarchy(float AnimationTime, const aiNode *pNode, const aiMatrix4x4 &ParentTransform);
+			void destroy();
+
+
+
+
+		private:
+
+			//const aiNodeAnim * findNodeAnim(const aiAnimation *animation, const std::string nodeName);
+
+			//aiMatrix4x4 interpolateTranslation(float time, const aiNodeAnim *pNodeAnim);
+
+			//aiMatrix4x4 interpolateRotation(float time, const aiNodeAnim *pNodeAnim);
+
+			//aiMatrix4x4 interpolateScale(float time, const aiNodeAnim *pNodeAnim);
+
+			//void readNodeHierarchy(float AnimationTime, const aiNode *pNode, const aiMatrix4x4 &ParentTransform);
 
 
 

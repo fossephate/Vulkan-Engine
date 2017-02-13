@@ -25,7 +25,9 @@ layout (set = 0, binding = 0) uniform sceneBuffer
 	//mat4 model;// todo: remove this
 	mat4 view;
 	mat4 projection;
-	
+
+
+
 	vec4 lightPos;
 	vec4 cameraPos;
 
@@ -33,11 +35,29 @@ layout (set = 0, binding = 0) uniform sceneBuffer
 
 } scene;
 
+
+
+
+// layout (binding = 0) uniform UBO 
+// {
+// 	mat4 projection;
+// 	mat4 view;
+// 	mat4 model;
+// 	mat4 bones[MAX_BONES];	
+// 	vec4 lightPos;
+// 	vec4 viewPos;
+// } ubo;
+
 // matrix data
 layout (set = 1, binding = 0) uniform matrixBuffer
 {
 	mat4 model;
 	mat4 boneIndex;
+	//vec4 boneIndex;
+	//vec4 padding[3];
+	//mat4 g1;
+	//mat4 bones[MAX_BONES];
+	//mat4 g2;
 } instance;
 
 
@@ -90,6 +110,7 @@ void main() {
 	mat4 MVP = scene.projection * scene.view * instance.model;
 
 	gl_Position = scene.projection * scene.view * instance.model * boneTransform * vec4(inPos.xyz, 1.0);
+	//gl_Position = scene.projection * scene.model * boneTransform * vec4(inPos.xyz, 1.0);
 
 
 	vec4 pos = instance.model * vec4(inPos, 1.0);

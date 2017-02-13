@@ -13,9 +13,7 @@ namespace vkx {
 	SkinnedMesh::SkinnedMesh(vkx::Context *context, vkx::AssetManager *assetManager) {
 
 		this->context = context;
-		//this->assetManager = assetManager;
 		this->meshLoader = new vkx::MeshLoader(context, assetManager);
-		//this->meshLoader = vkx::MeshLoader(context, assetManager);
 	}
 
 	//SkinnedMesh::SkinnedMesh(vkx::Context *context, vkx::AssetManager *assetManager) :
@@ -35,81 +33,79 @@ namespace vkx {
 		this->meshLoader->load(filename, flags);
 	}
 
-
-
-
-
-	// todo: remove this:
-	void SkinnedMesh::setup(float scale) {
-
-
-		this->setAnimation(0);
-		
-
-		// Setup bones
-		// One vertex bone info structure per vertex
-		this->bones.resize(this->meshLoader->numVertices);
-		// Store global inverse transform matrix of root node 
-		this->globalInverseTransform = this->meshLoader->pScene->mRootNode->mTransformation;
-		this->globalInverseTransform.Inverse();
-
-		aiMatrix4x4 scaleMatrix;
-		aiMatrix4x4::Scaling(aiVector3D(scale, scale, scale), scaleMatrix);
-
-		this->globalInverseTransform = this->globalInverseTransform * scaleMatrix;
-
-
-		// Load bones (weights and IDs)
-		for (uint32_t m = 0; m < this->meshLoader->m_Entries.size(); m++) {
-			aiMesh *paiMesh = this->meshLoader->pScene->mMeshes[m];
-			if (paiMesh->mNumBones > 0) {
-				this->loadBones(m, paiMesh, this->bones/*, scale*/);
-			}
-		}
-
-		// Generate vertex buffer
-		std::vector<skinnedMeshVertex> vertexBuffer;
-		// Iterate through all meshes in the file
-		// and extract the vertex information used in this demo
-		for (uint32_t m = 0; m < this->meshLoader->m_Entries.size(); m++) {
-			for (uint32_t i = 0; i < this->meshLoader->m_Entries[m].Vertices.size(); i++) {
-				skinnedMeshVertex vertex;
-
-				glm::vec3 pos = this->meshLoader->m_Entries[m].Vertices[i].m_pos;
-
-				//vertex.pos = glm::vec3(pos.x*scale, pos.y*scale, pos.z*scale);
-				vertex.pos = glm::vec3(pos.x, pos.y, pos.z);
-				//vertex.pos.y = -vertex.pos.y;// y was negative// important
-				vertex.normal = this->meshLoader->m_Entries[m].Vertices[i].m_normal;
-				vertex.uv = this->meshLoader->m_Entries[m].Vertices[i].m_tex;
-				vertex.color = this->meshLoader->m_Entries[m].Vertices[i].m_color;
-
-				// Fetch bone weights and IDs
-				for (uint32_t j = 0; j < MAX_BONES_PER_VERTEX; j++) {
-					vertex.boneWeights[j] = this->bones[this->meshLoader->m_Entries[m].vertexBase + i].weights[j];
-					vertex.boneIDs[j] = this->bones[this->meshLoader->m_Entries[m].vertexBase + i].IDs[j];
-				}
-
-				vertexBuffer.push_back(vertex);
-			}
-		}
-		uint32_t vertexBufferSize = vertexBuffer.size() * sizeof(skinnedMeshVertex);
-
-		// Generate index buffer from loaded mesh file
-		std::vector<uint32_t> indexBuffer;
-		for (uint32_t m = 0; m < this->meshLoader->m_Entries.size(); m++) {
-			uint32_t indexBase = indexBuffer.size();
-			for (uint32_t i = 0; i < this->meshLoader->m_Entries[m].Indices.size(); i++) {
-				indexBuffer.push_back(this->meshLoader->m_Entries[m].Indices[i] + indexBase);
-			}
-		}
-		uint32_t indexBufferSize = indexBuffer.size() * sizeof(uint32_t);
-		this->meshBuffer.indexCount = indexBuffer.size();
-		this->meshBuffer.vertices = context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
-		this->meshBuffer.indices = context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);
-
-		this->meshBuffer.materialIndex = this->meshLoader->m_Entries[0].MaterialIndex;
+	void SkinnedMesh::createSkinnedMeshBuffer(const std::vector<VertexLayout> &layout, float scale) {
+		this->meshLoader->createSkinnedMeshBuffer(layout, scale);
+		this->meshBuffer = this->meshLoader->combinedBuffer;
 	}
+
+	//// todo: remove this:
+	//void SkinnedMesh::setup(const std::vector<VertexLayout> &layout, float scale) {
+
+
+	//	this->setAnimation(0);
+	//	
+
+	//	// Setup bones
+	//	// One vertex bone info structure per vertex
+	//	this->bones.resize(this->meshLoader->numVertices);
+	//	// Store global inverse transform matrix of root node 
+	//	this->globalInverseTransform = this->meshLoader->pScene->mRootNode->mTransformation;
+	//	this->globalInverseTransform.Inverse();
+
+	//	aiMatrix4x4 scaleMatrix;
+	//	aiMatrix4x4::Scaling(aiVector3D(scale, scale, scale), scaleMatrix);
+
+	//	this->globalInverseTransform = this->globalInverseTransform * scaleMatrix;
+
+
+	//	// Load bones (weights and IDs)
+	//	for (uint32_t m = 0; m < this->meshLoader->m_Entries.size(); m++) {
+	//		aiMesh *paiMesh = this->meshLoader->pScene->mMeshes[m];
+	//		if (paiMesh->mNumBones > 0) {
+	//			this->loadBones(m, paiMesh, this->bones/*, scale*/);
+	//		}
+	//	}
+
+	//	// Generate vertex buffer
+	//	std::vector<skinnedMeshVertex> vertexBuffer;
+	//	// Iterate through all meshes in the file
+	//	// and extract the vertex information used in this demo
+	//	for (uint32_t m = 0; m < this->meshLoader->m_Entries.size(); m++) {
+	//		for (uint32_t i = 0; i < this->meshLoader->m_Entries[m].Vertices.size(); i++) {
+	//			skinnedMeshVertex vertex;
+
+	//			vertex.pos = this->meshLoader->m_Entries[m].Vertices[i].m_pos;//*scale
+	//			vertex.normal = this->meshLoader->m_Entries[m].Vertices[i].m_normal;
+	//			vertex.uv = this->meshLoader->m_Entries[m].Vertices[i].m_tex;
+	//			vertex.color = this->meshLoader->m_Entries[m].Vertices[i].m_color;
+
+	//			// Fetch bone weights and IDs
+	//			for (uint32_t j = 0; j < MAX_BONES_PER_VERTEX; j++) {
+	//				vertex.boneWeights[j] = this->bones[this->meshLoader->m_Entries[m].vertexBase + i].weights[j];
+	//				vertex.boneIDs[j] = this->bones[this->meshLoader->m_Entries[m].vertexBase + i].IDs[j];
+	//			}
+
+	//			vertexBuffer.push_back(vertex);
+	//		}
+	//	}
+	//	uint32_t vertexBufferSize = vertexBuffer.size() * vkx::vertexSize(layout);
+
+	//	// Generate index buffer from loaded mesh file
+	//	std::vector<uint32_t> indexBuffer;
+	//	for (uint32_t m = 0; m < this->meshLoader->m_Entries.size(); m++) {
+	//		uint32_t indexBase = indexBuffer.size();
+	//		for (uint32_t i = 0; i < this->meshLoader->m_Entries[m].Indices.size(); i++) {
+	//			indexBuffer.push_back(this->meshLoader->m_Entries[m].Indices[i] + indexBase);
+	//		}
+	//	}
+	//	uint32_t indexBufferSize = indexBuffer.size() * sizeof(uint32_t);
+	//	this->meshBuffer.indexCount = indexBuffer.size();
+	//	this->meshBuffer.vertices = context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
+	//	this->meshBuffer.indices = context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);
+
+	//	this->meshBuffer.materialIndex = this->meshLoader->m_Entries[0].materialIndex;
+	//	this->meshBuffer.materialName = this->meshLoader->m_Entries[0].materialName;
+	//}
 
 
 
@@ -142,62 +138,44 @@ namespace vkx {
 
 		// Set active animation by index
 		void SkinnedMesh::setAnimation(uint32_t animationIndex) {
-			assert(animationIndex < meshLoader->pScene->mNumAnimations);
-			pAnimation = meshLoader->pScene->mAnimations[animationIndex];
+			this->meshLoader->setAnimation(animationIndex);
 		}
 
-		// Load bone information from ASSIMP mesh
-		void SkinnedMesh::loadBones(uint32_t meshIndex, const aiMesh *pMesh, std::vector<VertexBoneData> &Bones/*, float scale*/) {
-			for (uint32_t i = 0; i < pMesh->mNumBones; i++) {
-				uint32_t index = 0;
+		//// Load bone information from ASSIMP mesh
+		//void SkinnedMesh::loadBones(uint32_t meshIndex, const aiMesh *pMesh, std::vector<VertexBoneData> &Bones/*, float scale*/) {
+		//	for (uint32_t i = 0; i < pMesh->mNumBones; i++) {
+		//		uint32_t index = 0;
 
-				assert(pMesh->mNumBones <= MAX_BONES);
+		//		assert(pMesh->mNumBones <= MAX_BONES);
 
-				std::string name(pMesh->mBones[i]->mName.data);
+		//		std::string name(pMesh->mBones[i]->mName.data);
 
-				if (boneMapping.find(name) == boneMapping.end()) {
-					// Bone not present, add new one
-					index = numBones;
-					numBones++;
-					BoneInfo bone;
-					boneInfo.push_back(bone);
-					
-					// todo: fix this
-					//aiMatrix4x4 offset = pMesh->mBones[i]->mOffsetMatrix;
-					//aiMatrix4x4 scaleMatrix;
-					//aiMatrix4x4::Scaling(aiVector3D(scale, scale, scale), scaleMatrix);
-					//offset = offset * scaleMatrix;
-					//boneInfo[index].offset = offset;
+		//		if (boneMapping.find(name) == boneMapping.end()) {
+		//			// Bone not present, add new one
+		//			index = numBones;
+		//			numBones++;
+		//			BoneInfo bone;
+		//			boneInfo.push_back(bone);
 
-					boneInfo[index].offset = pMesh->mBones[i]->mOffsetMatrix;
+		//			boneInfo[index].offset = pMesh->mBones[i]->mOffsetMatrix;
 
-					boneMapping[name] = index;
+		//			boneMapping[name] = index;
 
-				} else {
-					index = boneMapping[name];
-				}
+		//		} else {
+		//			index = boneMapping[name];
+		//		}
 
-				for (uint32_t j = 0; j < pMesh->mBones[i]->mNumWeights; j++) {
-					uint32_t vertexID = meshLoader->m_Entries[meshIndex].vertexBase + pMesh->mBones[i]->mWeights[j].mVertexId;
-					Bones[vertexID].add(index, pMesh->mBones[i]->mWeights[j].mWeight);
-				}
-			}
-			boneTransforms.resize(numBones);
-		}
+		//		for (uint32_t j = 0; j < pMesh->mBones[i]->mNumWeights; j++) {
+		//			uint32_t vertexID = meshLoader->m_Entries[meshIndex].vertexBase + pMesh->mBones[i]->mWeights[j].mVertexId;
+		//			Bones[vertexID].add(index, pMesh->mBones[i]->mWeights[j].mWeight);
+		//		}
+		//	}
+		//	boneTransforms.resize(numBones);
+		//}
 
 		// Recursive bone transformation for given animation time
 		void SkinnedMesh::update(float time) {
-			float TicksPerSecond = (float)(meshLoader->pScene->mAnimations[0]->mTicksPerSecond != 0 ? meshLoader->pScene->mAnimations[0]->mTicksPerSecond : 25.0f);
-			float TimeInTicks = time * TicksPerSecond;
-			float AnimationTime = fmod(TimeInTicks, (float)meshLoader->pScene->mAnimations[0]->mDuration);
-
-			aiMatrix4x4 identity = aiMatrix4x4();
-			readNodeHierarchy(AnimationTime, meshLoader->pScene->mRootNode, identity);
-
-			for (uint32_t i = 0; i < boneTransforms.size(); i++) {
-				boneTransforms[i] = boneInfo[i].finalTransformation;
-			}
-
+			this->meshLoader->update(time);
 		}
 
 		void SkinnedMesh::destroy() {
@@ -207,144 +185,144 @@ namespace vkx {
 
 
 
-		// Find animation for a given node
-		const aiNodeAnim* SkinnedMesh::findNodeAnim(const aiAnimation* animation, const std::string nodeName) {
-			for (uint32_t i = 0; i < animation->mNumChannels; i++) {
-				const aiNodeAnim* nodeAnim = animation->mChannels[i];
-				if (std::string(nodeAnim->mNodeName.data) == nodeName) {
-					return nodeAnim;
-				}
-			}
-			return nullptr;
-		}
+		//// Find animation for a given node
+		//const aiNodeAnim* SkinnedMesh::findNodeAnim(const aiAnimation* animation, const std::string nodeName) {
+		//	for (uint32_t i = 0; i < animation->mNumChannels; i++) {
+		//		const aiNodeAnim* nodeAnim = animation->mChannels[i];
+		//		if (std::string(nodeAnim->mNodeName.data) == nodeName) {
+		//			return nodeAnim;
+		//		}
+		//	}
+		//	return nullptr;
+		//}
 
-		// Returns a 4x4 matrix with interpolated translation between current and next frame
-		aiMatrix4x4 SkinnedMesh::interpolateTranslation(float time, const aiNodeAnim* pNodeAnim) {
-			aiVector3D translation;
+		//// Returns a 4x4 matrix with interpolated translation between current and next frame
+		//aiMatrix4x4 SkinnedMesh::interpolateTranslation(float time, const aiNodeAnim* pNodeAnim) {
+		//	aiVector3D translation;
 
-			if (pNodeAnim->mNumPositionKeys == 1) {
-				translation = pNodeAnim->mPositionKeys[0].mValue;
-			} else {
-				uint32_t frameIndex = 0;
-				for (uint32_t i = 0; i < pNodeAnim->mNumPositionKeys - 1; i++) {
-					if (time < (float)pNodeAnim->mPositionKeys[i + 1].mTime) {
-						frameIndex = i;
-						break;
-					}
-				}
+		//	if (pNodeAnim->mNumPositionKeys == 1) {
+		//		translation = pNodeAnim->mPositionKeys[0].mValue;
+		//	} else {
+		//		uint32_t frameIndex = 0;
+		//		for (uint32_t i = 0; i < pNodeAnim->mNumPositionKeys - 1; i++) {
+		//			if (time < (float)pNodeAnim->mPositionKeys[i + 1].mTime) {
+		//				frameIndex = i;
+		//				break;
+		//			}
+		//		}
 
-				aiVectorKey currentFrame = pNodeAnim->mPositionKeys[frameIndex];
-				aiVectorKey nextFrame = pNodeAnim->mPositionKeys[(frameIndex + 1) % pNodeAnim->mNumPositionKeys];
+		//		aiVectorKey currentFrame = pNodeAnim->mPositionKeys[frameIndex];
+		//		aiVectorKey nextFrame = pNodeAnim->mPositionKeys[(frameIndex + 1) % pNodeAnim->mNumPositionKeys];
 
-				float delta = (time - (float)currentFrame.mTime) / (float)(nextFrame.mTime - currentFrame.mTime);
+		//		float delta = (time - (float)currentFrame.mTime) / (float)(nextFrame.mTime - currentFrame.mTime);
 
-				const aiVector3D& start = currentFrame.mValue;
-				const aiVector3D& end = nextFrame.mValue;
+		//		const aiVector3D& start = currentFrame.mValue;
+		//		const aiVector3D& end = nextFrame.mValue;
 
-				translation = (start + delta * (end - start));
-			}
+		//		translation = (start + delta * (end - start));
+		//	}
 
-			aiMatrix4x4 mat;
-			aiMatrix4x4::Translation(translation, mat);
-			return mat;
-		}
+		//	aiMatrix4x4 mat;
+		//	aiMatrix4x4::Translation(translation, mat);
+		//	return mat;
+		//}
 
-		// Returns a 4x4 matrix with interpolated rotation between current and next frame
-		aiMatrix4x4 SkinnedMesh::interpolateRotation(float time, const aiNodeAnim* pNodeAnim) {
-			aiQuaternion rotation;
+		//// Returns a 4x4 matrix with interpolated rotation between current and next frame
+		//aiMatrix4x4 SkinnedMesh::interpolateRotation(float time, const aiNodeAnim* pNodeAnim) {
+		//	aiQuaternion rotation;
 
-			if (pNodeAnim->mNumRotationKeys == 1) {
-				rotation = pNodeAnim->mRotationKeys[0].mValue;
-			} else {
-				uint32_t frameIndex = 0;
-				for (uint32_t i = 0; i < pNodeAnim->mNumRotationKeys - 1; i++) {
-					if (time < (float)pNodeAnim->mRotationKeys[i + 1].mTime) {
-						frameIndex = i;
-						break;
-					}
-				}
+		//	if (pNodeAnim->mNumRotationKeys == 1) {
+		//		rotation = pNodeAnim->mRotationKeys[0].mValue;
+		//	} else {
+		//		uint32_t frameIndex = 0;
+		//		for (uint32_t i = 0; i < pNodeAnim->mNumRotationKeys - 1; i++) {
+		//			if (time < (float)pNodeAnim->mRotationKeys[i + 1].mTime) {
+		//				frameIndex = i;
+		//				break;
+		//			}
+		//		}
 
-				aiQuatKey currentFrame = pNodeAnim->mRotationKeys[frameIndex];
-				aiQuatKey nextFrame = pNodeAnim->mRotationKeys[(frameIndex + 1) % pNodeAnim->mNumRotationKeys];
+		//		aiQuatKey currentFrame = pNodeAnim->mRotationKeys[frameIndex];
+		//		aiQuatKey nextFrame = pNodeAnim->mRotationKeys[(frameIndex + 1) % pNodeAnim->mNumRotationKeys];
 
-				float delta = (time - (float)currentFrame.mTime) / (float)(nextFrame.mTime - currentFrame.mTime);
+		//		float delta = (time - (float)currentFrame.mTime) / (float)(nextFrame.mTime - currentFrame.mTime);
 
-				const aiQuaternion& start = currentFrame.mValue;
-				const aiQuaternion& end = nextFrame.mValue;
+		//		const aiQuaternion& start = currentFrame.mValue;
+		//		const aiQuaternion& end = nextFrame.mValue;
 
-				aiQuaternion::Interpolate(rotation, start, end, delta);
-				rotation.Normalize();
-			}
+		//		aiQuaternion::Interpolate(rotation, start, end, delta);
+		//		rotation.Normalize();
+		//	}
 
-			aiMatrix4x4 mat(rotation.GetMatrix());
-			return mat;
-		}
-
-
-		// Returns a 4x4 matrix with interpolated scaling between current and next frame
-		aiMatrix4x4 SkinnedMesh::interpolateScale(float time, const aiNodeAnim* pNodeAnim) {
-			aiVector3D scale;
-
-			if (pNodeAnim->mNumScalingKeys == 1) {
-				scale = pNodeAnim->mScalingKeys[0].mValue;
-			} else {
-				uint32_t frameIndex = 0;
-				for (uint32_t i = 0; i < pNodeAnim->mNumScalingKeys - 1; i++) {
-					if (time < (float)pNodeAnim->mScalingKeys[i + 1].mTime) {
-						frameIndex = i;
-						break;
-					}
-				}
-
-				aiVectorKey currentFrame = pNodeAnim->mScalingKeys[frameIndex];
-				aiVectorKey nextFrame = pNodeAnim->mScalingKeys[(frameIndex + 1) % pNodeAnim->mNumScalingKeys];
-
-				float delta = (time - (float)currentFrame.mTime) / (float)(nextFrame.mTime - currentFrame.mTime);
-
-				const aiVector3D& start = currentFrame.mValue;
-				const aiVector3D& end = nextFrame.mValue;
-
-				scale = (start + delta * (end - start));
-			}
-
-			aiMatrix4x4 mat;
-			aiMatrix4x4::Scaling(scale, mat);
-			return mat;
-		}
+		//	aiMatrix4x4 mat(rotation.GetMatrix());
+		//	return mat;
+		//}
 
 
+		//// Returns a 4x4 matrix with interpolated scaling between current and next frame
+		//aiMatrix4x4 SkinnedMesh::interpolateScale(float time, const aiNodeAnim* pNodeAnim) {
+		//	aiVector3D scale;
+
+		//	if (pNodeAnim->mNumScalingKeys == 1) {
+		//		scale = pNodeAnim->mScalingKeys[0].mValue;
+		//	} else {
+		//		uint32_t frameIndex = 0;
+		//		for (uint32_t i = 0; i < pNodeAnim->mNumScalingKeys - 1; i++) {
+		//			if (time < (float)pNodeAnim->mScalingKeys[i + 1].mTime) {
+		//				frameIndex = i;
+		//				break;
+		//			}
+		//		}
+
+		//		aiVectorKey currentFrame = pNodeAnim->mScalingKeys[frameIndex];
+		//		aiVectorKey nextFrame = pNodeAnim->mScalingKeys[(frameIndex + 1) % pNodeAnim->mNumScalingKeys];
+
+		//		float delta = (time - (float)currentFrame.mTime) / (float)(nextFrame.mTime - currentFrame.mTime);
+
+		//		const aiVector3D& start = currentFrame.mValue;
+		//		const aiVector3D& end = nextFrame.mValue;
+
+		//		scale = (start + delta * (end - start));
+		//	}
+
+		//	aiMatrix4x4 mat;
+		//	aiMatrix4x4::Scaling(scale, mat);
+		//	return mat;
+		//}
 
 
 
 
-		// Get node hierarchy for current animation time
-		void SkinnedMesh::readNodeHierarchy(float AnimationTime, const aiNode* pNode, const aiMatrix4x4& ParentTransform) {
-			std::string NodeName(pNode->mName.data);
 
-			aiMatrix4x4 NodeTransformation(pNode->mTransformation);
 
-			const aiNodeAnim* pNodeAnim = findNodeAnim(pAnimation, NodeName);
+		//// Get node hierarchy for current animation time
+		//void SkinnedMesh::readNodeHierarchy(float AnimationTime, const aiNode* pNode, const aiMatrix4x4& ParentTransform) {
+		//	std::string NodeName(pNode->mName.data);
 
-			if (pNodeAnim) {
-				// Get interpolated matrices between current and next frame
-				aiMatrix4x4 matScale = interpolateScale(AnimationTime, pNodeAnim);
-				aiMatrix4x4 matRotation = interpolateRotation(AnimationTime, pNodeAnim);
-				aiMatrix4x4 matTranslation = interpolateTranslation(AnimationTime, pNodeAnim);
+		//	aiMatrix4x4 NodeTransformation(pNode->mTransformation);
 
-				NodeTransformation = matTranslation * matRotation * matScale;
-			}
+		//	const aiNodeAnim* pNodeAnim = findNodeAnim(pAnimation, NodeName);
 
-			aiMatrix4x4 GlobalTransformation = ParentTransform * NodeTransformation;
+		//	if (pNodeAnim) {
+		//		// Get interpolated matrices between current and next frame
+		//		aiMatrix4x4 matScale = interpolateScale(AnimationTime, pNodeAnim);
+		//		aiMatrix4x4 matRotation = interpolateRotation(AnimationTime, pNodeAnim);
+		//		aiMatrix4x4 matTranslation = interpolateTranslation(AnimationTime, pNodeAnim);
 
-			if (boneMapping.find(NodeName) != boneMapping.end()) {
-				uint32_t BoneIndex = boneMapping[NodeName];
-				boneInfo[BoneIndex].finalTransformation = globalInverseTransform * GlobalTransformation * boneInfo[BoneIndex].offset;
-			}
+		//		NodeTransformation = matTranslation * matRotation * matScale;
+		//	}
 
-			for (uint32_t i = 0; i < pNode->mNumChildren; i++) {
-				readNodeHierarchy(AnimationTime, pNode->mChildren[i], GlobalTransformation);
-			}
-		}
+		//	aiMatrix4x4 GlobalTransformation = ParentTransform * NodeTransformation;
+
+		//	if (boneMapping.find(NodeName) != boneMapping.end()) {
+		//		uint32_t BoneIndex = boneMapping[NodeName];
+		//		boneInfo[BoneIndex].finalTransformation = globalInverseTransform * GlobalTransformation * boneInfo[BoneIndex].offset;
+		//	}
+
+		//	for (uint32_t i = 0; i < pNode->mNumChildren; i++) {
+		//		readNodeHierarchy(AnimationTime, pNode->mChildren[i], GlobalTransformation);
+		//	}
+		//}
 
 
 

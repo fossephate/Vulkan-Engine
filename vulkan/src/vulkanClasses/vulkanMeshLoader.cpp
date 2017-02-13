@@ -6,7 +6,6 @@ namespace vkx {
 
 		this->context = context;
 		this->assetManager = assetManager;
-		//this->device = context.device;
 		this->textureLoader = new vkx::TextureLoader(*context);
 	}
 
@@ -83,7 +82,8 @@ namespace vkx {
 			pScene->mMaterials[i]->Get(AI_MATKEY_NAME, name);
 
 			material.name = name.C_Str();
-			std::cout << "Material \"" << material.name << "\"" << std::endl;
+			std::string ls = "Info: Material: \"" + material.name + "\"\n";
+			printf(ls.c_str());
 
 			// if a material with the same name has already been loaded, continue
 			if (this->assetManager->materials.doExist(material.name)) {
@@ -117,9 +117,14 @@ namespace vkx {
 			// get diffuse texture
 			pScene->mMaterials[i]->GetTexture(aiTextureType_DIFFUSE, 0, &texturefile);
 			if (pScene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
-				std::cout << "  Diffuse: \"" << texturefile.C_Str() << "\"" << std::endl;
+
+				
 				std::string fileName = std::string(texturefile.C_Str());
 				std::replace(fileName.begin(), fileName.end(), '\\', '/');
+
+				//std::cout << "  Diffuse: \"" << texturefile.C_Str() << "\"" << std::endl;
+				std::string ls = "Info: Diffuse: \"" + std::string(texturefile.C_Str()) + "\"\n";
+				printf(ls.c_str());
 
 				// if the texture has already been loaded previously
 				// use it instead of loading it again
@@ -134,7 +139,7 @@ namespace vkx {
 				}
 			} else {
 				std::string fileName = std::string(texturefile.C_Str());
-				std::cout << "  Material has no diffuse, using dummy texture!" << std::endl;
+				printf("Error: Material has no diffuse, using dummy texture!\n");
 				// todo : separate pipeline and layout
 				material.diffuse = textureLoader->loadTexture(assetPath + "dummy.ktx", vk::Format::eBc2UnormBlock);
 			}
@@ -144,11 +149,16 @@ namespace vkx {
 			// get specular texture
 			pScene->mMaterials[i]->GetTexture(aiTextureType_SPECULAR, 0, &texturefile);
 			if (pScene->mMaterials[i]->GetTextureCount(aiTextureType_SPECULAR) > 0) {
-				std::cout << "  Specular: \"" << texturefile.C_Str() << "\"" << std::endl;
+				
+				material.hasSpecular = true;
+
 				std::string fileName = std::string(texturefile.C_Str());
 				std::replace(fileName.begin(), fileName.end(), '\\', '/');
 
-				//material.hasSpecular = true;
+				
+
+				std::string ls = "Info: Specular: \"" + std::string(texturefile.C_Str()) + "\"\n";
+				printf(ls.c_str());
 
 				// if the texture has already been loaded previously
 				// use it instead of loading it again
@@ -163,7 +173,7 @@ namespace vkx {
 				}
 			} else {
 				std::string fileName = std::string(texturefile.C_Str());
-				std::cout << "  Material has no specular, using dummy texture!" << std::endl;
+				printf("Error: Material has no specular, using dummy texture!\n");
 				// todo : separate pipeline and layout
 				material.specular = textureLoader->loadTexture(assetPath + "dummy.ktx", vk::Format::eBc2UnormBlock);
 			}
@@ -173,11 +183,16 @@ namespace vkx {
 			// get bump map
 			pScene->mMaterials[i]->GetTexture(aiTextureType_NORMALS, 0, &texturefile);
 			if (pScene->mMaterials[i]->GetTextureCount(aiTextureType_NORMALS) > 0) {
-				std::cout << "  Bump: \"" << texturefile.C_Str() << "\"" << std::endl;
+
+				material.hasBump = true;
+
 				std::string fileName = std::string(texturefile.C_Str());
 				std::replace(fileName.begin(), fileName.end(), '\\', '/');
 
-				material.hasBump = true;
+				std::string ls = "Info: Bump: \"" + std::string(texturefile.C_Str()) + "\"\n";
+				printf(ls.c_str());
+
+				
 
 				// if the texture has already been loaded previously
 				// use it instead of loading it again
@@ -192,14 +207,14 @@ namespace vkx {
 				}
 			} else {
 				std::string fileName = std::string(texturefile.C_Str());
-				std::cout << "  Material has no bump, using dummy texture!" << std::endl;
+				printf("Error: Material has no bump, using dummy texture!\n");
 				// todo : separate pipeline and layout
 				material.bump = textureLoader->loadTexture(assetPath + "dummy.ktx", vk::Format::eBc2UnormBlock);
 			}
 
 			// Mask
 			if (pScene->mMaterials[i]->GetTextureCount(aiTextureType_OPACITY) > 0) {
-				std::cout << "  Material has opacity, enabling alpha test" << std::endl;
+				printf("Info: Material has opacity, enabling alpha test.\n");
 				material.hasAlpha = true;
 			}
 
@@ -291,7 +306,7 @@ namespace vkx {
 			// set material name for this mesh
 			//int materialIndex = this->assetManager->loadedMaterials.size() - pScene->mNumMaterials + pMesh->mMaterialIndex;
 			//m_Entries[index].MaterialIndex = materialIndex;
-			
+
 			aiString name;
 			pScene->mMaterials[pMesh->mMaterialIndex]->Get(AI_MATKEY_NAME, name);
 
@@ -299,7 +314,6 @@ namespace vkx {
 
 
 			// get the color of this mesh's material
-			// is this just a hack? probably // todo: remove this
 			aiColor3D pColor(0.f, 0.f, 0.f);
 			pScene->mMaterials[pMesh->mMaterialIndex]->Get(AI_MATKEY_COLOR_DIFFUSE, pColor);
 
@@ -550,8 +564,8 @@ namespace vkx {
 			meshBuffer.indices = this->context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);
 			meshBuffer.dim = dim.size;
 
-			meshBuffer.materialIndex = m_Entries[m].MaterialIndex;
-			
+			meshBuffer.materialIndex = m_Entries[m].materialIndex;
+
 			meshBuffer.materialName = m_Entries[m].materialName;
 
 
@@ -564,146 +578,347 @@ namespace vkx {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ SKINNED MESH  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 
 
 
 	void vkx::MeshLoader::createSkinnedMeshBuffer(const std::vector<VertexLayout> &layout, float scale) {
 
-		for (int m = 0; m < m_Entries.size(); m++) {
+
+		this->setAnimation(0);
 
 
-			std::vector<float> vertexBuffer;
+		// Setup bones
+		// One vertex bone info structure per vertex
+		this->boneData.bones.resize(numVertices);
 
-			for (int i = 0; i < m_Entries[m].Vertices.size(); i++) {
-				// Push vertex data depending on layout
-				for (auto& layoutDetail : layout) {
-					// Position
-					if (layoutDetail == VERTEX_LAYOUT_POSITION) {
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.x * scale);
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.y * scale);
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.z * scale);
-					}
-					// Normal
-					if (layoutDetail == VERTEX_LAYOUT_NORMAL) {
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.x);
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.y);// y was negative// important
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.z);
-					}
-					// Texture coordinates
-					if (layoutDetail == VERTEX_LAYOUT_UV) {
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tex.s);
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tex.t);
-					}
-					// Color
-					if (layoutDetail == VERTEX_LAYOUT_COLOR) {
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.r);
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.g);
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.b);
-					}
-					// Tangent
-					if (layoutDetail == VERTEX_LAYOUT_TANGENT) {
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.x);
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.y);
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.z);
-					}
-					// Bitangent
-					if (layoutDetail == VERTEX_LAYOUT_BITANGENT) {
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.x);
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.y);
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.z);
-					}
-					// Dummy layout components for padding
-					if (layoutDetail == VERTEX_LAYOUT_DUMMY_FLOAT) {
-						vertexBuffer.push_back(0.0f);
-					}
-					if (layoutDetail == VERTEX_LAYOUT_DUMMY_VEC4) {
-						vertexBuffer.push_back(0.0f);
-						vertexBuffer.push_back(0.0f);
-						vertexBuffer.push_back(0.0f);
-						vertexBuffer.push_back(0.0f);
-					}
-				}
+		// Store global inverse transform matrix of root node 
+		this->boneData.globalInverseTransform = pScene->mRootNode->mTransformation;
+		this->boneData.globalInverseTransform.Inverse();
+
+		aiMatrix4x4 scaleMatrix;
+		aiMatrix4x4::Scaling(aiVector3D(scale, scale, scale), scaleMatrix);
+
+		this->boneData.globalInverseTransform = this->boneData.globalInverseTransform * scaleMatrix;
+
+
+		// Load bones (weights and IDs)
+		for (uint32_t m = 0; m < m_Entries.size(); m++) {
+			aiMesh *paiMesh = pScene->mMeshes[m];
+			if (paiMesh->mNumBones > 0) {
+				this->loadBones(m, paiMesh, this->boneData.bones/*, scale*/);
 			}
+		}
 
-			MeshBuffer meshBuffer;
-			meshBuffer.vertices.size = vertexBuffer.size() * sizeof(float);
+		// Generate vertex buffer
+		std::vector<skinnedMeshVertex> vertexBuffer;
+		// Iterate through all meshes in the file
+		// and extract the vertex information used in this demo
+		for (uint32_t m = 0; m < m_Entries.size(); m++) {
+			for (uint32_t i = 0; i < m_Entries[m].Vertices.size(); i++) {
+				skinnedMeshVertex vertex;
 
-			dim.min *= scale;
-			dim.max *= scale;
-			dim.size *= scale;
+				vertex.pos = m_Entries[m].Vertices[i].m_pos;//*scale
+				vertex.normal = m_Entries[m].Vertices[i].m_normal;
+				vertex.uv = m_Entries[m].Vertices[i].m_tex;
+				vertex.color = m_Entries[m].Vertices[i].m_color;
 
-			std::vector<uint32_t> indexBuffer;
-			uint32_t indexBase = (uint32_t)indexBuffer.size();
+				// Fetch bone weights and IDs
+				for (uint32_t j = 0; j < MAX_BONES_PER_VERTEX; j++) {
+					vertex.boneWeights[j] = this->boneData.bones[m_Entries[m].vertexBase + i].weights[j];
+					vertex.boneIDs[j] = this->boneData.bones[m_Entries[m].vertexBase + i].IDs[j];
+				}
+
+				vertexBuffer.push_back(vertex);
+			}
+		}
+		uint32_t vertexBufferSize = vertexBuffer.size() * vkx::vertexSize(layout);
+
+		// Generate index buffer from loaded mesh file
+		std::vector<uint32_t> indexBuffer;
+		for (uint32_t m = 0; m < m_Entries.size(); m++) {
+			uint32_t indexBase = indexBuffer.size();
 			for (uint32_t i = 0; i < m_Entries[m].Indices.size(); i++) {
 				indexBuffer.push_back(m_Entries[m].Indices[i] + indexBase);
 			}
-
-			meshBuffer.indexCount = (uint32_t)indexBuffer.size();
-			// Use staging buffer to move vertex and index buffer to device local memory
-			// Vertex buffer
-			meshBuffer.vertices = this->context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
-			// Index buffer
-			meshBuffer.indices = this->context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);
-			meshBuffer.dim = dim.size;
-
-			meshBuffer.materialIndex = m_Entries[m].MaterialIndex;
-			
-			meshBuffer.materialName = m_Entries[m].materialName;
-
-
-
-			// set pointer to material used by this mesh
-			//meshBuffer.material = &materials[meshBuffer.materialIndex];
-
-			meshBuffers.push_back(meshBuffer);
 		}
+		uint32_t indexBufferSize = indexBuffer.size() * sizeof(uint32_t);
+		this->combinedBuffer.indexCount = indexBuffer.size();
+		this->combinedBuffer.vertices = context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
+		this->combinedBuffer.indices = context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);
 
+		this->combinedBuffer.materialIndex = m_Entries[0].materialIndex;
+		this->combinedBuffer.materialName = m_Entries[0].materialName;
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	// Set active animation by index
+	void vkx::MeshLoader::setAnimation(uint32_t animationIndex) {
+		assert(animationIndex < pScene->mNumAnimations);
+		boneData.pAnimation = pScene->mAnimations[animationIndex];
+	}
+
+	// Load bone information from ASSIMP mesh
+	void vkx::MeshLoader::loadBones(uint32_t meshIndex, const aiMesh *pMesh, std::vector<VertexBoneData> &Bones/*, float scale*/) {
+		for (uint32_t i = 0; i < pMesh->mNumBones; i++) {
+			uint32_t index = 0;
+
+			assert(pMesh->mNumBones <= MAX_BONES);
+
+			std::string name(pMesh->mBones[i]->mName.data);
+
+			if (boneData.boneMapping.find(name) == boneData.boneMapping.end()) {
+				// Bone not present, add new one
+				index = boneData.numBones;
+				boneData.numBones++;
+				BoneInfo bone;
+				boneData.boneInfo.push_back(bone);
+
+				boneData.boneInfo[index].offset = pMesh->mBones[i]->mOffsetMatrix;
+
+				boneData.boneMapping[name] = index;
+
+			} else {
+				index = boneData.boneMapping[name];
+			}
+
+			for (uint32_t j = 0; j < pMesh->mBones[i]->mNumWeights; j++) {
+				uint32_t vertexID = m_Entries[meshIndex].vertexBase + pMesh->mBones[i]->mWeights[j].mVertexId;
+				Bones[vertexID].add(index, pMesh->mBones[i]->mWeights[j].mWeight);
+			}
+		}
+		boneData.boneTransforms.resize(boneData.numBones);
+	}
+
+	// Recursive bone transformation for given animation time
+	void vkx::MeshLoader::update(float time) {
+		float TicksPerSecond = (float)(pScene->mAnimations[0]->mTicksPerSecond != 0 ? pScene->mAnimations[0]->mTicksPerSecond : 25.0f);
+		float TimeInTicks = time * TicksPerSecond;
+		float AnimationTime = fmod(TimeInTicks, (float)pScene->mAnimations[0]->mDuration);
+
+		aiMatrix4x4 identity = aiMatrix4x4();
+		readNodeHierarchy(AnimationTime, pScene->mRootNode, identity);
+
+		for (uint32_t i = 0; i < boneData.boneTransforms.size(); i++) {
+			boneData.boneTransforms[i] = boneData.boneInfo[i].finalTransformation;
+		}
 
 	}
 
 
+
+	// Find animation for a given node
+	const aiNodeAnim* vkx::MeshLoader::findNodeAnim(const aiAnimation* animation, const std::string nodeName) {
+		for (uint32_t i = 0; i < animation->mNumChannels; i++) {
+			const aiNodeAnim* nodeAnim = animation->mChannels[i];
+			if (std::string(nodeAnim->mNodeName.data) == nodeName) {
+				return nodeAnim;
+			}
+		}
+		return nullptr;
+	}
+
+	// Returns a 4x4 matrix with interpolated translation between current and next frame
+	aiMatrix4x4 vkx::MeshLoader::interpolateTranslation(float time, const aiNodeAnim* pNodeAnim) {
+		aiVector3D translation;
+
+		if (pNodeAnim->mNumPositionKeys == 1) {
+			translation = pNodeAnim->mPositionKeys[0].mValue;
+		} else {
+			uint32_t frameIndex = 0;
+			for (uint32_t i = 0; i < pNodeAnim->mNumPositionKeys - 1; i++) {
+				if (time < (float)pNodeAnim->mPositionKeys[i + 1].mTime) {
+					frameIndex = i;
+					break;
+				}
+			}
+
+			aiVectorKey currentFrame = pNodeAnim->mPositionKeys[frameIndex];
+			aiVectorKey nextFrame = pNodeAnim->mPositionKeys[(frameIndex + 1) % pNodeAnim->mNumPositionKeys];
+
+			float delta = (time - (float)currentFrame.mTime) / (float)(nextFrame.mTime - currentFrame.mTime);
+
+			const aiVector3D& start = currentFrame.mValue;
+			const aiVector3D& end = nextFrame.mValue;
+
+			translation = (start + delta * (end - start));
+		}
+
+		aiMatrix4x4 mat;
+		aiMatrix4x4::Translation(translation, mat);
+		return mat;
+	}
+
+	// Returns a 4x4 matrix with interpolated rotation between current and next frame
+	aiMatrix4x4 vkx::MeshLoader::interpolateRotation(float time, const aiNodeAnim* pNodeAnim) {
+		aiQuaternion rotation;
+
+		if (pNodeAnim->mNumRotationKeys == 1) {
+			rotation = pNodeAnim->mRotationKeys[0].mValue;
+		} else {
+			uint32_t frameIndex = 0;
+			for (uint32_t i = 0; i < pNodeAnim->mNumRotationKeys - 1; i++) {
+				if (time < (float)pNodeAnim->mRotationKeys[i + 1].mTime) {
+					frameIndex = i;
+					break;
+				}
+			}
+
+			aiQuatKey currentFrame = pNodeAnim->mRotationKeys[frameIndex];
+			aiQuatKey nextFrame = pNodeAnim->mRotationKeys[(frameIndex + 1) % pNodeAnim->mNumRotationKeys];
+
+			float delta = (time - (float)currentFrame.mTime) / (float)(nextFrame.mTime - currentFrame.mTime);
+
+			const aiQuaternion& start = currentFrame.mValue;
+			const aiQuaternion& end = nextFrame.mValue;
+
+			aiQuaternion::Interpolate(rotation, start, end, delta);
+			rotation.Normalize();
+		}
+
+		aiMatrix4x4 mat(rotation.GetMatrix());
+		return mat;
+	}
+
+
+	// Returns a 4x4 matrix with interpolated scaling between current and next frame
+	aiMatrix4x4 vkx::MeshLoader::interpolateScale(float time, const aiNodeAnim* pNodeAnim) {
+		aiVector3D scale;
+
+		if (pNodeAnim->mNumScalingKeys == 1) {
+			scale = pNodeAnim->mScalingKeys[0].mValue;
+		} else {
+			uint32_t frameIndex = 0;
+			for (uint32_t i = 0; i < pNodeAnim->mNumScalingKeys - 1; i++) {
+				if (time < (float)pNodeAnim->mScalingKeys[i + 1].mTime) {
+					frameIndex = i;
+					break;
+				}
+			}
+
+			aiVectorKey currentFrame = pNodeAnim->mScalingKeys[frameIndex];
+			aiVectorKey nextFrame = pNodeAnim->mScalingKeys[(frameIndex + 1) % pNodeAnim->mNumScalingKeys];
+
+			float delta = (time - (float)currentFrame.mTime) / (float)(nextFrame.mTime - currentFrame.mTime);
+
+			const aiVector3D& start = currentFrame.mValue;
+			const aiVector3D& end = nextFrame.mValue;
+
+			scale = (start + delta * (end - start));
+		}
+
+		aiMatrix4x4 mat;
+		aiMatrix4x4::Scaling(scale, mat);
+		return mat;
+	}
+
+
+
+
+
+
+	// Get node hierarchy for current animation time
+	void vkx::MeshLoader::readNodeHierarchy(float AnimationTime, const aiNode* pNode, const aiMatrix4x4& ParentTransform) {
+		std::string NodeName(pNode->mName.data);
+
+		aiMatrix4x4 NodeTransformation(pNode->mTransformation);
+
+		const aiNodeAnim* pNodeAnim = findNodeAnim(boneData.pAnimation, NodeName);
+
+		if (pNodeAnim) {
+			// Get interpolated matrices between current and next frame
+			aiMatrix4x4 matScale = interpolateScale(AnimationTime, pNodeAnim);
+			aiMatrix4x4 matRotation = interpolateRotation(AnimationTime, pNodeAnim);
+			aiMatrix4x4 matTranslation = interpolateTranslation(AnimationTime, pNodeAnim);
+
+			NodeTransformation = matTranslation * matRotation * matScale;
+		}
+
+		aiMatrix4x4 GlobalTransformation = ParentTransform * NodeTransformation;
+
+		if (boneData.boneMapping.find(NodeName) != boneData.boneMapping.end()) {
+			uint32_t BoneIndex = boneData.boneMapping[NodeName];
+			boneData.boneInfo[BoneIndex].finalTransformation = boneData.globalInverseTransform * GlobalTransformation * boneData.boneInfo[BoneIndex].offset;
+		}
+
+		for (uint32_t i = 0; i < pNode->mNumChildren; i++) {
+			readNodeHierarchy(AnimationTime, pNode->mChildren[i], GlobalTransformation);
+		}
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

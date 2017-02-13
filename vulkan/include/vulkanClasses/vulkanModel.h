@@ -31,11 +31,12 @@ namespace vkx {
 
 		public:
 
+			// todo: change to meshbuffers:
 			std::vector<Mesh> meshes;
 
 			uint32_t matrixIndex;
 			uint32_t vertexBufferBinding = 0;
-			//vk::Pipeline pipeline;
+
 
 			// pointer to meshLoader
 			vkx::MeshLoader *meshLoader = nullptr;
@@ -60,10 +61,6 @@ namespace vkx {
 			void load(const std::string &filename, int flags);
 
 			void createMeshes(const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
-
-			//void setupVertexInputState(const std::vector<VertexLayout> &layout);
-
-			void drawIndexed(const vk::CommandBuffer& cmdBuffer);
 
 			void destroy();
 	};

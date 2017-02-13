@@ -17,36 +17,18 @@ namespace vkx {
 	class Mesh : public Object3D {
 		public:
 
+			// todo: make this class like the model class
+			
+			uint32_t matrixIndex;
 
-		uint32_t matrixIndex;
-		uint32_t vertexBufferBinding = 0;
-		vk::Pipeline pipeline;
+			uint32_t vertexBufferBinding = 0;
 
-		// Mesh buffer
-		vkx::MeshBuffer meshBuffer;
+			// Mesh buffer
+			vkx::MeshBuffer meshBuffer;
 
-		// pointer to the material used by this mesh
-		//vkx::Material *material;
+			Mesh(vkx::MeshBuffer meshBuffer);
 
-		//http://www.learncpp.com/cpp-tutorial/8-5a-constructor-member-initializer-lists/
-
-		//vk::Pipeline pipeline;
-		//vk::PipelineLayout pipelineLayout;
-		//vk::DescriptorSet descriptorSet;
-
-		//vk::PipelineVertexInputStateCreateInfo vertexInputState;
-		//vk::VertexInputBindingDescription bindingDescription;
-		//std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
-
-
-		// no default constructor
-		Mesh();
-
-		Mesh(vkx::MeshBuffer meshBuffer);
-
-		void destroy();
-
-
+			void destroy();
 	};
 
 }

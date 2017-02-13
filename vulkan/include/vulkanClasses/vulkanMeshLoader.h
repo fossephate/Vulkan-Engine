@@ -80,13 +80,15 @@ namespace vkx {
 		VERTEX_LAYOUT_BITANGENT = 0x5,
 		VERTEX_LAYOUT_DUMMY_FLOAT = 0x6,
 		VERTEX_LAYOUT_DUMMY_VEC4 = 0x7,
-		VERTEX_LAYOUT_BONE_ID = 0x7,// added 1/20/17
-		VERTEX_LAYOUT_BONE_WEIGHT = 0x7,// added 1/20/17
+		VERTEX_LAYOUT_BONE_ID = 0x8,// added 1/20/17
+		VERTEX_LAYOUT_BONE_WEIGHT = 0x9,// added 1/20/17
 	} VertexLayout;
 
 
-	/*extern */struct MaterialProperties;
-	/*extern */struct Material;
+	struct MaterialProperties;
+	struct Material;
+	struct BoneInfo;
+	struct VertexBoneData;
 
 	struct MeshBuffer {
 
@@ -125,6 +127,7 @@ namespace vkx {
 					break;
 				default:
 					vSize += 3 * sizeof(float);
+					break;
 			}
 		}
 		return vSize;
@@ -165,15 +168,31 @@ namespace vkx {
 				}
 			};
 
+			struct skinnedMeshVertex {
+				glm::vec3 pos;
+				glm::vec2 uv;
+				glm::vec3 color;
+				glm::vec3 normal;
+				// Max. four bones per vertex
+				float boneWeights[4];
+				uint32_t boneIDs[4];
+			};
+
 			struct MeshEntry {
 				uint32_t NumIndices;
-				uint32_t MaterialIndex;
 				uint32_t vertexBase;// offset (for indexed draw)? p sure
+
+				uint32_t materialIndex;
 				std::string materialName;
 
 				std::vector<Vertex> Vertices;
 				std::vector<uint32_t> Indices;
 			};
+
+
+
+
+
 
 		public:
 			#if defined(__ANDROID__)
@@ -182,6 +201,36 @@ namespace vkx {
 
 			// raw data
 			std::vector<MeshEntry> m_Entries;
+
+
+
+			struct {
+				// Bone related stuff
+				// Maps bone name with index
+				std::map<std::string, uint32_t> boneMapping;
+				// Bone details
+				std::vector<BoneInfo> boneInfo;
+
+				// Number of bones present
+				uint32_t numBones = 0;
+				// Root inverse transform matrix
+				aiMatrix4x4 globalInverseTransform;
+				// Per-vertex bone info
+				std::vector<VertexBoneData> bones;
+				// Bone transformations
+				std::vector<aiMatrix4x4> boneTransforms;
+				// Currently active animation
+				aiAnimation *pAnimation;
+			} boneData;
+
+
+
+
+
+
+
+
+
 			
 
 			// fitted to vertex layout && usable to draw
@@ -216,9 +265,9 @@ namespace vkx {
 
 			
 
-			vk::PipelineVertexInputStateCreateInfo vi;
-			std::vector<vk::VertexInputBindingDescription> bindingDescriptions;
-			std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
+			//vk::PipelineVertexInputStateCreateInfo vi;
+			//std::vector<vk::VertexInputBindingDescription> bindingDescriptions;
+			//std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
 			//vk::Pipeline pipeline;
 
 			Assimp::Importer Importer;
@@ -240,7 +289,6 @@ namespace vkx {
 
 			// Loads the mesh with some default flags
 			bool load(const std::string &filename);
-
 			// Load the mesh with custom flags
 			bool load(const std::string &filename, int flags);
 
@@ -250,10 +298,24 @@ namespace vkx {
 			bool parse(const aiScene *pScene, const std::string &Filename);
 
 			// Create vertex and index buffer with given layout
-			// Note : Only does staging if a valid command buffer and transfer queue are passed
+
+			// for single meshes (multiple meshes are combined into a single buffer with only one material)
 			void createMeshBuffer(const std::vector<VertexLayout> &layout, float scale);
+			// for groups of meshes (models) with multiple buffers and materials
 			void createMeshBuffers(const std::vector<VertexLayout> &layout, float scale);
-			void createSkinnedMeshBuffer(const std::vector<VertexLayout>& layout, float scale);
+
+			/* Skinned Meshes */
+			// for skinned meshes (with bones)
+			void createSkinnedMeshBuffer(const std::vector<VertexLayout> &layout, float scale);
+
+			void setAnimation(uint32_t animationIndex);
+			void loadBones(uint32_t meshIndex, const aiMesh *pMesh, std::vector<VertexBoneData>& Bones);
+			void update(float time);
+			const aiNodeAnim* findNodeAnim(const aiAnimation *animation, const std::string nodeName);
+			aiMatrix4x4 interpolateTranslation(float time, const aiNodeAnim *pNodeAnim);
+			aiMatrix4x4 interpolateRotation(float time, const aiNodeAnim *pNodeAnim);
+			aiMatrix4x4 interpolateScale(float time, const aiNodeAnim *pNodeAnim);
+			void readNodeHierarchy(float AnimationTime, const aiNode *pNode, const aiMatrix4x4 &ParentTransform);
 	};
 
 }

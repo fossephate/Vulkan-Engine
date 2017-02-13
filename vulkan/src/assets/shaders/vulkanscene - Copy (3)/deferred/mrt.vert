@@ -32,12 +32,10 @@ void main()
 	// Vertex position in world space
 	vec4 tmpPos = inPos;
 	outWorldPos = vec3(ubo.model * tmpPos);
-	
 	// GL to Vulkan coord space
 	//outWorldPos.y = -outWorldPos.y;
 	
 	// Normal in world space
-	// todo: do the inverse transpose on cpu
 	mat3 mNormal = transpose(inverse(mat3(ubo.model)));
     outNormal = mNormal * normalize(inNormal);
     //outTangent = mNormal * normalize(inTangent);

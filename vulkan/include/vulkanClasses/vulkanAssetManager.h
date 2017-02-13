@@ -46,6 +46,9 @@ namespace vkx {
 	struct Material {
 		// name
 		std::string name;
+		// index
+		uint32_t index;
+
 		// Material properties
 		MaterialProperties properties;
 
@@ -151,16 +154,17 @@ namespace vkx {
 			
 
 
-			vk::DescriptorSetLayout *materialDescriptorSetLayout{ nullptr };
-			vk::DescriptorPool *materialDescriptorPool{ nullptr };
+			vk::DescriptorSetLayout* materialDescriptorSetLayout{ nullptr };
+			vk::DescriptorPool* materialDescriptorPool{ nullptr };
 
 
-			vk::DescriptorSetLayout *materialDescriptorSetLayoutDeferred{ nullptr };
-			vk::DescriptorPool *materialDescriptorPoolDeferred{ nullptr };
+			vk::DescriptorSetLayout* materialDescriptorSetLayoutDeferred{ nullptr };
+			vk::DescriptorPool* materialDescriptorPoolDeferred{ nullptr };
 
 
 			struct {
 				//std::unordered_map<std::string, Material> loadedMaterials;
+
 				// need order
 				std::map<std::string, Material> loadedMaterials;
 
@@ -170,6 +174,7 @@ namespace vkx {
 
 				void add(std::string name, Material material) {
 					loadedMaterials[name] = material;
+					this->sync();
 				}
 
 				Material* getPtr(std::string name) {
@@ -178,6 +183,14 @@ namespace vkx {
 
 				bool doExist(std::string name) {
 					return loadedMaterials.find(name) != loadedMaterials.end();
+				}
+
+				void sync() {
+					uint32_t counter = 0;
+					for (auto &iterator : loadedMaterials) {
+						iterator.second.index = counter;
+						counter++;
+					}
 				}
 			} materials;
 

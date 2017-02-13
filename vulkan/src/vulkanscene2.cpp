@@ -1259,12 +1259,12 @@ public:
 			}
 		}
 
-		//for (int i = 0; i < this->assetManager.materials.loadedMaterials.size(); ++i) {
-		//auto &map = this->assetManager.materials.loadedMaterials;
-		//for (auto mat = map.begin(); mat != map.end(); ++mat) {
-		//	//materialNodes[i] = this->assetManager.materials.loadedMaterials[i].properties;
-		//	//materialNodes[mat.m] = mat;
-		//}
+
+
+		for (auto &iterator : this->assetManager.materials.loadedMaterials) {
+			uint32_t index = iterator.second.index;
+			materialNodes[index] = iterator.second.properties;
+		}
 
 
 		// todo: don't update the whole buffer each time
@@ -1414,15 +1414,17 @@ public:
 
 		auto skinnedMesh1 = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
 		skinnedMesh1->load(getAssetPath() + "models/goblin.dae");
-		skinnedMesh1->setup(0.0005f);
+		skinnedMesh1->createSkinnedMeshBuffer(skinnedMeshVertexLayout, 0.0005f);
+
+		skinnedMeshes.push_back(skinnedMesh1);
 
 		for (int i = 0; i < 1; ++i) {
 
 			auto testSkinnedMesh = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
 			testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");
-			testSkinnedMesh->setup(0.0005f);
+			testSkinnedMesh->createSkinnedMeshBuffer(skinnedMeshVertexLayout, 0.0005f);
 
-			//skinnedMeshes.push_back(testSkinnedMesh);
+			skinnedMeshes.push_back(testSkinnedMesh);
 		}
 
 		auto physicsPlane = std::make_shared<vkx::PhysicsObject>(&physicsManager, models[0]);
@@ -1565,7 +1567,7 @@ public:
 
 
 		// z-up rotations
-		camera.rotationSpeed = -0.005f;
+		camera.rotationSpeed = -0.05f;
 
 		if (mouse.leftMouseButton.state) {
 			camera.rotateWorldZ(mouse.delta.x*camera.rotationSpeed);
@@ -1587,7 +1589,7 @@ public:
 		}
 
 
-		camera.rotationSpeed = -0.02f;
+		camera.rotationSpeed = -0.2f;
 
 
 		if (keyStates.up_arrow) {
@@ -1809,7 +1811,7 @@ public:
 
 			uint32_t boneOffset = skinnedMesh->boneIndex*MAX_BONES;
 
-			for (uint32_t i = 0; i < skinnedMesh->boneTransforms.size(); ++i) {
+			for (uint32_t i = 0; i < skinnedMesh->meshLoader->boneData.boneTransforms.size(); ++i) {
 
 				//matrixNodes[skinnedMesh.matrixIndex].bones[i] = aiMatrix4x4ToGlm(&skinnedMesh.boneTransforms[i]);
 				//matrixNodes[skinnedMesh.matrixIndex].bones[i] = glm::transpose(glm::make_mat4(&skinnedMesh.boneTransforms[i].a1));
@@ -1819,7 +1821,7 @@ public:
 				//uboBoneData.bones[boneOffset + i] = glm::transpose(glm::make_mat4(&skinnedMesh->boneTransforms[i].a1));
 				//uboScene.bones[i] = glm::transpose(glm::make_mat4(&skinnedMesh->boneTransforms[i].a1));
 
-				uboScene.bones[boneOffset + i] = glm::transpose(glm::make_mat4(&skinnedMesh->boneTransforms[i].a1));
+				uboScene.bones[boneOffset + i] = glm::transpose(glm::make_mat4(&skinnedMesh->meshLoader->boneData.boneTransforms[i].a1));
 
 			}
 		}
@@ -1919,18 +1921,25 @@ public:
 
 
 				if (lastMaterialName != mesh.meshBuffer.materialName) {
+
 					lastMaterialName = mesh.meshBuffer.materialName;
-					uint32_t offset2 = mesh.meshBuffer.materialIndex * static_cast<uint32_t>(alignedMaterialSize);
+
+					vkx::Material m = this->assetManager.materials.get(mesh.meshBuffer.materialName);
+					//uint32_t materialIndex = this->assetManager.materials.get(mesh.meshBuffer.materialName).index;
+
+
+					uint32_t offset2 = m.index * static_cast<uint32_t>(alignedMaterialSize);
 					// the third param is the set number!
 					setNum = 2;
 					cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset2);
-					//}
 
-					lastMaterialIndex = mesh.meshBuffer.materialIndex;
 
+
+					//lastMaterialIndex = mesh.meshBuffer.materialIndex;
+
+					// bind texture: // todo: implement a better way to bind textures
 					// must make pipeline layout compatible
-					//vkx::Material m = this->assetManager.loadedMaterials[mesh.meshBuffer.materialIndex];
-					vkx::Material m = this->assetManager.materials.get(mesh.meshBuffer.materialName);
+					
 					setNum = 3;
 					cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, m.descriptorSet, nullptr);
 				}
@@ -1984,23 +1993,22 @@ public:
 			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset1);
 
 
-			//if (lastMaterialIndex != skinnedMesh->meshBuffer.materialIndex) {
-			if (lastMaterialIndex != skinnedMesh->meshBuffer.materialIndex) {
 
-				lastMaterialIndex = skinnedMesh->meshBuffer.materialIndex;
-				uint32_t offset2 = skinnedMesh->meshBuffer.materialIndex * alignedMaterialSize;
+			if (lastMaterialName != skinnedMesh->meshBuffer.materialName) {
+
+				lastMaterialName = skinnedMesh->meshBuffer.materialName;
+
+				vkx::Material m = this->assetManager.materials.get(skinnedMesh->meshBuffer.materialName);
+				//uint32_t materialIndex = this->assetManager.materials.get(skinnedMesh->meshBuffer.materialName).index;
+
+				uint32_t offset2 = m.index * alignedMaterialSize;
 				// the third param is the set number!
 				setNum = 2;
 				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset2);
-				//}
 
 
-
-
-				//if (lastMaterialIndex != skinnedMesh->meshBuffer.materialIndex) {
-				// must make pipeline layout compatible
-				//vkx::Material m = this->assetManager.loadedMaterials[skinnedMesh->meshBuffer.materialIndex];
-				vkx::Material m = this->assetManager.materials.get(skinnedMesh->meshBuffer.materialName);
+				// bind texture:
+				//vkx::Material m = this->assetManager.materials.get(skinnedMesh->meshBuffer.materialName);
 				setNum = 3;
 				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, m.descriptorSet, nullptr);
 			}
@@ -2010,7 +2018,7 @@ public:
 			cmdBuffer.drawIndexed(skinnedMesh->meshBuffer.indexCount, 1, 0, 0, 0);
 		}
 
-
+		
 
 
 

@@ -47,10 +47,6 @@ namespace vkx {
 		//this->pipeline = this->meshLoader->pipeline;// not needed?
 	}
 
-
-	void Model::drawIndexed(const vk::CommandBuffer &cmdBuffer) {
-	}
-
 	void Model::destroy() {
 		for (auto &mesh : this->meshes) {
 			mesh.meshBuffer.destroy();
