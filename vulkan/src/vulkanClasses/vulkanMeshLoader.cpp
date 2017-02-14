@@ -141,7 +141,7 @@ namespace vkx {
 				std::string fileName = std::string(texturefile.C_Str());
 				printf("Error: Material has no diffuse, using dummy texture!\n");
 				// todo : separate pipeline and layout
-				material.diffuse = textureLoader->loadTexture(assetPath + "dummy.ktx", vk::Format::eBc2UnormBlock);
+				material.diffuse = textureLoader->loadTexture(assetPath + "kamen.ktx", vk::Format::eBc2UnormBlock);
 			}
 
 
@@ -235,12 +235,6 @@ namespace vkx {
 					1);
 
 			material.descriptorSet = context->device.allocateDescriptorSets(allocInfo)[0];
-
-			//vk::DescriptorImageInfo texDescriptor =
-			//	vkx::descriptorImageInfo(
-			//		material.diffuse.sampler,
-			//		material.diffuse.view,
-			//		vk::ImageLayout::eGeneral);
 
 
 			std::vector<vk::WriteDescriptorSet> writeDescriptorSets =

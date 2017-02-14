@@ -114,6 +114,10 @@ public:
 	std::vector<std::shared_ptr<vkx::Model>> models;
 	std::vector<std::shared_ptr<vkx::SkinnedMesh>> skinnedMeshes;
 
+	std::vector<std::shared_ptr<vkx::Mesh>> meshesDeferred;
+	std::vector<std::shared_ptr<vkx::Model>> modelsDeferred;
+	std::vector<std::shared_ptr<vkx::SkinnedMesh>> skinnedMeshesDeferred;
+
 	std::vector<std::shared_ptr<vkx::PhysicsObject>> physicsObjects;
 
 	struct {
@@ -408,13 +412,27 @@ public:
 	void prepareVertexDescriptions() {
 
 
+		struct skinnedMeshVertex {
+			glm::vec3 pos;
+			glm::vec2 uv;
+			glm::vec3 color;
+			glm::vec3 normal;
+
+			// Max. four bones per vertex
+			float boneWeights[4];
+			uint32_t boneIDs[4];
+		};
+
+		uint32_t s1 = sizeof(skinnedMeshVertex);
+		uint32_t s2 = vkx::vertexSize(skinnedMeshVertexLayout);
+
 
 		/* not deferred */
 
 		// Binding description
 		vertices.bindingDescriptions.resize(1);
 		vertices.bindingDescriptions[0] =
-			vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, vkx::vertexSize(skinnedMeshVertexLayout), vk::VertexInputRate::eVertex);
+			vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, sizeof(skinnedMeshVertex), vk::VertexInputRate::eVertex);
 			//vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, vkx::vertexSize(skinnedMeshVertexLayout), vk::VertexInputRate::eVertex);
 
 		// Attribute descriptions
@@ -541,35 +559,42 @@ public:
 
 
 
-		// combined image sampler
-		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes3 =
-		{
-			vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 10000),
-		};
 
-		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo3 =
-			vkx::descriptorPoolCreateInfo(descriptorPoolSizes3.size(), descriptorPoolSizes3.data(), 10000);
-
-
-		vk::DescriptorPool descriptorPool3 = device.createDescriptorPool(descriptorPoolCreateInfo3);
-		descriptorPools.push_back(descriptorPool3);
-
-		this->assetManager.materialDescriptorPool = &descriptorPools[3];
 
 
 
 
 		//// bone data
-		//std::vector<vk::DescriptorPoolSize> descriptorPoolSizes4 =
+		//std::vector<vk::DescriptorPoolSize> descriptorPoolSizes3 =
 		//{
 		//	vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 1),// static bone data
 		//};
 
-		//vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo4 =
-		//	vkx::descriptorPoolCreateInfo(descriptorPoolSizes4.size(), descriptorPoolSizes4.data(), 1);
+		//vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo3 =
+		//	vkx::descriptorPoolCreateInfo(descriptorPoolSizes3.size(), descriptorPoolSizes3.data(), 1);
 
-		//vk::DescriptorPool descriptorPool4 = device.createDescriptorPool(descriptorPoolCreateInfo4);
-		//descriptorPools.push_back(descriptorPool4);
+		//vk::DescriptorPool descriptorPool3 = device.createDescriptorPool(descriptorPoolCreateInfo3);
+		//descriptorPools.push_back(descriptorPool3);
+
+
+
+		// combined image sampler
+		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes4 =
+		{
+			vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 10000),
+		};
+
+		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo4 =
+			vkx::descriptorPoolCreateInfo(descriptorPoolSizes4.size(), descriptorPoolSizes4.data(), 10000);
+
+
+		vk::DescriptorPool descriptorPool4 = device.createDescriptorPool(descriptorPoolCreateInfo4);
+		descriptorPools.push_back(descriptorPool4);
+
+		this->assetManager.materialDescriptorPool = &descriptorPools[3];
+
+
+
 
 
 		std::vector<vk::DescriptorPoolSize> descriptorPoolSizesDeferred =
@@ -593,7 +618,6 @@ public:
 
 		// descriptor set layout 0
 		// scene data
-
 		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings0 =
 		{
 			// Binding 0 : Vertex shader uniform buffer
@@ -613,7 +637,6 @@ public:
 
 		// descriptor set layout 1
 		// matrix data
-
 		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings1 =
 		{
 			// Binding 0 : Vertex shader dynamic uniform buffer
@@ -635,7 +658,6 @@ public:
 
 		// descriptor set layout 2
 		// material data
-
 		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings2 =
 		{
 			// Binding 0 : Vertex shader dynamic uniform buffer
@@ -654,10 +676,32 @@ public:
 
 
 
-		// descriptor set layout 3
-		// combined image sampler
 
-		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings3 =
+		// // descriptor set layout 3
+		// // bone data
+		//std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings3 =
+		//{
+		//	// Binding 0 : Vertex shader uniform buffer
+		//	vkx::descriptorSetLayoutBinding(
+		//		vk::DescriptorType::eUniformBuffer,
+		//		vk::ShaderStageFlagBits::eVertex,
+		//		0),// binding 0
+		//};
+
+		//vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo3 =
+		//	vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings3.data(), descriptorSetLayoutBindings3.size());
+
+		//vk::DescriptorSetLayout descriptorSetLayout3 = device.createDescriptorSetLayout(descriptorSetLayoutCreateInfo3);
+		//descriptorSetLayouts.push_back(descriptorSetLayout3);
+
+
+
+
+
+
+		// descriptor set layout 4
+		// combined image sampler
+		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings4 =
 		{
 			// Binding 0 : Fragment shader color map image sampler
 			vkx::descriptorSetLayoutBinding(
@@ -666,11 +710,12 @@ public:
 				0),// binding 0
 		};
 
-		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo3 =
-			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings3.data(), descriptorSetLayoutBindings3.size());
+		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo4 =
+			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings4.data(), descriptorSetLayoutBindings4.size());
 
-		vk::DescriptorSetLayout descriptorSetLayout3 = device.createDescriptorSetLayout(descriptorSetLayoutCreateInfo3);
-		descriptorSetLayouts.push_back(descriptorSetLayout3);
+		vk::DescriptorSetLayout descriptorSetLayout4 = device.createDescriptorSetLayout(descriptorSetLayoutCreateInfo4);
+		descriptorSetLayouts.push_back(descriptorSetLayout4);
+
 
 		this->assetManager.materialDescriptorSetLayout = &descriptorSetLayouts[3];
 
@@ -680,23 +725,9 @@ public:
 
 
 
-		//// descriptor set layout 4
-		//// bone data
 
-		//std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings4 =
-		//{
-		//	// Binding 0 : Vertex shader uniform buffer
-		//	vkx::descriptorSetLayoutBinding(
-		//		vk::DescriptorType::eUniformBuffer,
-		//		vk::ShaderStageFlagBits::eVertex,
-		//		0),// binding 0
-		//};
 
-		//vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo4 =
-		//	vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings4.data(), descriptorSetLayoutBindings4.size());
 
-		//vk::DescriptorSetLayout descriptorSetLayout4 = device.createDescriptorSetLayout(descriptorSetLayoutCreateInfo4);
-		//descriptorSetLayouts.push_back(descriptorSetLayout4);
 
 
 
@@ -714,6 +745,18 @@ public:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+		/* deferred ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 
 		// Deferred shading layout
@@ -806,25 +849,28 @@ public:
 		descriptorSets.push_back(descriptorSets2[0]);// descriptor set 2
 
 
-
-		// descriptor set 3
-		// image sampler
-		//vk::DescriptorSetAllocateInfo descriptorSetInfo3 =
+		//// descriptor set 3
+		//// bone data
+		//vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo3 =
 		//	vkx::descriptorSetAllocateInfo(descriptorPools[3], &descriptorSetLayouts[3], 1);
 
-		//std::vector<vk::DescriptorSet> descriptorSets3 = device.allocateDescriptorSets(descriptorSetInfo3);
-		//descriptorSets.push_back(descriptorSets3[0]);// descriptor set 3
+		//std::vector<vk::DescriptorSet> descriptorSets3 = device.allocateDescriptorSets(descriptorSetAllocateInfo3);
+		//descriptorSets.push_back(descriptorSets3[0]);// descriptor set 4
 
 
 
-
-		//// descriptor set 4
-		//// bone data
+		// descriptor set 4
+		// image sampler
 		//vk::DescriptorSetAllocateInfo descriptorSetInfo4 =
-		//	vkx::descriptorSetAllocateInfo(descriptorPools[4], &descriptorSetLayouts[4], 1);
+		//	vkx::descriptorSetAllocateInfo(descriptorPool4[4], &descriptorSetLayouts[4], 1);
 
-		//std::vector<vk::DescriptorSet> descSets4 = device.allocateDescriptorSets(descriptorSetInfo4);
-		//descriptorSets.push_back(descSets4[0]);// descriptor set 4
+		//std::vector<vk::DescriptorSet> descriptorSets4 = device.allocateDescriptorSets(descriptorSetInfo4);
+		//descriptorSets.push_back(descriptorSets4[0]);// descriptor set 4
+
+
+
+
+
 
 
 
@@ -857,24 +903,16 @@ public:
 				&uniformData.materialVS.descriptor),
 
 
-			// set 3 is set later (textures)
-
-
-			//// set 4
+			//// set 3
 			//// static bone data buffer
 			//vkx::writeDescriptorSet(
-			//	/*descriptorSets[2]*/descSets4[0],// descriptor set 4
+			//	descriptorSets[3],// descriptor set 3
 			//	vk::DescriptorType::eUniformBuffer,// static
 			//	0,// binding 0
 			//	&uniformData.bonesVS.descriptor)
 
-			//// set 4
-			//// static bone data buffer
-			//vkx::writeDescriptorSet(
-			//	descriptorSets[3],// descriptor set 4
-			//	vk::DescriptorType::eUniformBuffer,// static
-			//	0,// binding 0
-			//	&uniformData.bonesVS.descriptor)
+			// set 4 is set later (textures)
+
 		};
 
 
@@ -924,31 +962,31 @@ public:
 
 		std::vector<vk::WriteDescriptorSet> writeDescriptorSets2 =
 		{
-			// Binding 0 : Vertex shader uniform buffer
+			// set 0: Binding 0 : Vertex shader uniform buffer
 			vkx::writeDescriptorSet(
 				descriptorSetsDeferred.basic,
 				vk::DescriptorType::eUniformBuffer,
 				0,
 				&uniformDataDeferred.vsFullScreen.descriptor),
-			// Binding 1 : Position texture target
+			// set 0: Binding 1 : Position texture target
 			vkx::writeDescriptorSet(
 				descriptorSetsDeferred.basic,
 				vk::DescriptorType::eCombinedImageSampler,
 				1,
 				&texDescriptorPosition),
-			// Binding 2 : Normals texture target
+			// set 0: Binding 2 : Normals texture target
 			vkx::writeDescriptorSet(
 				descriptorSetsDeferred.basic,
 				vk::DescriptorType::eCombinedImageSampler,
 				2,
 				&texDescriptorNormal),
-			// Binding 3 : Albedo texture target
+			// set 0: Binding 3 : Albedo texture target
 			vkx::writeDescriptorSet(
 				descriptorSetsDeferred.basic,
 				vk::DescriptorType::eCombinedImageSampler,
 				3,
 				&texDescriptorAlbedo),
-			// Binding 4 : Fragment shader uniform buffer
+			// set 0: Binding 4 : Fragment shader uniform buffer
 			vkx::writeDescriptorSet(
 				descriptorSetsDeferred.basic,
 				vk::DescriptorType::eUniformBuffer,
@@ -1398,7 +1436,7 @@ public:
 		models.push_back(planeModel);
 		//models.push_back(otherModel1);
 
-		for (int i = 0; i < 4; ++i) {
+		for (int i = 0; i < 20; ++i) {
 
 			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			testModel->load(getAssetPath() + "models/monkey.fbx");
@@ -1412,13 +1450,13 @@ public:
 		// important!
 		//http://stackoverflow.com/questions/6624819/c-vector-of-objects-vs-vector-of-pointers-to-objects
 
-		auto skinnedMesh1 = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
-		skinnedMesh1->load(getAssetPath() + "models/goblin.dae");
-		skinnedMesh1->createSkinnedMeshBuffer(skinnedMeshVertexLayout, 0.0005f);
+		//auto skinnedMesh1 = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
+		//skinnedMesh1->load(getAssetPath() + "models/goblin.dae");
+		//skinnedMesh1->createSkinnedMeshBuffer(skinnedMeshVertexLayout, 0.0005f);
 
-		skinnedMeshes.push_back(skinnedMesh1);
+		//skinnedMeshes.push_back(skinnedMesh1);
 
-		for (int i = 0; i < 1; ++i) {
+		for (int i = 0; i < 2; ++i) {
 
 			auto testSkinnedMesh = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
 			testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");
@@ -1506,6 +1544,28 @@ public:
 
 
 
+
+
+
+
+
+
+
+		for (int i = 0; i < 6; ++i) {
+
+			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
+			testModel->load(getAssetPath() + "models/monkey.fbx");
+			testModel->createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+
+			modelsDeferred.push_back(testModel);
+		}
+
+
+
+
+
+
+
 		// after any model loading with materials has occurred, updateMaterialBuffer() must be called
 		// *after any material loading
 		updateMaterialBuffer();
@@ -1567,7 +1627,7 @@ public:
 
 
 		// z-up rotations
-		camera.rotationSpeed = -0.05f;
+		camera.rotationSpeed = -0.025f;
 
 		if (mouse.leftMouseButton.state) {
 			camera.rotateWorldZ(mouse.delta.x*camera.rotationSpeed);
@@ -1589,7 +1649,7 @@ public:
 		}
 
 
-		camera.rotationSpeed = -0.2f;
+		camera.rotationSpeed = -0.02f;
 
 
 		if (keyStates.up_arrow) {
@@ -1621,6 +1681,12 @@ public:
 
 		if (keyStates.r) {
 			toggleDebugDisplay();
+		}
+
+		if (keyStates.space) {
+			physicsObjects[1]->rigidBody->activate();
+			//physicsObjects[1]->rigidBody->setLinearVelocity(btVector3(0.0f, 0.0f, 12.0f));
+			physicsObjects[1]->rigidBody->applyCentralForce(btVector3(0.0f, sin(globalP)*0.1f, 0.05f));
 		}
 
 		camera.updateViewMatrix();
@@ -1726,12 +1792,18 @@ public:
 
 
 		if (models.size() > 3) {
-
+			
 			//models[1]->setTranslation(glm::vec3(3 * cos(globalP), 1.0f, 3 * sin(globalP)));
-			models[2]->setTranslation(glm::vec3(2 * cos(globalP) + 2.0f, sin(globalP) + 2.0, 0.0f));
-			models[3]->setTranslation(glm::vec3(cos(globalP) - 2.0f, 2.0f, sin(globalP) + 2.0f));
+
+			//models[1]->setTranslation(glm::vec3(-2.0f, 0.0f, sin(globalP) + 2.0f));
+			//models[2]->setTranslation(glm::vec3(-2.0f, 0.0f, sin(globalP) + 2.0f));
+			//models[3]->setTranslation(glm::vec3(2.0f, 0.0f, sin(globalP) + 2.0f));
 			//models[4].setTranslation(glm::vec3(cos(globalP), 3.0f, 0.0f));
 			//models[5].setTranslation(glm::vec3(cos(globalP) - 2.0f, 4.0f, 0.0f));
+		}
+
+		for (int i = 2; i < models.size(); ++i) {
+			models[i]->setTranslation(glm::vec3((2.0f*i)-(models.size()), 0.0f, sin(globalP*i) + 2.0f));
 		}
 
 		//if (keyStates.space) {
@@ -1743,27 +1815,23 @@ public:
 		//	models.push_back(testModel);
 		//}
 
-		if (models.size() > 6) {
-			models[4]->setTranslation(glm::vec3(cos(globalP), 3.0f, 0.0f));
+
+
+
+		if (skinnedMeshes.size() > 0) {
+			//skinnedMeshes[0]->setTranslation(glm::vec3(2.0f, sin(globalP), 1.0f));
+
+			glm::vec3 point = skinnedMeshes[0]->transform.translation;
+			skinnedMeshes[0]->setTranslation(glm::vec3(point.x, point.y, 1.0f));
+			skinnedMeshes[0]->translateLocal(glm::vec3(0.0f, 0.05f, 0.0f));
+			skinnedMeshes[0]->rotateLocalZ(0.014f);
 		}
 
 
 
-
-		if (skinnedMeshes.size() > 1) {
-			skinnedMeshes[0]->setTranslation(glm::vec3(2.0f, sin(globalP), 1.0f));
-
-			glm::vec3 point = skinnedMeshes[1]->transform.translation;
-			skinnedMeshes[1]->setTranslation(glm::vec3(point.x, point.y, 1.0f));
-			skinnedMeshes[1]->translateLocal(glm::vec3(0.0f, 0.05f, 0.0f));
-			skinnedMeshes[1]->rotateLocalZ(0.014f);
-		}
-
-
-
-		if (skinnedMeshes.size() > 1) {
+		if (skinnedMeshes.size() > 0) {
 			skinnedMeshes[0]->animationSpeed = 1.0f;
-			skinnedMeshes[1]->animationSpeed = 3.5f;
+			//skinnedMeshes[1]->animationSpeed = 3.5f;
 		}
 
 
@@ -1776,11 +1844,7 @@ public:
 		//matrixNodes[1].model = glm::translate(glm::mat4(), glm::vec3(sin(globalP), 1.0f, 0.0f));
 
 
-		if (keyStates.space) {
-			physicsObjects[1]->rigidBody->activate();
-			//physicsObjects[1]->rigidBody->setLinearVelocity(btVector3(0.0f, 0.0f, 12.0f));
-			physicsObjects[1]->rigidBody->applyCentralForce(btVector3(0.0f, sin(globalP)*0.1f, 0.05f));
-		}
+
 
 
 
@@ -1913,7 +1977,7 @@ public:
 
 
 				//uint32_t offset1 = mesh.matrixIndex * alignedMatrixSize;
-				uint32_t offset1 = model->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
+				uint32_t offset1 = model->matrixIndex * alignedMatrixSize;
 				//https://www.khronos.org/registry/vulkan/specs/1.0/apispec.html#vkCmdBindDescriptorSets
 				// the third param is the set number!
 				setNum = 1;
@@ -1928,7 +1992,7 @@ public:
 					//uint32_t materialIndex = this->assetManager.materials.get(mesh.meshBuffer.materialName).index;
 
 
-					uint32_t offset2 = m.index * static_cast<uint32_t>(alignedMaterialSize);
+					uint32_t offset2 = m.index * alignedMaterialSize;
 					// the third param is the set number!
 					setNum = 2;
 					cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset2);
@@ -2035,6 +2099,8 @@ public:
 		cmdBuffer.setScissor(0, vkx::rect2D(size));
 
 
+		// renders quad
+
 		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.deferred, 0, descriptorSetsDeferred.basic, nullptr);
 		if (debugDisplay) {
 			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.debug);
@@ -2093,19 +2159,57 @@ public:
 		offscreenCmdBuffer.begin(cmdBufInfo);
 		offscreenCmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
 
+
+		// start of render pass
+
+
 		vk::Viewport viewport = vkx::viewport(offscreen.size);
 		offscreenCmdBuffer.setViewport(0, viewport);
 
 		vk::Rect2D scissor = vkx::rect2D(offscreen.size);
 		offscreenCmdBuffer.setScissor(0, scissor);
 
+		vk::DeviceSize offsets = { 0 };
+
+
+
+
+
+
+
+
+
 		offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.offscreen, 0, descriptorSetsDeferred.offscreen, nullptr);
 		offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.offscreen);
 
-		vk::DeviceSize offsets = { 0 };
+		
+
+
+
+
+
+
+
+
 		offscreenCmdBuffer.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, meshBuffers.example.vertices.buffer, { 0 });
 		offscreenCmdBuffer.bindIndexBuffer(meshBuffers.example.indices.buffer, 0, vk::IndexType::eUint32);
 		offscreenCmdBuffer.drawIndexed(meshBuffers.example.indexCount, 1, 0, 0, 0);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		// end render pass
+
 		offscreenCmdBuffer.endRenderPass();
 		offscreenCmdBuffer.end();
 	}

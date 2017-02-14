@@ -8,15 +8,7 @@ layout (location = 1) in vec2 inUV;
 layout (location = 2) in vec3 inColor;
 layout (location = 3) in vec3 inNormal;
 
-
 #define MAX_BONES 64
-
-struct matrixNode {
-	mat4 model;
-	//mat4 g1;
-	//mat4 g2;
-	//mat4 g3;
-};
 
 // scene
 layout (set = 0, binding = 0) uniform sceneBuffer
@@ -26,6 +18,7 @@ layout (set = 0, binding = 0) uniform sceneBuffer
 
 	vec3 lightPos;
 	vec3 cameraPos;
+
 	// todo: definitely remove this
 	mat4 bones[MAX_BONES];
 } scene;
@@ -34,24 +27,8 @@ layout (set = 0, binding = 0) uniform sceneBuffer
 layout (set = 1, binding = 0) uniform matrixBuffer
 {
 	mat4 model;
-	//mat4 boneIndex;
-	//vec4 boneIndex;
-	//vec4 padding[3];
 	mat4 g1;
-	//mat4 garbage2;
-	//mat4 garbage3;
 } instance;
-
-// layout (set = 1, binding = 0) uniform matrixBuffer
-// {
-// 	matrixNode instance;
-// };
-
-// bone data
-layout (set = 4, binding = 0) uniform boneBuffer
-{
-	mat4 bones[/*MAX_BONES*64*/4096];
-} boneData;
 
 
 
@@ -85,40 +62,10 @@ void main()
 	gl_Position = MVP * vec4(inPos.xyz, 1.0);
 
 	vec4 pos = modelView * vec4(inPos.xyz, 0.0);
-	//outNormal = mat3(instance.model) * inNormal;// commented out for blinn-phong
 
 
 	vec3 lPos = mat3(instance.model) * scene.lightPos.xyz;
 	outLightVec = lPos - (instance.model * vec4(inPos.xyz, 0.0)).xyz;
 	outViewVec = -(instance.model * vec4(inPos.xyz, 0.0)).xyz;
-
-	// FragPos = vec3(model * vec4(position, 1.0f));
-
-	// vec4 pos = modelView * inPos;
-	// outViewVec = vec3(modelView * pos);
-
-
-	// vec4 lightPos = vec4(scene.lightPos, 1.0) * modelView;
-
-	// outLightVec = normalize(lightPos.xyz - outViewVec);
-
-
-
-	// outNormal = inNormal;
-	// outColor = inColor;
-	// outUV = inUV;
-
-	// mat4 modelView = scene.view * instance.model;
-
-	// gl_Position = scene.projection * scene.view * instance.model * vec4(inPos.xyz, 1.0);
-	
-	// vec4 pos = modelView * inPos;
-	// outNormal = mat3(instance.model) * inNormal;
-	// vec3 lPos = mat3(instance.model) * scene.lightPos.xyz;
-
-	// outLightVec = lPos - (instance.model * vec4(inPos.xyz, 0.0)).xyz;
-	// outViewVec = -(instance.model * vec4(inPos.xyz, 0.0)).xyz;
-
-
 
 }
