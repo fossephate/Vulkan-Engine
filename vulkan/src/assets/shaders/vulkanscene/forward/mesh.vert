@@ -20,14 +20,16 @@ layout (set = 0, binding = 0) uniform sceneBuffer
 	vec3 cameraPos;
 
 	// todo: definitely remove this
-	mat4 bones[MAX_BONES];
+	//mat4 bones[MAX_BONES];
 } scene;
 
 // matrix data
 layout (set = 1, binding = 0) uniform matrixBuffer
 {
 	mat4 model;
+	mat4 boneIndex;
 	mat4 g1;
+	mat4 g2;
 } instance;
 
 

@@ -107,30 +107,108 @@ namespace vkx {
 
 
 
-	//template <typename T>
-	//class VulkanResourceList
-	//{
-	//public:
-	//	vk::Device &device;
-	//	std::unordered_map<std::string, T> resources;
-	//	VulkanResourceList(VkDevice &dev) : device(dev) {};
-	//	const T get(std::string name)
-	//	{
-	//		return resources[name];
-	//	}
-	//	T *getPtr(std::string name)
-	//	{
-	//		return &resources[name];
-	//	}
-	//	bool present(std::string name)
-	//	{
-	//		return resources.find(name) != resources.end();
-	//	}
-	//};
+	template <typename T>
+	class VulkanResourceList {
+		public:
+			vk::Device &device;
+			std::unordered_map<std::string, T> resources;
+			VulkanResourceList(vk::Device &dev) : device(dev) {};
+			const T get(std::string name)
+			{
+				return resources[name];
+			}
+			T *getPtr(std::string name)
+			{
+				return &resources[name];
+			}
+			bool present(std::string name)
+			{
+				return resources.find(name) != resources.end();
+			}
+	};
+
+	class PipelineLayoutList : public VulkanResourceList<vk::PipelineLayout> {
+		public:
+			PipelineLayoutList(vk::Device &dev) : VulkanResourceList(dev) {};
+
+			~PipelineLayoutList() {
+				for (auto &pipelineLayout : resources) {
+					device.destroyPipelineLayout(pipelineLayout.second, nullptr);
+				}
+			}
+			vk::PipelineLayout add(std::string name, vk::PipelineLayoutCreateInfo &createInfo) {				vk::PipelineLayout pipelineLayout = device.createPipelineLayout(createInfo, nullptr);
+				resources[name] = pipelineLayout;
+				return pipelineLayout;
+			}
+	};
 
 
 
 
+	class PipelineList : public VulkanResourceList<vk::Pipeline> {
+		public:
+			PipelineList(vk::Device &dev) : VulkanResourceList(dev) {};
+
+			~PipelineList() {
+				for (auto &pipeline : resources) {					device.destroyPipeline(pipeline.second, nullptr);
+				}
+			}
+			vk::Pipeline addGraphicsPipeline(std::string name, vk::GraphicsPipelineCreateInfo &pipelineCreateInfo, vk::PipelineCache &pipelineCache) {				vk::Pipeline pipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+				resources[name] = pipeline;
+				return pipeline;
+			}
+	};
+
+
+
+	class DescriptorSetLayoutList : public VulkanResourceList<vk::DescriptorSetLayout> {
+		public:
+			DescriptorSetLayoutList(vk::Device &dev) : VulkanResourceList(dev) {};
+
+			~DescriptorSetLayoutList() {
+				for (auto &descriptorSetLayout : resources) {					device.destroyDescriptorSetLayout(descriptorSetLayout.second, nullptr);
+				}
+			}
+
+			vk::DescriptorSetLayout add(std::string name, vk::DescriptorSetLayoutCreateInfo createInfo) {				vk::DescriptorSetLayout descriptorSetLayout = device.createDescriptorSetLayout(createInfo, nullptr);
+				resources[name] = descriptorSetLayout;
+				return descriptorSetLayout;
+			}
+	};
+
+	class DescriptorSetList : public VulkanResourceList<vk::DescriptorSet> {
+		private:
+			//vk::DescriptorPool descriptorPool;
+		public:
+			DescriptorSetList(vk::Device &dev/*, vk::DescriptorPool pool*/) : VulkanResourceList(dev)/*, descriptorPool(pool)*/ {};
+
+			~DescriptorSetList() {
+				//for (auto& descriptorSet : resources) {
+				//	vkFreeDescriptorSets(device, descriptorPool, 1, &descriptorSet.second);
+				//	device.freeDescriptorSets(descriptorPool, 1, &descriptorSet.second);
+				//}
+			}
+			vk::DescriptorSet add(std::string name, vk::DescriptorSetAllocateInfo allocInfo) {				vk::DescriptorSet descriptorSet = device.allocateDescriptorSets(allocInfo)[0];
+				resources[name] = descriptorSet;
+				return descriptorSet;
+		}
+	};
+
+
+	class DescriptorPoolList : public VulkanResourceList<vk::DescriptorPool> {
+		public:
+		DescriptorPoolList(vk::Device &dev) : VulkanResourceList(dev) {};
+
+		~DescriptorPoolList() {
+			for (auto &descriptorPool : resources) {
+				//device.destroyPipelineLayout(pipelineLayout.second, nullptr);
+			}
+		}
+		vk::DescriptorPool add(std::string name, vk::DescriptorPoolCreateInfo &createInfo) {			vk::DescriptorPool descriptorPool = device.createDescriptorPool(createInfo, nullptr);
+			resources[name] = descriptorPool;
+			return descriptorPool;
+		}
+	};
 
 
 

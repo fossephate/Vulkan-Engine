@@ -778,7 +778,7 @@ void vulkanApp::renderLoop() {
 		// the time it took to render the frame
 		auto tFrameTime = std::chrono::duration<double, std::milli>(tNow - tFrameStart);
 		// set FPS
-		double FPS = 60.0;
+		double FPS = 6000.0;
 		std::chrono::duration<double, std::milli> minWorkTime(1000.0 / FPS);
 
 		//if (tFrameTime < minWorkTime) {

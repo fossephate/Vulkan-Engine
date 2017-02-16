@@ -17,6 +17,7 @@ struct Light {
     float _pad;
 };
 
+// todo: make this another set(1) rather than binding = 4
 layout (set = 0, binding = 4) uniform UBO 
 {
     Light lights[51];

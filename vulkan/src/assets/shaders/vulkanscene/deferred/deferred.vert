@@ -8,8 +8,8 @@ layout (location = 1) in vec2 inUV;
 
 layout (set = 0, binding = 0) uniform UBO 
 {
-	mat4 projection;
-	mat4 model;
+	mat4 projection;// consider hardcoding in? probably not worth it
+	mat4 model;// this is used in debug.vert
 } ubo;
 
 layout (location = 0) out vec2 outUV;
@@ -17,5 +17,5 @@ layout (location = 0) out vec2 outUV;
 void main() 
 {
 	outUV = inUV;
-	gl_Position = ubo.projection * ubo.model * vec4(inPos.xyz, 1.0);
+	gl_Position = ubo.projection * /*ubo.model **/ vec4(inPos.xyz, 1.0);
 }
