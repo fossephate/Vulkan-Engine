@@ -201,31 +201,31 @@ public:
 
 	} pipelines;
 
-	struct {
+	//struct {
 
-		vk::Pipeline meshes;
-		vk::Pipeline skinnedMeshes;
+	//	vk::Pipeline meshes;
+	//	vk::Pipeline skinnedMeshes;
 
-		vk::Pipeline deferred;
-		vk::Pipeline offscreen;
-		vk::Pipeline debug;
-	} pipelinesDeferred;
-
-
-
-	struct {
-		vk::PipelineLayout basic;
-
-		vk::PipelineLayout deferred;
-
-		vk::PipelineLayout offscreen;
-	} pipelineLayouts;
+	//	vk::Pipeline deferred;
+	//	vk::Pipeline offscreen;
+	//	vk::Pipeline debug;
+	//} pipelinesDeferred;
 
 
 
-	std::vector<vk::DescriptorSetLayout> descriptorSetLayouts;
-	std::vector<vk::DescriptorSet> descriptorSets;
-	std::vector<vk::DescriptorPool> descriptorPools;
+	//struct {
+	//	//vk::PipelineLayout basic;
+
+	//	vk::PipelineLayout deferred;
+
+	//	vk::PipelineLayout offscreen;
+	//} pipelineLayouts;
+
+
+
+	//std::vector<vk::DescriptorSetLayout> descriptorSetLayouts;
+	//std::vector<vk::DescriptorSet> descriptorSets;
+	//std::vector<vk::DescriptorPool> descriptorPools;
 
 
 	struct {
@@ -290,11 +290,14 @@ public:
 	} descriptorSetsDeferred;
 
 
-	struct Resources {
+	struct Resources {
+
 		vkx::PipelineLayoutList* pipelineLayouts;
 		vkx::PipelineList *pipelines;
 		vkx::DescriptorSetLayoutList *descriptorSetLayouts;
-		vkx::DescriptorSetList *descriptorSets;		vkx::DescriptorPoolList *descriptorPools;
+		vkx::DescriptorSetList *descriptorSets;
+		vkx::DescriptorPoolList *descriptorPools;
+
 	} rscs;
 
 
@@ -570,10 +573,6 @@ public:
 		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo0 =
 			vkx::descriptorPoolCreateInfo(descriptorPoolSizes0.size(), descriptorPoolSizes0.data(), 1);
 
-
-		//vk::DescriptorPool descriptorPool0 = device.createDescriptorPool(descriptorPoolCreateInfo0);
-		//descriptorPools.push_back(descriptorPool0);
-
 		rscs.descriptorPools->add("forward.scene", descriptorPoolCreateInfo0);
 
 
@@ -587,9 +586,6 @@ public:
 
 		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo1 =
 			vkx::descriptorPoolCreateInfo(descriptorPoolSizes1.size(), descriptorPoolSizes1.data(), 1);
-
-		//vk::DescriptorPool descriptorPool1 = device.createDescriptorPool(descriptorPoolCreateInfo1);
-		//descriptorPools.push_back(descriptorPool1);
 
 		rscs.descriptorPools->add("forward.matrix", descriptorPoolCreateInfo1);
 
@@ -605,10 +601,6 @@ public:
 
 		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo2 =
 			vkx::descriptorPoolCreateInfo(descriptorPoolSizes2.size(), descriptorPoolSizes2.data(), 1);
-
-
-		//vk::DescriptorPool descriptorPool2 = device.createDescriptorPool(descriptorPoolCreateInfo2);
-		//descriptorPools.push_back(descriptorPool2);
 
 
 		rscs.descriptorPools->add("forward.material", descriptorPoolCreateInfo2);
@@ -640,13 +632,8 @@ public:
 		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo4 =
 			vkx::descriptorPoolCreateInfo(descriptorPoolSizes4.size(), descriptorPoolSizes4.data(), 10000);
 
-
-		vk::DescriptorPool descriptorPool4 = device.createDescriptorPool(descriptorPoolCreateInfo4);
-		descriptorPools.push_back(descriptorPool4);
-
-		this->assetManager.materialDescriptorPool = &descriptorPools[3];
-
-
+		rscs.descriptorPools->add("forward.textures", descriptorPoolCreateInfo4);
+		this->assetManager.materialDescriptorPool = rscs.descriptorPools->getPtr("forward.textures");
 
 
 
@@ -686,8 +673,7 @@ public:
 		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo0 =
 			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings0.data(), descriptorSetLayoutBindings0.size());
 
-		vk::DescriptorSetLayout descriptorSetLayout0 = device.createDescriptorSetLayout(descriptorSetLayoutCreateInfo0);
-		descriptorSetLayouts.push_back(descriptorSetLayout0);
+		rscs.descriptorSetLayouts->add("forward.scene", descriptorSetLayoutCreateInfo0);
 
 
 
@@ -705,8 +691,7 @@ public:
 		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo1 =
 			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings1.data(), descriptorSetLayoutBindings1.size());
 
-		vk::DescriptorSetLayout descriptorSetLayout1 = device.createDescriptorSetLayout(descriptorSetLayoutCreateInfo1);
-		descriptorSetLayouts.push_back(descriptorSetLayout1);
+		rscs.descriptorSetLayouts->add("forward.matrix", descriptorSetLayoutCreateInfo1);
 
 
 
@@ -726,9 +711,7 @@ public:
 		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo2 =
 			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings2.data(), descriptorSetLayoutBindings2.size());
 
-		vk::DescriptorSetLayout descriptorSetLayout2 = device.createDescriptorSetLayout(descriptorSetLayoutCreateInfo2);
-
-		descriptorSetLayouts.push_back(descriptorSetLayout2);
+		rscs.descriptorSetLayouts->add("forward.material", descriptorSetLayoutCreateInfo2);
 
 
 
@@ -764,16 +747,15 @@ public:
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
 				0),// binding 0
+			// todo: add specular / bump map here
 		};
 
 		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo4 =
 			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings4.data(), descriptorSetLayoutBindings4.size());
 
-		vk::DescriptorSetLayout descriptorSetLayout4 = device.createDescriptorSetLayout(descriptorSetLayoutCreateInfo4);
-		descriptorSetLayouts.push_back(descriptorSetLayout4);
+		rscs.descriptorSetLayouts->add("forward.textures", descriptorSetLayoutCreateInfo4);
+		this->assetManager.materialDescriptorSetLayout = rscs.descriptorSetLayouts->getPtr("forward.textures");
 
-
-		this->assetManager.materialDescriptorSetLayout = &descriptorSetLayouts[3];
 
 
 
@@ -791,10 +773,27 @@ public:
 		// use all descriptor set layouts
 		// to form pipeline layout
 
+		// todo: if possible find a better way to do this
+		// index / use ordered map and get ptr? ordered by name so probably wouldn't work as intended
+
+		std::vector<vk::DescriptorSetLayout> descriptorSetLayouts;
+
+		vk::DescriptorSetLayout descriptorSetLayout0 = rscs.descriptorSetLayouts->get("forward.scene");
+		vk::DescriptorSetLayout descriptorSetLayout1 = rscs.descriptorSetLayouts->get("forward.matrix");
+		vk::DescriptorSetLayout descriptorSetLayout2 = rscs.descriptorSetLayouts->get("forward.material");
+		vk::DescriptorSetLayout descriptorSetLayout3 = rscs.descriptorSetLayouts->get("forward.textures");
+		descriptorSetLayouts.push_back(descriptorSetLayout0);
+		descriptorSetLayouts.push_back(descriptorSetLayout1);
+		descriptorSetLayouts.push_back(descriptorSetLayout2);
+		descriptorSetLayouts.push_back(descriptorSetLayout3);
+
+
 		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
 			vkx::pipelineLayoutCreateInfo(descriptorSetLayouts.data(), descriptorSetLayouts.size());
 
-		pipelineLayouts.basic = device.createPipelineLayout(pPipelineLayoutCreateInfo);
+		//pipelineLayouts.basic = device.createPipelineLayout(pPipelineLayoutCreateInfo);
+		//vk::PipelineLayout t = device.createPipelineLayout(pPipelineLayoutCreateInfo);
+		rscs.pipelineLayouts->add("forward.basic", pPipelineLayoutCreateInfo);
 
 
 
@@ -870,12 +869,16 @@ public:
 
 		// todo:
 		// deferred render pass, I should combine this with the above pipeline layout
-		pipelineLayouts.deferred = device.createPipelineLayout(pPipelineLayoutCreateInfoDeferred);
+		//pipelineLayouts.deferred = device.createPipelineLayout(pPipelineLayoutCreateInfoDeferred);
+		
+		rscs.pipelineLayouts->add("deferred.deferred", pPipelineLayoutCreateInfoDeferred);
 
 
 		// Offscreen (scene) rendering pipeline layout
 		// important! used for offscreen render pass
-		pipelineLayouts.offscreen = device.createPipelineLayout(pPipelineLayoutCreateInfoDeferred);
+		//pipelineLayouts.offscreen = device.createPipelineLayout(pPipelineLayoutCreateInfoDeferred);
+
+		rscs.pipelineLayouts->add("deferred.offscreen", pPipelineLayoutCreateInfoDeferred);
 
 
 
@@ -889,32 +892,29 @@ public:
 
 		// descriptor set 0
 		// scene data
-		vk::DescriptorSetAllocateInfo descriptorSetInfo0 =
-			vkx::descriptorSetAllocateInfo(descriptorPools[0], &descriptorSetLayouts[0], 1);
+		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo0 =
+			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("forward.scene"), &rscs.descriptorSetLayouts->get("forward.scene"), 1);
 
-		std::vector<vk::DescriptorSet> descriptorSets0 = device.allocateDescriptorSets(descriptorSetInfo0);
-		descriptorSets.push_back(descriptorSets0[0]);// descriptor set 0
+		rscs.descriptorSets->add("forward.scene", descriptorSetAllocateInfo0);
 
 
 
 
 		// descriptor set 1
 		// matrix data
-		vk::DescriptorSetAllocateInfo descriptorSetInfo1 =
-			vkx::descriptorSetAllocateInfo(descriptorPools[1], &descriptorSetLayouts[1], 1);
+		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo1 =
+			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("forward.matrix"), &rscs.descriptorSetLayouts->get("forward.matrix"), 1);
 
-		std::vector<vk::DescriptorSet> descriptorSets1 = device.allocateDescriptorSets(descriptorSetInfo1);
-		descriptorSets.push_back(descriptorSets1[0]);// descriptor set 1
+		rscs.descriptorSets->add("forward.matrix", descriptorSetAllocateInfo1);
 
 
 
 		// descriptor set 2
 		// material data
-		vk::DescriptorSetAllocateInfo descriptorSetInfo2 =
-			vkx::descriptorSetAllocateInfo(descriptorPools[2], &descriptorSetLayouts[2], 1);
+		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo2 =
+			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("forward.material"), &rscs.descriptorSetLayouts->get("forward.material"), 1);
 
-		std::vector<vk::DescriptorSet> descriptorSets2 = device.allocateDescriptorSets(descriptorSetInfo2);
-		descriptorSets.push_back(descriptorSets2[0]);// descriptor set 2
+		rscs.descriptorSets->add("forward.material", descriptorSetAllocateInfo2);
 
 
 		//// descriptor set 3
@@ -938,7 +938,7 @@ public:
 
 
 
-
+		
 
 
 
@@ -947,14 +947,14 @@ public:
 		{
 			// Set 0: Binding 0: scene uniform buffer
 			vkx::writeDescriptorSet(
-				descriptorSets[0],// descriptor set 0
+				rscs.descriptorSets->get("forward.scene"),// descriptor set 0
 				vk::DescriptorType::eUniformBuffer,
 				0,// binding 0
 				&uniformData.sceneVS.descriptor),
 
 			// Set 1: Binding 0: vertex shader matrix dynamic buffer
 			vkx::writeDescriptorSet(
-				descriptorSets[1],// descriptor set 1
+				rscs.descriptorSets->get("forward.matrix"),// descriptor set 1
 				vk::DescriptorType::eUniformBufferDynamic,
 				0,// binding 0
 				&uniformData.matrixVS.descriptor),
@@ -962,7 +962,7 @@ public:
 
 			// Set 2: Binding 0: fragment shader material dynamic buffer
 			vkx::writeDescriptorSet(
-				descriptorSets[2],// descriptor set 2
+				rscs.descriptorSets->get("forward.material"),// descriptor set 2
 				vk::DescriptorType::eUniformBufferDynamic,
 				0,// binding 0
 				&uniformData.materialVS.descriptor),
@@ -1097,12 +1097,12 @@ public:
 				1,
 				&textures.colorMap.descriptor),
 
-			// Set 1: Binding 0: Vertex shader uniform buffer
-			vkx::writeDescriptorSet(
-				descriptorSets[1],
-				vk::DescriptorType::eUniformBufferDynamic,
-				0,
-				&uniformDataDeferred.matrixVS.descriptor),
+			//// Set 1: Binding 0: Vertex shader uniform buffer
+			//vkx::writeDescriptorSet(
+			//	rscs.descriptorSets->get("forward.matrix"),
+			//	vk::DescriptorType::eUniformBufferDynamic,
+			//	0,
+			//	&uniformDataDeferred.matrixVS.descriptor),
 
 
 		};
@@ -1160,8 +1160,7 @@ public:
 		std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStages;
 
 
-		vk::GraphicsPipelineCreateInfo pipelineCreateInfo =
-			vkx::pipelineCreateInfo(pipelineLayouts.basic, renderPass);
+		vk::GraphicsPipelineCreateInfo pipelineCreateInfo = vkx::pipelineCreateInfo(/*pipelineLayouts.basic*/rscs.pipelineLayouts->get("forward.basic"), renderPass);
 
 		pipelineCreateInfo.pVertexInputState = &vertices.inputState;
 		pipelineCreateInfo.pInputAssemblyState = &inputAssemblyState;
@@ -1178,8 +1177,15 @@ public:
 
 		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/mesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/mesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		pipelines.meshes = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
-
+		
+		
+		////pipelines.meshes = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		////rscs.pipelines->addGraphicsPipeline("forward.meshes", pipelineCache, pipelineCreateInfo);
+		
+		
+		vk::Pipeline meshPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		//rscs.pipelines->add("forward.meshes", meshPipeline);
+		rscs.pipelines->resources["forward.meshes"] = meshPipeline;
 
 
 
@@ -1188,8 +1194,11 @@ public:
 		// skinned meshes:
 		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/skinnedMesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/skinnedMesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		pipelines.skinnedMeshes = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
-
+		//pipelines.skinnedMeshes = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		//rscs.pipelines->addGraphicsPipeline("forward.skinnedMeshes", pipelineCache, pipelineCreateInfo);
+		vk::Pipeline skinnedMeshPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		//rscs.pipelines->add("forward.skinnedMeshes", skinnedMeshPipeline);
+		rscs.pipelines->resources["forward.skinnedMeshes"] = skinnedMeshPipeline;
 
 
 
@@ -1254,7 +1263,7 @@ public:
 		// Final fullscreen pass pipeline
 		std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStages;
 
-		vk::GraphicsPipelineCreateInfo pipelineCreateInfo = vkx::pipelineCreateInfo(pipelineLayouts.deferred, renderPass);
+		vk::GraphicsPipelineCreateInfo pipelineCreateInfo = vkx::pipelineCreateInfo(rscs.pipelineLayouts->get("deferred.deferred"), renderPass);
 		pipelineCreateInfo.pVertexInputState = &verticesDeferred.inputState;
 		pipelineCreateInfo.pInputAssemblyState = &inputAssemblyState;
 		pipelineCreateInfo.pRasterizationState = &rasterizationState;
@@ -1269,14 +1278,18 @@ public:
 
 		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/deferred.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/deferred.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		pipelinesDeferred.deferred = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo, nullptr)[0];
+		//pipelinesDeferred.deferred = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		//rscs.pipelines->addGraphicsPipeline("forward.skinnedMeshes", pipelineCache, pipelineCreateInfo);
+		vk::Pipeline deferredPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		rscs.pipelines->resources["deferred.deferred"] = deferredPipeline;
 
 
 		// Debug display pipeline
 		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/debug.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/debug.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		pipelinesDeferred.debug = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo, nullptr)[0];
-
+		//pipelinesDeferred.debug = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		vk::Pipeline debugPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		rscs.pipelines->resources["deferred.debug"] = debugPipeline;
 
 
 
@@ -1290,7 +1303,7 @@ public:
 		pipelineCreateInfo.renderPass = offscreen.renderPass;
 
 		// Separate layout
-		pipelineCreateInfo.layout = pipelineLayouts.offscreen;
+		pipelineCreateInfo.layout = rscs.pipelineLayouts->get("deferred.offscreen");
 
 		// Blend attachment states required for all color attachments
 		// This is important, as color write mask will otherwise be 0x0 and you
@@ -1310,8 +1323,9 @@ public:
 		// Offscreen pipeline
 		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/mrtMesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/mrtMesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		pipelinesDeferred.meshes = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
-
+		//pipelinesDeferred.meshes = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		vk::Pipeline deferredMeshPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		rscs.pipelines->resources["deferred.meshes"] = deferredMeshPipeline;
 
 	}
 
@@ -2048,7 +2062,7 @@ public:
 
 		// bind mesh pipeline
 		// don't have to do this for every mesh
-		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.meshes);
+		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("forward.meshes"));
 
 		// for each model
 		// model = group of meshes
@@ -2067,7 +2081,7 @@ public:
 
 				// bind scene descriptor set
 				setNum = 0;
-				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, descriptorSets[setNum], nullptr);
+				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, rscs.descriptorSets->get("forward.scene"), nullptr);
 
 
 				uint32_t offset1 = model->matrixIndex * alignedMatrixSize;
@@ -2075,7 +2089,7 @@ public:
 				//https://www.khronos.org/registry/vulkan/specs/1.0/apispec.html#vkCmdBindDescriptorSets
 				// the third param is the set number!
 				setNum = 1;
-				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset1);
+				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.matrix"), 1, &offset1);
 
 
 				if (lastMaterialName != mesh.meshBuffer.materialName) {
@@ -2089,7 +2103,7 @@ public:
 					uint32_t offset2 = m.index * static_cast<uint32_t>(alignedMaterialSize);
 					// the third param is the set number!
 					setNum = 2;
-					cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset2);
+					cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.material"), 1, &offset2);
 
 
 
@@ -2099,7 +2113,7 @@ public:
 					// must make pipeline layout compatible
 					
 					setNum = 3;
-					cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, m.descriptorSet, nullptr);
+					cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, m.descriptorSet, nullptr);
 				}
 
 
@@ -2123,7 +2137,7 @@ public:
 
 		// bind skinned mesh pipeline
 		// don't have to do this for every skinned mesh// bind once
-		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.skinnedMeshes);
+		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("forward.skinnedMeshes"));
 
 		for (auto &skinnedMesh : skinnedMeshes) {
 
@@ -2138,14 +2152,14 @@ public:
 
 			// bind scene descriptor set
 			setNum = 0;
-			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, descriptorSets[setNum], nullptr);
+			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, rscs.descriptorSets->get("forward.scene"), nullptr);
 
 			//uint32_t offset1 = skinnedMesh->matrixIndex * alignedMatrixSize;
 			uint32_t offset1 = skinnedMesh->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
 			//https://www.khronos.org/registry/vulkan/specs/1.0/apispec.html#vkCmdBindDescriptorSets
 			// the third param is the set number!
 			setNum = 1;
-			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset1);
+			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.matrix"), 1, &offset1);
 
 
 
@@ -2160,13 +2174,13 @@ public:
 				uint32_t offset2 = m.index * static_cast<uint32_t>(alignedMaterialSize);
 				// the third param is the set number!
 				setNum = 2;
-				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset2);
+				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.material"), 1, &offset2);
 
 
 				// bind texture:
 				//vkx::Material m = this->assetManager.materials.get(skinnedMesh->meshBuffer.materialName);
 				setNum = 3;
-				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, m.descriptorSet, nullptr);
+				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, m.descriptorSet, nullptr);
 			}
 
 
@@ -2193,9 +2207,9 @@ public:
 
 		// renders quad
 
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.deferred, 0, descriptorSetsDeferred.basic, nullptr);
+		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.deferred"), 0, descriptorSetsDeferred.basic, nullptr);
 		if (debugDisplay) {
-			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelinesDeferred.debug);
+			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.debug"));
 			cmdBuffer.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, meshBuffers.quad.vertices.buffer, { 0 });
 			cmdBuffer.bindIndexBuffer(meshBuffers.quad.indices.buffer, 0, vk::IndexType::eUint32);
 			cmdBuffer.drawIndexed(meshBuffers.quad.indexCount, 1, 0, 0, 1);
@@ -2209,7 +2223,7 @@ public:
 
 		cmdBuffer.setViewport(0, viewport);
 		// Final composition as full screen quad
-		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelinesDeferred.deferred);
+		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.deferred"));
 		cmdBuffer.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, meshBuffers.quad.vertices.buffer, { 0 });
 		cmdBuffer.bindIndexBuffer(meshBuffers.quad.indices.buffer, 0, vk::IndexType::eUint32);
 		cmdBuffer.drawIndexed(6, 1, 0, 0, 1);
@@ -2271,7 +2285,7 @@ public:
 
 
 
-		offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.offscreen, 0, descriptorSetsDeferred.offscreen, nullptr);
+		offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.offscreen"), 0, descriptorSetsDeferred.offscreen, nullptr);
 
 
 
@@ -2311,7 +2325,7 @@ public:
 		// bind mesh pipeline
 		// don't have to do this for every mesh
 		// todo: create pipelinesDefferd.mesh
-		offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelinesDeferred.meshes);
+		offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.meshes"));
 
 		// for each model
 		// model = group of meshes

@@ -149,14 +149,16 @@ namespace vkx {
 		public:
 			PipelineList(vk::Device &dev) : VulkanResourceList(dev) {};
 
-			~PipelineList() {
-				for (auto &pipeline : resources) {					device.destroyPipeline(pipeline.second, nullptr);
-				}
-			}
-			vk::Pipeline addGraphicsPipeline(std::string name, vk::GraphicsPipelineCreateInfo &pipelineCreateInfo, vk::PipelineCache &pipelineCache) {				vk::Pipeline pipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
-				resources[name] = pipeline;
-				return pipeline;
-			}
+			//~PipelineList() {
+			//	for (auto &pipeline : resources) {			//		device.destroyPipeline(pipeline.second, nullptr);
+			//	}
+			//}
+			//vk::Pipeline addGraphicsPipeline(std::string name, vk::PipelineCache &pipelineCache, vk::GraphicsPipelineCreateInfo &pipelineCreateInfo) {			//	vk::Pipeline pipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+			//	resources[name] = pipeline;
+			//	return pipeline;
+			//}			//void addGraphicsPipeline(std::string name, vk::Pipeline pipeline) {
+			//	resources[name] = pipeline;
+			//}			void add(std::string name, vk::Pipeline pipeline) {				resources[name] = pipeline;			}
 	};
 
 
@@ -173,7 +175,9 @@ namespace vkx {
 			vk::DescriptorSetLayout add(std::string name, vk::DescriptorSetLayoutCreateInfo createInfo) {				vk::DescriptorSetLayout descriptorSetLayout = device.createDescriptorSetLayout(createInfo, nullptr);
 				resources[name] = descriptorSetLayout;
 				return descriptorSetLayout;
-			}
+			}			//void add(std::string name, vk::DescriptorSetLayout descriptorSetLayout) {
+			//	resources[name] = descriptorSetLayout;
+			//}
 	};
 
 	class DescriptorSetList : public VulkanResourceList<vk::DescriptorSet> {
@@ -191,7 +195,9 @@ namespace vkx {
 			vk::DescriptorSet add(std::string name, vk::DescriptorSetAllocateInfo allocInfo) {				vk::DescriptorSet descriptorSet = device.allocateDescriptorSets(allocInfo)[0];
 				resources[name] = descriptorSet;
 				return descriptorSet;
-		}
+			}			//void add(std::string name, vk::DescriptorSet descriptorSet) {
+			//	resources[name] = descriptorSet;
+			//}
 	};
 
 
