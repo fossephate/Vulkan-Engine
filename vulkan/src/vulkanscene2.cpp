@@ -77,6 +77,14 @@ inline glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4* from) {
 	return to;
 }
 
+float rand0t1() {
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<> dis(0.0f, 1.0f);
+	float rnd = dis(gen);
+	return rnd;
+}
+
 
 
 // Wrapper functions for aligned memory allocation
@@ -189,42 +197,6 @@ public:
 	} textures;
 
 
-
-
-	//struct {
-	//	vk::Pipeline meshes;
-	//	vk::Pipeline skinnedMeshes;
-	//	vk::Pipeline blending;
-	//	vk::Pipeline wireframe;
-	//} pipelines;
-
-	//struct {
-
-	//	vk::Pipeline meshes;
-	//	vk::Pipeline skinnedMeshes;
-
-	//	vk::Pipeline deferred;
-	//	vk::Pipeline offscreen;
-	//	vk::Pipeline debug;
-	//} pipelinesDeferred;
-
-
-
-	//struct {
-	//	//vk::PipelineLayout basic;
-
-	//	vk::PipelineLayout deferred;
-
-	//	vk::PipelineLayout offscreen;
-	//} pipelineLayouts;
-
-
-
-	//std::vector<vk::DescriptorSetLayout> descriptorSetLayouts;
-	//std::vector<vk::DescriptorSet> descriptorSets;
-	//std::vector<vk::DescriptorPool> descriptorPools;
-
-
 	struct {
 		vk::PipelineVertexInputStateCreateInfo inputState;
 		std::vector<vk::VertexInputBindingDescription> bindingDescriptions;
@@ -275,16 +247,6 @@ public:
 
 		vkx::UniformData matrixVS;
 	} uniformDataDeferred;
-
-
-	//vk::DescriptorPool descriptorPoolDeferred;
-	//vk::DescriptorSetLayout descriptorSetLayoutDeferred;
-
-	//struct {
-	//	vk::DescriptorSet basic;
-
-	//	vk::DescriptorSet offscreen;
-	//} descriptorSetsDeferred;
 
 
 	struct Resources {
@@ -1260,6 +1222,7 @@ public:
 
 		// offscreen descriptor set
 		// todo: combine with above
+		// or dont
 
 		std::vector<vk::WriteDescriptorSet> offscreenWriteDescriptorSets =
 		{
@@ -1745,13 +1708,13 @@ public:
 
 		//skinnedMeshes.push_back(skinnedMesh1);
 
-		for (int i = 0; i < 2; ++i) {
+		for (int i = 0; i < 1; ++i) {
 
-			//auto testSkinnedMesh = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
-			//->load(getAssetPath() + "models/goblin.dae");
-			//testSkinnedMesh->createSkinnedMeshBuffer(skinnedMeshVertexLayout, 0.0005f);
+			auto testSkinnedMesh = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
+			testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");
+			testSkinnedMesh->createSkinnedMeshBuffer(skinnedMeshVertexLayout, 0.0005f);
 
-			//skinnedMeshes.push_back(testSkinnedMesh);
+			skinnedMeshes.push_back(testSkinnedMesh);
 		}
 
 		auto physicsPlane = std::make_shared<vkx::PhysicsObject>(&physicsManager, models[0]);
@@ -2007,6 +1970,30 @@ public:
 			physicsObjects[1]->rigidBody->applyCentralForce(btVector3(0.1f, 0.0f, 0.0f));
 		}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	}
 
 
@@ -2090,6 +2077,12 @@ public:
 			models[i]->setTranslation(glm::vec3((2.0f*i)-(models.size()), 0.0f, sin(globalP*i) + 2.0f));
 		}
 
+		// todo: move this
+		for (int i = 0; i < modelsDeferred.size(); ++i) {
+			modelsDeferred[i]->setTranslation(glm::vec3((2.0f*i) - (modelsDeferred.size()), 0.0f, sin(globalP*i) + 2.0f));
+		}
+
+
 		//for (int i = 2; i < 50; ++i) {
 		//	int off = i*5;
 		//	for (int j = 0; j < 5; ++j) {
@@ -2097,16 +2090,6 @@ public:
 		//		models[n]->setTranslation(glm::vec3((2.0f*i) - (models.size()), 0.0f, sin(globalP*i) + 2.0f));
 		//	}
 		//}
-
-		//if (keyStates.space) {
-		//	auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
-		//	testModel->load(getAssetPath() + "models/monkey.fbx");
-		//	testModel->createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
-		//	testModel->matrixIndex = 0;
-
-		//	models.push_back(testModel);
-		//}
-
 
 
 
@@ -2139,19 +2122,12 @@ public:
 
 
 
+		/* UPDATE BUFFERS */
 
 		// todo: fix
 		for (auto &model : models) {
-
-			//consoleLog = std::to_string(model.transform.translation.x);
 			matrixNodes[model->matrixIndex].model = model->transfMatrix;
-			//glm::mat4* modelMat = (glm::mat4*)(((uint64_t)modelMatrices + (model.matrixIndex * dynamicAlignment)));
-			//*modelMat = model.transfMatrix;
-
 		}
-
-
-
 
 		// uboBoneData.bones is a large bone data buffer
 		// use offset to store bone data for each skinnedMesh
@@ -2168,7 +2144,6 @@ public:
 			uint32_t boneOffset = skinnedMesh->boneIndex*MAX_BONES;
 
 			for (uint32_t i = 0; i < skinnedMesh->meshLoader->boneData.boneTransforms.size(); ++i) {
-
 				//matrixNodes[skinnedMesh.matrixIndex].bones[i] = aiMatrix4x4ToGlm(&skinnedMesh.boneTransforms[i]);
 				//matrixNodes[skinnedMesh.matrixIndex].bones[i] = glm::transpose(glm::make_mat4(&skinnedMesh.boneTransforms[i].a1));
 				//std::ofstream log("logfile.txt", std::ios_base::app | std::ios_base::out);
@@ -2176,10 +2151,14 @@ public:
 
 				//uboBoneData.bones[boneOffset + i] = glm::transpose(glm::make_mat4(&skinnedMesh->boneTransforms[i].a1));
 				//uboScene.bones[i] = glm::transpose(glm::make_mat4(&skinnedMesh->boneTransforms[i].a1));
-
 				uboScene.bones[boneOffset + i] = glm::transpose(glm::make_mat4(&skinnedMesh->meshLoader->boneData.boneTransforms[i].a1));
-
 			}
+		}
+
+
+
+		for (auto &modelDeferred : modelsDeferred) {
+			matrixNodes[modelDeferred->matrixIndex].model = modelDeferred->transfMatrix;
 		}
 
 
@@ -2537,6 +2516,7 @@ public:
 				// the third param is the set number!
 				setNum = 1;
 				//offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.offscreen, setNum, 1, &descriptorSets[setNum], 1, &offset1);
+				offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.offscreen"), setNum, 1, &rscs.descriptorSets->get("deferred.matrix"), 1, &offset1);
 
 
 				if (lastMaterialName != mesh.meshBuffer.materialName) {
@@ -2559,8 +2539,8 @@ public:
 					// bind texture: // todo: implement a better way to bind textures
 					// must make pipeline layout compatible
 
-					setNum = 3;
-					//offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, m.descriptorSet, nullptr);
+					setNum = 2;
+					offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.offscreen"), setNum, m.descriptorSet, nullptr);
 				}
 
 
