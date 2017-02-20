@@ -209,8 +209,8 @@ namespace vkx
 				bool fullscreen = false;
 				/** @brief Set to true if v-sync will be forced for the swapchain */
 				bool vsync = false;
-				/** @brief Set to true to cap fps */
-				bool capFPS = true;
+				/** @brief fps cap value */
+				float fpsCap = 60.0f;
 			} settings;
 			
 
@@ -260,6 +260,11 @@ namespace vkx
 				bool f = false;
 				bool r = false;
 				bool t = false;
+				bool y = false;
+				bool p = false;
+
+				bool minus = false;
+				bool equals = false;
 			} keyStates;
 
 			struct {

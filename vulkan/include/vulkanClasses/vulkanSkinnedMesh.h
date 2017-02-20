@@ -112,30 +112,11 @@ namespace vkx {
 			uint32_t vertexBufferBinding = 0;
 			//vk::Pipeline pipeline;
 
-			// if there are too many vector member variables
-			// the program crashes for some reason
+
+
 
 			float animationSpeed = 0.75f;
 
-
-
-			//// Bone related stuff
-			//// Maps bone name with index
-			//std::map<std::string, uint32_t> boneMapping;
-			//// Bone details
-			//std::vector<BoneInfo> boneInfo;
-
-
-			//// Number of bones present
-			//uint32_t numBones = 0;
-			//// Root inverse transform matrix
-			//aiMatrix4x4 globalInverseTransform;
-			//// Per-vertex bone info
-			//std::vector<VertexBoneData> bones;
-			//// Bone transformations
-			//std::vector<aiMatrix4x4> boneTransforms;
-			//// Currently active animation
-			//aiAnimation *pAnimation;
 
 			//http://stackoverflow.com/questions/15648844/using-smart-pointers-for-class-members
 
@@ -187,28 +168,6 @@ namespace vkx {
 			void update(float time);
 
 			void destroy();
-
-
-
-
-		private:
-
-			//const aiNodeAnim * findNodeAnim(const aiAnimation *animation, const std::string nodeName);
-
-			//aiMatrix4x4 interpolateTranslation(float time, const aiNodeAnim *pNodeAnim);
-
-			//aiMatrix4x4 interpolateRotation(float time, const aiNodeAnim *pNodeAnim);
-
-			//aiMatrix4x4 interpolateScale(float time, const aiNodeAnim *pNodeAnim);
-
-			//void readNodeHierarchy(float AnimationTime, const aiNode *pNode, const aiMatrix4x4 &ParentTransform);
-
-
-
-
-
-
-
 
 
 	};

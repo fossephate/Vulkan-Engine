@@ -144,7 +144,6 @@ public:
 
 	// static scene uniform buffer
 	struct {
-		//glm::mat4 model;// todo: remove
 		glm::mat4 view;
 		glm::mat4 projection;
 
@@ -193,7 +192,6 @@ public:
 	// todo: remove this:
 	struct {
 		vkx::Texture colorMap;
-		vkx::Texture floor;
 	} textures;
 
 
@@ -281,10 +279,7 @@ public:
 
 
 	VulkanExample() : /*vkx::vulkanApp*/ vkx::OffscreenExampleBase(ENABLE_VALIDATION)/*, offscreen(context)*/ {
-		// todo: pick better numbers
-		// or pick based on screen size
-		size.width = 1280;
-		size.height = 720;
+
 
 
 
@@ -300,6 +295,13 @@ public:
 		camera.setTranslation({ -0.0f, -16.0f, 3.0f });
 		glm::quat initialOrientation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 		camera.setRotation(initialOrientation);
+
+		// todo: pick better numbers
+		// or pick based on screen size
+		size.width = 1280;
+		size.height = 720;
+
+		camera.setProjection(80.0f, (float)size.width / (float)size.height, 0.0001f, 256.0f);
 
 
 
@@ -340,27 +342,12 @@ public:
 		// todo: fix this all up
 
 
-		//offscreen.destroy();
 
-		//// destroy pipelines
-		//device.destroyPipeline(pipelines.meshes);
-		//device.destroyPipeline(pipelines.skinnedMeshes);
-
-
-		//device.destroyPipeline(pipelinesDeferred.deferred);
-		//device.destroyPipeline(pipelinesDeferred.offscreen);
-		//device.destroyPipeline(pipelinesDeferred.debug);
+		// destroy pipelines
 
 
 
-		//// destroy pipeline layouts
-		//device.destroyPipelineLayout(pipelineLayouts.basic);
-
-		//device.destroyPipelineLayout(pipelineLayouts.deferred);
-		//device.destroyPipelineLayout(pipelineLayouts.offscreen);
-
-
-		//device.destroyDescriptorSetLayout(descriptorSetLayout);
+		// destroy pipeline layouts
 
 		// destroy uniform buffers
 		uniformData.sceneVS.destroy();
@@ -1674,19 +1661,21 @@ public:
 		auto planeModel = std::make_shared<vkx::Model>(&context, &assetManager);
 		planeModel->load(getAssetPath() + "models/plane.fbx");
 		planeModel->createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		models.push_back(planeModel);
+
 
 		//auto otherModel2 = std::make_shared<vkx::Model>(&context, &assetManager);
-		//otherModel2->load(getAssetPath() + "models/monkey.fbx");
-		//otherModel2->createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
-
+		//otherModel2->load(getAssetPath() + "models/sponza.dae");
+		//otherModel2->createMeshes(meshVertexLayout, 0.05f, VERTEX_BUFFER_BIND_ID);
+		//models.push_back(otherModel2);
 
 
 		//meshes.push_back(skyboxMesh);
 		//meshes.push_back(planeMesh);
 		//meshes.push_back(otherMesh1);
 
-		models.push_back(planeModel);
-		//models.push_back(otherModel1);
+		
+		
 
 		for (int i = 0; i < 10; ++i) {
 
@@ -1696,6 +1685,8 @@ public:
 
 			models.push_back(testModel);
 		}
+
+
 
 
 
@@ -1935,6 +1926,10 @@ public:
 			toggleDebugDisplay();
 		}
 
+
+
+
+
 		if (keyStates.space) {
 			physicsObjects[1]->rigidBody->activate();
 			//physicsObjects[1]->rigidBody->setLinearVelocity(btVector3(0.0f, 0.0f, 12.0f));
@@ -1972,7 +1967,11 @@ public:
 
 
 
-
+		if (keyStates.minus) {
+			settings.fpsCap -= 0.2f;
+		} else if(keyStates.equals) {
+			settings.fpsCap += 0.2f;
+		}
 
 
 
@@ -2056,7 +2055,6 @@ public:
 
 		for (int i = 0; i < skinnedMeshes.size(); ++i) {
 			skinnedMeshes[i]->boneIndex = i;
-			// todo: set 4x4 matrix bone index
 		}
 
 
@@ -2064,6 +2062,11 @@ public:
 		for (int i = 0; i < modelsDeferred.size(); ++i) {
 			modelsDeferred[i]->matrixIndex = models.size() + skinnedMeshes.size() + i;
 		}
+
+		for (int i = 0; i < skinnedMeshesDeferred.size(); ++i) {
+			skinnedMeshesDeferred[i]->boneIndex = skinnedMeshes.size() + i;
+		}
+
 
 
 		//for (int i = 0; i < matrixNodes.size(); ++i) {
@@ -2368,7 +2371,7 @@ public:
 
 
 		// renders quad
-		uint32_t setNum = 3;
+		uint32_t setNum = 3;// important!
 		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.deferred"), setNum, rscs.descriptorSets->get("deferred.deferred"), nullptr);
 		if (debugDisplay) {
 			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.debug"));
@@ -2379,9 +2382,10 @@ public:
 			viewport.x = viewport.width * 0.5f;
 			viewport.y = viewport.height * 0.5f;
 		}
-
 		viewport.x = viewport.width * 0.5f;
 		viewport.y = viewport.height * 0.5f;
+
+
 
 		cmdBuffer.setViewport(0, viewport);
 		// Final composition as full screen quad

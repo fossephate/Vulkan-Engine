@@ -741,6 +741,15 @@ namespace vkx {
 
 	// Recursive bone transformation for given animation time
 	void vkx::MeshLoader::update(float time) {
+
+		// get the current time:
+		boneData.tNow = std::chrono::high_resolution_clock::now();
+
+		auto timeSinceUpdate = std::chrono::duration<float, std::milli>(boneData.tNow - boneData.tLastUpdate);
+		if (timeSinceUpdate.count() < boneData.waitTimeMS) {
+			return;
+		}
+
 		float TicksPerSecond = (float)(pScene->mAnimations[0]->mTicksPerSecond != 0 ? pScene->mAnimations[0]->mTicksPerSecond : 25.0f);
 		float TimeInTicks = time * TicksPerSecond;
 		float AnimationTime = fmod(TimeInTicks, (float)pScene->mAnimations[0]->mDuration);
@@ -751,6 +760,9 @@ namespace vkx {
 		for (uint32_t i = 0; i < boneData.boneTransforms.size(); i++) {
 			boneData.boneTransforms[i] = boneData.boneInfo[i].finalTransformation;
 		}
+
+		// update the time since last update to now:
+		boneData.tLastUpdate = std::chrono::high_resolution_clock::now();
 
 	}
 

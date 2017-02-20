@@ -701,6 +701,19 @@ void vulkanApp::updateInputInfo() {
 				case SDLK_o:
 					keyStates.o = state;
 					break;
+				case SDLK_y:
+					keyStates.y = state;
+					break;
+				case SDLK_p:
+					keyStates.p = state;
+					break;
+
+				case SDLK_MINUS:
+					keyStates.minus = state;
+					break;
+				case SDLK_EQUALS:
+					keyStates.equals = state;
+					break;
 
 				default:
 					break;
@@ -778,8 +791,8 @@ void vulkanApp::renderLoop() {
 		// the time it took to render the frame
 		auto tFrameTime = std::chrono::duration<double, std::milli>(tNow - tFrameStart);
 		// set FPS
-		double FPS = 6000.0;
-		std::chrono::duration<double, std::milli> minWorkTime(1000.0 / FPS);
+		//double FPS = 6000.0;
+		std::chrono::duration<double, std::milli> minWorkTime(1000.0 / settings.fpsCap);
 
 		//if (tFrameTime < minWorkTime) {
 			std::this_thread::sleep_for(minWorkTime - tFrameTime);

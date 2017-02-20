@@ -221,6 +221,13 @@ namespace vkx {
 				std::vector<aiMatrix4x4> boneTransforms;
 				// Currently active animation
 				aiAnimation *pAnimation;
+
+				// when the last update was
+				std::chrono::steady_clock::time_point tLastUpdate = std::chrono::high_resolution_clock::now();
+				// the current time
+				std::chrono::steady_clock::time_point tNow = std::chrono::high_resolution_clock::now();
+				// time to wait in ms to update bones
+				float waitTimeMS = 2000.0f;
 			} boneData;
 
 
