@@ -125,18 +125,24 @@ namespace vkx {
 			{
 				return resources.find(name) != resources.end();
 			}
-	};
-
-	class PipelineLayoutList : public VulkanResourceList<vk::PipelineLayout> {
-		public:
+	};
+
+
+
+	class PipelineLayoutList : public VulkanResourceList<vk::PipelineLayout> {
+
+		public:
+
 			PipelineLayoutList(vk::Device &dev) : VulkanResourceList(dev) {};
 
 			~PipelineLayoutList() {
 				for (auto &pipelineLayout : resources) {
 					device.destroyPipelineLayout(pipelineLayout.second, nullptr);
 				}
-			}
-			vk::PipelineLayout add(std::string name, vk::PipelineLayoutCreateInfo &createInfo) {				vk::PipelineLayout pipelineLayout = device.createPipelineLayout(createInfo, nullptr);
+			}
+
+			vk::PipelineLayout add(std::string name, vk::PipelineLayoutCreateInfo &createInfo) {
+				vk::PipelineLayout pipelineLayout = device.createPipelineLayout(createInfo, nullptr);
 				resources[name] = pipelineLayout;
 				return pipelineLayout;
 			}
@@ -145,72 +151,105 @@ namespace vkx {
 
 
 
-	class PipelineList : public VulkanResourceList<vk::Pipeline> {
-		public:
+	class PipelineList : public VulkanResourceList<vk::Pipeline> {
+
+		public:
+
 			PipelineList(vk::Device &dev) : VulkanResourceList(dev) {};
 
 			//~PipelineList() {
-			//	for (auto &pipeline : resources) {			//		device.destroyPipeline(pipeline.second, nullptr);
+			//	for (auto &pipeline : resources) {
+			//		device.destroyPipeline(pipeline.second, nullptr);
 			//	}
-			//}
-			//vk::Pipeline addGraphicsPipeline(std::string name, vk::PipelineCache &pipelineCache, vk::GraphicsPipelineCreateInfo &pipelineCreateInfo) {			//	vk::Pipeline pipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+			//}
+
+			//vk::Pipeline addGraphicsPipeline(std::string name, vk::PipelineCache &pipelineCache, vk::GraphicsPipelineCreateInfo &pipelineCreateInfo) {
+			//	vk::Pipeline pipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
 			//	resources[name] = pipeline;
 			//	return pipeline;
-			//}			//void addGraphicsPipeline(std::string name, vk::Pipeline pipeline) {
+			//}
+
+			//void addGraphicsPipeline(std::string name, vk::Pipeline pipeline) {
 			//	resources[name] = pipeline;
-			//}			void add(std::string name, vk::Pipeline pipeline) {				resources[name] = pipeline;			}
+			//}
+
+			void add(std::string name, vk::Pipeline pipeline) {
+				resources[name] = pipeline;
+			}
+
 	};
 
 
 
-	class DescriptorSetLayoutList : public VulkanResourceList<vk::DescriptorSetLayout> {
+	class DescriptorSetLayoutList : public VulkanResourceList<vk::DescriptorSetLayout> {
+
 		public:
 			DescriptorSetLayoutList(vk::Device &dev) : VulkanResourceList(dev) {};
 
 			~DescriptorSetLayoutList() {
-				for (auto &descriptorSetLayout : resources) {					device.destroyDescriptorSetLayout(descriptorSetLayout.second, nullptr);
+				for (auto &descriptorSetLayout : resources) {
+					device.destroyDescriptorSetLayout(descriptorSetLayout.second, nullptr);
 				}
 			}
 
-			vk::DescriptorSetLayout add(std::string name, vk::DescriptorSetLayoutCreateInfo createInfo) {				vk::DescriptorSetLayout descriptorSetLayout = device.createDescriptorSetLayout(createInfo, nullptr);
+			vk::DescriptorSetLayout add(std::string name, vk::DescriptorSetLayoutCreateInfo createInfo) {
+				vk::DescriptorSetLayout descriptorSetLayout = device.createDescriptorSetLayout(createInfo, nullptr);
 				resources[name] = descriptorSetLayout;
 				return descriptorSetLayout;
-			}			//void add(std::string name, vk::DescriptorSetLayout descriptorSetLayout) {
+			}
+
+			//void add(std::string name, vk::DescriptorSetLayout descriptorSetLayout) {
 			//	resources[name] = descriptorSetLayout;
-			//}
-	};
-
-	class DescriptorSetList : public VulkanResourceList<vk::DescriptorSet> {
+			//}
+
+	};
+
+
+
+	class DescriptorSetList : public VulkanResourceList<vk::DescriptorSet> {
+
 		private:
 			//vk::DescriptorPool descriptorPool;
-		public:
-			DescriptorSetList(vk::Device &dev/*, vk::DescriptorPool pool*/) : VulkanResourceList(dev)/*, descriptorPool(pool)*/ {};
-
+		public:
+
+			DescriptorSetList(vk::Device &dev/*, vk::DescriptorPool pool*/) : VulkanResourceList(dev)/*, descriptorPool(pool)*/ {};
+
+
+
 			~DescriptorSetList() {
 				//for (auto& descriptorSet : resources) {
 				//	vkFreeDescriptorSets(device, descriptorPool, 1, &descriptorSet.second);
 				//	device.freeDescriptorSets(descriptorPool, 1, &descriptorSet.second);
 				//}
-			}
-			vk::DescriptorSet add(std::string name, vk::DescriptorSetAllocateInfo allocInfo) {				vk::DescriptorSet descriptorSet = device.allocateDescriptorSets(allocInfo)[0];
+			}
+
+			vk::DescriptorSet add(std::string name, vk::DescriptorSetAllocateInfo allocInfo) {
+				vk::DescriptorSet descriptorSet = device.allocateDescriptorSets(allocInfo)[0];
 				resources[name] = descriptorSet;
 				return descriptorSet;
-			}			//void add(std::string name, vk::DescriptorSet descriptorSet) {
+			}
+
+			//void add(std::string name, vk::DescriptorSet descriptorSet) {
 			//	resources[name] = descriptorSet;
-			//}
+			//}
+
 	};
 
 
-	class DescriptorPoolList : public VulkanResourceList<vk::DescriptorPool> {
-		public:
+	class DescriptorPoolList : public VulkanResourceList<vk::DescriptorPool> {
+
+		public:
+
 		DescriptorPoolList(vk::Device &dev) : VulkanResourceList(dev) {};
 
 		~DescriptorPoolList() {
 			for (auto &descriptorPool : resources) {
 				//device.destroyPipelineLayout(pipelineLayout.second, nullptr);
 			}
-		}
-		vk::DescriptorPool add(std::string name, vk::DescriptorPoolCreateInfo &createInfo) {			vk::DescriptorPool descriptorPool = device.createDescriptorPool(createInfo, nullptr);
+		}
+
+		vk::DescriptorPool add(std::string name, vk::DescriptorPoolCreateInfo &createInfo) {
+			vk::DescriptorPool descriptorPool = device.createDescriptorPool(createInfo, nullptr);
 			resources[name] = descriptorPool;
 			return descriptorPool;
 		}

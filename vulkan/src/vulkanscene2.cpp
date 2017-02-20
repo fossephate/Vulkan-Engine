@@ -191,15 +191,12 @@ public:
 
 
 
-	struct {
-		vk::Pipeline meshes;
-		vk::Pipeline skinnedMeshes;
-		vk::Pipeline blending;
-		vk::Pipeline wireframe;
-
-
-
-	} pipelines;
+	//struct {
+	//	vk::Pipeline meshes;
+	//	vk::Pipeline skinnedMeshes;
+	//	vk::Pipeline blending;
+	//	vk::Pipeline wireframe;
+	//} pipelines;
 
 	//struct {
 
@@ -280,14 +277,14 @@ public:
 	} uniformDataDeferred;
 
 
-	vk::DescriptorPool descriptorPoolDeferred;
-	vk::DescriptorSetLayout descriptorSetLayoutDeferred;
+	//vk::DescriptorPool descriptorPoolDeferred;
+	//vk::DescriptorSetLayout descriptorSetLayoutDeferred;
 
-	struct {
-		vk::DescriptorSet basic;
+	//struct {
+	//	vk::DescriptorSet basic;
 
-		vk::DescriptorSet offscreen;
-	} descriptorSetsDeferred;
+	//	vk::DescriptorSet offscreen;
+	//} descriptorSetsDeferred;
 
 
 	struct Resources {
@@ -637,6 +634,49 @@ public:
 
 
 
+
+
+
+
+
+
+		// later:
+		// deferred:
+		// scene data
+		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes5 =
+		{
+			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 1),// mostly static data
+		};
+
+		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo5 =
+			vkx::descriptorPoolCreateInfo(descriptorPoolSizes5.size(), descriptorPoolSizes5.data(), 1);
+		rscs.descriptorPools->add("deferred.scene", descriptorPoolCreateInfo5);
+
+
+		// matrix data
+		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes6 =
+		{
+			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1),// non-static data
+		};
+
+		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo6 =
+			vkx::descriptorPoolCreateInfo(descriptorPoolSizes6.size(), descriptorPoolSizes6.data(), 1);
+		rscs.descriptorPools->add("deferred.matrix", descriptorPoolCreateInfo6);
+
+
+
+		// combined image sampler
+		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes7 =
+		{
+			vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 1000),
+		};
+
+		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo7 =
+			vkx::descriptorPoolCreateInfo(descriptorPoolSizes7.size(), descriptorPoolSizes7.data(), 1000);
+		rscs.descriptorPools->add("deferred.textures", descriptorPoolCreateInfo7);
+
+
+
 		std::vector<vk::DescriptorPoolSize> descriptorPoolSizesDeferred =
 		{
 			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 8),
@@ -646,15 +686,13 @@ public:
 		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfoDeferred =
 			vkx::descriptorPoolCreateInfo(descriptorPoolSizesDeferred.size(), descriptorPoolSizesDeferred.data(), 2);
 
-		descriptorPoolDeferred = device.createDescriptorPool(descriptorPoolCreateInfoDeferred);
-
-
-		//rscs.descriptorPools->add("deferred.pool0", descriptorPoolCreateInfoDeferred);
-
-
-
+		rscs.descriptorPools->add("deferred.deferred", descriptorPoolCreateInfoDeferred);
 
 	}
+
+
+
+
 
 	void prepareDescriptorSetLayouts() {
 
@@ -663,7 +701,7 @@ public:
 		// scene data
 		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings0 =
 		{
-			// Binding 0 : Vertex shader uniform buffer
+			// Set 0: Binding 0 : Vertex shader uniform buffer
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBuffer,
 				vk::ShaderStageFlagBits::eVertex,
@@ -681,7 +719,7 @@ public:
 		// matrix data
 		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings1 =
 		{
-			// Binding 0 : Vertex shader dynamic uniform buffer
+			// Set 1: Binding 0 : Vertex shader dynamic uniform buffer
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBufferDynamic,
 				vk::ShaderStageFlagBits::eVertex,
@@ -701,7 +739,7 @@ public:
 		// material data
 		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings2 =
 		{
-			// Binding 0 : Vertex shader dynamic uniform buffer
+			// Set 2: Binding 0 : Vertex shader dynamic uniform buffer
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBufferDynamic,
 				vk::ShaderStageFlagBits::eVertex,
@@ -742,7 +780,7 @@ public:
 		// combined image sampler
 		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings4 =
 		{
-			// Binding 0 : Fragment shader color map image sampler
+			// Set 4: Binding 0 : Fragment shader color map image sampler
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
@@ -788,8 +826,7 @@ public:
 		descriptorSetLayouts.push_back(descriptorSetLayout3);
 
 
-		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfo =
-			vkx::pipelineLayoutCreateInfo(descriptorSetLayouts.data(), descriptorSetLayouts.size());
+		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfo = vkx::pipelineLayoutCreateInfo(descriptorSetLayouts.data(), descriptorSetLayouts.size());
 
 		//pipelineLayouts.basic = device.createPipelineLayout(pPipelineLayoutCreateInfo);
 		//vk::PipelineLayout t = device.createPipelineLayout(pPipelineLayoutCreateInfo);
@@ -811,6 +848,108 @@ public:
 
 
 
+
+
+
+
+
+
+		/* DEFERRED / OFFSCREEN PASSES */
+
+
+
+
+
+
+
+
+
+
+		// descriptor set layout 0
+		// scene data
+		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings5 =
+		{
+			// Set 0: Binding 0 : Vertex shader uniform buffer
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eUniformBuffer,
+				vk::ShaderStageFlagBits::eVertex,
+				0),// binding 0
+		};
+
+		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo5 =
+			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings5.data(), descriptorSetLayoutBindings5.size());
+
+		rscs.descriptorSetLayouts->add("deferred.scene", descriptorSetLayoutCreateInfo5);
+
+
+
+
+
+
+		// descriptor set layout 1
+		// matrix data
+		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings6 =
+		{
+			// Set 1: Binding 0 : Vertex shader dynamic uniform buffer
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eUniformBufferDynamic,
+				vk::ShaderStageFlagBits::eVertex,
+				0),// binding 0
+		};
+
+		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo6 =
+			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings6.data(), descriptorSetLayoutBindings6.size());
+
+		rscs.descriptorSetLayouts->add("deferred.matrix", descriptorSetLayoutCreateInfo6);
+
+
+
+
+
+
+		//// descriptor set layout 2
+		//// material data
+		//std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings2 =
+		//{
+		//	// Set 2: Binding 0 : Vertex shader dynamic uniform buffer
+		//	vkx::descriptorSetLayoutBinding(
+		//		vk::DescriptorType::eUniformBufferDynamic,
+		//		vk::ShaderStageFlagBits::eVertex,
+		//		0),// binding 0
+		//};
+
+		//vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo2 =
+		//	vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings2.data(), descriptorSetLayoutBindings2.size());
+
+		//rscs.descriptorSetLayouts->add("deferred.material", descriptorSetLayoutCreateInfo2);
+
+
+
+
+		// descriptor set layout 3
+		// combined image sampler
+		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings7 =
+		{
+			// Set 4: Binding 0 : Fragment shader color map image sampler
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eCombinedImageSampler,
+				vk::ShaderStageFlagBits::eFragment,
+				0),// binding 0
+				   // todo: add specular / bump map here
+		};
+
+		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo7 =
+			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings7.data(), descriptorSetLayoutBindings7.size());
+
+		rscs.descriptorSetLayouts->add("deferred.textures", descriptorSetLayoutCreateInfo7);
+		
+
+
+
+
+
+
+
 		/* deferred ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 		// todo:
 		// this set layout could just be set = 5 for the above layout
@@ -821,28 +960,28 @@ public:
 		// Deferred shading layout
 		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindingsDeferred =
 		{
-			// Binding 0 : Vertex shader uniform buffer
+			// Set 0: Binding 0: Vertex shader uniform buffer
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBuffer,
 				vk::ShaderStageFlagBits::eVertex,
 				0),
-			// Binding 1 : Position texture target / Scene colormap
+			// Set 0: Binding 1: Position texture target / Scene colormap
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
 				1),
-			// Binding 2 : Normals texture target
+			// Set 0: Binding 2: Normals texture target
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
 				2),
-			// Binding 3 : Albedo texture target
+			// Set 0: Binding 3: Albedo texture target
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
 				3),
 			// todo: seperate this, it doesn't need to be updated with the textures
-			// Binding 4 : Fragment shader uniform buffer
+			// Set 0: Binding 4: Fragment shader uniform buffer
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBuffer,
 				vk::ShaderStageFlagBits::eFragment,
@@ -853,10 +992,50 @@ public:
 		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfoDeferred =
 			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindingsDeferred.data(), descriptorSetLayoutBindingsDeferred.size());
 
-		descriptorSetLayoutDeferred = device.createDescriptorSetLayout(descriptorSetLayoutCreateInfoDeferred);
+		//descriptorSetLayoutDeferred = device.createDescriptorSetLayout(descriptorSetLayoutCreateInfoDeferred);
+		rscs.descriptorSetLayouts->add("deferred.deferred", descriptorSetLayoutCreateInfoDeferred);
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		std::vector<vk::DescriptorSetLayout> descriptorSetLayoutsDeferred;
+
+		vk::DescriptorSetLayout descriptorSetLayout4 = rscs.descriptorSetLayouts->get("deferred.scene");
+		vk::DescriptorSetLayout descriptorSetLayout5 = rscs.descriptorSetLayouts->get("deferred.matrix");
+		//vk::DescriptorSetLayout descriptorSetLayout6 = rscs.descriptorSetLayouts->get("deferred.material");
+		vk::DescriptorSetLayout descriptorSetLayout7 = rscs.descriptorSetLayouts->get("deferred.textures");
+		
+		vk::DescriptorSetLayout descriptorSetLayout8 = rscs.descriptorSetLayouts->get("deferred.deferred");
+
+
+		descriptorSetLayoutsDeferred.push_back(descriptorSetLayout4);
+		descriptorSetLayoutsDeferred.push_back(descriptorSetLayout5);
+		//descriptorSetLayoutsDeferred.push_back(descriptorSetLayout6);
+		descriptorSetLayoutsDeferred.push_back(descriptorSetLayout7);
+		descriptorSetLayoutsDeferred.push_back(descriptorSetLayout8);
+		//descriptorSetLayouts.push_back(descriptorSetLayout7);
 
 
 
@@ -864,20 +1043,16 @@ public:
 		// use all descriptor set layouts
 		// to form pipeline layout
 
-		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfoDeferred =
-			vkx::pipelineLayoutCreateInfo(&descriptorSetLayoutDeferred, 1);
+		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfoDeferred = vkx::pipelineLayoutCreateInfo(descriptorSetLayoutsDeferred.data(), descriptorSetLayoutsDeferred.size());
 
 		// todo:
 		// deferred render pass, I should combine this with the above pipeline layout
-		//pipelineLayouts.deferred = device.createPipelineLayout(pPipelineLayoutCreateInfoDeferred);
-		
+
 		rscs.pipelineLayouts->add("deferred.deferred", pPipelineLayoutCreateInfoDeferred);
 
 
 		// Offscreen (scene) rendering pipeline layout
 		// important! used for offscreen render pass
-		//pipelineLayouts.offscreen = device.createPipelineLayout(pPipelineLayoutCreateInfoDeferred);
-
 		rscs.pipelineLayouts->add("deferred.offscreen", pPipelineLayoutCreateInfoDeferred);
 
 
@@ -894,26 +1069,18 @@ public:
 		// scene data
 		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo0 =
 			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("forward.scene"), &rscs.descriptorSetLayouts->get("forward.scene"), 1);
-
 		rscs.descriptorSets->add("forward.scene", descriptorSetAllocateInfo0);
-
-
-
 
 		// descriptor set 1
 		// matrix data
 		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo1 =
 			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("forward.matrix"), &rscs.descriptorSetLayouts->get("forward.matrix"), 1);
-
 		rscs.descriptorSets->add("forward.matrix", descriptorSetAllocateInfo1);
-
-
 
 		// descriptor set 2
 		// material data
 		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo2 =
 			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("forward.material"), &rscs.descriptorSetLayouts->get("forward.material"), 1);
-
 		rscs.descriptorSets->add("forward.material", descriptorSetAllocateInfo2);
 
 
@@ -925,8 +1092,6 @@ public:
 		//std::vector<vk::DescriptorSet> descriptorSets3 = device.allocateDescriptorSets(descriptorSetAllocateInfo3);
 		//descriptorSets.push_back(descriptorSets3[0]);// descriptor set 4
 
-
-
 		// descriptor set 4
 		// image sampler
 		//vk::DescriptorSetAllocateInfo descriptorSetInfo4 =
@@ -934,11 +1099,6 @@ public:
 
 		//std::vector<vk::DescriptorSet> descriptorSets4 = device.allocateDescriptorSets(descriptorSetInfo4);
 		//descriptorSets.push_back(descriptorSets4[0]);// descriptor set 4
-
-
-
-
-		
 
 
 
@@ -958,7 +1118,6 @@ public:
 				vk::DescriptorType::eUniformBufferDynamic,
 				0,// binding 0
 				&uniformData.matrixVS.descriptor),
-
 
 			// Set 2: Binding 0: fragment shader material dynamic buffer
 			vkx::writeDescriptorSet(
@@ -987,37 +1146,40 @@ public:
 
 
 
+		// descriptor set 0
+		// scene data
+		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo5 =
+			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred.scene"), &rscs.descriptorSetLayouts->get("deferred.scene"), 1);
+		rscs.descriptorSets->add("deferred.scene", descriptorSetAllocateInfo5);
+
+		// descriptor set 1
+		// matrix data
+		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo6 =
+			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred.matrix"), &rscs.descriptorSetLayouts->get("deferred.matrix"), 1);
+		rscs.descriptorSets->add("deferred.matrix", descriptorSetAllocateInfo6);
+
+		// descriptor set 2
+		// textures data
+		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo7 =
+			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred.textures"), &rscs.descriptorSetLayouts->get("deferred.textures"), 1);
+		rscs.descriptorSets->add("deferred.textures", descriptorSetAllocateInfo7);
+
+
+		// descriptor set 3
+		// offscreen textures data
+		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo8 =
+			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred.deferred"), &rscs.descriptorSetLayouts->get("deferred.deferred"), 1);
+		rscs.descriptorSets->add("deferred.deferred", descriptorSetAllocateInfo8);
 
 
 
+		//// Textured quad descriptor set
+		//vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo7 =
+		//	vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred.deferred"), &rscs.descriptorSetLayouts->get("deferred.deferred"), 1);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-		// Textured quad descriptor set
-		vk::DescriptorSetAllocateInfo allocInfo = vkx::descriptorSetAllocateInfo(descriptorPoolDeferred, &descriptorSetLayoutDeferred, 1);
-
-
-		// deferred descriptor set = 0, binding = 0
-		descriptorSetsDeferred.basic = device.allocateDescriptorSets(allocInfo)[0];
-
-		// Offscreen descriptor set = 0, binding = 0
-		// different pipeline layout// change to same pipeline layout// todo:
-		descriptorSetsDeferred.offscreen = device.allocateDescriptorSets(allocInfo)[0];
-
-
-
-
+		//// deferred descriptor set = 0, binding = 0
+		//rscs.descriptorSets->add("deferred.basic", descriptorSetAllocateInfo7);
+		
 
 
 
@@ -1037,33 +1199,49 @@ public:
 
 		std::vector<vk::WriteDescriptorSet> writeDescriptorSets2 =
 		{
-			// set 0: Binding 0 : Vertex shader uniform buffer
+
+			//// Set 0: Binding 0: scene uniform buffer
+			//vkx::writeDescriptorSet(
+			//	rscs.descriptorSets->get("deferred.scene"),
+			//	vk::DescriptorType::eUniformBuffer,
+			//	0,// binding 0
+			//	&uniformData.sceneVS.descriptor),
+
+			//// Set 1: Binding 0: vertex shader matrix dynamic buffer
+			//vkx::writeDescriptorSet(
+			//	rscs.descriptorSets->get("deferred.matrix"),
+			//	vk::DescriptorType::eUniformBufferDynamic,
+			//	0,// binding 0
+			//	&uniformData.matrixVS.descriptor),
+
+
+			// set 3: Binding 0 : Vertex shader uniform buffer
 			vkx::writeDescriptorSet(
-				descriptorSetsDeferred.basic,
+				rscs.descriptorSets->get("deferred.deferred"),
 				vk::DescriptorType::eUniformBuffer,
 				0,
 				&uniformDataDeferred.vsFullScreen.descriptor),
-			// set 0: Binding 1 : Position texture target
+			// set 3: Binding 1 : Position texture target
 			vkx::writeDescriptorSet(
-				descriptorSetsDeferred.basic,
+				rscs.descriptorSets->get("deferred.deferred"),
 				vk::DescriptorType::eCombinedImageSampler,
 				1,
 				&texDescriptorPosition),
-			// set 0: Binding 2 : Normals texture target
+			// set 3: Binding 2 : Normals texture target
 			vkx::writeDescriptorSet(
-				descriptorSetsDeferred.basic,
+				rscs.descriptorSets->get("deferred.deferred"),
 				vk::DescriptorType::eCombinedImageSampler,
 				2,
 				&texDescriptorNormal),
-			// set 0: Binding 3 : Albedo texture target
+			// set 3: Binding 3 : Albedo texture target
 			vkx::writeDescriptorSet(
-				descriptorSetsDeferred.basic,
+				rscs.descriptorSets->get("deferred.deferred"),
 				vk::DescriptorType::eCombinedImageSampler,
 				3,
 				&texDescriptorAlbedo),
-			// set 0: Binding 4 : Fragment shader uniform buffer
+			// set 3: Binding 4 : Fragment shader uniform buffer
 			vkx::writeDescriptorSet(
-				descriptorSetsDeferred.basic,
+				rscs.descriptorSets->get("deferred.deferred"),
 				vk::DescriptorType::eUniformBuffer,
 				4,
 				&uniformDataDeferred.fsLights.descriptor),
@@ -1081,28 +1259,33 @@ public:
 
 
 		// offscreen descriptor set
+		// todo: combine with above
 
 		std::vector<vk::WriteDescriptorSet> offscreenWriteDescriptorSets =
 		{
 			// Set 0: Binding 0: Vertex shader uniform buffer
 			vkx::writeDescriptorSet(
-				descriptorSetsDeferred.offscreen,
+				rscs.descriptorSets->get("deferred.scene"),
 				vk::DescriptorType::eUniformBuffer,
 				0,
 				&uniformDataDeferred.vsOffscreen.descriptor),
-			// Set 0: Binding 1: Scene color map
+
+
+			// Set 1: Binding 0: Vertex shader uniform buffer
 			vkx::writeDescriptorSet(
-				descriptorSetsDeferred.offscreen,
+				rscs.descriptorSets->get("deferred.matrix"),
+				vk::DescriptorType::eUniformBufferDynamic,
+				0,
+				&uniformDataDeferred.matrixVS.descriptor),
+
+			// Set 2: Binding 0: Scene color map
+			vkx::writeDescriptorSet(
+				rscs.descriptorSets->get("deferred.textures"),
 				vk::DescriptorType::eCombinedImageSampler,
 				1,
 				&textures.colorMap.descriptor),
 
-			//// Set 1: Binding 0: Vertex shader uniform buffer
-			//vkx::writeDescriptorSet(
-			//	rscs.descriptorSets->get("forward.matrix"),
-			//	vk::DescriptorType::eUniformBufferDynamic,
-			//	0,
-			//	&uniformDataDeferred.matrixVS.descriptor),
+
 
 
 		};
@@ -1160,7 +1343,7 @@ public:
 		std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStages;
 
 
-		vk::GraphicsPipelineCreateInfo pipelineCreateInfo = vkx::pipelineCreateInfo(/*pipelineLayouts.basic*/rscs.pipelineLayouts->get("forward.basic"), renderPass);
+		vk::GraphicsPipelineCreateInfo pipelineCreateInfo = vkx::pipelineCreateInfo(rscs.pipelineLayouts->get("forward.basic"), renderPass);
 
 		pipelineCreateInfo.pVertexInputState = &vertices.inputState;
 		pipelineCreateInfo.pInputAssemblyState = &inputAssemblyState;
@@ -2206,8 +2389,8 @@ public:
 
 
 		// renders quad
-
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.deferred"), 0, descriptorSetsDeferred.basic, nullptr);
+		uint32_t setNum = 3;
+		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.deferred"), setNum, rscs.descriptorSets->get("deferred.deferred"), nullptr);
 		if (debugDisplay) {
 			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.debug"));
 			cmdBuffer.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, meshBuffers.quad.vertices.buffer, { 0 });
@@ -2285,7 +2468,7 @@ public:
 
 
 
-		offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.offscreen"), 0, descriptorSetsDeferred.offscreen, nullptr);
+		
 
 
 
@@ -2344,6 +2527,7 @@ public:
 
 				// bind scene descriptor set
 				setNum = 0;
+				offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.offscreen"), setNum, rscs.descriptorSets->get("deferred.scene"), nullptr);
 				//offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.offscreen, setNum, descriptorSets[setNum], nullptr);
 
 

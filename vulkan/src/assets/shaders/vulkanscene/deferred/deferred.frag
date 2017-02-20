@@ -3,9 +3,9 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 
-layout (set = 0, binding = 1) uniform sampler2D samplerPosition;
-layout (set = 0, binding = 2) uniform sampler2D samplerNormal;
-layout (set = 0, binding = 3) uniform sampler2D samplerAlbedo;
+layout (set = 3, binding = 1) uniform sampler2D samplerPosition;
+layout (set = 3, binding = 2) uniform sampler2D samplerNormal;
+layout (set = 3, binding = 3) uniform sampler2D samplerAlbedo;
 
 
 struct Light {
@@ -18,7 +18,7 @@ struct Light {
 };
 
 // todo: make this another set(1) rather than binding = 4
-layout (set = 0, binding = 4) uniform UBO 
+layout (set = 3, binding = 4) uniform UBO 
 {
     Light lights[51];
     vec4 viewPos;
