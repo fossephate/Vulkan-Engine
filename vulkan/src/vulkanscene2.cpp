@@ -1282,7 +1282,7 @@ public:
 			vkx::writeDescriptorSet(
 				rscs.descriptorSets->get("deferred.textures"),
 				vk::DescriptorType::eCombinedImageSampler,
-				1,
+				0,
 				&textures.colorMap.descriptor),
 
 

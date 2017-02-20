@@ -37,21 +37,21 @@ layout (location = 4) out vec3 outTangent;
 
 void main() 
 {
-	gl_Position = scene.projection * scene.view * scene.model * inPos;
+	gl_Position = scene.projection * scene.view * instance.model * inPos;
 	
 	outUV = inUV;
 	outUV.t = 1.0 - outUV.t;
 
 	// Vertex position in world space
 	vec4 tmpPos = inPos;
-	outWorldPos = vec3(scene.model * tmpPos);
+	outWorldPos = vec3(instance.model * tmpPos);
 	
 	// GL to Vulkan coord space
 	//outWorldPos.y = -outWorldPos.y;
 	
 	// Normal in world space
 	// todo: do the inverse transpose on cpu
-	mat3 mNormal = transpose(inverse(mat3(scene.model)));
+	mat3 mNormal = transpose(inverse(mat3(instance.model)));
     outNormal = mNormal * normalize(inNormal);
     //outTangent = mNormal * normalize(inTangent);
 	

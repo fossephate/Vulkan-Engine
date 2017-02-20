@@ -69,7 +69,7 @@ void main()
     vec3 color = texture(samplerColorMap, inUV).rgb * inColor;
     // Ambient
     //vec3 ambient = 0.08 * color;
-    vec3 ambient = 0.38 * color;
+    vec3 ambient = 0.18 * color;
 
     // Diffuse
     vec3 lightDir = normalize(inLightPos - inPos);
