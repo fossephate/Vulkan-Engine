@@ -25,8 +25,6 @@ layout (set = 1, binding = 0) uniform matrixBuffer
 {
 	mat4 model;
 	mat4 boneIndex;
-	mat4 g1;
-	mat4 g2;
 } instance;
 
 
@@ -56,9 +54,9 @@ void main()
 	outLightPos = scene.lightPos;
 	
 	mat4 modelView = scene.view * instance.model;
-	mat4 MVP = scene.projection * scene.view * instance.model;
+	//mat4 MVP = scene.projection * scene.view * instance.model;
 
-	gl_Position = MVP * vec4(inPos.xyz, 1.0);
+	gl_Position = scene.projection * scene.view * instance.model * vec4(inPos.xyz, 1.0);
 
 	vec4 pos = modelView * vec4(inPos.xyz, 0.0);
 

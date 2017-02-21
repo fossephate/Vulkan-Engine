@@ -69,6 +69,13 @@ void main()
         }
 		
     }    	
-   
-  outFragcolor = vec4(fragcolor, 1.0);	
+  
+  float alpha = 1.0;
+
+  if(fragcolor == vec3(0, 0, 0)) {
+    alpha = 0.0;
+  }
+
+  outFragcolor = vec4(fragcolor, alpha);
+
 }

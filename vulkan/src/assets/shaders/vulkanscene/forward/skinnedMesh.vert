@@ -22,7 +22,6 @@ layout (location = 5) in ivec4 inBoneIDs;
 // scene
 layout (set = 0, binding = 0) uniform sceneBuffer
 {
-	//mat4 model;// todo: remove this
 	mat4 view;
 	mat4 projection;
 
@@ -30,6 +29,15 @@ layout (set = 0, binding = 0) uniform sceneBuffer
 	vec4 cameraPos;
 
 } scene;
+
+
+// bone data
+layout (set = 0, binding = 1) uniform boneBuffer
+{
+	mat4 bones[MAX_BONES*MAX_SKINNED_MESHES];
+} boneData;
+
+
 
 // matrix data
 layout (set = 1, binding = 0) uniform matrixBuffer
@@ -39,11 +47,11 @@ layout (set = 1, binding = 0) uniform matrixBuffer
 } instance;
 
 
-// bone data
-layout (set = 4, binding = 0) uniform boneBuffer
-{
-	mat4 bones[MAX_BONES*MAX_SKINNED_MESHES];
-} boneData;
+// // bone data
+// layout (set = 4, binding = 0) uniform boneBuffer
+// {
+// 	mat4 bones[MAX_BONES*MAX_SKINNED_MESHES];
+// } boneData;
 
 
 
@@ -105,38 +113,5 @@ void main() {
 	outLightVec = lPos - (instance.model * vec4(inPos.xyz, 0.0)).xyz;
 	outViewVec = -(instance.model * vec4(inPos.xyz, 0.0)).xyz;
 
-
-
-
-
-
-
-
-
-	//int offset = instance.boneIndex * 64;
-
-    // mat4 boneTransform = boneData.bones[inBoneIDs[0]*offset] * inBoneWeights[0];
-    // boneTransform     += boneData.bones[inBoneIDs[1]*offset] * inBoneWeights[1];
-    // boneTransform     += boneData.bones[inBoneIDs[2]*offset] * inBoneWeights[2];
-    // boneTransform     += boneData.bones[inBoneIDs[3]*offset] * inBoneWeights[3];
-
-
- //    mat4 boneTransform = scene.bones[inBoneIDs[0]] * inBoneWeights[0];
- //    boneTransform     += scene.bones[inBoneIDs[1]] * inBoneWeights[1];
- //    boneTransform     += scene.bones[inBoneIDs[2]] * inBoneWeights[2];
- //    boneTransform     += scene.bones[inBoneIDs[3]] * inBoneWeights[3];
-
- //    //mat4 boneTransform = mat4(1.0);
-
 	
-	// outNormal = inNormal;
-	// outColor = inColor;
-	// outUV = inUV;
-
-	// gl_Position = scene.projection * scene.view * instance.model * boneTransform * vec4(inPos.xyz, 1.0);
-
- //    vec4 pos = instance.model * vec4(inPos, 1.0);
-	// outNormal = mat3(inverse(transpose(instance.model))) * inNormal;
- //    outLightVec = scene.lightPos.xyz - pos.xyz;
- //    outViewVec = scene.cameraPos.xyz - pos.xyz;
 }

@@ -652,6 +652,12 @@ public:
 				vk::DescriptorType::eUniformBuffer,
 				vk::ShaderStageFlagBits::eVertex,
 				0),// binding 0
+
+			// Set 0: Binding 1: Vertex shader uniform buffer// bone data
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eUniformBuffer,
+				vk::ShaderStageFlagBits::eVertex,
+				1),// binding 1
 		};
 
 		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo0 =
@@ -717,20 +723,20 @@ public:
 
 
 
-		// descriptor set layout 4
-		// bone data
-		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings4 =
-		{
-			// Set 4: Binding 0 : Vertex shader uniform buffer
-			vkx::descriptorSetLayoutBinding(
-				vk::DescriptorType::eUniformBuffer,
-				vk::ShaderStageFlagBits::eVertex,
-				0),// binding 0
-		};
+		//// descriptor set layout 4
+		//// bone data
+		//std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings4 =
+		//{
+		//	// Set 4: Binding 0 : Vertex shader uniform buffer
+		//	vkx::descriptorSetLayoutBinding(
+		//		vk::DescriptorType::eUniformBuffer,
+		//		vk::ShaderStageFlagBits::eVertex,
+		//		0),// binding 0
+		//};
 
-		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo4 =
-			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings4.data(), descriptorSetLayoutBindings4.size());
-		rscs.descriptorSetLayouts->add("forward.bones", descriptorSetLayoutCreateInfo4);
+		//vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo4 =
+		//	vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings4.data(), descriptorSetLayoutBindings4.size());
+		//rscs.descriptorSetLayouts->add("forward.bones", descriptorSetLayoutCreateInfo4);
 
 
 
@@ -752,12 +758,12 @@ public:
 		vk::DescriptorSetLayout descriptorSetLayout1 = rscs.descriptorSetLayouts->get("forward.matrix");
 		vk::DescriptorSetLayout descriptorSetLayout2 = rscs.descriptorSetLayouts->get("forward.material");
 		vk::DescriptorSetLayout descriptorSetLayout3 = rscs.descriptorSetLayouts->get("forward.textures");
-		vk::DescriptorSetLayout descriptorSetLayout4 = rscs.descriptorSetLayouts->get("forward.bones");
+		//vk::DescriptorSetLayout descriptorSetLayout4 = rscs.descriptorSetLayouts->get("forward.bones");
 		descriptorSetLayouts.push_back(descriptorSetLayout0);
 		descriptorSetLayouts.push_back(descriptorSetLayout1);
 		descriptorSetLayouts.push_back(descriptorSetLayout2);
 		descriptorSetLayouts.push_back(descriptorSetLayout3);
-		descriptorSetLayouts.push_back(descriptorSetLayout4);
+		//descriptorSetLayouts.push_back(descriptorSetLayout4);
 
 
 		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfo = vkx::pipelineLayoutCreateInfo(descriptorSetLayouts.data(), descriptorSetLayouts.size());
@@ -1008,11 +1014,11 @@ public:
 		rscs.descriptorSets->add("forward.material", descriptorSetAllocateInfo2);
 
 
-		// descriptor set 0
-		// bone data
-		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo3 =
-			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("forward.bones"), &rscs.descriptorSetLayouts->get("forward.bones"), 1);
-		rscs.descriptorSets->add("forward.bones", descriptorSetAllocateInfo3);
+		//// descriptor set 0
+		//// bone data
+		//vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo3 =
+		//	vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("forward.bones"), &rscs.descriptorSetLayouts->get("forward.bones"), 1);
+		//rscs.descriptorSets->add("forward.bones", descriptorSetAllocateInfo3);
 
 		// descriptor set 4
 		// image sampler
@@ -1034,6 +1040,13 @@ public:
 				0,// binding 0
 				&uniformData.sceneVS.descriptor),
 
+			// Set 0: Binding 1: bones uniform buffer
+			vkx::writeDescriptorSet(
+				rscs.descriptorSets->get("forward.scene"),// descriptor set 0
+				vk::DescriptorType::eUniformBuffer,
+				1,// binding 0
+				&uniformData.bonesVS.descriptor),
+
 			// Set 1: Binding 0: vertex shader matrix dynamic buffer
 			vkx::writeDescriptorSet(
 				rscs.descriptorSets->get("forward.matrix"),// descriptor set 1
@@ -1048,12 +1061,12 @@ public:
 				0,// binding 0
 				&uniformData.materialVS.descriptor),
 
-			// Set 4: Binding 0: bones uniform buffer
-			vkx::writeDescriptorSet(
-				rscs.descriptorSets->get("forward.bones"),// descriptor set 0
-				vk::DescriptorType::eUniformBuffer,
-				0,// binding 0
-				&uniformData.bonesVS.descriptor),
+			//// Set 4: Binding 0: bones uniform buffer
+			//vkx::writeDescriptorSet(
+			//	rscs.descriptorSets->get("forward.bones"),// descriptor set 4
+			//	vk::DescriptorType::eUniformBuffer,
+			//	0,// binding 0
+			//	&uniformData.bonesVS.descriptor),
 
 
 			//// Set 4?: Binding 0: static bone data buffer
@@ -1302,8 +1315,6 @@ public:
 
 
 
-
-
 		// skinned meshes:
 		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/skinnedMesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/skinnedMesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
@@ -1324,6 +1335,9 @@ public:
 		//pipelines.skybox = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo, nullptr)[0];
 
 
+
+
+
 		//// Alpha blended pipeline
 		//// transparency
 		//rasterizationState.cullMode = vk::CullModeFlagBits::eNone;
@@ -1331,7 +1345,9 @@ public:
 		//blendAttachmentState.colorBlendOp = vk::BlendOp::eAdd;
 		//blendAttachmentState.srcColorBlendFactor = vk::BlendFactor::eSrcColor;
 		//blendAttachmentState.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcColor;
-		//pipelines.blending = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)[0];
+		//vk::Pipeline meshPipelineBlending = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)[0];
+		//rscs.pipelines->resources["forward.meshes.blending"] = meshPipelineBlending;
+		//blendAttachmentState.blendEnable = VK_TRUE;
 
 
 		//// Wire frame rendering pipeline
@@ -1391,10 +1407,23 @@ public:
 
 		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/deferred.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/deferred.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		//pipelinesDeferred.deferred = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
-		//rscs.pipelines->addGraphicsPipeline("forward.skinnedMeshes", pipelineCache, pipelineCreateInfo);
+
+		// fullscreen quad
 		vk::Pipeline deferredPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
 		rscs.pipelines->resources["deferred.deferred"] = deferredPipeline;
+
+
+		// Alpha blended pipeline
+		// transparency
+		rasterizationState.cullMode = vk::CullModeFlagBits::eNone;
+		blendAttachmentState.blendEnable = VK_TRUE;
+		blendAttachmentState.colorBlendOp = vk::BlendOp::eAdd;
+		blendAttachmentState.srcColorBlendFactor = vk::BlendFactor::eOne;
+		blendAttachmentState.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha;
+		vk::Pipeline deferredPipelineBlending = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)[0];
+		rscs.pipelines->resources["deferred.deferred.blending"] = deferredPipelineBlending;
+		blendAttachmentState.blendEnable = VK_FALSE;
+
 
 
 		// Debug display pipeline
@@ -1786,13 +1815,11 @@ public:
 
 
 
-		auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
-		testModel->load(getAssetPath() + "models/sponza.dae");
-		testModel->createMeshes(deferredVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
-
-		testModel->rotateWorldX(PI/2.0);
-
-		modelsDeferred.push_back(testModel);
+		//auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
+		//sponzaModel->load(getAssetPath() + "models/sponza.dae");
+		//sponzaModel->createMeshes(deferredVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
+		//sponzaModel->rotateWorldX(PI/2.0);
+		//modelsDeferred.push_back(sponzaModel);
 
 
 
@@ -1801,7 +1828,7 @@ public:
 		for (int i = 0; i < 6; ++i) {
 
 			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
-			testModel->load(getAssetPath() + "models/cube.fbx");
+			testModel->load(getAssetPath() + "models/monkey.fbx");
 			testModel->createMeshes(deferredVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
 
 			modelsDeferred.push_back(testModel);
@@ -2031,56 +2058,47 @@ public:
 
 
 	void updateDrawCommandBuffer(const vk::CommandBuffer &cmdBuffer) {
+
+
+
+
+
+
+
 		cmdBuffer.setViewport(0, vkx::viewport(size));
 		cmdBuffer.setScissor(0, vkx::rect2D(size));
 
 
-		//https://github.com/nvpro-samples/gl_vk_threaded_cadscene/blob/master/doc/vulkan_uniforms.md
+
+		{
+			// todo: fix this// important
+			// stop doing this every frame
+			// only when necessary
+			// actually not that bad, since it makes pushing to vector easy
+			for (int i = 0; i < models.size(); ++i) {
+				models[i]->matrixIndex = i;
+			}
 
 
-		// left:
-		//vk::Viewport testViewport = vkx::viewport((float)size.width / 3, (float)size.height, 0.0f, 1.0f);
-		//cmdBuffer.setViewport(0, testViewport);
-		// center
-		//viewport.x += viewport.width;
-		//cmdBuffer.setViewport(0, viewport);
+			// uses matrix indices directly after meshes' indices
+			for (int i = 0; i < skinnedMeshes.size(); ++i) {
+				skinnedMeshes[i]->matrixIndex = models.size() + i;
+			}
+
+			for (int i = 0; i < skinnedMeshes.size(); ++i) {
+				skinnedMeshes[i]->boneIndex = i;
+			}
 
 
+			// uses matrix indices directly after skinnedMeshes' indices
+			for (int i = 0; i < modelsDeferred.size(); ++i) {
+				modelsDeferred[i]->matrixIndex = models.size() + skinnedMeshes.size() + i;
+			}
 
-		// todo: fix this// important
-		// stop doing this every frame
-		// only when necessary
-		// actually not that bad, since it makes pushing to vector easy
-		for (int i = 0; i < models.size(); ++i) {
-			models[i]->matrixIndex = i;
+			for (int i = 0; i < skinnedMeshesDeferred.size(); ++i) {
+				skinnedMeshesDeferred[i]->boneIndex = skinnedMeshes.size() + i;
+			}
 		}
-
-
-		// uses matrix indices directly after meshes' indices
-		for (int i = 0; i < skinnedMeshes.size(); ++i) {
-			skinnedMeshes[i]->matrixIndex = models.size() + i;
-		}
-
-		for (int i = 0; i < skinnedMeshes.size(); ++i) {
-			skinnedMeshes[i]->boneIndex = i;
-		}
-
-
-		// uses matrix indices directly after skinnedMeshes' indices
-		for (int i = 0; i < modelsDeferred.size(); ++i) {
-			modelsDeferred[i]->matrixIndex = models.size() + skinnedMeshes.size() + i;
-		}
-
-		for (int i = 0; i < skinnedMeshesDeferred.size(); ++i) {
-			skinnedMeshesDeferred[i]->boneIndex = skinnedMeshes.size() + i;
-		}
-
-
-
-		//for (int i = 0; i < matrixNodes.size(); ++i) {
-		//	matrixNodes[i].boneIndex[0][0] = i;
-		//}
-
 
 		globalP += 0.005f;
 
@@ -2114,22 +2132,9 @@ public:
 		}
 
 
-
-		if (skinnedMeshes.size() > 0) {
-			skinnedMeshes[0]->animationSpeed = 1.0f;
-			//skinnedMeshes[1]->animationSpeed = 3.5f;
-		}
-
-
 		//uboScene.lightPos = glm::vec3(cos(globalP), 4.0f, cos(globalP));
-		uboScene.lightPos = glm::vec4(cos(globalP), 4.0f, cos(globalP), 1.0f);
+		uboScene.lightPos = glm::vec4(cos(globalP), 4.0f, cos(globalP)+3.0f, 1.0f);
 		//uboScene.lightPos = glm::vec3(1.0f, -2.0f, 4.0/**sin(globalP*10.0f)*/+4.0);
-
-
-		//matrixNodes[0].model = glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, 0.0f));
-		//matrixNodes[1].model = glm::translate(glm::mat4(), glm::vec3(sin(globalP), 1.0f, 0.0f));
-
-
 
 
 
@@ -2155,15 +2160,6 @@ public:
 			uint32_t boneOffset = skinnedMesh->boneIndex*MAX_BONES;
 
 			for (uint32_t i = 0; i < skinnedMesh->meshLoader->boneData.boneTransforms.size(); ++i) {
-				//matrixNodes[skinnedMesh.matrixIndex].bones[i] = aiMatrix4x4ToGlm(&skinnedMesh.boneTransforms[i]);
-				//matrixNodes[skinnedMesh.matrixIndex].bones[i] = glm::transpose(glm::make_mat4(&skinnedMesh.boneTransforms[i].a1));
-				//std::ofstream log("logfile.txt", std::ios_base::app | std::ios_base::out);
-				//log << skinnedMesh.boneTransforms[i].a1 << "\n";
-
-				//uboBoneData.bones[boneOffset + i] = glm::transpose(glm::make_mat4(&skinnedMesh->boneTransforms[i].a1));
-				//uboScene.bones[i] = glm::transpose(glm::make_mat4(&skinnedMesh->boneTransforms[i].a1));
-				
-				//uboScene.bones[boneOffset + i] = glm::transpose(glm::make_mat4(&skinnedMesh->meshLoader->boneData.boneTransforms[i].a1));
 				uboBoneData.bones[boneOffset + i] = glm::transpose(glm::make_mat4(&skinnedMesh->meshLoader->boneData.boneTransforms[i].a1));
 			}
 		}
@@ -2237,12 +2233,10 @@ public:
 		// MODELS:
 
 		// bind mesh pipeline
-		// don't have to do this for every mesh
 		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("forward.meshes"));
 
 		// for each model
 		// model = group of meshes
-		// todo: add skinned / animated model support
 		for (auto &model : models) {
 			// for each of the model's meshes
 			for (auto &mesh : model->meshes) {
@@ -2259,11 +2253,8 @@ public:
 				setNum = 0;
 				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, rscs.descriptorSets->get("forward.scene"), nullptr);
 
-
-				uint32_t offset1 = model->matrixIndex * alignedMatrixSize;
-				//uint32_t offset1 = model->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
-				//https://www.khronos.org/registry/vulkan/specs/1.0/apispec.html#vkCmdBindDescriptorSets
-				// the third param is the set number!
+				//uint32_t offset1 = model->matrixIndex * alignedMatrixSize;
+				uint32_t offset1 = model->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
 				setNum = 1;
 				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.matrix"), 1, &offset1);
 
@@ -2271,27 +2262,19 @@ public:
 				if (lastMaterialName != mesh.meshBuffer.materialName) {
 
 					lastMaterialName = mesh.meshBuffer.materialName;
-
 					vkx::Material m = this->assetManager.materials.get(mesh.meshBuffer.materialName);
-					//uint32_t materialIndex = this->assetManager.materials.get(mesh.meshBuffer.materialName).index;
 
+					// Set 2: Binding: 0
 					//uint32_t offset2 = m.index * alignedMaterialSize;
 					uint32_t offset2 = m.index * static_cast<uint32_t>(alignedMaterialSize);
-					// the third param is the set number!
 					setNum = 2;
 					cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.material"), 1, &offset2);
 
-
-
-					//lastMaterialIndex = mesh.meshBuffer.materialIndex;
-
 					// bind texture: // todo: implement a better way to bind textures
-					// must make pipeline layout compatible
-					
+					// Set: 3 Binding: 0
 					setNum = 3;
 					cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, m.descriptorSet, nullptr);
 				}
-
 
 				// draw:
 				cmdBuffer.drawIndexed(mesh.meshBuffer.indexCount, 1, 0, 0, 0);
@@ -2312,106 +2295,99 @@ public:
 		// SKINNED MESHES:
 
 		// bind skinned mesh pipeline
-		// don't have to do this for every skinned mesh// bind once
 		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("forward.skinnedMeshes"));
-
 		for (auto &skinnedMesh : skinnedMeshes) {
-
-
 			// bind vertex & index buffers
 			cmdBuffer.bindVertexBuffers(skinnedMesh->vertexBufferBinding, skinnedMesh->meshBuffer.vertices.buffer, vk::DeviceSize());
 			cmdBuffer.bindIndexBuffer(skinnedMesh->meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
 
-
+			// descriptor set #
 			uint32_t setNum;
-			//uint32_t offset;
 
 			// bind scene descriptor set
+			// Set 0: Binding 0:
 			setNum = 0;
 			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, rscs.descriptorSets->get("forward.scene"), nullptr);
 
+			// there is a bone uniform, set: 0, binding: 1
+
+
+			// Set 1: Binding 0:
 			//uint32_t offset1 = skinnedMesh->matrixIndex * alignedMatrixSize;
 			uint32_t offset1 = skinnedMesh->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
-			//https://www.khronos.org/registry/vulkan/specs/1.0/apispec.html#vkCmdBindDescriptorSets
-			// the third param is the set number!
 			setNum = 1;
 			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.matrix"), 1, &offset1);
 
-
-
 			if (lastMaterialName != skinnedMesh->meshBuffer.materialName) {
-
 				lastMaterialName = skinnedMesh->meshBuffer.materialName;
-
 				vkx::Material m = this->assetManager.materials.get(skinnedMesh->meshBuffer.materialName);
-				//uint32_t materialIndex = this->assetManager.materials.get(skinnedMesh->meshBuffer.materialName).index;
 
+				// Set 2: Binding: 0
 				//uint32_t offset2 = m.index * alignedMaterialSize;
 				uint32_t offset2 = m.index * static_cast<uint32_t>(alignedMaterialSize);
-				// the third param is the set number!
 				setNum = 2;
 				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.material"), 1, &offset2);
 
-
 				// bind texture:
+				// Set 3: Binding 0:
 				setNum = 3;
 				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, m.descriptorSet, nullptr);
 			}
 
 			// bind bone descriptor set
-			setNum = 4;
-			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, rscs.descriptorSets->get("forward.bones"), nullptr);
-
-
+			//setNum = 0;
+			// Set 0: Binding 1:
+			//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, rscs.descriptorSets->get("forward.bones"), nullptr);
 
 
 			// draw:
 			cmdBuffer.drawIndexed(skinnedMesh->meshBuffer.indexCount, 1, 0, 0, 0);
 		}
 
-		
 
 
 
 
-		/* DEFERRED QUAD */
+		{
+			/* DEFERRED QUAD */
 
-		updateUniformBufferDeferredLights();
+			updateUniformBufferDeferredLights();
 
-
-
-
-		vk::Viewport viewport = vkx::viewport(size);
-		cmdBuffer.setViewport(0, viewport);
-		cmdBuffer.setScissor(0, vkx::rect2D(size));
+			vk::Viewport viewport = vkx::viewport(size);
+			cmdBuffer.setViewport(0, viewport);
+			cmdBuffer.setScissor(0, vkx::rect2D(size));
 
 
-		// renders quad
-		uint32_t setNum = 3;// important!
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.deferred"), setNum, rscs.descriptorSets->get("deferred.deferred"), nullptr);
-		if (debugDisplay) {
-			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.debug"));
+			// renders quad
+			uint32_t setNum = 3;// important!
+			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.deferred"), setNum, rscs.descriptorSets->get("deferred.deferred"), nullptr);
+			if (debugDisplay) {
+				cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.debug"));
+				cmdBuffer.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, meshBuffers.quad.vertices.buffer, { 0 });
+				cmdBuffer.bindIndexBuffer(meshBuffers.quad.indices.buffer, 0, vk::IndexType::eUint32);
+				cmdBuffer.drawIndexed(meshBuffers.quad.indexCount, 1, 0, 0, 1);
+				// Move viewport to display final composition in lower right corner
+				viewport.x = viewport.width * 0.5f;
+				viewport.y = viewport.height * 0.5f;
+			}
+
+			if (!fullDeferred) {
+				viewport.x = viewport.width * 0.5f;
+				viewport.y = viewport.height * 0.5f;
+			}
+
+
+
+			cmdBuffer.setViewport(0, viewport);
+			// Final composition as full screen quad
+			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.deferred"));
 			cmdBuffer.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, meshBuffers.quad.vertices.buffer, { 0 });
 			cmdBuffer.bindIndexBuffer(meshBuffers.quad.indices.buffer, 0, vk::IndexType::eUint32);
-			cmdBuffer.drawIndexed(meshBuffers.quad.indexCount, 1, 0, 0, 1);
-			// Move viewport to display final composition in lower right corner
-			viewport.x = viewport.width * 0.5f;
-			viewport.y = viewport.height * 0.5f;
+			cmdBuffer.drawIndexed(6, 1, 0, 0, 1);
 		}
 
-		if (!fullDeferred) {
-			viewport.x = viewport.width * 0.5f;
-			viewport.y = viewport.height * 0.5f;
-		}
+		
 
-
-
-		cmdBuffer.setViewport(0, viewport);
-		// Final composition as full screen quad
-		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.deferred"));
-		cmdBuffer.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, meshBuffers.quad.vertices.buffer, { 0 });
-		cmdBuffer.bindIndexBuffer(meshBuffers.quad.indices.buffer, 0, vk::IndexType::eUint32);
-		cmdBuffer.drawIndexed(6, 1, 0, 0, 1);
 
 
 	}
@@ -2530,13 +2506,10 @@ public:
 				// bind scene descriptor set
 				setNum = 0;
 				offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.offscreen"), setNum, rscs.descriptorSets->get("deferred.scene"), nullptr);
-				//offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.offscreen, setNum, descriptorSets[setNum], nullptr);
 
 
 				uint32_t offset1 = model->matrixIndex * alignedMatrixSize;
 				//uint32_t offset1 = model->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
-				//https://www.khronos.org/registry/vulkan/specs/1.0/apispec.html#vkCmdBindDescriptorSets
-				// the third param is the set number!
 				setNum = 1;
 				//offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.offscreen, setNum, 1, &descriptorSets[setNum], 1, &offset1);
 				offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.offscreen"), setNum, 1, &rscs.descriptorSets->get("deferred.matrix"), 1, &offset1);
