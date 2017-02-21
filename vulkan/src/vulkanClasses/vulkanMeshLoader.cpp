@@ -50,8 +50,9 @@ namespace vkx {
 		//pScene->mRootNode->mTransformation
 		//aiMatrix4x4 &r = pScene->mRootNode->mTransformation;
 		//aiMatrix4x4 rot;
-		//rot.FromEulerAnglesXYZ(aiVector3D(-90.0f, 0.0f, 0.0f));
+		//rot.FromEulerAnglesXYZ(aiVector3D(-90.0f, 90.0f, 10.0f));
 		//pScene->mRootNode->mTransformation = rot * pScene->mRootNode->mTransformation;// change collada model back to z up// important
+		
 		////pScene->mRootNode->mTransformation = pScene->mRootNode->mTransformation * rot;
 		//glm::mat4 r2 = glm::mat4(\
 		//	r.a1, r.a2, r.a3, r.a4,

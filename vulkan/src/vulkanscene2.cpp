@@ -26,6 +26,8 @@
 // Texture properties
 #define TEX_DIM 1024
 
+#define PI 3.14159265359
+
 
 
 
@@ -301,7 +303,7 @@ public:
 		size.width = 1280;
 		size.height = 720;
 
-		camera.setProjection(80.0f, (float)size.width / (float)size.height, 0.0001f, 256.0f);
+		camera.setProjection(80.0f, (float)size.width / (float)size.height, 0.01f, 128.0f);
 
 
 
@@ -402,21 +404,18 @@ public:
 	void prepareVertexDescriptions() {
 
 
-		struct skinnedMeshVertex {
+		//struct skinnedMeshVertex {
+		//	glm::vec3 pos;
+		//	glm::vec2 uv;
+		//	glm::vec3 color;
+		//	glm::vec3 normal;
+		//	// Max. four bones per vertex
+		//	float boneWeights[4];
+		//	uint32_t boneIDs[4];
+		//};
 
-			glm::vec3 pos;
-			glm::vec2 uv;
-			glm::vec3 color;
-			glm::vec3 normal;
-
-
-			// Max. four bones per vertex
-			float boneWeights[4];
-			uint32_t boneIDs[4];
-		};
-
-		uint32_t s1 = sizeof(skinnedMeshVertex);
-		uint32_t s2 = vkx::vertexSize(skinnedMeshVertexLayout);
+		//uint32_t s1 = sizeof(skinnedMeshVertex);
+		//uint32_t s2 = vkx::vertexSize(skinnedMeshVertexLayout);
 
 
 		/* not deferred */
@@ -518,7 +517,6 @@ public:
 
 		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo0 =
 			vkx::descriptorPoolCreateInfo(descriptorPoolSizes0.size(), descriptorPoolSizes0.data(), 1);
-
 		rscs.descriptorPools->add("forward.scene", descriptorPoolCreateInfo0);
 
 
@@ -532,7 +530,6 @@ public:
 
 		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo1 =
 			vkx::descriptorPoolCreateInfo(descriptorPoolSizes1.size(), descriptorPoolSizes1.data(), 1);
-
 		rscs.descriptorPools->add("forward.matrix", descriptorPoolCreateInfo1);
 
 
@@ -547,8 +544,6 @@ public:
 
 		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo2 =
 			vkx::descriptorPoolCreateInfo(descriptorPoolSizes2.size(), descriptorPoolSizes2.data(), 1);
-
-
 		rscs.descriptorPools->add("forward.material", descriptorPoolCreateInfo2);
 
 
@@ -563,8 +558,8 @@ public:
 
 		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo4 =
 			vkx::descriptorPoolCreateInfo(descriptorPoolSizes4.size(), descriptorPoolSizes4.data(), 10000);
-
 		rscs.descriptorPools->add("forward.textures", descriptorPoolCreateInfo4);
+
 		this->assetManager.materialDescriptorPool = rscs.descriptorPools->getPtr("forward.textures");
 
 
@@ -581,7 +576,6 @@ public:
 
 		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo55 =
 			vkx::descriptorPoolCreateInfo(descriptorPoolSizes55.size(), descriptorPoolSizes55.data(), 1);
-
 		rscs.descriptorPools->add("forward.bones", descriptorPoolCreateInfo55);
 
 
@@ -1538,10 +1532,12 @@ public:
 
 	// Prepare and initialize uniform buffer containing shader uniforms
 	void prepareUniformBuffersDeferred() {
-		// Fullscreen vertex shader
+		// Fullscreen quad vertex shader
 		uniformDataDeferred.vsFullScreen = context.createUniformBuffer(uboVS);
-		// Deferred vertex shader
+
+		// Offscreen vertex shader
 		uniformDataDeferred.vsOffscreen = context.createUniformBuffer(uboOffscreenVS);
+		
 		// Deferred fragment shader
 		uniformDataDeferred.fsLights = context.createUniformBuffer(uboFSLights);
 
@@ -1577,52 +1573,65 @@ public:
 
 	// Update fragment shader light position uniform block
 	void updateUniformBufferDeferredLights() {
-		// White light from above
-		uboFSLights.lights[0].position = glm::vec4(0.0f, 4.0f*sin(globalP), 3.0f, 0.0f);
-		uboFSLights.lights[0].color = glm::vec4(1.5f);
-		uboFSLights.lights[0].radius = 15.0f;
-		uboFSLights.lights[0].linearFalloff = 0.3f;
-		uboFSLights.lights[0].quadraticFalloff = 0.4f;
-		// Red light
-		uboFSLights.lights[1].position = glm::vec4(2.0f*cos(globalP) - 2.0f, 0.0f, 0.0f, 0.0f);
-		uboFSLights.lights[1].color = glm::vec4(1.5f, 0.0f, 0.0f, 0.0f);
-		uboFSLights.lights[1].radius = 15.0f;
-		uboFSLights.lights[1].linearFalloff = 0.4f;
-		uboFSLights.lights[1].quadraticFalloff = 0.3f;
-		// Blue light
-		uboFSLights.lights[2].position = glm::vec4(2.0f, 1.0f, 0.0f, 0.0f);
-		uboFSLights.lights[2].color = glm::vec4(0.0f, 0.0f, 2.5f, 0.0f);
-		uboFSLights.lights[2].radius = 10.0f;
-		uboFSLights.lights[2].linearFalloff = 0.45f;
-		uboFSLights.lights[2].quadraticFalloff = 0.35f;
-		// Belt glow
-		uboFSLights.lights[3].position = glm::vec4(0.0f, 0.7f, 0.5f, 0.0f);
-		uboFSLights.lights[3].color = glm::vec4(2.5f, 2.5f, 0.0f, 0.0f);
-		uboFSLights.lights[3].radius = 5.0f;
-		uboFSLights.lights[3].linearFalloff = 8.0f;
-		uboFSLights.lights[3].quadraticFalloff = 6.0f;
-		// Green light
-		uboFSLights.lights[4].position = glm::vec4(3.0f, 2.0f, 1.0f, 0.0f);
-		uboFSLights.lights[4].color = glm::vec4(0.0f, 1.5f, 0.0f, 0.0f);
-		uboFSLights.lights[4].radius = 10.0f;
-		uboFSLights.lights[4].linearFalloff = 0.8f;
-		uboFSLights.lights[4].quadraticFalloff = 0.6f;
+		//// White light from above
+		//uboFSLights.lights[0].position = glm::vec4(0.0f, 4.0f*sin(globalP), 3.0f, 0.0f);
+		//uboFSLights.lights[0].color = glm::vec4(1.5f);
+		//uboFSLights.lights[0].radius = 15.0f;
+		//uboFSLights.lights[0].linearFalloff = 0.3f;
+		//uboFSLights.lights[0].quadraticFalloff = 0.4f;
+		//// Red light
+		//uboFSLights.lights[1].position = glm::vec4(2.0f*cos(globalP) - 2.0f, 0.0f, 0.0f, 0.0f);
+		//uboFSLights.lights[1].color = glm::vec4(1.5f, 0.0f, 0.0f, 0.0f);
+		//uboFSLights.lights[1].radius = 15.0f;
+		//uboFSLights.lights[1].linearFalloff = 0.4f;
+		//uboFSLights.lights[1].quadraticFalloff = 0.3f;
+		//// Blue light
+		//uboFSLights.lights[2].position = glm::vec4(2.0f, 1.0f, 0.0f, 0.0f);
+		//uboFSLights.lights[2].color = glm::vec4(0.0f, 0.0f, 2.5f, 0.0f);
+		//uboFSLights.lights[2].radius = 10.0f;
+		//uboFSLights.lights[2].linearFalloff = 0.45f;
+		//uboFSLights.lights[2].quadraticFalloff = 0.35f;
+		//// Belt glow
+		//uboFSLights.lights[3].position = glm::vec4(0.0f, 0.7f, 0.5f, 0.0f);
+		//uboFSLights.lights[3].color = glm::vec4(2.5f, 2.5f, 0.0f, 0.0f);
+		//uboFSLights.lights[3].radius = 5.0f;
+		//uboFSLights.lights[3].linearFalloff = 8.0f;
+		//uboFSLights.lights[3].quadraticFalloff = 6.0f;
+		//// Green light
+		//uboFSLights.lights[4].position = glm::vec4(3.0f, 2.0f, 1.0f, 0.0f);
+		//uboFSLights.lights[4].color = glm::vec4(0.0f, 1.5f, 0.0f, 0.0f);
+		//uboFSLights.lights[4].radius = 10.0f;
+		//uboFSLights.lights[4].linearFalloff = 0.8f;
+		//uboFSLights.lights[4].quadraticFalloff = 0.6f;
 
-		for (int i = 5; i < 10; ++i) {
+		int n = 0;
+		int w = 8;
+		int h = 6;
+		int sw = 15;
+		int sh = 15;
 
-			std::random_device rd;
-			std::mt19937 gen(rd());
-			std::uniform_real_distribution<> dis(0, 0.8f);
-			float rnd = dis(gen);
-			float rnd1 = dis(gen);
-			float rnd2 = dis(gen);
-			float rnd3 = dis(gen);
+		for (int i = 0; i < w; ++i) {
 
-			uboFSLights.lights[i].position = glm::vec4(sin(globalP)*i, cos(globalP)*i, 3.0f*sin(globalP+i), 0.0f);
-			uboFSLights.lights[i].color = glm::vec4(sin(globalP)+(i*2), cos(globalP)+i, sin(globalP)*i, 0.0f) * glm::vec4(1.5f);
-			uboFSLights.lights[i].radius = 15.0f;
-			uboFSLights.lights[i].linearFalloff = 0.3f;
-			uboFSLights.lights[i].quadraticFalloff = 0.4f;
+			for (int j = 0; j < h; ++j) {
+
+				//float rnd = rand0t1();
+
+				float xOffset = (w*sw)/2.0;
+				float yOffset = (h*sh) / 2.0;
+
+				float x = (i * sw)-xOffset;
+				float y = (j * sh)-yOffset;
+				float z = (10.0f);
+
+				uboFSLights.lights[n].position = glm::vec4(x, y, z, 0.0f);
+				uboFSLights.lights[n].color = glm::vec4(sin(globalP) + (i * 2), cos(globalP) + i, sin(globalP)*i, 0.0f) * glm::vec4(1.5f);
+				uboFSLights.lights[n].radius = 15.0f;
+				uboFSLights.lights[n].linearFalloff = 0.3f;
+				uboFSLights.lights[n].quadraticFalloff = 0.4f;
+
+				// increment counter
+				n++;
+			}
 
 		}
 
@@ -1777,7 +1786,13 @@ public:
 
 
 
+		auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
+		testModel->load(getAssetPath() + "models/sponza.dae");
+		testModel->createMeshes(deferredVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
 
+		testModel->rotateWorldX(PI/2.0);
+
+		modelsDeferred.push_back(testModel);
 
 
 
@@ -1791,6 +1806,8 @@ public:
 
 			modelsDeferred.push_back(testModel);
 		}
+
+
 
 
 
