@@ -22,7 +22,7 @@
 // Maximum number of bones per vertex
 #define MAX_BONES_PER_VERTEX 4
 // Maximum number of skinned meshes (by 65k uniform limit)
-#define MAX_SKINNED_MESHES 10
+#define MAX_SKINNED_MESHES 4
 // Texture properties
 #define TEX_DIM 1024
 
@@ -149,7 +149,6 @@ public:
 
 		glm::vec4 lightPos;
 		glm::vec4 cameraPos;
-		glm::mat4 bones[MAX_BONES*MAX_SKINNED_MESHES];// todo: remove this from here
 	} uboScene;
 
 	// todo: fix this
@@ -168,7 +167,7 @@ public:
 
 	// bone data uniform buffer
 	struct {
-		glm::mat4 bones[1];
+		glm::mat4 bones[MAX_BONES*MAX_SKINNED_MESHES];
 	} uboBoneData;
 
 
@@ -181,6 +180,7 @@ public:
 	float globalP = 0.0f;
 
 	bool debugDisplay = false;
+	float fullDeferred = false;
 
 	//glm::vec3 lightPos = glm::vec3(1.0f, -2.0f, 2.0f);
 	glm::vec4 lightPos = glm::vec4(1.0f, -2.0f, 2.0f, 1.0f);
@@ -555,20 +555,6 @@ public:
 
 
 
-		//// bone data
-		//std::vector<vk::DescriptorPoolSize> descriptorPoolSizes3 =
-		//{
-		//	vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 1),// static bone data
-		//};
-
-		//vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo3 =
-		//	vkx::descriptorPoolCreateInfo(descriptorPoolSizes3.size(), descriptorPoolSizes3.data(), 1);
-
-		//vk::DescriptorPool descriptorPool3 = device.createDescriptorPool(descriptorPoolCreateInfo3);
-		//descriptorPools.push_back(descriptorPool3);
-
-
-
 		// combined image sampler
 		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes4 =
 		{
@@ -587,6 +573,23 @@ public:
 
 
 
+		// bone data
+		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes55 =
+		{
+			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 1),// mostly static data
+		};
+
+		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo55 =
+			vkx::descriptorPoolCreateInfo(descriptorPoolSizes55.size(), descriptorPoolSizes55.data(), 1);
+
+		rscs.descriptorPools->add("forward.bones", descriptorPoolCreateInfo55);
+
+
+
+
+
+
+		/* DEFERRED */
 
 
 		// later:
@@ -662,8 +665,6 @@ public:
 
 		rscs.descriptorSetLayouts->add("forward.scene", descriptorSetLayoutCreateInfo0);
 
-
-
 		// descriptor set layout 1
 		// matrix data
 		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings1 =
@@ -679,10 +680,6 @@ public:
 			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings1.data(), descriptorSetLayoutBindings1.size());
 
 		rscs.descriptorSetLayouts->add("forward.matrix", descriptorSetLayoutCreateInfo1);
-
-
-
-
 
 		// descriptor set layout 2
 		// material data
@@ -703,33 +700,13 @@ public:
 
 
 
-		// // descriptor set layout 3
-		// // bone data
-		//std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings3 =
-		//{
-		//	// Binding 0 : Vertex shader uniform buffer
-		//	vkx::descriptorSetLayoutBinding(
-		//		vk::DescriptorType::eUniformBuffer,
-		//		vk::ShaderStageFlagBits::eVertex,
-		//		0),// binding 0
-		//};
-
-		//vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo3 =
-		//	vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings3.data(), descriptorSetLayoutBindings3.size());pip
-
-		//vk::DescriptorSetLayout descriptorSetLayout3 = device.createDescriptorSetLayout(descriptorSetLayoutCreateInfo3);
-		//descriptorSetLayouts.push_back(descriptorSetLayout3);
 
 
-
-
-
-
-		// descriptor set layout 4
+		// descriptor set layout 3
 		// combined image sampler
-		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings4 =
+		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings3 =
 		{
-			// Set 4: Binding 0 : Fragment shader color map image sampler
+			// Set 3: Binding 0 : Fragment shader color map image sampler
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
@@ -737,17 +714,29 @@ public:
 			// todo: add specular / bump map here
 		};
 
-		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo4 =
-			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings4.data(), descriptorSetLayoutBindings4.size());
+		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo3 =
+			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings3.data(), descriptorSetLayoutBindings3.size());
 
-		rscs.descriptorSetLayouts->add("forward.textures", descriptorSetLayoutCreateInfo4);
+		rscs.descriptorSetLayouts->add("forward.textures", descriptorSetLayoutCreateInfo3);
 		this->assetManager.materialDescriptorSetLayout = rscs.descriptorSetLayouts->getPtr("forward.textures");
 
 
 
 
+		// descriptor set layout 4
+		// bone data
+		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings4 =
+		{
+			// Set 4: Binding 0 : Vertex shader uniform buffer
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eUniformBuffer,
+				vk::ShaderStageFlagBits::eVertex,
+				0),// binding 0
+		};
 
-
+		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo4 =
+			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings4.data(), descriptorSetLayoutBindings4.size());
+		rscs.descriptorSetLayouts->add("forward.bones", descriptorSetLayoutCreateInfo4);
 
 
 
@@ -769,10 +758,12 @@ public:
 		vk::DescriptorSetLayout descriptorSetLayout1 = rscs.descriptorSetLayouts->get("forward.matrix");
 		vk::DescriptorSetLayout descriptorSetLayout2 = rscs.descriptorSetLayouts->get("forward.material");
 		vk::DescriptorSetLayout descriptorSetLayout3 = rscs.descriptorSetLayouts->get("forward.textures");
+		vk::DescriptorSetLayout descriptorSetLayout4 = rscs.descriptorSetLayouts->get("forward.bones");
 		descriptorSetLayouts.push_back(descriptorSetLayout0);
 		descriptorSetLayouts.push_back(descriptorSetLayout1);
 		descriptorSetLayouts.push_back(descriptorSetLayout2);
 		descriptorSetLayouts.push_back(descriptorSetLayout3);
+		descriptorSetLayouts.push_back(descriptorSetLayout4);
 
 
 		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfo = vkx::pipelineLayoutCreateInfo(descriptorSetLayouts.data(), descriptorSetLayouts.size());
@@ -831,10 +822,6 @@ public:
 		rscs.descriptorSetLayouts->add("deferred.scene", descriptorSetLayoutCreateInfo5);
 
 
-
-
-
-
 		// descriptor set layout 1
 		// matrix data
 		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings6 =
@@ -850,11 +837,6 @@ public:
 			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings6.data(), descriptorSetLayoutBindings6.size());
 
 		rscs.descriptorSetLayouts->add("deferred.matrix", descriptorSetLayoutCreateInfo6);
-
-
-
-
-
 
 		//// descriptor set layout 2
 		//// material data
@@ -879,7 +861,7 @@ public:
 		// combined image sampler
 		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings7 =
 		{
-			// Set 4: Binding 0 : Fragment shader color map image sampler
+			// Set 2: Binding 0 : Fragment shader color map image sampler
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
@@ -971,17 +953,16 @@ public:
 
 		std::vector<vk::DescriptorSetLayout> descriptorSetLayoutsDeferred;
 
-		vk::DescriptorSetLayout descriptorSetLayout4 = rscs.descriptorSetLayouts->get("deferred.scene");
-		vk::DescriptorSetLayout descriptorSetLayout5 = rscs.descriptorSetLayouts->get("deferred.matrix");
+		vk::DescriptorSetLayout descriptorSetLayout5 = rscs.descriptorSetLayouts->get("deferred.scene");
+		vk::DescriptorSetLayout descriptorSetLayout6 = rscs.descriptorSetLayouts->get("deferred.matrix");
 		//vk::DescriptorSetLayout descriptorSetLayout6 = rscs.descriptorSetLayouts->get("deferred.material");
 		vk::DescriptorSetLayout descriptorSetLayout7 = rscs.descriptorSetLayouts->get("deferred.textures");
-		
 		vk::DescriptorSetLayout descriptorSetLayout8 = rscs.descriptorSetLayouts->get("deferred.deferred");
 
 
-		descriptorSetLayoutsDeferred.push_back(descriptorSetLayout4);
+		//descriptorSetLayoutsDeferred.push_back(descriptorSetLayout4);
 		descriptorSetLayoutsDeferred.push_back(descriptorSetLayout5);
-		//descriptorSetLayoutsDeferred.push_back(descriptorSetLayout6);
+		descriptorSetLayoutsDeferred.push_back(descriptorSetLayout6);
 		descriptorSetLayoutsDeferred.push_back(descriptorSetLayout7);
 		descriptorSetLayoutsDeferred.push_back(descriptorSetLayout8);
 		//descriptorSetLayouts.push_back(descriptorSetLayout7);
@@ -1033,13 +1014,11 @@ public:
 		rscs.descriptorSets->add("forward.material", descriptorSetAllocateInfo2);
 
 
-		//// descriptor set 3
-		//// bone data
-		//vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo3 =
-		//	vkx::descriptorSetAllocateInfo(descriptorPools[3], &descriptorSetLayouts[3], 1);
-
-		//std::vector<vk::DescriptorSet> descriptorSets3 = device.allocateDescriptorSets(descriptorSetAllocateInfo3);
-		//descriptorSets.push_back(descriptorSets3[0]);// descriptor set 4
+		// descriptor set 0
+		// bone data
+		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo3 =
+			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("forward.bones"), &rscs.descriptorSetLayouts->get("forward.bones"), 1);
+		rscs.descriptorSets->add("forward.bones", descriptorSetAllocateInfo3);
 
 		// descriptor set 4
 		// image sampler
@@ -1074,6 +1053,13 @@ public:
 				vk::DescriptorType::eUniformBufferDynamic,
 				0,// binding 0
 				&uniformData.materialVS.descriptor),
+
+			// Set 4: Binding 0: bones uniform buffer
+			vkx::writeDescriptorSet(
+				rscs.descriptorSets->get("forward.bones"),// descriptor set 0
+				vk::DescriptorType::eUniformBuffer,
+				0,// binding 0
+				&uniformData.bonesVS.descriptor),
 
 
 			//// Set 4?: Binding 0: static bone data buffer
@@ -1484,6 +1470,7 @@ public:
 		updateSceneBuffer();// update scene ubo
 		updateMatrixBuffer();// update matrix ubo
 		updateMaterialBuffer();// update material ubo
+		updateBoneBuffer();
 		// todo: update bonedata ubo
 
 	}
@@ -1495,7 +1482,6 @@ public:
 
 		uboScene.view = camera.matrices.view;
 		uboScene.projection = camera.matrices.projection;
-		//uboScene.cameraPos = camera.transform.translation;
 		uboScene.cameraPos = glm::vec4(camera.transform.translation, 0.0f);
 		uniformData.sceneVS.copy(uboScene);
 	}
@@ -1546,6 +1532,9 @@ public:
 	}
 
 
+	void updateBoneBuffer() {
+		uniformData.bonesVS.copy(uboBoneData);
+	}
 
 	// Prepare and initialize uniform buffer containing shader uniforms
 	void prepareUniformBuffersDeferred() {
@@ -1973,7 +1962,9 @@ public:
 			settings.fpsCap += 0.2f;
 		}
 
-
+		if (keyStates.y) {
+			fullDeferred = !fullDeferred;
+		}
 
 
 
@@ -2101,7 +2092,7 @@ public:
 
 			glm::vec3 point = skinnedMeshes[0]->transform.translation;
 			skinnedMeshes[0]->setTranslation(glm::vec3(point.x, point.y, 1.0f));
-			skinnedMeshes[0]->translateLocal(glm::vec3(0.0f, 0.05f, 0.0f));
+			skinnedMeshes[0]->translateLocal(glm::vec3(0.0f, -0.024f, 0.0f));
 			skinnedMeshes[0]->rotateLocalZ(0.014f);
 		}
 
@@ -2154,7 +2145,9 @@ public:
 
 				//uboBoneData.bones[boneOffset + i] = glm::transpose(glm::make_mat4(&skinnedMesh->boneTransforms[i].a1));
 				//uboScene.bones[i] = glm::transpose(glm::make_mat4(&skinnedMesh->boneTransforms[i].a1));
-				uboScene.bones[boneOffset + i] = glm::transpose(glm::make_mat4(&skinnedMesh->meshLoader->boneData.boneTransforms[i].a1));
+				
+				//uboScene.bones[boneOffset + i] = glm::transpose(glm::make_mat4(&skinnedMesh->meshLoader->boneData.boneTransforms[i].a1));
+				uboBoneData.bones[boneOffset + i] = glm::transpose(glm::make_mat4(&skinnedMesh->meshLoader->boneData.boneTransforms[i].a1));
 			}
 		}
 
@@ -2168,6 +2161,7 @@ public:
 		updateSceneBuffer();
 		updateMatrixBuffer();
 		updateMaterialBuffer();
+		updateBoneBuffer();
 
 		//updateTextOverlay();
 
@@ -2343,10 +2337,15 @@ public:
 
 
 				// bind texture:
-				//vkx::Material m = this->assetManager.materials.get(skinnedMesh->meshBuffer.materialName);
 				setNum = 3;
 				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, m.descriptorSet, nullptr);
 			}
+
+			// bind bone descriptor set
+			setNum = 4;
+			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, rscs.descriptorSets->get("forward.bones"), nullptr);
+
+
 
 
 			// draw:
@@ -2358,7 +2357,7 @@ public:
 
 
 
-
+		/* DEFERRED QUAD */
 
 		updateUniformBufferDeferredLights();
 
@@ -2382,8 +2381,11 @@ public:
 			viewport.x = viewport.width * 0.5f;
 			viewport.y = viewport.height * 0.5f;
 		}
-		viewport.x = viewport.width * 0.5f;
-		viewport.y = viewport.height * 0.5f;
+
+		if (!fullDeferred) {
+			viewport.x = viewport.width * 0.5f;
+			viewport.y = viewport.height * 0.5f;
+		}
 
 
 

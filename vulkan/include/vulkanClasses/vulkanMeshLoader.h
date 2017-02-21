@@ -227,7 +227,7 @@ namespace vkx {
 				// the current time
 				std::chrono::steady_clock::time_point tNow = std::chrono::high_resolution_clock::now();
 				// time to wait in ms to update bones
-				float waitTimeMS = 2000.0f;
+				float waitTimeMS = 10.0f;
 			} boneData;
 
 

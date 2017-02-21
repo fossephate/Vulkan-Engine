@@ -18,9 +18,6 @@ layout (set = 0, binding = 0) uniform sceneBuffer
 
 	vec3 lightPos;
 	vec3 cameraPos;
-
-	// todo: definitely remove this
-	//mat4 bones[MAX_BONES];
 } scene;
 
 // matrix data

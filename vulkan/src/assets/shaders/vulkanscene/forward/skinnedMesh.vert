@@ -16,7 +16,7 @@ layout (location = 5) in ivec4 inBoneIDs;
 
 #define MAX_BONES 64
 
-#define MAX_SKINNED_MESHES 10
+#define MAX_SKINNED_MESHES 4
 
 
 // scene
@@ -29,8 +29,6 @@ layout (set = 0, binding = 0) uniform sceneBuffer
 	vec4 lightPos;
 	vec4 cameraPos;
 
-	mat4 bones[MAX_BONES*MAX_SKINNED_MESHES];
-
 } scene;
 
 // matrix data
@@ -41,11 +39,11 @@ layout (set = 1, binding = 0) uniform matrixBuffer
 } instance;
 
 
-// // bone data
-// layout (set = 3, binding = 0) uniform boneBuffer
-// {
-// 	mat4 bones[MAX_BONES*MAX_SKINNED_MESHES];
-// } boneData;
+// bone data
+layout (set = 4, binding = 0) uniform boneBuffer
+{
+	mat4 bones[MAX_BONES*MAX_SKINNED_MESHES];
+} boneData;
 
 
 
@@ -71,15 +69,15 @@ void main() {
 
 	int offset = index*MAX_BONES;
 
-	mat4 boneTransform = scene.bones[inBoneIDs[0]+offset] * inBoneWeights[0];
-	boneTransform     += scene.bones[inBoneIDs[1]+offset] * inBoneWeights[1];
-	boneTransform     += scene.bones[inBoneIDs[2]+offset] * inBoneWeights[2];
-	boneTransform     += scene.bones[inBoneIDs[3]+offset] * inBoneWeights[3];
+	// mat4 boneTransform = scene.bones[inBoneIDs[0]+offset] * inBoneWeights[0];
+	// boneTransform     += scene.bones[inBoneIDs[1]+offset] * inBoneWeights[1];
+	// boneTransform     += scene.bones[inBoneIDs[2]+offset] * inBoneWeights[2];
+	// boneTransform     += scene.bones[inBoneIDs[3]+offset] * inBoneWeights[3];
 
-	// mat4 boneTransform = boneData.bones[inBoneIDs[0]+offset] * inBoneWeights[0];
-	// boneTransform     += boneData.bones[inBoneIDs[1]+offset] * inBoneWeights[1];
-	// boneTransform     += boneData.bones[inBoneIDs[2]+offset] * inBoneWeights[2];
-	// boneTransform     += boneData.bones[inBoneIDs[3]+offset] * inBoneWeights[3];
+	mat4 boneTransform = boneData.bones[inBoneIDs[0]+offset] * inBoneWeights[0];
+	boneTransform     += boneData.bones[inBoneIDs[1]+offset] * inBoneWeights[1];
+	boneTransform     += boneData.bones[inBoneIDs[2]+offset] * inBoneWeights[2];
+	boneTransform     += boneData.bones[inBoneIDs[3]+offset] * inBoneWeights[3];
 
 	//mat4 boneTransform = mat4(1.0);
 
