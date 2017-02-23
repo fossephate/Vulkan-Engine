@@ -235,7 +235,7 @@ public:
 	};
 
 	struct {
-		Light lights[50];
+		Light lights[100];
 		glm::vec4 viewPos;
 	} uboFSLights;
 
@@ -512,7 +512,7 @@ public:
 		// scene data
 		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes0 =
 		{
-			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 1),// mostly static data
+			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 2),// mostly static data
 		};
 
 		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo0 =
@@ -568,15 +568,15 @@ public:
 
 
 
-		// bone data
-		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes55 =
-		{
-			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 1),// mostly static data
-		};
+		//// bone data
+		//std::vector<vk::DescriptorPoolSize> descriptorPoolSizes55 =
+		//{
+		//	vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 1),// mostly static data
+		//};
 
-		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo55 =
-			vkx::descriptorPoolCreateInfo(descriptorPoolSizes55.size(), descriptorPoolSizes55.data(), 1);
-		rscs.descriptorPools->add("forward.bones", descriptorPoolCreateInfo55);
+		//vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo55 =
+		//	vkx::descriptorPoolCreateInfo(descriptorPoolSizes55.size(), descriptorPoolSizes55.data(), 1);
+		//rscs.descriptorPools->add("forward.bones", descriptorPoolCreateInfo55);
 
 
 
@@ -1645,15 +1645,14 @@ public:
 
 				//float rnd = rand0t1();
 
-				float xOffset = (w*sw)/2.0;
+				float xOffset = (w*sw) / 2.0;
 				float yOffset = (h*sh) / 2.0;
 
-				float x = (i * sw)-xOffset;
-				float y = (j * sh)-yOffset;
-				float z = (10.0f);
-
+				float x = (i * sw) - xOffset;
+				float y = (j * sh) - yOffset;
+				float z = (10.0f) + (sin((0.5*globalP) + n)*2.0f);
 				uboFSLights.lights[n].position = glm::vec4(x, y, z, 0.0f);
-				uboFSLights.lights[n].color = glm::vec4(sin(globalP) + (i * 2), cos(globalP) + i, sin(globalP)*i, 0.0f) * glm::vec4(1.5f);
+				uboFSLights.lights[n].color = glm::vec4((i * 2) - 3.0f, i, j, 0.0f) * glm::vec4(2.5f);
 				uboFSLights.lights[n].radius = 15.0f;
 				uboFSLights.lights[n].linearFalloff = 0.3f;
 				uboFSLights.lights[n].quadraticFalloff = 0.4f;
@@ -1815,11 +1814,11 @@ public:
 
 
 
-		//auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
-		//sponzaModel->load(getAssetPath() + "models/sponza.dae");
-		//sponzaModel->createMeshes(deferredVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
-		//sponzaModel->rotateWorldX(PI/2.0);
-		//modelsDeferred.push_back(sponzaModel);
+		auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
+		sponzaModel->load(getAssetPath() + "models/sponza.dae");
+		sponzaModel->createMeshes(deferredVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
+		sponzaModel->rotateWorldX(PI/2.0);
+		modelsDeferred.push_back(sponzaModel);
 
 
 
