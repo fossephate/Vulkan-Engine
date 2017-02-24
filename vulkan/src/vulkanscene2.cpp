@@ -1640,7 +1640,7 @@ public:
 		}
 
 
-		for (int i = 0; i < 1; ++i) {
+		for (int i = 0; i < 2; ++i) {
 
 			auto testSkinnedMesh = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
 			testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");
@@ -1955,6 +1955,16 @@ public:
 			skinnedMeshes[0]->translateLocal(glm::vec3(0.0f, -0.024f, 0.0f));
 			skinnedMeshes[0]->rotateLocalZ(0.014f);
 		}
+
+		if (skinnedMeshes.size() > 1) {
+			skinnedMeshes[1]->animationSpeed = 5.0f;
+			glm::vec3 point = skinnedMeshes[1]->transform.translation;
+			skinnedMeshes[1]->setTranslation(glm::vec3(point.x, point.y, 1.0f));
+			skinnedMeshes[1]->translateLocal(glm::vec3(0.0f, -0.024f, 0.0f));
+			skinnedMeshes[1]->rotateLocalZ(-0.014f);
+		}
+
+
 		uboScene.lightPos = glm::vec4(cos(globalP), 4.0f, cos(globalP)+3.0f, 1.0f);
 
 
@@ -1965,9 +1975,6 @@ public:
 
 		{
 			// todo: fix this// important
-			// stop doing this every frame
-			// only when necessary
-			// actually not that bad, since it makes pushing to vector easy
 			for (int i = 0; i < models.size(); ++i) {
 				models[i]->matrixIndex = i;
 			}
@@ -1985,7 +1992,8 @@ public:
 
 			// uses matrix indices directly after skinnedMeshes' indices
 			for (int i = 0; i < modelsDeferred.size(); ++i) {
-				modelsDeferred[i]->matrixIndex = models.size() + skinnedMeshes.size() + i;// todo: figure this out
+				// added a buffer of 10 so that there is time ti uodate command buffers
+				modelsDeferred[i]->matrixIndex = models.size() + skinnedMeshes.size() + i + 10;// todo: figure this out
 			}
 
 			//for (int i = 0; i < skinnedMeshesDeferred.size(); ++i) {
@@ -2435,26 +2443,6 @@ public:
 
 
 
-		
-
-
-
-		//offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelinesDeferred.offscreen);
-
-
-		
-
-
-
-
-
-
-
-
-		//offscreenCmdBuffer.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, meshBuffers.example.vertices.buffer, { 0 });
-		//offscreenCmdBuffer.bindIndexBuffer(meshBuffers.example.indices.buffer, 0, vk::IndexType::eUint32);
-		//offscreenCmdBuffer.drawIndexed(meshBuffers.example.indexCount, 1, 0, 0, 0);
-
 
 
 
@@ -2585,16 +2573,6 @@ public:
 			vk::Format::eBc3UnormBlock);
 	}
 
-	void loadMeshes() {
-		//meshes.example = loadMesh(getAssetPath() + "models/armor/armor.dae", vertexLayout, 1.0f);
-
-		vkx::MeshLoader loader(&this->context, &this->assetManager);
-		//loader.load(getAssetPath() + "models/armor/armor.dae");
-		loader.load(getAssetPath() + "models/cube.fbx");
-		loader.createMeshBuffer(deferredVertexLayout, 1.0f);
-		meshBuffers.example = loader.combinedBuffer;
-	}
-
 	void generateQuads() {
 		// Setup vertices for multiple screen aligned quads
 		// Used for displaying final result and debug 
@@ -2661,11 +2639,8 @@ public:
 
 		//OffscreenExampleBase::prepare();
 
-
-
 		loadTextures();
 		generateQuads();
-		loadMeshes();
 
 
 		prepareVertexDescriptions();

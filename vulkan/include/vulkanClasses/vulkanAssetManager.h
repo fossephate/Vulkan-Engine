@@ -8,6 +8,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <assimp/Importer.hpp> 
+#include <assimp/scene.h>     
+#include <assimp/postprocess.h>
+#include <assimp/cimport.h>
+
 #if defined(__ANDROID__)
 #include <android/asset_manager.h>
 #endif
@@ -103,6 +108,22 @@ namespace vkx {
 
 
 
+	template <typename T>
+	class ResourceList {
+		public:
+			std::unordered_map<std::string, T> resources;
+			const T get(std::string name) {
+				return resources[name];
+			}
+			T *getPtr(std::string name) {
+				return &resources[name];
+			}
+			bool present(std::string name) {
+				return resources.find(name) != resources.end();
+			}
+	};
+
+
 
 
 
@@ -113,16 +134,13 @@ namespace vkx {
 			vk::Device &device;
 			std::unordered_map<std::string, T> resources;
 			VulkanResourceList(vk::Device &dev) : device(dev) {};
-			const T get(std::string name)
-			{
+			const T get(std::string name) {
 				return resources[name];
 			}
-			T *getPtr(std::string name)
-			{
+			T *getPtr(std::string name) {
 				return &resources[name];
 			}
-			bool present(std::string name)
-			{
+			bool present(std::string name) {
 				return resources.find(name) != resources.end();
 			}
 	};
@@ -240,23 +258,38 @@ namespace vkx {
 
 		public:
 
-		DescriptorPoolList(vk::Device &dev) : VulkanResourceList(dev) {};
+			DescriptorPoolList(vk::Device &dev) : VulkanResourceList(dev) {};
 
-		~DescriptorPoolList() {
-			for (auto &descriptorPool : resources) {
-				//device.destroyPipelineLayout(pipelineLayout.second, nullptr);
+			~DescriptorPoolList() {
+				for (auto &descriptorPool : resources) {
+					//device.destroyPipelineLayout(pipelineLayout.second, nullptr);
+				}
 			}
-		}
 
-		vk::DescriptorPool add(std::string name, vk::DescriptorPoolCreateInfo &createInfo) {
-			vk::DescriptorPool descriptorPool = device.createDescriptorPool(createInfo, nullptr);
-			resources[name] = descriptorPool;
-			return descriptorPool;
-		}
+			vk::DescriptorPool add(std::string name, vk::DescriptorPoolCreateInfo &createInfo) {
+				vk::DescriptorPool descriptorPool = device.createDescriptorPool(createInfo, nullptr);
+				resources[name] = descriptorPool;
+				return descriptorPool;
+			}
 	};
 
 
+	class MeshList : public ResourceList<const aiScene*> {
 
+		public:
+
+			//DescriptorPoolList(vk::Device &dev) : VulResourceList(dev) {};
+
+			~MeshList() {
+				//for (auto &descriptorPool : resources) {
+				//	//device.destroyPipelineLayout(pipelineLayout.second, nullptr);
+				//}
+			}
+
+			void add(std::string name, const aiScene* scene) {
+				resources[name] = scene;
+			}
+	};
 
 
 
@@ -338,6 +371,8 @@ namespace vkx {
 					return loadedTextures.find(name) != loadedTextures.end();
 				}
 			} textures;
+
+			MeshList meshes;
 
 
 

@@ -43,7 +43,18 @@ namespace vkx {
 
 		free(meshData);
 #else
-		pScene = Importer.ReadFile(filename.c_str(), flags);
+
+
+		// todo: use asset manager here
+		if (this->assetManager->meshes.present(filename)) {
+			pScene = this->assetManager->meshes.get(filename);
+		} else {
+			pScene = Importer.ReadFile(filename.c_str(), flags);
+			this->assetManager->meshes.add(filename, pScene);
+		}
+
+
+
 #endif
 
 		//pScene->mRootNode->mTransformation = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(1.0f, 0.0f, 0.0f)) * pScene->mRootNode->mTransformation;
