@@ -1589,7 +1589,8 @@ public:
 
 				float x = (i * sw) - xOffset;
 				float y = (j * sh) - yOffset;
-				float z = (10.0f) + (sin((0.5*globalP) + n)*2.0f);
+				float z = (10.0f) + (sin((0.5*globalP) + n)*2.0f);
+
 				uboFSLights.lights[n].position = glm::vec4(x, y, z, 0.0f);
 				uboFSLights.lights[n].color = glm::vec4((i * 2) - 3.0f, i, j, 0.0f) * glm::vec4(2.5f);
 				uboFSLights.lights[n].radius = 15.0f;
@@ -1640,7 +1641,7 @@ public:
 		}
 
 
-		for (int i = 0; i < 2; ++i) {
+		for (int i = 0; i < 0; ++i) {
 
 			auto testSkinnedMesh = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
 			testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");
@@ -1650,7 +1651,7 @@ public:
 		}
 
 		auto physicsPlane = std::make_shared<vkx::PhysicsObject>(&physicsManager, models[0]);
-		btCollisionShape* boxShape = new btBoxShape(btVector3(btScalar(20.), btScalar(20.), btScalar(0.1)));
+		btCollisionShape* boxShape = new btBoxShape(btVector3(btScalar(200.), btScalar(200.), btScalar(0.1)));
 		physicsPlane->createRigidBody(boxShape, 0.0f);
 		//btTransform t;
 		//t.setOrigin(btVector3(0., 0., 0.));
@@ -1839,10 +1840,10 @@ public:
 		
 			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			testModel->load(getAssetPath() + "models/monkey.fbx");
-			testModel->createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
-			models.push_back(testModel);
-			//testModel->createMeshes(deferredVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
-			//modelsDeferred.push_back(testModel);
+			//testModel->createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+			//models.push_back(testModel);
+			testModel->createMeshes(deferredVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+			modelsDeferred.push_back(testModel);
 
 
 
@@ -1863,16 +1864,13 @@ public:
 			//	char pathPrefix[1024];
 			//	b3FileUtils::extractPath(relativeFileName, pathPrefix, 1024);
 			//}
-			//GLInstanceGraphicsShape* glmesh = LoadMeshFromObj(relativeFileName, "");
+			//GLInstanceGraphicsShape* glmesh = LoadMeshFromObj(relativeFileName, "");
+
 			//printf("[INFO] Obj loaded: Extracted %d verticed from obj file [%s]\n", glmesh->m_numvertices, fileName);
 		
 		
 		
-		
-		
-		
-		
-		
+			updateOffscreen = true;
 		
 		
 		
