@@ -365,6 +365,8 @@ namespace vkx
 			// all command buffers that may reference this
 			virtual void updateDrawCommandBuffer(const vk::CommandBuffer& drawCommand) = 0;
 
+			virtual void updateCommandBuffers() = 0;
+
 
 
 			void drawCurrentCommandBuffer(const vk::Semaphore& semaphore = vk::Semaphore());

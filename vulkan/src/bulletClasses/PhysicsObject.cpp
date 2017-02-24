@@ -13,11 +13,48 @@ namespace vkx {
 
 	}
 
-	PhysicsObject::PhysicsObject(vkx::PhysicsManager *physicsManager, std::shared_ptr<vkx::Object3D> object3D, btRigidBody *rigidBody) {
+	PhysicsObject::PhysicsObject(vkx::PhysicsManager *physicsManager, std::shared_ptr<vkx::Object3D> object3D/*, btRigidBody *rigidBody*/) {
 
 		this->physicsManager = physicsManager;
 		this->object3D = object3D;
-		this->rigidBody = rigidBody;
+		
+	}
+
+	void PhysicsObject::addRigidBody(btRigidBody *body) {
+		this->rigidBody = body;
+		this->physicsManager->dynamicsWorld->addRigidBody(this->rigidBody);
+	}
+
+	void PhysicsObject::createRigidBody(btCollisionShape *collisionShape, float mass) {
+
+		//btCollisionShape* groundShape = new btBoxShape(btVector3(btScalar(20.), btScalar(20.), btScalar(0.1)));
+		// todo: re-use collision shapes from collisionshapes vector
+		this->physicsManager->collisionShapes.push_back(collisionShape);
+
+
+		// set default translation
+		btTransform defaultTransform;
+		defaultTransform.setIdentity();
+		defaultTransform.setOrigin(btVector3(0, 0, 0));
+
+		// set mass
+		btScalar rbMass(mass);
+
+		btVector3 localInertia(0, 0, 0);
+		// if the mass is not 0, the body is dynamic, calculate local inertia
+		if (rbMass != 0.f) {
+			collisionShape->calculateLocalInertia(rbMass, localInertia);
+		}
+
+		//using motionstate is optional, it provides interpolation capabilities, and only synchronizes 'active' objects
+		btDefaultMotionState* myMotionState = new btDefaultMotionState(defaultTransform);
+		btRigidBody::btRigidBodyConstructionInfo rbInfo(rbMass, myMotionState, collisionShape, localInertia);
+		btRigidBody* body = new btRigidBody(rbInfo);
+
+		// add rigid body to self and physics manager
+		this->addRigidBody(body);
+
+
 	}
 
 	void PhysicsObject::sync() {

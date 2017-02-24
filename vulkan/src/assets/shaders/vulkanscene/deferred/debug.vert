@@ -9,8 +9,8 @@ layout (location = 3) in vec3 inNormal;
 
 layout (set = 3, binding = 0) uniform UBO 
 {
-	mat4 projection;
 	mat4 model;
+	mat4 projection;
 } ubo;
 
 layout (location = 0) out vec3 outUV;

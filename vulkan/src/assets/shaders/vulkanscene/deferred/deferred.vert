@@ -8,8 +8,8 @@ layout (location = 1) in vec2 inUV;
 
 layout (set = 3, binding = 0) uniform UBO 
 {
-	mat4 projection;// consider hardcoding in? probably not worth it
 	mat4 model;// this is used in debug.vert
+	mat4 projection;// consider hardcoding in? probably not worth it
 } ubo;
 
 layout (location = 0) out vec2 outUV;

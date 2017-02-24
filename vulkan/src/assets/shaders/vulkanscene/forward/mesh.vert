@@ -25,6 +25,8 @@ layout (set = 1, binding = 0) uniform matrixBuffer
 {
 	mat4 model;
 	mat4 boneIndex;
+	mat4 g1;
+	mat4 g2;
 } instance;
 
 

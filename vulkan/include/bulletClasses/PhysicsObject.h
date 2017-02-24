@@ -32,7 +32,7 @@ namespace vkx {
 
 			// pointer to object3D (derived)
 			//vkx::Object3D *object3D = nullptr;
-			std::shared_ptr<vkx::Object3D> object3D;
+			std::shared_ptr<vkx::Object3D> object3D = nullptr;
 
 			// pointer to physics manager
 			vkx::PhysicsManager *physicsManager = nullptr;
@@ -44,8 +44,11 @@ namespace vkx {
 
 			//PhysicsObject(vkx::PhysicsManager *physicsManager, vkx::Object3D *object3D);
 			//PhysicsObject(vkx::PhysicsManager *physicsManager, std::shared_ptr<vkx::Object3D> object3D);
-			PhysicsObject(vkx::PhysicsManager *physicsManager, std::shared_ptr<vkx::Object3D> object3D, btRigidBody *rigidBody = nullptr);
+			PhysicsObject(vkx::PhysicsManager *physicsManager, std::shared_ptr<vkx::Object3D> object3D/*, btRigidBody *rigidBody = nullptr*/);
 
+			void addRigidBody(btRigidBody *body);
+
+			void createRigidBody(btCollisionShape *collisionShape, float mass);
 
 			void sync();
 

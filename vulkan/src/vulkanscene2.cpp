@@ -213,8 +213,8 @@ public:
 
 
 	struct {
-		glm::mat4 projection;
 		glm::mat4 model;
+		glm::mat4 projection;
 	} uboVS;
 
 	struct {
@@ -258,6 +258,14 @@ public:
 		vkx::DescriptorPoolList *descriptorPools;
 
 	} rscs;
+
+	struct {
+		size_t models = 0;
+		size_t skinnedMeshes = 0;
+	} lastSizes;
+
+	bool updateDraw = true;
+	bool updateOffscreen = true;
 
 
 
@@ -423,7 +431,6 @@ public:
 		// Binding description
 		vertices.bindingDescriptions.resize(1);
 		vertices.bindingDescriptions[0] =
-			//vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, sizeof(skinnedMeshVertex), vk::VertexInputRate::eVertex);
 			vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, vkx::vertexSize(skinnedMeshVertexLayout), vk::VertexInputRate::eVertex);
 
 		// Attribute descriptions
@@ -519,9 +526,6 @@ public:
 			vkx::descriptorPoolCreateInfo(descriptorPoolSizes0.size(), descriptorPoolSizes0.data(), 1);
 		rscs.descriptorPools->add("forward.scene", descriptorPoolCreateInfo0);
 
-
-
-
 		// matrix data
 		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes1 =
 		{
@@ -531,10 +535,6 @@ public:
 		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo1 =
 			vkx::descriptorPoolCreateInfo(descriptorPoolSizes1.size(), descriptorPoolSizes1.data(), 1);
 		rscs.descriptorPools->add("forward.matrix", descriptorPoolCreateInfo1);
-
-
-
-
 
 		// material data
 		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes2 =
@@ -765,11 +765,8 @@ public:
 		descriptorSetLayouts.push_back(descriptorSetLayout3);
 		//descriptorSetLayouts.push_back(descriptorSetLayout4);
 
-
+		// create pipelineLayout from descriptorSetLayouts
 		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfo = vkx::pipelineLayoutCreateInfo(descriptorSetLayouts.data(), descriptorSetLayouts.size());
-
-		//pipelineLayouts.basic = device.createPipelineLayout(pPipelineLayoutCreateInfo);
-		//vk::PipelineLayout t = device.createPipelineLayout(pPipelineLayoutCreateInfo);
 		rscs.pipelineLayouts->add("forward.basic", pPipelineLayoutCreateInfo);
 
 
@@ -922,21 +919,7 @@ public:
 
 		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfoDeferred =
 			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindingsDeferred.data(), descriptorSetLayoutBindingsDeferred.size());
-
-		//descriptorSetLayoutDeferred = device.createDescriptorSetLayout(descriptorSetLayoutCreateInfoDeferred);
 		rscs.descriptorSetLayouts->add("deferred.deferred", descriptorSetLayoutCreateInfoDeferred);
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1305,13 +1288,8 @@ public:
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/mesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
 		
 		
-		////pipelines.meshes = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
-		////rscs.pipelines->addGraphicsPipeline("forward.meshes", pipelineCache, pipelineCreateInfo);
-		
-		
 		vk::Pipeline meshPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
-		//rscs.pipelines->add("forward.meshes", meshPipeline);
-		rscs.pipelines->resources["forward.meshes"] = meshPipeline;
+		rscs.pipelines->add("forward.meshes", meshPipeline);
 
 
 
@@ -1321,8 +1299,7 @@ public:
 		//pipelines.skinnedMeshes = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
 		//rscs.pipelines->addGraphicsPipeline("forward.skinnedMeshes", pipelineCache, pipelineCreateInfo);
 		vk::Pipeline skinnedMeshPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
-		//rscs.pipelines->add("forward.skinnedMeshes", skinnedMeshPipeline);
-		rscs.pipelines->resources["forward.skinnedMeshes"] = skinnedMeshPipeline;
+		rscs.pipelines->add("forward.skinnedMeshes", skinnedMeshPipeline);
 
 
 
@@ -1410,7 +1387,7 @@ public:
 
 		// fullscreen quad
 		vk::Pipeline deferredPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
-		rscs.pipelines->resources["deferred.deferred"] = deferredPipeline;
+		rscs.pipelines->add("deferred.deferred", deferredPipeline);
 
 
 		// Alpha blended pipeline
@@ -1421,7 +1398,7 @@ public:
 		blendAttachmentState.srcColorBlendFactor = vk::BlendFactor::eOne;
 		blendAttachmentState.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha;
 		vk::Pipeline deferredPipelineBlending = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)[0];
-		rscs.pipelines->resources["deferred.deferred.blending"] = deferredPipelineBlending;
+		rscs.pipelines->add("deferred.deferred.blending", deferredPipelineBlending);
 		blendAttachmentState.blendEnable = VK_FALSE;
 
 
@@ -1429,17 +1406,12 @@ public:
 		// Debug display pipeline
 		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/debug.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/debug.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		//pipelinesDeferred.debug = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
 		vk::Pipeline debugPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
-		rscs.pipelines->resources["deferred.debug"] = debugPipeline;
+		rscs.pipelines->add("deferred.debug", debugPipeline);
 
 
 
 		// OFFSCREEN PIPELINES:
-
-		// Offscreen pipeline
-		//shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/mrt.vert.spv", vk::ShaderStageFlagBits::eVertex);
-		//shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/mrt.frag.spv", vk::ShaderStageFlagBits::eFragment);
 
 		// Separate render pass
 		pipelineCreateInfo.renderPass = offscreen.renderPass;
@@ -1459,15 +1431,12 @@ public:
 		colorBlendState.attachmentCount = blendAttachmentStates.size();
 		colorBlendState.pAttachments = blendAttachmentStates.data();
 
-		//pipelinesDeferred.offscreen = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo, nullptr)[0];
-
-
 		// Offscreen pipeline
 		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/mrtMesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/mrtMesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		//pipelinesDeferred.meshes = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
 		vk::Pipeline deferredMeshPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
-		rscs.pipelines->resources["deferred.meshes"] = deferredMeshPipeline;
+		rscs.pipelines->add("deferred.meshes", deferredMeshPipeline);
+
 
 	}
 
@@ -1602,36 +1571,6 @@ public:
 
 	// Update fragment shader light position uniform block
 	void updateUniformBufferDeferredLights() {
-		//// White light from above
-		//uboFSLights.lights[0].position = glm::vec4(0.0f, 4.0f*sin(globalP), 3.0f, 0.0f);
-		//uboFSLights.lights[0].color = glm::vec4(1.5f);
-		//uboFSLights.lights[0].radius = 15.0f;
-		//uboFSLights.lights[0].linearFalloff = 0.3f;
-		//uboFSLights.lights[0].quadraticFalloff = 0.4f;
-		//// Red light
-		//uboFSLights.lights[1].position = glm::vec4(2.0f*cos(globalP) - 2.0f, 0.0f, 0.0f, 0.0f);
-		//uboFSLights.lights[1].color = glm::vec4(1.5f, 0.0f, 0.0f, 0.0f);
-		//uboFSLights.lights[1].radius = 15.0f;
-		//uboFSLights.lights[1].linearFalloff = 0.4f;
-		//uboFSLights.lights[1].quadraticFalloff = 0.3f;
-		//// Blue light
-		//uboFSLights.lights[2].position = glm::vec4(2.0f, 1.0f, 0.0f, 0.0f);
-		//uboFSLights.lights[2].color = glm::vec4(0.0f, 0.0f, 2.5f, 0.0f);
-		//uboFSLights.lights[2].radius = 10.0f;
-		//uboFSLights.lights[2].linearFalloff = 0.45f;
-		//uboFSLights.lights[2].quadraticFalloff = 0.35f;
-		//// Belt glow
-		//uboFSLights.lights[3].position = glm::vec4(0.0f, 0.7f, 0.5f, 0.0f);
-		//uboFSLights.lights[3].color = glm::vec4(2.5f, 2.5f, 0.0f, 0.0f);
-		//uboFSLights.lights[3].radius = 5.0f;
-		//uboFSLights.lights[3].linearFalloff = 8.0f;
-		//uboFSLights.lights[3].quadraticFalloff = 6.0f;
-		//// Green light
-		//uboFSLights.lights[4].position = glm::vec4(3.0f, 2.0f, 1.0f, 0.0f);
-		//uboFSLights.lights[4].color = glm::vec4(0.0f, 1.5f, 0.0f, 0.0f);
-		//uboFSLights.lights[4].radius = 10.0f;
-		//uboFSLights.lights[4].linearFalloff = 0.8f;
-		//uboFSLights.lights[4].quadraticFalloff = 0.6f;
 
 		int n = 0;
 		int w = 8;
@@ -1683,28 +1622,16 @@ public:
 
 	void start() {
 
-
+		// add plane model
 		auto planeModel = std::make_shared<vkx::Model>(&context, &assetManager);
 		planeModel->load(getAssetPath() + "models/plane.fbx");
 		planeModel->createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 		models.push_back(planeModel);
 
-
-		//auto otherModel2 = std::make_shared<vkx::Model>(&context, &assetManager);
-		//otherModel2->load(getAssetPath() + "models/sponza.dae");
-		//otherModel2->createMeshes(meshVertexLayout, 0.05f, VERTEX_BUFFER_BIND_ID);
-		//models.push_back(otherModel2);
-
-
-		//meshes.push_back(skyboxMesh);
-		//meshes.push_back(planeMesh);
-		//meshes.push_back(otherMesh1);
-
 		
 		
 
 		for (int i = 0; i < 10; ++i) {
-
 			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			testModel->load(getAssetPath() + "models/cube.fbx");
 			testModel->createMeshes(meshVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
@@ -1712,18 +1639,6 @@ public:
 			models.push_back(testModel);
 		}
 
-
-
-
-
-		// important!
-		//http://stackoverflow.com/questions/6624819/c-vector-of-objects-vs-vector-of-pointers-to-objects
-
-		//auto skinnedMesh1 = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
-		//skinnedMesh1->load(getAssetPath() + "models/goblin.dae");
-		//skinnedMesh1->createSkinnedMeshBuffer(skinnedMeshVertexLayout, 0.0005f);
-
-		//skinnedMeshes.push_back(skinnedMesh1);
 
 		for (int i = 0; i < 1; ++i) {
 
@@ -1735,84 +1650,28 @@ public:
 		}
 
 		auto physicsPlane = std::make_shared<vkx::PhysicsObject>(&physicsManager, models[0]);
-
-
-
-
-		auto physicsBall = std::make_shared<vkx::PhysicsObject>(&physicsManager, models[1]);
-
-		//the ground is a cube of side 100 at position y = -56.
-		//the sphere will hit it at y = -6, with center at -5
-		{
-			btCollisionShape* groundShape = new btBoxShape(btVector3(btScalar(20.), btScalar(20.), btScalar(0.1)));
-
-			this->physicsManager.collisionShapes.push_back(groundShape);
-
-			btTransform groundTransform;
-			groundTransform.setIdentity();
-			groundTransform.setOrigin(btVector3(0, 0, 0));
-
-			btScalar mass(0.);
-
-			//rigidbody is dynamic if and only if mass is non zero, otherwise static
-			bool isDynamic = (mass != 0.f);
-
-			btVector3 localInertia(0, 0, 0);
-			if (isDynamic) {
-				groundShape->calculateLocalInertia(mass, localInertia);
-			}
-
-			//using motionstate is optional, it provides interpolation capabilities, and only synchronizes 'active' objects
-			btDefaultMotionState* myMotionState = new btDefaultMotionState(groundTransform);
-			btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, groundShape, localInertia);
-			btRigidBody* body = new btRigidBody(rbInfo);
-
-			physicsPlane->rigidBody = body;
-
-			//add the body to the dynamics world
-			this->physicsManager.dynamicsWorld->addRigidBody(body);
-		}
-
-		{
-			//create a dynamic rigidbody
-
-			//btCollisionShape* colShape = new btBoxShape(btVector3(1,1,1));
-			btCollisionShape* colShape = new btSphereShape(btScalar(1.));
-			this->physicsManager.collisionShapes.push_back(colShape);
-
-			/// Create Dynamic Objects
-			btTransform startTransform;
-			startTransform.setIdentity();
-
-			btScalar	mass(1.f);
-
-			//rigidbody is dynamic if and only if mass is non zero, otherwise static
-			bool isDynamic = (mass != 0.f);
-
-			btVector3 localInertia(0, 0, 0);
-			if (isDynamic) {
-				colShape->calculateLocalInertia(mass, localInertia);
-
-				startTransform.setOrigin(btVector3(0, 0, 10));
-
-				//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
-				btDefaultMotionState* myMotionState = new btDefaultMotionState(startTransform);
-				btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, colShape, localInertia);
-				btRigidBody* body = new btRigidBody(rbInfo);
-
-				physicsBall->rigidBody = body;
-
-				this->physicsManager.dynamicsWorld->addRigidBody(body);
-
-			}
-		}
-
+		btCollisionShape* boxShape = new btBoxShape(btVector3(btScalar(20.), btScalar(20.), btScalar(0.1)));
+		physicsPlane->createRigidBody(boxShape, 0.0f);
+		//btTransform t;
+		//t.setOrigin(btVector3(0., 0., 0.));
+		//physicsPlane->rigidBody->setWorldTransform(t);
 		physicsObjects.push_back(physicsPlane);
-		physicsObjects.push_back(physicsBall);
+
+
+		//auto physicsBall = std::make_shared<vkx::PhysicsObject>(&physicsManager, models[1]);
+		//btCollisionShape* sphereShape = new btSphereShape(btScalar(1.));
+		//physicsBall->createRigidBody(sphereShape, 1.0f);
+		//btTransform t2;
+		//t2.setOrigin(btVector3(0., 0., 10.));
+		//physicsBall->rigidBody->setWorldTransform(t2);
+		//physicsObjects.push_back(physicsBall);
 
 
 
 
+
+
+		// deferred
 
 		auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
 		sponzaModel->load(getAssetPath() + "models/sponza.dae");
@@ -1820,12 +1679,14 @@ public:
 		sponzaModel->rotateWorldX(PI/2.0);
 		modelsDeferred.push_back(sponzaModel);
 
+		//// add plane model
+		//auto planeModel2 = std::make_shared<vkx::Model>(&context, &assetManager);
+		//planeModel2->load(getAssetPath() + "models/plane.fbx");
+		//planeModel2->createMeshes(deferredVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		//modelsDeferred.push_back(planeModel2);
 
-
-
-		// deferred
+		
 		for (int i = 0; i < 6; ++i) {
-
 			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			testModel->load(getAssetPath() + "models/monkey.fbx");
 			testModel->createMeshes(deferredVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
@@ -1841,8 +1702,8 @@ public:
 
 
 
-		// after any model loading with materials has occurred, updateMaterialBuffer() must be called
-		// *after any material loading
+		// after any loading with materials has occurred, updateMaterialBuffer() must be called
+		// to update texture descriptor sets and sync
 		updateMaterialBuffer();
 
 	}
@@ -1856,6 +1717,9 @@ public:
 
 
 	void updateWorld() {
+
+		updateDraw = false;
+		updateOffscreen = false;
 
 
 		// z-up translations
@@ -1958,22 +1822,65 @@ public:
 			toggleDebugDisplay();
 		}
 
-
+		if (keyStates.p) {
+			//buildOffscreenCommandBuffer();
+			updateDraw = true;
+			updateOffscreen = true;
+		}
 
 
 
 		if (keyStates.space) {
-			physicsObjects[1]->rigidBody->activate();
+			//physicsObjects[1]->rigidBody->activate();
 			//physicsObjects[1]->rigidBody->setLinearVelocity(btVector3(0.0f, 0.0f, 12.0f));
-			physicsObjects[1]->rigidBody->applyCentralForce(btVector3(0.0f, sin(globalP)*0.1f, 0.05f));
+			//physicsObjects[1]->rigidBody->applyCentralForce(btVector3(0.0f, sin(globalP)*0.1f, 0.05f));
+		
+		
+		
+			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
+			testModel->load(getAssetPath() + "models/monkey.fbx");
+			testModel->createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+			models.push_back(testModel);
+			//testModel->createMeshes(deferredVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+			//modelsDeferred.push_back(testModel);
+
+
+
+			auto physicsBall = std::make_shared<vkx::PhysicsObject>(&physicsManager, testModel);
+			btCollisionShape* sphereShape = new btSphereShape(btScalar(1.));
+			physicsBall->createRigidBody(sphereShape, 1.0f);
+			btTransform t;
+			t.setOrigin(btVector3(0., 0., 10.));
+			physicsBall->rigidBody->setWorldTransform(t);
+			physicsObjects.push_back(physicsBall);
+			
+		
+		
+		
+			//const char* fileName = "teddy.obj";//sphere8.obj";//sponza_closed.obj";//sphere8.obj";
+			//char relativeFileName[1024];
+			//if (b3ResourcePath::findResourcePath(fileName, relativeFileName, 1024)) {
+			//	char pathPrefix[1024];
+			//	b3FileUtils::extractPath(relativeFileName, pathPrefix, 1024);
+			//}
+			//GLInstanceGraphicsShape* glmesh = LoadMeshFromObj(relativeFileName, "");
+			//printf("[INFO] Obj loaded: Extracted %d verticed from obj file [%s]\n", glmesh->m_numvertices, fileName);
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
 		}
 
 		camera.updateViewMatrix();
 		//// todo: definitely remove this from here
-		updateUniformBuffersScreen();
-		updateSceneBufferDeferred();
-		updateMatrixBufferDeferred();
-		updateUniformBufferDeferredLights();
+
 
 		if (!camera.isFirstPerson) {
 			camera.followOpts.point = models[1]->transform.translation;
@@ -2007,9 +1914,13 @@ public:
 
 		if (keyStates.y) {
 			fullDeferred = !fullDeferred;
+			updateDraw = true;
+			updateOffscreen = true;
+
 		}
 
 
+		
 
 
 
@@ -2027,45 +1938,28 @@ public:
 
 
 
-	}
 
 
 
 
 
 
-	void updatePhysics() {
-		//this->physicsManager.dynamicsWorld->stepSimulation(1.f / 60.f, 10);
-		this->physicsManager.dynamicsWorld->stepSimulation(1.f / (frameTimer*1000.0f), 10);
 
-		for (int i = 0; i < this->physicsObjects.size(); ++i) {
-			this->physicsObjects[i]->sync();
+
+
+
+
+		if (skinnedMeshes.size() > 0) {
+			glm::vec3 point = skinnedMeshes[0]->transform.translation;
+			skinnedMeshes[0]->setTranslation(glm::vec3(point.x, point.y, 1.0f));
+			skinnedMeshes[0]->translateLocal(glm::vec3(0.0f, -0.024f, 0.0f));
+			skinnedMeshes[0]->rotateLocalZ(0.014f);
 		}
-	}
+		uboScene.lightPos = glm::vec4(cos(globalP), 4.0f, cos(globalP)+3.0f, 1.0f);
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-	void updateDrawCommandBuffer(const vk::CommandBuffer &cmdBuffer) {
-
-
-
-
-
-
-
-		cmdBuffer.setViewport(0, vkx::viewport(size));
-		cmdBuffer.setScissor(0, vkx::rect2D(size));
+		globalP += 0.005f;
 
 
 
@@ -2085,55 +1979,37 @@ public:
 			}
 
 			for (int i = 0; i < skinnedMeshes.size(); ++i) {
-				skinnedMeshes[i]->boneIndex = i;
+				skinnedMeshes[i]->boneIndex = i;// todo: fix
 			}
 
 
 			// uses matrix indices directly after skinnedMeshes' indices
 			for (int i = 0; i < modelsDeferred.size(); ++i) {
-				modelsDeferred[i]->matrixIndex = models.size() + skinnedMeshes.size() + i;
+				modelsDeferred[i]->matrixIndex = models.size() + skinnedMeshes.size() + i;// todo: figure this out
 			}
 
-			for (int i = 0; i < skinnedMeshesDeferred.size(); ++i) {
-				skinnedMeshesDeferred[i]->boneIndex = skinnedMeshes.size() + i;
-			}
-		}
-
-		globalP += 0.005f;
-
-		for (int i = 2; i < models.size(); ++i) {
-			models[i]->setTranslation(glm::vec3((2.0f*i)-(models.size()), 0.0f, sin(globalP*i) + 2.0f));
-		}
-
-		// todo: move this
-		for (int i = 0; i < modelsDeferred.size(); ++i) {
-			modelsDeferred[i]->setTranslation(glm::vec3((2.0f*i) - (modelsDeferred.size()), 0.0f, sin(globalP*i) + 2.0f));
+			//for (int i = 0; i < skinnedMeshesDeferred.size(); ++i) {
+			//	skinnedMeshesDeferred[i]->boneIndex = models.size() + skinnedMeshes.size() + modelsDeferred.size() + i + 1;
+			//}
 		}
 
 
-		//for (int i = 2; i < 50; ++i) {
-		//	int off = i*5;
-		//	for (int j = 0; j < 5; ++j) {
-		//		int n = j + off;
-		//		models[n]->setTranslation(glm::vec3((2.0f*i) - (models.size()), 0.0f, sin(globalP*i) + 2.0f));
-		//	}
-		//}
 
 
 
-		if (skinnedMeshes.size() > 0) {
-			//skinnedMeshes[0]->setTranslation(glm::vec3(2.0f, sin(globalP), 1.0f));
-
-			glm::vec3 point = skinnedMeshes[0]->transform.translation;
-			skinnedMeshes[0]->setTranslation(glm::vec3(point.x, point.y, 1.0f));
-			skinnedMeshes[0]->translateLocal(glm::vec3(0.0f, -0.024f, 0.0f));
-			skinnedMeshes[0]->rotateLocalZ(0.014f);
-		}
 
 
-		//uboScene.lightPos = glm::vec3(cos(globalP), 4.0f, cos(globalP));
-		uboScene.lightPos = glm::vec4(cos(globalP), 4.0f, cos(globalP)+3.0f, 1.0f);
-		//uboScene.lightPos = glm::vec3(1.0f, -2.0f, 4.0/**sin(globalP*10.0f)*/+4.0);
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2174,6 +2050,120 @@ public:
 		updateMatrixBuffer();
 		updateMaterialBuffer();
 		updateBoneBuffer();
+
+
+
+		updateUniformBuffersScreen();
+		updateSceneBufferDeferred();
+		updateMatrixBufferDeferred();
+		updateUniformBufferDeferredLights();
+
+
+		if (models.size() != lastSizes.models) {
+			updateDraw = true;
+		}
+		if (skinnedMeshes.size() != lastSizes.skinnedMeshes) {
+			updateDraw = true;
+		}
+
+		lastSizes.models = models.size();
+		lastSizes.skinnedMeshes = skinnedMeshes.size();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	}
+
+
+
+
+
+
+	void updatePhysics() {
+		//this->physicsManager.dynamicsWorld->stepSimulation(1.f / 60.f, 10);
+		this->physicsManager.dynamicsWorld->stepSimulation(1.f / (frameTimer*1000.0f), 10);
+
+		for (int i = 0; i < this->physicsObjects.size(); ++i) {
+			this->physicsObjects[i]->sync();
+		}
+	}
+
+
+
+
+
+
+
+
+	void updateCommandBuffers() {
+
+		if (updateDraw) {
+			// record / update draw command buffers
+			updateDrawCommandBuffers();
+		}
+
+		if (updateOffscreen) {
+			buildOffscreenCommandBuffer();
+		}
+
+	}
+
+
+
+
+
+	void updateDrawCommandBuffer(const vk::CommandBuffer &cmdBuffer) {
+
+
+
+
+
+
+
+		cmdBuffer.setViewport(0, vkx::viewport(size));
+		cmdBuffer.setScissor(0, vkx::rect2D(size));
+
+
+
+
+
+		
+
+		/*for (int i = 2; i < 5; ++i) {
+			models[i]->setTranslation(glm::vec3((2.0f*i)-(models.size()), 0.0f, sin(globalP*i) + 2.0f));
+		}*/
+
+		// todo: move this
+		/*for (int i = 2; i < 5; ++i) {
+			modelsDeferred[i]->setTranslation(glm::vec3((2.0f*i) - (modelsDeferred.size()), 0.0f, sin(globalP*i) + 2.0f));
+		}*/
+
+
+		//for (int i = 2; i < 50; ++i) {
+		//	int off = i*5;
+		//	for (int j = 0; j < 5; ++j) {
+		//		int n = j + off;
+		//		models[n]->setTranslation(glm::vec3((2.0f*i) - (models.size()), 0.0f, sin(globalP*i) + 2.0f));
+		//	}
+		//}
+
+
+
+
+
+
+
+
 
 		//updateTextOverlay();
 
@@ -2507,8 +2497,8 @@ public:
 				offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.offscreen"), setNum, rscs.descriptorSets->get("deferred.scene"), nullptr);
 
 
-				uint32_t offset1 = model->matrixIndex * alignedMatrixSize;
-				//uint32_t offset1 = model->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
+				//uint32_t offset1 = model->matrixIndex * alignedMatrixSize;
+				uint32_t offset1 = model->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
 				setNum = 1;
 				//offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.offscreen, setNum, 1, &descriptorSets[setNum], 1, &offset1);
 				offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.offscreen"), setNum, 1, &rscs.descriptorSets->get("deferred.matrix"), 1, &offset1);
@@ -2666,10 +2656,10 @@ public:
 				vk::Format::eR8G8B8A8Unorm
 			} };
 
-		//vulkanApp::prepare();
-		//offscreen.prepare();
+		vulkanApp::prepare();
+		offscreen.prepare();
 
-		OffscreenExampleBase::prepare();
+		//OffscreenExampleBase::prepare();
 
 
 
@@ -2694,7 +2684,7 @@ public:
 
 		start();
 
-
+		updateWorld();
 		updateDrawCommandBuffers();
 		buildOffscreenCommandBuffer();
 

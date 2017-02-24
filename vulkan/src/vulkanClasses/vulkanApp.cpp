@@ -805,12 +805,12 @@ void vulkanApp::renderLoop() {
 
 
 		fpsTimer += (float)tFrameTime.count();
-		if (fpsTimer > 1000.0f) {
-			lastFPS = frameCounter;
+		//if (fpsTimer > 1000.0f) {
+			//lastFPS = frameCounter;
 			updateTextOverlay();
 			fpsTimer = 0.0f;
 			frameCounter = 0;
-		}
+		//}
 
 		// start of frame
 		tFrameStart = std::chrono::high_resolution_clock::now();
@@ -826,8 +826,12 @@ void vulkanApp::renderLoop() {
 		updatePhysics();
 
 
+		updateCommandBuffers();
+
 		// record / update draw command buffers
-		updateDrawCommandBuffers();
+		//updateDrawCommandBuffers();
+
+		//buildOffscreenCommandBuffer();
 
 		// render
 		render();
