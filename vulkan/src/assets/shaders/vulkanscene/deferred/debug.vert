@@ -5,6 +5,7 @@
 
 layout (location = 0) in vec3 inPos;
 layout (location = 1) in vec2 inUV;
+
 layout (location = 3) in vec3 inNormal;
 
 layout (set = 3, binding = 0) uniform UBO 

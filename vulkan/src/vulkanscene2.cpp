@@ -22,7 +22,7 @@
 // Maximum number of bones per vertex
 #define MAX_BONES_PER_VERTEX 4
 // Maximum number of skinned meshes (by 65k uniform limit)
-#define MAX_SKINNED_MESHES 4
+#define MAX_SKINNED_MESHES 10
 // Texture properties
 #define TEX_DIM 1024
 
@@ -131,7 +131,6 @@ public:
 	std::vector<std::shared_ptr<vkx::PhysicsObject>> physicsObjects;
 
 	struct {
-		vkx::MeshBuffer example;
 		vkx::MeshBuffer quad;
 	} meshBuffers;
 
@@ -320,21 +319,7 @@ public:
 
 
 		// todo: move this somewhere else
-		// it doesn't need to be here
 		unsigned int alignment = (uint32_t)context.deviceProperties.limits.minUniformBufferOffsetAlignment;
-		size_t uboAlignment = context.deviceProperties.limits.minUniformBufferOffsetAlignment;
-
-
-		//dynamicAlignment = (sizeof(glm::mat4) / uboAlignment) * uboAlignment + ((sizeof(glm::mat4) % uboAlignment) > 0 ? uboAlignment : 0);
-		//dynamicAlignment = (sizeof(MatrixNode) / uboAlignment) * uboAlignment + ((sizeof(MatrixNode) % uboAlignment) > 0 ? uboAlignment : 0);
-
-
-		// todo: fix
-		//size_t bufferSize = 100 * dynamicAlignment;
-		//MatrixNode2.model = (glm::mat4*)alignedAlloc(bufferSize, dynamicAlignment);
-		//modelMatrices = (glm::mat4*)alignedAlloc(bufferSize, dynamicAlignment);
-		//modelMatrices = (MatrixNode*)alignedAlloc(bufferSize, dynamicAlignment);
-
 
 		alignedMatrixSize = (unsigned int)(alignedSize(alignment, sizeof(MatrixNode)));
 		alignedMaterialSize = (unsigned int)(alignedSize(alignment, sizeof(vkx::MaterialProperties)));
@@ -568,20 +553,6 @@ public:
 
 
 
-		//// bone data
-		//std::vector<vk::DescriptorPoolSize> descriptorPoolSizes55 =
-		//{
-		//	vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 1),// mostly static data
-		//};
-
-		//vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo55 =
-		//	vkx::descriptorPoolCreateInfo(descriptorPoolSizes55.size(), descriptorPoolSizes55.data(), 1);
-		//rscs.descriptorPools->add("forward.bones", descriptorPoolCreateInfo55);
-
-
-
-
-
 
 		/* DEFERRED */
 
@@ -591,7 +562,7 @@ public:
 		// scene data
 		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes5 =
 		{
-			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 1),// mostly static data
+			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 2),// mostly static data
 		};
 
 		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo5 =
@@ -662,7 +633,6 @@ public:
 
 		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo0 =
 			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings0.data(), descriptorSetLayoutBindings0.size());
-
 		rscs.descriptorSetLayouts->add("forward.scene", descriptorSetLayoutCreateInfo0);
 
 		// descriptor set layout 1
@@ -678,7 +648,6 @@ public:
 
 		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo1 =
 			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings1.data(), descriptorSetLayoutBindings1.size());
-
 		rscs.descriptorSetLayouts->add("forward.matrix", descriptorSetLayoutCreateInfo1);
 
 		// descriptor set layout 2
@@ -694,7 +663,6 @@ public:
 
 		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo2 =
 			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings2.data(), descriptorSetLayoutBindings2.size());
-
 		rscs.descriptorSetLayouts->add("forward.material", descriptorSetLayoutCreateInfo2);
 
 
@@ -716,7 +684,6 @@ public:
 
 		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo3 =
 			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings3.data(), descriptorSetLayoutBindings3.size());
-
 		rscs.descriptorSetLayouts->add("forward.textures", descriptorSetLayoutCreateInfo3);
 		this->assetManager.materialDescriptorSetLayout = rscs.descriptorSetLayouts->getPtr("forward.textures");
 
@@ -811,11 +778,16 @@ public:
 				vk::DescriptorType::eUniformBuffer,
 				vk::ShaderStageFlagBits::eVertex,
 				0),// binding 0
+
+			// Set 0: Binding 1: Vertex shader uniform buffer// bone data
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eUniformBuffer,
+				vk::ShaderStageFlagBits::eVertex,
+				1),// binding 1
 		};
 
 		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo5 =
 			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings5.data(), descriptorSetLayoutBindings5.size());
-
 		rscs.descriptorSetLayouts->add("deferred.scene", descriptorSetLayoutCreateInfo5);
 
 
@@ -879,9 +851,6 @@ public:
 
 
 		/* deferred ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-		// todo:
-		// this set layout could just be set = 5 for the above layout
-		// rather than being an entire pipeline layout
 
 		// descriptor set layout for full screen quad // deferred pass
 
@@ -959,7 +928,7 @@ public:
 		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfoDeferred = vkx::pipelineLayoutCreateInfo(descriptorSetLayoutsDeferred.data(), descriptorSetLayoutsDeferred.size());
 
 		// todo:
-		// deferred render pass, I should combine this with the above pipeline layout
+		// deferred render pass, I should combine this with the above pipeline layout?
 
 		rscs.pipelineLayouts->add("deferred.deferred", pPipelineLayoutCreateInfoDeferred);
 
@@ -1195,6 +1164,13 @@ public:
 				vk::DescriptorType::eUniformBuffer,
 				0,
 				&uniformDataDeferred.vsOffscreen.descriptor),
+
+			// Set 0: Binding 1: bones uniform buffer
+			vkx::writeDescriptorSet(
+				rscs.descriptorSets->get("deferred.scene"),// descriptor set 0
+				vk::DescriptorType::eUniformBuffer,
+				1,// binding 1
+				&uniformData.bonesVS.descriptor),
 
 
 			// Set 1: Binding 0: Vertex shader uniform buffer
@@ -1437,6 +1413,12 @@ public:
 		vk::Pipeline deferredMeshPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
 		rscs.pipelines->add("deferred.meshes", deferredMeshPipeline);
 
+		// Offscreen pipeline
+		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/mrtSkinnedMesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/mrtSkinnedMesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
+		vk::Pipeline deferredSkinnedMeshPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		rscs.pipelines->add("deferred.skinnedMeshes", deferredSkinnedMeshPipeline);
+
 
 	}
 
@@ -1641,7 +1623,7 @@ public:
 		}
 
 
-		for (int i = 0; i < 0; ++i) {
+		for (int i = 0; i < 2; ++i) {
 
 			auto testSkinnedMesh = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
 			testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");
@@ -1674,11 +1656,13 @@ public:
 
 		// deferred
 
-		auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
-		sponzaModel->load(getAssetPath() + "models/sponza.dae");
-		sponzaModel->createMeshes(deferredVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
-		sponzaModel->rotateWorldX(PI/2.0);
-		modelsDeferred.push_back(sponzaModel);
+		if (true) {
+			auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
+			sponzaModel->load(getAssetPath() + "models/sponza.dae");
+			sponzaModel->createMeshes(deferredVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
+			sponzaModel->rotateWorldX(PI / 2.0);
+			modelsDeferred.push_back(sponzaModel);
+		}
 
 		//// add plane model
 		//auto planeModel2 = std::make_shared<vkx::Model>(&context, &assetManager);
@@ -1693,6 +1677,16 @@ public:
 			testModel->createMeshes(deferredVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
 
 			modelsDeferred.push_back(testModel);
+		}
+
+
+		for (int i = 0; i < 2; ++i) {
+
+			auto testSkinnedMesh = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
+			testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");
+			testSkinnedMesh->createSkinnedMeshBuffer(skinnedMeshVertexLayout, 0.0005f);
+
+			//skinnedMeshesDeferred.push_back(testSkinnedMesh);
 		}
 
 
@@ -2097,7 +2091,20 @@ public:
 
 	void updatePhysics() {
 		//this->physicsManager.dynamicsWorld->stepSimulation(1.f / 60.f, 10);
-		this->physicsManager.dynamicsWorld->stepSimulation(1.f / (frameTimer*1000.0f), 10);
+		//this->physicsManager.dynamicsWorld->stepSimulation(1.f / (frameTimer*1000.0f), 10);
+		
+		
+		// get current time
+		auto tNow = std::chrono::high_resolution_clock::now();
+		// the time since the last tick
+		auto tDuration = std::chrono::duration<double, std::milli>(tNow - this->physicsManager.tLastTimeStep);
+		
+		// todo: fix
+		this->physicsManager.dynamicsWorld->stepSimulation(tDuration.count()/1000.0, 10);
+
+
+
+
 
 		for (int i = 0; i < this->physicsObjects.size(); ++i) {
 			this->physicsObjects[i]->sync();
@@ -2520,6 +2527,89 @@ public:
 			}
 
 		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		// SKINNED MESHES:
+
+		// bind skinned mesh pipeline
+		offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.skinnedMeshes"));
+		for (auto &skinnedMesh : skinnedMeshesDeferred) {
+			// bind vertex & index buffers
+			offscreenCmdBuffer.bindVertexBuffers(skinnedMesh->vertexBufferBinding, skinnedMesh->meshBuffer.vertices.buffer, vk::DeviceSize());
+			offscreenCmdBuffer.bindIndexBuffer(skinnedMesh->meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
+
+			// descriptor set #
+			uint32_t setNum;
+
+			// bind scene descriptor set
+			// Set 0: Binding 0:
+			setNum = 0;
+			offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.offscreen"), setNum, rscs.descriptorSets->get("deferred.scene"), nullptr);
+
+			// there is a bone uniform, set: 0, binding: 1
+
+
+			// Set 1: Binding 0:
+			//uint32_t offset1 = skinnedMesh->matrixIndex * alignedMatrixSize;
+			uint32_t offset1 = skinnedMesh->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
+			setNum = 1;
+			offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.offscreen"), setNum, 1, &rscs.descriptorSets->get("deferred.matrix"), 1, &offset1);
+
+			if (lastMaterialName != skinnedMesh->meshBuffer.materialName) {
+				lastMaterialName = skinnedMesh->meshBuffer.materialName;
+				vkx::Material m = this->assetManager.materials.get(skinnedMesh->meshBuffer.materialName);
+
+				// Set 2: Binding: 0
+				//uint32_t offset2 = m.index * alignedMaterialSize;
+				uint32_t offset2 = m.index * static_cast<uint32_t>(alignedMaterialSize);
+				setNum = 2;
+				//offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.material"), 1, &offset2);
+
+				// bind texture:
+				// Set 3: Binding 0:
+				setNum = 3;
+				offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.offscreen"), setNum, m.descriptorSet, nullptr);
+			}
+
+			// bind bone descriptor set
+			//setNum = 0;
+			// Set 0: Binding 1:
+			//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, rscs.descriptorSets->get("forward.bones"), nullptr);
+
+
+			// draw:
+			offscreenCmdBuffer.drawIndexed(skinnedMesh->meshBuffer.indexCount, 1, 0, 0, 0);
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

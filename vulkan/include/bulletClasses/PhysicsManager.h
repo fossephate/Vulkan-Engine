@@ -21,7 +21,7 @@
 #include <glm/gtx/rotate_vector.hpp>
 #include <algorithm>
 
-
+#include <chrono>
 
 
 
@@ -35,6 +35,8 @@ namespace vkx {
 	class PhysicsManager {
 
 		public:
+
+			std::chrono::high_resolution_clock::time_point tLastTimeStep = std::chrono::high_resolution_clock::now();
 
 			//collision configuration contains default setup for memory, collision setup. Advanced users can create their own configuration.
 			btDefaultCollisionConfiguration* collisionConfiguration = nullptr;
