@@ -1294,8 +1294,6 @@ public:
 		// skinned meshes:
 		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/skinnedMesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/skinnedMesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		//pipelines.skinnedMeshes = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
-		//rscs.pipelines->addGraphicsPipeline("forward.skinnedMeshes", pipelineCache, pipelineCreateInfo);
 		vk::Pipeline skinnedMeshPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
 		rscs.pipelines->add("forward.skinnedMeshes", skinnedMeshPipeline);
 
@@ -1680,7 +1678,7 @@ public:
 
 		// deferred
 
-		if (true) {
+		if (!false) {
 			auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			sponzaModel->load(getAssetPath() + "models/sponza.dae");
 			sponzaModel->createMeshes(meshVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
@@ -1842,7 +1840,6 @@ public:
 		}
 
 		if (keyStates.p) {
-			//buildOffscreenCommandBuffer();
 			updateDraw = true;
 			updateOffscreen = true;
 		}
@@ -2516,6 +2513,7 @@ public:
 		renderPassBeginInfo.renderArea.extent.height = offscreen.size.y;
 		renderPassBeginInfo.clearValueCount = clearValues.size();
 		renderPassBeginInfo.pClearValues = clearValues.data();
+		
 
 		offscreenCmdBuffer.begin(cmdBufInfo);
 		offscreenCmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
@@ -2585,7 +2583,6 @@ public:
 				//uint32_t offset1 = model->matrixIndex * alignedMatrixSize;
 				uint32_t offset1 = model->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
 				setNum = 1;
-				//offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.offscreen, setNum, 1, &descriptorSets[setNum], 1, &offset1);
 				offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.offscreen"), setNum, 1, &rscs.descriptorSets->get("deferred.matrix"), 1, &offset1);
 
 
@@ -2819,6 +2816,8 @@ public:
 
 		vulkanApp::prepare();
 		offscreen.prepare();
+
+		offscreen.depthFinalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 
 		//OffscreenExampleBase::prepare();
 

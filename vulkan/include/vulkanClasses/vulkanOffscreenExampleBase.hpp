@@ -120,9 +120,9 @@ namespace vkx {
 					depthAttachment.format = depthFormat;
 					depthAttachment.loadOp = vk::AttachmentLoadOp::eClear;
 					// We might be using the depth attacment for something, so preserve it if it's final layout is not undefined
-					depthAttachment.storeOp = depthFinalLayout == vk::ImageLayout::eUndefined ? vk::AttachmentStoreOp::eDontCare : vk::AttachmentStoreOp::eStore;
+					depthAttachment.storeOp = this->depthFinalLayout == vk::ImageLayout::eUndefined ? vk::AttachmentStoreOp::eDontCare : vk::AttachmentStoreOp::eStore;
 					depthAttachment.initialLayout = vk::ImageLayout::eUndefined;
-					depthAttachment.finalLayout = depthFinalLayout;
+					depthAttachment.finalLayout = this->depthFinalLayout;
 					attachments.push_back(depthAttachment);
 					depthAttachmentReference.attachment = attachments.size() - 1;
 					depthAttachmentReference.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
