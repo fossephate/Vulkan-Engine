@@ -1831,18 +1831,22 @@ public:
 			//}
 		}
 
-		if (keyStates.t) {
+		if (keyStates.onKeyDown(&keyStates.t)) {
 			camera.isFirstPerson = !camera.isFirstPerson;
 		}
 
-		if (keyStates.r) {
+		if (keyStates.onKeyDown(&keyStates.r)) {
 			toggleDebugDisplay();
 		}
 
-		if (keyStates.p) {
+		if (keyStates.onKeyDown(&keyStates.p)) {
 			updateDraw = true;
 			updateOffscreen = true;
 		}
+
+
+
+
 
 
 
@@ -1938,7 +1942,7 @@ public:
 			settings.fpsCap += 0.2f;
 		}
 
-		if (keyStates.y) {
+		if (keyStates.onKeyDown(&keyStates.y)) {
 			fullDeferred = !fullDeferred;
 			updateDraw = true;
 			updateOffscreen = true;

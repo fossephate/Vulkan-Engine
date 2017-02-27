@@ -239,6 +239,49 @@ namespace vkx
 			CreateImageResult depthStencil;
 
 			struct {
+
+				std::map<bool*, bool> keyDownMap;
+				std::map<bool*, bool> keyUpMap;
+
+
+				bool onKeyDown(bool *state) {
+					bool toReturn = false;
+					// if the key was previously up
+					if (this->keyDownMap[state] == false) {
+						// if the key was pressed this frame
+						if (*state == true) {
+							this->keyDownMap[state] = true;
+							toReturn = true;
+						}
+					// if the key was previously down
+					} else if (this->keyDownMap[state] == true) {
+						// if the key was unpressed this frame
+						if (*state == false) {
+							this->keyDownMap[state] = false;
+						}
+					}
+					return toReturn;
+				}
+
+				bool onKeyUp(bool *state) {
+					bool toReturn = false;
+					// if the key was previously down
+					if (this->keyUpMap[state] == true) {
+						// if the key was unpressed this frame
+						if (*state == false) {
+							this->keyUpMap[state] = true;
+							toReturn = true;
+						}
+					// if the key was previously up
+					} else if (this->keyUpMap[state] == false) {
+						// if the key was pressed this frame
+						if (*state == true) {
+							this->keyUpMap[state] = false;
+						}
+					}
+					return toReturn;
+				}
+
 				bool w = false;
 				bool s = false;
 				bool a = false;
