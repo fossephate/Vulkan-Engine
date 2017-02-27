@@ -682,6 +682,27 @@ void vulkanApp::updateInputInfo() {
 				case SDLK_t:
 					keyStates.t = state;
 					break;
+				case SDLK_z:
+					keyStates.z = state;
+					break;
+				case SDLK_x:
+					keyStates.x = state;
+					break;
+				case SDLK_c:
+					keyStates.c = state;
+					break;
+				case SDLK_v:
+					keyStates.v = state;
+					break;
+				case SDLK_b:
+					keyStates.b = state;
+					break;
+				case SDLK_n:
+					keyStates.n = state;
+					break;
+				case SDLK_m:
+					keyStates.m = state;
+					break;
 				// another wsadqe
 				case SDLK_i:
 					keyStates.i = state;

@@ -263,6 +263,15 @@ namespace vkx
 				bool y = false;
 				bool p = false;
 
+				bool z = false;
+				bool x = false;
+				bool c = false;
+				bool v = false;
+				bool b = false;
+				bool n = false;
+				bool m = false;
+
+
 				bool minus = false;
 				bool equals = false;
 			} keyStates;

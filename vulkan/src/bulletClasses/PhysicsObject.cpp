@@ -29,7 +29,10 @@ namespace vkx {
 
 		//btCollisionShape* groundShape = new btBoxShape(btVector3(btScalar(20.), btScalar(20.), btScalar(0.1)));
 		// todo: re-use collision shapes from collisionshapes vector
+		//if (this->physicsManager->collisionShapes.size() < 1) {
 		this->physicsManager->collisionShapes.push_back(collisionShape);
+		//}
+		//collisionShape = this->physicsManager->collisionShapes[0];
 
 
 		// set default translation
@@ -53,6 +56,7 @@ namespace vkx {
 
 		// add rigid body to self and physics manager
 		this->addRigidBody(body);
+
 
 
 	}
@@ -80,8 +84,7 @@ namespace vkx {
 
 
 	void PhysicsObject::destroy() {
-
-
+		this->physicsManager->dynamicsWorld->removeRigidBody(this->rigidBody);
 	}
 
 }

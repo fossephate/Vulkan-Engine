@@ -202,11 +202,17 @@ public:
 		std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
 	} vertices;
 
-	struct {
-		vk::PipelineVertexInputStateCreateInfo inputState;
-		std::vector<vk::VertexInputBindingDescription> bindingDescriptions;
-		std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
-	} verticesDeferred;
+	//struct {
+	//	vk::PipelineVertexInputStateCreateInfo inputState;
+	//	std::vector<vk::VertexInputBindingDescription> bindingDescriptions;
+	//	std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
+	//} meshVertices;
+
+	//struct {
+	//	vk::PipelineVertexInputStateCreateInfo inputState;
+	//	std::vector<vk::VertexInputBindingDescription> bindingDescriptions;
+	//	std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
+	//} skinnedMeshVertices;
 
 
 
@@ -326,7 +332,7 @@ public:
 
 		//camera.matrixNodes.projection = glm::perspectiveRH(glm::radians(60.0f), (float)size.width / (float)size.height, 0.0001f, 256.0f);
 
-		title = "Vulkan Demo Scene";
+		title = "Vulkan test";
 	}
 
 	~VulkanExample() {
@@ -397,21 +403,7 @@ public:
 	void prepareVertexDescriptions() {
 
 
-		//struct skinnedMeshVertex {
-		//	glm::vec3 pos;
-		//	glm::vec2 uv;
-		//	glm::vec3 color;
-		//	glm::vec3 normal;
-		//	// Max. four bones per vertex
-		//	float boneWeights[4];
-		//	uint32_t boneIDs[4];
-		//};
-
-		//uint32_t s1 = sizeof(skinnedMeshVertex);
-		//uint32_t s2 = vkx::vertexSize(skinnedMeshVertexLayout);
-
-
-		/* not deferred */
+		// skinned mesh vertex layout
 
 		// Binding description
 		vertices.bindingDescriptions.resize(1);
@@ -449,48 +441,78 @@ public:
 		vertices.inputState.pVertexAttributeDescriptions = vertices.attributeDescriptions.data();
 
 
+		{
+		// mesh vertex layout
+
+		//// Binding description
+		//meshVertices.bindingDescriptions.resize(1);
+		//meshVertices.bindingDescriptions[0] =
+		//	vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, vkx::vertexSize(skinnedMeshVertexLayout), vk::VertexInputRate::eVertex);
+
+		//// Attribute descriptions
+		//// Describes memory layout and shader positions
+		//meshVertices.attributeDescriptions.resize(6);
+		//// Location 0 : Position
+		//meshVertices.attributeDescriptions[0] =
+		//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 0, vk::Format::eR32G32B32Sfloat, 0);
+		//// Location 1 : (UV) Texture coordinates
+		//meshVertices.attributeDescriptions[1] =
+		//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 1, vk::Format::eR32G32Sfloat, sizeof(float) * 3);
+		//// Location 2 : Color
+		//meshVertices.attributeDescriptions[2] =
+		//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 2, vk::Format::eR32G32B32Sfloat, sizeof(float) * 5);
+		//// Location 3 : Normal
+		//meshVertices.attributeDescriptions[3] =
+		//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 3, vk::Format::eR32G32B32Sfloat, sizeof(float) * 8);
 
 
 
+		//meshVertices.inputState.vertexBindingDescriptionCount = vertices.bindingDescriptions.size();
+		//meshVertices.inputState.pVertexBindingDescriptions = vertices.bindingDescriptions.data();
+
+		//meshVertices.inputState.vertexAttributeDescriptionCount = vertices.attributeDescriptions.size();
+		//meshVertices.inputState.pVertexAttributeDescriptions = vertices.attributeDescriptions.data();
 
 
-		/* deferred */
+		//// skinned mesh vertex layout
 
-		// Binding description
-		verticesDeferred.bindingDescriptions.resize(1);
-		verticesDeferred.bindingDescriptions[0] =
-			vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, vkx::vertexSize(deferredVertexLayout), vk::VertexInputRate::eVertex);
-			//vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, sizeof(meshVertex), vk::VertexInputRate::eVertex);
+		//// Binding description
+		//skinnedMeshVertices.bindingDescriptions.resize(1);
+		//skinnedMeshVertices.bindingDescriptions[0] =
+		//	vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, vkx::vertexSize(deferredVertexLayout), vk::VertexInputRate::eVertex);
 
-		// Attribute descriptions
-		// Describes memory layout and shader positions
-		verticesDeferred.attributeDescriptions.resize(4);
-		// Location 0 : Position
-		verticesDeferred.attributeDescriptions[0] =
-			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 0, vk::Format::eR32G32B32Sfloat, 0);
-		// Location 1 : (UV) Texture coordinates
-		verticesDeferred.attributeDescriptions[1] =
-			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 1, vk::Format::eR32G32Sfloat, sizeof(float) * 3);
-		// Location 2 : Color
-		verticesDeferred.attributeDescriptions[2] =
-			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 2, vk::Format::eR32G32B32Sfloat, sizeof(float) * 5);
-		// Location 3 : Normal
-		verticesDeferred.attributeDescriptions[3] =
-			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 3, vk::Format::eR32G32B32Sfloat, sizeof(float) * 8);
+		//// Attribute descriptions
+		//// Describes memory layout and shader positions
+		//skinnedMeshVertices.attributeDescriptions.resize(4);
+		//// Location 0 : Position
+		//skinnedMeshVertices.attributeDescriptions[0] =
+		//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 0, vk::Format::eR32G32B32Sfloat, 0);
+		//// Location 1 : (UV) Texture coordinates
+		//skinnedMeshVertices.attributeDescriptions[1] =
+		//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 1, vk::Format::eR32G32Sfloat, sizeof(float) * 3);
+		//// Location 2 : Color
+		//skinnedMeshVertices.attributeDescriptions[2] =
+		//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 2, vk::Format::eR32G32B32Sfloat, sizeof(float) * 5);
+		//// Location 3 : Normal
+		//skinnedMeshVertices.attributeDescriptions[3] =
+		//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 3, vk::Format::eR32G32B32Sfloat, sizeof(float) * 8);
 		//// Location 4 : Bone weights
-		//verticesDeferred.attributeDescriptions[4] =
+		//skinnedMeshVertices.attributeDescriptions[4] =
 		//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 4, vk::Format::eR32G32B32A32Sfloat, sizeof(float) * 11);
 		//// Location 5 : Bone IDs
-		//verticesDeferred.attributeDescriptions[5] =
+		//skinnedMeshVertices.attributeDescriptions[5] =
 		//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 5, vk::Format::eR32G32B32A32Sint, sizeof(float) * 15);
 
 
 
-		verticesDeferred.inputState.vertexBindingDescriptionCount = verticesDeferred.bindingDescriptions.size();
-		verticesDeferred.inputState.pVertexBindingDescriptions = verticesDeferred.bindingDescriptions.data();
+		//skinnedMeshVertices.inputState.vertexBindingDescriptionCount = verticesDeferred.bindingDescriptions.size();
+		//skinnedMeshVertices.inputState.pVertexBindingDescriptions = verticesDeferred.bindingDescriptions.data();
 
-		verticesDeferred.inputState.vertexAttributeDescriptionCount = verticesDeferred.attributeDescriptions.size();
-		verticesDeferred.inputState.pVertexAttributeDescriptions = verticesDeferred.attributeDescriptions.data();
+		//skinnedMeshVertices.inputState.vertexAttributeDescriptionCount = verticesDeferred.attributeDescriptions.size();
+		//skinnedMeshVertices.inputState.pVertexAttributeDescriptions = verticesDeferred.attributeDescriptions.data();
+		}
+
+
 
 	}
 
@@ -1170,7 +1192,7 @@ public:
 				rscs.descriptorSets->get("deferred.scene"),// descriptor set 0
 				vk::DescriptorType::eUniformBuffer,
 				1,// binding 1
-				&uniformData.bonesVS.descriptor),
+				&uniformData.bonesVS.descriptor),// bind to forward descriptor since it's the same
 
 
 			// Set 1: Binding 0: Vertex shader uniform buffer
@@ -1178,7 +1200,7 @@ public:
 				rscs.descriptorSets->get("deferred.matrix"),
 				vk::DescriptorType::eUniformBufferDynamic,
 				0,
-				&uniformDataDeferred.matrixVS.descriptor),
+				&uniformData.matrixVS.descriptor),// bind to forward descriptor since it's the same
 
 			// Set 2: Binding 0: Scene color map
 			vkx::writeDescriptorSet(
@@ -1326,8 +1348,10 @@ public:
 		vk::PipelineColorBlendStateCreateInfo colorBlendState =
 			vkx::pipelineColorBlendStateCreateInfo(1, &blendAttachmentState);
 
-		vk::PipelineDepthStencilStateCreateInfo depthStencilState =
-			vkx::pipelineDepthStencilStateCreateInfo(VK_TRUE, VK_TRUE, vk::CompareOp::eLessOrEqual);
+		vk::PipelineDepthStencilStateCreateInfo depthStencilState;
+		depthStencilState.depthTestEnable = VK_TRUE;
+		depthStencilState.depthWriteEnable = VK_TRUE;
+		depthStencilState.depthCompareOp = vk::CompareOp::eLessOrEqual;
 
 		vk::PipelineViewportStateCreateInfo viewportState =
 			vkx::pipelineViewportStateCreateInfo(1, 1);
@@ -1346,7 +1370,7 @@ public:
 		std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStages;
 
 		vk::GraphicsPipelineCreateInfo pipelineCreateInfo = vkx::pipelineCreateInfo(rscs.pipelineLayouts->get("deferred.deferred"), renderPass);
-		pipelineCreateInfo.pVertexInputState = &verticesDeferred.inputState;
+		pipelineCreateInfo.pVertexInputState = &vertices.inputState;
 		pipelineCreateInfo.pInputAssemblyState = &inputAssemblyState;
 		pipelineCreateInfo.pRasterizationState = &rasterizationState;
 		pipelineCreateInfo.pColorBlendState = &colorBlendState;
@@ -1452,7 +1476,7 @@ public:
 
 	void updateSceneBuffer() {
 
-		camera.updateViewMatrix();
+		//camera.updateViewMatrix();
 
 		uboScene.view = camera.matrices.view;
 		uboScene.projection = camera.matrices.projection;
@@ -1541,7 +1565,7 @@ public:
 	}
 
 	void updateSceneBufferDeferred() {
-		camera.updateViewMatrix();
+		//camera.updateViewMatrix();
 		uboOffscreenVS.projection = camera.matrices.projection;
 		uboOffscreenVS.view = camera.matrices.view;
 		uniformDataDeferred.vsOffscreen.copy(uboOffscreenVS);
@@ -1608,7 +1632,7 @@ public:
 		// add plane model
 		auto planeModel = std::make_shared<vkx::Model>(&context, &assetManager);
 		planeModel->load(getAssetPath() + "models/plane.fbx");
-		planeModel->createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		planeModel->createMeshes(skinnedMeshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 		models.push_back(planeModel);
 
 		
@@ -1617,7 +1641,7 @@ public:
 		for (int i = 0; i < 10; ++i) {
 			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			testModel->load(getAssetPath() + "models/cube.fbx");
-			testModel->createMeshes(meshVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
+			testModel->createMeshes(skinnedMeshVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
 
 			models.push_back(testModel);
 		}
@@ -1659,7 +1683,7 @@ public:
 		if (true) {
 			auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			sponzaModel->load(getAssetPath() + "models/sponza.dae");
-			sponzaModel->createMeshes(deferredVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
+			sponzaModel->createMeshes(meshVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
 			sponzaModel->rotateWorldX(PI / 2.0);
 			modelsDeferred.push_back(sponzaModel);
 		}
@@ -1671,13 +1695,13 @@ public:
 		//modelsDeferred.push_back(planeModel2);
 
 		
-		for (int i = 0; i < 6; ++i) {
-			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
-			testModel->load(getAssetPath() + "models/monkey.fbx");
-			testModel->createMeshes(deferredVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
+		//for (int i = 0; i < 6; ++i) {
+		//	auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
+		//	testModel->load(getAssetPath() + "models/monkey.fbx");
+		//	testModel->createMeshes(meshVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
 
-			modelsDeferred.push_back(testModel);
-		}
+		//	modelsDeferred.push_back(testModel);
+		//}
 
 
 		for (int i = 0; i < 2; ++i) {
@@ -1686,7 +1710,7 @@ public:
 			testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");
 			testSkinnedMesh->createSkinnedMeshBuffer(skinnedMeshVertexLayout, 0.0005f);
 
-			//skinnedMeshesDeferred.push_back(testSkinnedMesh);
+			skinnedMeshesDeferred.push_back(testSkinnedMesh);
 		}
 
 
@@ -1836,7 +1860,7 @@ public:
 			testModel->load(getAssetPath() + "models/monkey.fbx");
 			//testModel->createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 			//models.push_back(testModel);
-			testModel->createMeshes(deferredVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+			testModel->createMeshes(skinnedMeshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 			modelsDeferred.push_back(testModel);
 
 
@@ -1861,17 +1885,30 @@ public:
 			//GLInstanceGraphicsShape* glmesh = LoadMeshFromObj(relativeFileName, "");
 
 			//printf("[INFO] Obj loaded: Extracted %d verticed from obj file [%s]\n", glmesh->m_numvertices, fileName);
-		
-		
-		
+
+
+
 			updateOffscreen = true;
-		
-		
-		
+
+
+
 		}
 
-		camera.updateViewMatrix();
-		//// todo: definitely remove this from here
+		if (keyStates.m) {
+			if (modelsDeferred.size() > 2) {
+				modelsDeferred[modelsDeferred.size() - 1]->destroy();
+				modelsDeferred.pop_back();
+				updateOffscreen = true;
+			}
+		}
+
+		if (keyStates.n) {
+			if (physicsObjects.size() > 2) {
+				physicsObjects[physicsObjects.size() - 1]->destroy();
+				physicsObjects.pop_back();
+				updateOffscreen = true;
+			}
+		}
 
 
 		if (!camera.isFirstPerson) {
@@ -1900,7 +1937,7 @@ public:
 
 		if (keyStates.minus) {
 			settings.fpsCap -= 0.2f;
-		} else if(keyStates.equals) {
+		} else if (keyStates.equals) {
 			settings.fpsCap += 0.2f;
 		}
 
@@ -1912,8 +1949,8 @@ public:
 		}
 
 
-		
 
+		camera.updateViewMatrix();
 
 
 
@@ -1942,6 +1979,7 @@ public:
 
 
 		if (skinnedMeshes.size() > 0) {
+			skinnedMeshes[0]->animationSpeed = 1.0f;
 			glm::vec3 point = skinnedMeshes[0]->transform.translation;
 			skinnedMeshes[0]->setTranslation(glm::vec3(point.x, point.y, 1.0f));
 			skinnedMeshes[0]->translateLocal(glm::vec3(0.0f, -0.024f, 0.0f));
@@ -1954,6 +1992,33 @@ public:
 			skinnedMeshes[1]->setTranslation(glm::vec3(point.x, point.y, 1.0f));
 			skinnedMeshes[1]->translateLocal(glm::vec3(0.0f, -0.024f, 0.0f));
 			skinnedMeshes[1]->rotateLocalZ(-0.014f);
+		}
+
+
+		//if (modelsDeferred.size() > 3) {
+		//	for (int i = 0; i < modelsDeferred.size(); ++i) {
+		//		modelsDeferred[i]->setTranslation(glm::vec3(2 * i, 0.0f, sin(4*globalP*i)));
+		//	}
+		//}
+
+		//for (int i = 0; i < modelsDeferred.size(); ++i) {
+		//	modelsDeferred[i]->setTranslation(glm::vec3((2.0f*i) - (modelsDeferred.size()), 0.0f, sin(globalP*i) + 2.0f));
+		//}
+
+		if (skinnedMeshesDeferred.size() > 0) {
+			skinnedMeshesDeferred[0]->animationSpeed = 1.0f;
+			glm::vec3 point = skinnedMeshesDeferred[0]->transform.translation;
+			skinnedMeshesDeferred[0]->setTranslation(glm::vec3(point.x, point.y, 1.0f));
+			skinnedMeshesDeferred[0]->translateLocal(glm::vec3(0.0f, -0.024f, 0.0f));
+			skinnedMeshesDeferred[0]->rotateLocalZ(0.014f);
+		}
+
+		if (skinnedMeshesDeferred.size() > 1) {
+			skinnedMeshesDeferred[1]->animationSpeed = 5.0f;
+			glm::vec3 point = skinnedMeshesDeferred[1]->transform.translation;
+			skinnedMeshesDeferred[1]->setTranslation(glm::vec3(point.x, point.y, 1.0f));
+			skinnedMeshesDeferred[1]->translateLocal(glm::vec3(0.0f, -0.024f, 0.0f));
+			skinnedMeshesDeferred[1]->rotateLocalZ(0.024f);
 		}
 
 
@@ -1977,20 +2042,27 @@ public:
 				skinnedMeshes[i]->matrixIndex = models.size() + i;
 			}
 
+
+			// uses matrix indices directly after skinnedMeshes' indices
+			for (int i = 0; i < modelsDeferred.size(); ++i) {
+				// added a buffer of 10 so that there is time to update command buffers
+				modelsDeferred[i]->matrixIndex = models.size() + skinnedMeshes.size() + i + 10;// todo: figure this out
+			}
+
+			// uses matrix indices directly after modelsDeferred' indices
+			for (int i = 0; i < skinnedMeshesDeferred.size(); ++i) {
+				// added a buffer of 10 so that there is time to update command buffers
+				skinnedMeshesDeferred[i]->matrixIndex = models.size() + skinnedMeshes.size() + modelsDeferred.size() + i + 10;// todo: figure this out
+			}
+
+			// set bone indices
 			for (int i = 0; i < skinnedMeshes.size(); ++i) {
 				skinnedMeshes[i]->boneIndex = i;// todo: fix
 			}
 
-
-			// uses matrix indices directly after skinnedMeshes' indices
-			for (int i = 0; i < modelsDeferred.size(); ++i) {
-				// added a buffer of 10 so that there is time ti uodate command buffers
-				modelsDeferred[i]->matrixIndex = models.size() + skinnedMeshes.size() + i + 10;// todo: figure this out
+			for (int i = 0; i < skinnedMeshesDeferred.size(); ++i) {
+				skinnedMeshesDeferred[i]->boneIndex = skinnedMeshes.size() + i;
 			}
-
-			//for (int i = 0; i < skinnedMeshesDeferred.size(); ++i) {
-			//	skinnedMeshesDeferred[i]->boneIndex = models.size() + skinnedMeshes.size() + modelsDeferred.size() + i + 1;
-			//}
 		}
 
 
@@ -2041,8 +2113,28 @@ public:
 
 
 
-		for (auto &modelDeferred : modelsDeferred) {
-			matrixNodes[modelDeferred->matrixIndex].model = modelDeferred->transfMatrix;
+		for (auto &model : modelsDeferred) {
+			matrixNodes[model->matrixIndex].model = model->transfMatrix;
+		}
+
+
+		// uboBoneData.bones is a large bone data buffer
+		// use offset to store bone data for each skinnedMesh
+		// basically a manual dynamic buffer
+		for (auto &skinnedMesh : skinnedMeshesDeferred) {
+
+			matrixNodes[skinnedMesh->matrixIndex].model = skinnedMesh->transfMatrix;
+			matrixNodes[skinnedMesh->matrixIndex].boneIndex[0][0] = skinnedMesh->boneIndex;
+
+			// performance optimization needed here:
+			skinnedMesh->update(globalP*skinnedMesh->animationSpeed);// update animation / interpolated
+
+
+			uint32_t boneOffset = skinnedMesh->boneIndex*MAX_BONES;
+
+			for (uint32_t i = 0; i < skinnedMesh->meshLoader->boneData.boneTransforms.size(); ++i) {
+				uboBoneData.bones[boneOffset + i] = glm::transpose(glm::make_mat4(&skinnedMesh->meshLoader->boneData.boneTransforms[i].a1));
+			}
 		}
 
 
@@ -2573,20 +2665,15 @@ public:
 
 				// Set 2: Binding: 0
 				//uint32_t offset2 = m.index * alignedMaterialSize;
-				uint32_t offset2 = m.index * static_cast<uint32_t>(alignedMaterialSize);
-				setNum = 2;
+				//uint32_t offset2 = m.index * static_cast<uint32_t>(alignedMaterialSize);
+				//setNum = 2;
 				//offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.material"), 1, &offset2);
 
 				// bind texture:
-				// Set 3: Binding 0:
-				setNum = 3;
+				// Set 2: Binding 0:
+				setNum = 2;
 				offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.offscreen"), setNum, m.descriptorSet, nullptr);
 			}
-
-			// bind bone descriptor set
-			//setNum = 0;
-			// Set 0: Binding 1:
-			//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, rscs.descriptorSets->get("forward.bones"), nullptr);
 
 
 			// draw:
@@ -2664,11 +2751,19 @@ public:
 	void generateQuads() {
 		// Setup vertices for multiple screen aligned quads
 		// Used for displaying final result and debug 
+		//struct Vertex {
+		//	float pos[3];
+		//	float uv[2];
+		//	float col[3];
+		//	float normal[3];
+		//};
 		struct Vertex {
 			float pos[3];
 			float uv[2];
 			float col[3];
 			float normal[3];
+			float dummy1[4];
+			float dummy2[4];
 		};
 
 		std::vector<Vertex> vertexBuffer;
