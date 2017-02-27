@@ -4,10 +4,19 @@
 #include "btBulletDynamicsCommon.h"
 #include "LinearMath/btVector3.h"
 #include "LinearMath/btAlignedObjectArray.h"
+#include "BulletCollision\CollisionShapes\btShapeHull.h"
+
 //#include "../CommonInterfaces/CommonRigidBodyBase.h"
+//#include ""
 
+//#include "../Utils/b3ResourcePath.h"
+#include "Bullet3Common/b3FileUtils.h"
+#include "Importers/ImportObjDemo/LoadMeshFromObj.h"
+#include "Importers\ImportColladaDemo\LoadMeshFromCollada.h"
+//#include "Importers\ImportMeshUtility\b3ImportMeshUtility.h"
+//#include "GLInstanceGraphicsShape.h"
 
-
+#include "OpenGLWindow\GLInstanceGraphicsShape.h"
 
 
 // glm
@@ -23,6 +32,12 @@
 
 #include <chrono>
 
+
+struct BulletVertex {
+	float xyzw[4];
+	float normal[3];
+	float uv[2];
+};
 
 
 

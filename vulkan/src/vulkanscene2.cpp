@@ -1693,13 +1693,13 @@ public:
 		//modelsDeferred.push_back(planeModel2);
 
 		
-		//for (int i = 0; i < 6; ++i) {
-		//	auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
-		//	testModel->load(getAssetPath() + "models/monkey.fbx");
-		//	testModel->createMeshes(meshVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
+		for (int i = 0; i < 6; ++i) {
+			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
+			testModel->load(getAssetPath() + "models/monkey.fbx");
+			testModel->createMeshes(meshVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
 
-		//	modelsDeferred.push_back(testModel);
-		//}
+			modelsDeferred.push_back(testModel);
+		}
 
 
 		for (int i = 0; i < 2; ++i) {
@@ -1831,20 +1831,29 @@ public:
 			//}
 		}
 
-		if (keyStates.onKeyDown(&keyStates.t)) {
+		//if (keyStates.onKeyDown(&keyStates.t)) {
+		if (keyStates.t) {
 			camera.isFirstPerson = !camera.isFirstPerson;
 		}
 
-		if (keyStates.onKeyDown(&keyStates.r)) {
+		//if (keyStates.onKeyDown(&keyStates.r)) {
+		if (keyStates.r) {
 			toggleDebugDisplay();
 		}
 
-		if (keyStates.onKeyDown(&keyStates.p)) {
+		//if (keyStates.onKeyDown(&keyStates.p)) {
+		if (keyStates.p) {
 			updateDraw = true;
 			updateOffscreen = true;
 		}
 
+		//if (keyStates.onKeyDown(&keyStates.y)) {
+		if (keyStates.y) {
+			fullDeferred = !fullDeferred;
+			updateDraw = true;
+			updateOffscreen = true;
 
+		}
 
 
 
@@ -1854,38 +1863,116 @@ public:
 			//physicsObjects[1]->rigidBody->activate();
 			//physicsObjects[1]->rigidBody->setLinearVelocity(btVector3(0.0f, 0.0f, 12.0f));
 			//physicsObjects[1]->rigidBody->applyCentralForce(btVector3(0.0f, sin(globalP)*0.1f, 0.05f));
+
+
+			auto testModel0 = std::make_shared<vkx::Model>(&context, &assetManager);
+			testModel0->load(getAssetPath() + "models/myCube.dae");
+			testModel0->createMeshes(skinnedMeshVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
+			modelsDeferred.push_back(testModel0);
+
+			auto physicsBall0 = std::make_shared<vkx::PhysicsObject>(&physicsManager, testModel0);
+			btCollisionShape* sphereShape0 = new btSphereShape(btScalar(1.));
+
+			physicsBall0->createRigidBody(sphereShape0, 1.0f);
+			btTransform t0;
+			t0.setOrigin(btVector3(0., 0., 10.));
+			physicsBall0->rigidBody->setWorldTransform(t0);
+			physicsObjects.push_back(physicsBall0);
 		
 		
 		
+
+
+
+
+
+
+
+
+
+
 			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
-			testModel->load(getAssetPath() + "models/monkey.fbx");
+			testModel->load(getAssetPath() + "models/myCube.dae");
 			//testModel->createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 			//models.push_back(testModel);
-			testModel->createMeshes(skinnedMeshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+			testModel->createMeshes(skinnedMeshVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
 			modelsDeferred.push_back(testModel);
 
 
 
-			auto physicsBall = std::make_shared<vkx::PhysicsObject>(&physicsManager, testModel);
-			btCollisionShape* sphereShape = new btSphereShape(btScalar(1.));
-			physicsBall->createRigidBody(sphereShape, 1.0f);
-			btTransform t;
-			t.setOrigin(btVector3(0., 0., 10.));
-			physicsBall->rigidBody->setWorldTransform(t);
-			physicsObjects.push_back(physicsBall);
-			
-		
-		
-		
-			//const char* fileName = "teddy.obj";//sphere8.obj";//sponza_closed.obj";//sphere8.obj";
-			//char relativeFileName[1024];
-			//if (b3ResourcePath::findResourcePath(fileName, relativeFileName, 1024)) {
-			//	char pathPrefix[1024];
-			//	b3FileUtils::extractPath(relativeFileName, pathPrefix, 1024);
-			//}
-			//GLInstanceGraphicsShape* glmesh = LoadMeshFromObj(relativeFileName, "");
+			//auto physicsBall = std::make_shared<vkx::PhysicsObject>(&physicsManager, testModel);
+			//
+			//btConvexHullShape *convexHullShape = new btConvexHullShape();
+			//
+			////for (int i = 0; i < testModel->meshLoader->m_Entries[0].Indices.size(); ++i) {
+			////	uint32_t index = testModel->meshLoader->m_Entries[0].Indices[i];
+			////	glm::vec3 point = testModel->meshLoader->m_Entries[0].Vertices[index].m_pos;
+			////	btVector3 p = btVector3(point.x, point.y, point.z);
+			////	convexHullShape->addPoint(p);
+			////}
 
-			//printf("[INFO] Obj loaded: Extracted %d verticed from obj file [%s]\n", glmesh->m_numvertices, fileName);
+			////for (int i = 0; i < testModel->meshLoader->m_Entries[0].Vertices.size(); ++i) {
+			////	
+			////	glm::vec3 point = testModel->meshLoader->m_Entries[0].Vertices[i].m_pos;
+			////	btVector3 p = btVector3(point.x, point.y, point.z);
+			////	convexHullShape->addPoint(p);
+			////}
+
+			//for (int i = 0; i < testModel->meshLoader->pScene->mMeshes[0]->mNumVertices; ++i) {
+
+			//	aiVector3D point = testModel->meshLoader->pScene->mMeshes[0]->mVertices[0];
+			//	btVector3 p = btVector3(point.x, point.y, point.z);
+			//	convexHullShape->addPoint(p, true);
+			//}
+
+			////convexHullShape->optimizeConvexHull();
+			////convexHullShape->initializePolyhedralFeatures();
+
+
+
+
+
+
+
+			////{
+
+			////	btTriangleMesh trimesh = new btTriangleMesh();
+			////	auto vertices = testModel->meshLoader->m_Entries[0].Vertices;
+			////	auto indices = testModel->meshLoader->m_Entries[0].Indices;
+			////	for (int i = 0; i < testModel->meshLoader->m_Entries[0].Indices.size() * 3; ++i)
+			////	{
+
+
+			////		int index0 = indices[i * 3 + 0];
+			////		int index1 = indices[i * 3 + 1];
+			////		int index2 = indices[i * 3 + 2];
+
+			////		btVector3 vertex0(vertices[index0].m_pos.x, vertices[index0].m_pos.y, vertices[index0].m_pos.z);
+			////		btVector3 vertex1(vertices[index1].m_pos.x, vertices[index1].m_pos.y, vertices[index1].m_pos.z);
+			////		btVector3 vertex2(vertices[index2].m_pos.x, vertices[index2].m_pos.y, vertices[index2].m_pos.z);
+
+			////		trimesh.addTriangle(vertex0, vertex1, vertex2);
+			////	}
+			////	btConvexShape *tmpshape = new btConvexTriangleMeshShape(&trimesh);
+			////	btShapeHull *hull = new btShapeHull(tmpshape);
+			////	btScalar margin = tmpshape->getMargin();
+			////	hull->buildHull(margin);
+			////	tmpshape->setUserPointer(hull);
+			////}
+
+
+
+
+
+
+
+			//btCollisionShape* sphereShape = new btSphereShape(btScalar(1.));
+			//
+			//physicsBall->createRigidBody(convexHullShape, 0.0f);
+			//btTransform t;
+			//t.setOrigin(btVector3(0., 0., 0.));
+			//physicsBall->rigidBody->setWorldTransform(t);
+			//physicsObjects.push_back(physicsBall);
 
 
 
@@ -1942,12 +2029,7 @@ public:
 			settings.fpsCap += 0.2f;
 		}
 
-		if (keyStates.onKeyDown(&keyStates.y)) {
-			fullDeferred = !fullDeferred;
-			updateDraw = true;
-			updateOffscreen = true;
 
-		}
 
 
 

@@ -179,7 +179,7 @@ namespace vkx {
 			};
 
 			struct MeshEntry {
-				uint32_t NumIndices;
+				uint32_t numIndices;
 				uint32_t vertexBase;// offset (for indexed draw)? p sure
 
 				uint32_t materialIndex;
