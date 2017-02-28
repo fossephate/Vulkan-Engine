@@ -32,18 +32,15 @@
 
 #include <chrono>
 
-
-struct BulletVertex {
-	float xyzw[4];
-	float normal[3];
-	float uv[2];
-};
-
-
+#include "vulkanMeshLoader.h"
 
 
 
 namespace vkx {
+
+
+
+
 
 
 
@@ -73,6 +70,10 @@ namespace vkx {
 			btAlignedObjectArray<btCollisionShape*> collisionShapes;
 
 			PhysicsManager();
+
+
+
+
 
 
 	};

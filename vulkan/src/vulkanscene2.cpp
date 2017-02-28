@@ -89,6 +89,45 @@ float rand0t1() {
 
 
 
+
+// todo: move this somewhere else
+btConvexHullShape* createConvexHullFromMesh(vkx::MeshLoader *meshLoader) {
+	btConvexHullShape *convexHullShape = new btConvexHullShape();
+	for (int i = 0; i < meshLoader->m_Entries[0].Indices.size(); ++i) {
+		uint32_t index = meshLoader->m_Entries[0].Indices[i];
+		glm::vec3 point = meshLoader->m_Entries[0].Vertices[index].m_pos;
+		btVector3 p = btVector3(point.x, point.y, point.z);
+		convexHullShape->addPoint(p);
+	}
+	convexHullShape->optimizeConvexHull();
+	convexHullShape->initializePolyhedralFeatures();
+
+	return convexHullShape;
+};
+
+int completeHack = 0;
+
+
+// todo: move this somewhere else
+btConvexHullShape* createConvexHullFromMeshEntry(vkx::MeshLoader *meshLoader, int index) {
+	btConvexHullShape *convexHullShape = new btConvexHullShape();
+	for (int i = 0; i < meshLoader->m_Entries[completeHack].Indices.size(); ++i) {
+		uint32_t index = meshLoader->m_Entries[completeHack].Indices[i];
+		glm::vec3 point = meshLoader->m_Entries[completeHack].Vertices[index].m_pos;
+		btVector3 p = btVector3(point.x, point.y, point.z);
+		convexHullShape->addPoint(p);
+	}
+	convexHullShape->optimizeConvexHull();
+	convexHullShape->initializePolyhedralFeatures();
+
+	return convexHullShape;
+};
+
+
+
+
+
+
 // Wrapper functions for aligned memory allocation
 // There is currently no standard for this in C++ that works across all platforms and vendors, so we abstract this
 void* alignedAlloc(size_t size, size_t alignment) {
@@ -1651,7 +1690,7 @@ public:
 			testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");
 			testSkinnedMesh->createSkinnedMeshBuffer(skinnedMeshVertexLayout, 0.0005f);
 
-			skinnedMeshes.push_back(testSkinnedMesh);
+			//skinnedMeshes.push_back(testSkinnedMesh);
 		}
 
 		auto physicsPlane = std::make_shared<vkx::PhysicsObject>(&physicsManager, planeModel);
@@ -1678,13 +1717,33 @@ public:
 
 		// deferred
 
-		if (false) {
+		if (!false) {
 			auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			sponzaModel->load(getAssetPath() + "models/sponza.dae");
 			sponzaModel->createMeshes(meshVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
 			sponzaModel->rotateWorldX(PI / 2.0);
 			modelsDeferred.push_back(sponzaModel);
 		}
+
+
+		//auto boxModel = std::make_shared<vkx::Model>(&context, &assetManager);
+		//boxModel->load(getAssetPath() + "models/boxVhacd.fbx");
+		//boxModel->createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		////boxModel->rotateWorldX(PI / 2.0);
+		//modelsDeferred.push_back(boxModel);
+		////printf(std::to_string(boxModel->meshLoader->m_Entries.size()).c_str());
+
+		//for (int i = 0; i < 12; ++i) {
+		//	auto physicsPart = std::make_shared<vkx::PhysicsObject>(&physicsManager, nullptr);
+		//	btCollisionShape *wallShape1 = createConvexHullFromMeshEntry(boxModel->meshLoader, i);
+		//	physicsPart->createRigidBody(wallShape1, 0.0f);
+
+		//	completeHack += 1;
+		//	//btTransform t1;
+		//	//t1.setOrigin(btVector3(0., 0., 4.));
+		//	//physicsPart->rigidBody->setWorldTransform(t1);
+		//	//physicsObjects.push_back(physicsWall1);
+		//}
 
 		//// add plane model
 		//auto planeModel2 = std::make_shared<vkx::Model>(&context, &assetManager);
@@ -1702,7 +1761,7 @@ public:
 		}
 
 
-		for (int i = 0; i < 2; ++i) {
+		for (int i = 0; i < 1; ++i) {
 
 			auto testSkinnedMesh = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
 			testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");
@@ -1919,78 +1978,10 @@ public:
 
 
 			auto physicsBall = std::make_shared<vkx::PhysicsObject>(&physicsManager, testModel);
-			
-			
-			btConvexHullShape *convexHullShape = new btConvexHullShape();
-			
-			for (int i = 0; i < testModel->meshLoader->m_Entries[0].Indices.size(); ++i) {
-				uint32_t index = testModel->meshLoader->m_Entries[0].Indices[i];
-				glm::vec3 point = testModel->meshLoader->m_Entries[0].Vertices[index].m_pos;
-				btVector3 p = btVector3(point.x, point.y, point.z);
-				convexHullShape->addPoint(p);
-			}
-
-			//for (int i = 0; i < testModel->meshLoader->m_Entries[0].Vertices.size(); ++i) {
-			//	
-			//	glm::vec3 point = testModel->meshLoader->m_Entries[0].Vertices[i].m_pos;
-			//	btVector3 p = btVector3(point.x, point.y, point.z);
-			//	convexHullShape->addPoint(p);
-			//}
-
-			//for (int i = 0; i < testModel->meshLoader->pScene->mMeshes[0]->mNumVertices; ++i) {
-
-			//	aiVector3D point = testModel->meshLoader->pScene->mMeshes[0]->mVertices[0];
-			//	btVector3 p = btVector3(point.x, point.y, point.z);
-			//	convexHullShape->addPoint(p, true);
-			//}
-
-			convexHullShape->optimizeConvexHull();
-			convexHullShape->initializePolyhedralFeatures();
-
-
-
-
-
-
-
-			////{
-
-			//	btTriangleMesh trimesh = new btTriangleMesh();
-			//	auto vertices = testModel->meshLoader->m_Entries[0].Vertices;
-			//	auto indices = testModel->meshLoader->m_Entries[0].Indices;
-			//	for (int i = 0; i < indices.size() * 3; ++i)
-			//	{
-
-
-			//		int index0 = indices[i * 3 + 0];
-			//		int index1 = indices[i * 3 + 1];
-			//		int index2 = indices[i * 3 + 2];
-
-			//		btVector3 vertex0(vertices[index0].m_pos.x, vertices[index0].m_pos.y, vertices[index0].m_pos.z);
-			//		btVector3 vertex1(vertices[index1].m_pos.x, vertices[index1].m_pos.y, vertices[index1].m_pos.z);
-			//		btVector3 vertex2(vertices[index2].m_pos.x, vertices[index2].m_pos.y, vertices[index2].m_pos.z);
-
-			//		trimesh.addTriangle(vertex0, vertex1, vertex2);
-			//	}
-			//	btConvexShape *tmpshape = new btConvexTriangleMeshShape(&trimesh);
-			//	btShapeHull *hull = new btShapeHull(tmpshape);
-			//	btScalar margin = tmpshape->getMargin();
-			//	hull->buildHull(margin);
-			//	tmpshape->setUserPointer(hull);
-			////}
-
-
-
-
-
-
-
-			//btCollisionShape* sphereShape = new btSphereShape(btScalar(1.));
-			//
+			btConvexHullShape *convexHullShape = createConvexHullFromMesh(testModel->meshLoader);
 			physicsBall->createRigidBody(convexHullShape, 1.0f);
-			btTransform t;
-			t.setOrigin(btVector3(0., 0., 100.));
-			physicsBall->rigidBody->getMotionState()->setWorldTransform(t);
+			physicsBall->rigidBody->activate();
+			physicsBall->rigidBody->translate(btVector3(0., 0., 10.));
 			physicsObjects.push_back(physicsBall);
 
 
@@ -2002,15 +1993,16 @@ public:
 		}
 
 		if (keyStates.m) {
-			if (modelsDeferred.size() > 3) {
+			if (modelsDeferred.size() > 4) {
 				modelsDeferred[modelsDeferred.size() - 1]->destroy();
 				modelsDeferred.pop_back();
+				updateDraw = true;
 				updateOffscreen = true;
 			}
 		}
 
 		if (keyStates.n) {
-			if (physicsObjects.size() > 3) {
+			if (physicsObjects.size() > 4) {
 				physicsObjects[physicsObjects.size() - 1]->destroy();
 				physicsObjects.pop_back();
 				updateOffscreen = true;
