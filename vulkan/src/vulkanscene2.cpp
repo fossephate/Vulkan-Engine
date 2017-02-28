@@ -1654,7 +1654,7 @@ public:
 			skinnedMeshes.push_back(testSkinnedMesh);
 		}
 
-		auto physicsPlane = std::make_shared<vkx::PhysicsObject>(&physicsManager, models[0]);
+		auto physicsPlane = std::make_shared<vkx::PhysicsObject>(&physicsManager, planeModel);
 		btCollisionShape* boxShape = new btBoxShape(btVector3(btScalar(200.), btScalar(200.), btScalar(0.1)));
 		physicsPlane->createRigidBody(boxShape, 0.0f);
 		//btTransform t;
@@ -1678,7 +1678,7 @@ public:
 
 		// deferred
 
-		if (!false) {
+		if (false) {
 			auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			sponzaModel->load(getAssetPath() + "models/sponza.dae");
 			sponzaModel->createMeshes(meshVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
@@ -1711,6 +1711,24 @@ public:
 			skinnedMeshesDeferred.push_back(testSkinnedMesh);
 		}
 
+
+
+
+
+		auto wallModel1 = std::make_shared<vkx::Model>(&context, &assetManager);
+		wallModel1->load(getAssetPath() + "models/plane.fbx");
+		wallModel1->createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		modelsDeferred.push_back(wallModel1);
+
+
+
+		//auto physicsWall1 = std::make_shared<vkx::PhysicsObject>(&physicsManager, wallModel1);
+		//btCollisionShape *wallShape1 = new btBoxShape(btVector3(btScalar(1.0), btScalar(1.), btScalar(0.1)));
+		//physicsWall1->createRigidBody(wallShape1, 0.0f);
+		//btTransform t1;
+		//t1.setOrigin(btVector3(0., 0., 4.));
+		//physicsWall1->rigidBody->setWorldTransform(t1);
+		//physicsObjects.push_back(physicsWall1);
 
 
 
@@ -1872,11 +1890,13 @@ public:
 
 			auto physicsBall0 = std::make_shared<vkx::PhysicsObject>(&physicsManager, testModel0);
 			btCollisionShape* sphereShape0 = new btSphereShape(btScalar(1.));
+			btCollisionShape* boxShape0 = new btBoxShape(btVector3(btScalar(1.), btScalar(1.), btScalar(1.)));
 
-			physicsBall0->createRigidBody(sphereShape0, 1.0f);
+			physicsBall0->createRigidBody(boxShape0, 1.0f);
 			btTransform t0;
 			t0.setOrigin(btVector3(0., 0., 10.));
-			physicsBall0->rigidBody->setWorldTransform(t0);
+			//physicsBall0->rigidBody->setWorldTransform(t0);
+			physicsBall0->rigidBody->getMotionState()->setWorldTransform(t0);
 			physicsObjects.push_back(physicsBall0);
 		
 		
@@ -1900,10 +1920,11 @@ public:
 
 
 
-			//auto physicsBall = std::make_shared<vkx::PhysicsObject>(&physicsManager, testModel);
-			//
-			//btConvexHullShape *convexHullShape = new btConvexHullShape();
-			//
+			auto physicsBall = std::make_shared<vkx::PhysicsObject>(&physicsManager, testModel);
+			
+			
+			btConvexHullShape *convexHullShape = new btConvexHullShape();
+			
 			////for (int i = 0; i < testModel->meshLoader->m_Entries[0].Indices.size(); ++i) {
 			////	uint32_t index = testModel->meshLoader->m_Entries[0].Indices[i];
 			////	glm::vec3 point = testModel->meshLoader->m_Entries[0].Vertices[index].m_pos;
@@ -1918,15 +1939,15 @@ public:
 			////	convexHullShape->addPoint(p);
 			////}
 
-			//for (int i = 0; i < testModel->meshLoader->pScene->mMeshes[0]->mNumVertices; ++i) {
+			for (int i = 0; i < testModel->meshLoader->pScene->mMeshes[0]->mNumVertices; ++i) {
 
-			//	aiVector3D point = testModel->meshLoader->pScene->mMeshes[0]->mVertices[0];
-			//	btVector3 p = btVector3(point.x, point.y, point.z);
-			//	convexHullShape->addPoint(p, true);
-			//}
+				aiVector3D point = testModel->meshLoader->pScene->mMeshes[0]->mVertices[0];
+				btVector3 p = btVector3(point.x, point.y, point.z);
+				convexHullShape->addPoint(p, true);
+			}
 
-			////convexHullShape->optimizeConvexHull();
-			////convexHullShape->initializePolyhedralFeatures();
+			//convexHullShape->optimizeConvexHull();
+			//convexHullShape->initializePolyhedralFeatures();
 
 
 
@@ -1968,11 +1989,11 @@ public:
 
 			//btCollisionShape* sphereShape = new btSphereShape(btScalar(1.));
 			//
-			//physicsBall->createRigidBody(convexHullShape, 0.0f);
-			//btTransform t;
-			//t.setOrigin(btVector3(0., 0., 0.));
-			//physicsBall->rigidBody->setWorldTransform(t);
-			//physicsObjects.push_back(physicsBall);
+			physicsBall->createRigidBody(convexHullShape, 0.0f);
+			btTransform t;
+			t.setOrigin(btVector3(0., 0., 0.));
+			physicsBall->rigidBody->setWorldTransform(t);
+			physicsObjects.push_back(physicsBall);
 
 
 
@@ -1983,7 +2004,7 @@ public:
 		}
 
 		if (keyStates.m) {
-			if (modelsDeferred.size() > 2) {
+			if (modelsDeferred.size() > 3) {
 				modelsDeferred[modelsDeferred.size() - 1]->destroy();
 				modelsDeferred.pop_back();
 				updateOffscreen = true;
@@ -1991,7 +2012,7 @@ public:
 		}
 
 		if (keyStates.n) {
-			if (physicsObjects.size() > 2) {
+			if (physicsObjects.size() > 3) {
 				physicsObjects[physicsObjects.size() - 1]->destroy();
 				physicsObjects.pop_back();
 				updateOffscreen = true;
