@@ -274,7 +274,7 @@ namespace vkx {
 	};
 
 
-	class MeshList : public ResourceList<const aiScene*> {
+	class MeshList : public ResourceList</*const */aiScene*> {
 
 		public:
 
@@ -286,7 +286,7 @@ namespace vkx {
 				//}
 			}
 
-			void add(std::string name, const aiScene* scene) {
+			void add(std::string name, /*const */aiScene* scene) {
 				resources[name] = scene;
 			}
 	};

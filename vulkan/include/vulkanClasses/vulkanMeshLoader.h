@@ -288,7 +288,8 @@ namespace vkx {
 			//vk::Queue queue;
 
 			TextureLoader *textureLoader{ nullptr };
-			const aiScene *pScene{ nullptr };
+			//const aiScene *pScene{ nullptr };
+			aiScene *pScene{ nullptr };
 
 			MeshLoader(vkx::Context *context, vkx::AssetManager *assetManager);
 

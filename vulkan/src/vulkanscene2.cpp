@@ -1883,21 +1883,21 @@ public:
 			//physicsObjects[1]->rigidBody->applyCentralForce(btVector3(0.0f, sin(globalP)*0.1f, 0.05f));
 
 
-			auto testModel0 = std::make_shared<vkx::Model>(&context, &assetManager);
-			testModel0->load(getAssetPath() + "models/myCube.dae");
-			testModel0->createMeshes(skinnedMeshVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
-			modelsDeferred.push_back(testModel0);
+			//auto testModel0 = std::make_shared<vkx::Model>(&context, &assetManager);
+			//testModel0->load(getAssetPath() + "models/myCube.dae");
+			//testModel0->createMeshes(skinnedMeshVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
+			//modelsDeferred.push_back(testModel0);
 
-			auto physicsBall0 = std::make_shared<vkx::PhysicsObject>(&physicsManager, testModel0);
-			btCollisionShape* sphereShape0 = new btSphereShape(btScalar(1.));
-			btCollisionShape* boxShape0 = new btBoxShape(btVector3(btScalar(1.), btScalar(1.), btScalar(1.)));
+			//auto physicsBall0 = std::make_shared<vkx::PhysicsObject>(&physicsManager, testModel0);
+			//btCollisionShape* sphereShape0 = new btSphereShape(btScalar(1.));
+			//btCollisionShape* boxShape0 = new btBoxShape(btVector3(btScalar(1.), btScalar(1.), btScalar(1.)));
 
-			physicsBall0->createRigidBody(boxShape0, 1.0f);
-			btTransform t0;
-			t0.setOrigin(btVector3(0., 0., 10.));
-			//physicsBall0->rigidBody->setWorldTransform(t0);
-			physicsBall0->rigidBody->getMotionState()->setWorldTransform(t0);
-			physicsObjects.push_back(physicsBall0);
+			//physicsBall0->createRigidBody(boxShape0, 1.0f);
+			//btTransform t0;
+			//t0.setOrigin(btVector3(0., 0., 10.));
+			////physicsBall0->rigidBody->setWorldTransform(t0);
+			//physicsBall0->rigidBody->getMotionState()->setWorldTransform(t0);
+			//physicsObjects.push_back(physicsBall0);
 		
 		
 		
@@ -1913,9 +1913,7 @@ public:
 
 			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			testModel->load(getAssetPath() + "models/myCube.dae");
-			//testModel->createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
-			//models.push_back(testModel);
-			testModel->createMeshes(skinnedMeshVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
+			testModel->createMeshes(skinnedMeshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 			modelsDeferred.push_back(testModel);
 
 
@@ -1925,29 +1923,29 @@ public:
 			
 			btConvexHullShape *convexHullShape = new btConvexHullShape();
 			
-			////for (int i = 0; i < testModel->meshLoader->m_Entries[0].Indices.size(); ++i) {
-			////	uint32_t index = testModel->meshLoader->m_Entries[0].Indices[i];
-			////	glm::vec3 point = testModel->meshLoader->m_Entries[0].Vertices[index].m_pos;
-			////	btVector3 p = btVector3(point.x, point.y, point.z);
-			////	convexHullShape->addPoint(p);
-			////}
-
-			////for (int i = 0; i < testModel->meshLoader->m_Entries[0].Vertices.size(); ++i) {
-			////	
-			////	glm::vec3 point = testModel->meshLoader->m_Entries[0].Vertices[i].m_pos;
-			////	btVector3 p = btVector3(point.x, point.y, point.z);
-			////	convexHullShape->addPoint(p);
-			////}
-
-			for (int i = 0; i < testModel->meshLoader->pScene->mMeshes[0]->mNumVertices; ++i) {
-
-				aiVector3D point = testModel->meshLoader->pScene->mMeshes[0]->mVertices[0];
+			for (int i = 0; i < testModel->meshLoader->m_Entries[0].Indices.size(); ++i) {
+				uint32_t index = testModel->meshLoader->m_Entries[0].Indices[i];
+				glm::vec3 point = testModel->meshLoader->m_Entries[0].Vertices[index].m_pos;
 				btVector3 p = btVector3(point.x, point.y, point.z);
-				convexHullShape->addPoint(p, true);
+				convexHullShape->addPoint(p);
 			}
 
-			//convexHullShape->optimizeConvexHull();
-			//convexHullShape->initializePolyhedralFeatures();
+			//for (int i = 0; i < testModel->meshLoader->m_Entries[0].Vertices.size(); ++i) {
+			//	
+			//	glm::vec3 point = testModel->meshLoader->m_Entries[0].Vertices[i].m_pos;
+			//	btVector3 p = btVector3(point.x, point.y, point.z);
+			//	convexHullShape->addPoint(p);
+			//}
+
+			//for (int i = 0; i < testModel->meshLoader->pScene->mMeshes[0]->mNumVertices; ++i) {
+
+			//	aiVector3D point = testModel->meshLoader->pScene->mMeshes[0]->mVertices[0];
+			//	btVector3 p = btVector3(point.x, point.y, point.z);
+			//	convexHullShape->addPoint(p, true);
+			//}
+
+			convexHullShape->optimizeConvexHull();
+			convexHullShape->initializePolyhedralFeatures();
 
 
 
@@ -1957,28 +1955,28 @@ public:
 
 			////{
 
-			////	btTriangleMesh trimesh = new btTriangleMesh();
-			////	auto vertices = testModel->meshLoader->m_Entries[0].Vertices;
-			////	auto indices = testModel->meshLoader->m_Entries[0].Indices;
-			////	for (int i = 0; i < testModel->meshLoader->m_Entries[0].Indices.size() * 3; ++i)
-			////	{
+			//	btTriangleMesh trimesh = new btTriangleMesh();
+			//	auto vertices = testModel->meshLoader->m_Entries[0].Vertices;
+			//	auto indices = testModel->meshLoader->m_Entries[0].Indices;
+			//	for (int i = 0; i < indices.size() * 3; ++i)
+			//	{
 
 
-			////		int index0 = indices[i * 3 + 0];
-			////		int index1 = indices[i * 3 + 1];
-			////		int index2 = indices[i * 3 + 2];
+			//		int index0 = indices[i * 3 + 0];
+			//		int index1 = indices[i * 3 + 1];
+			//		int index2 = indices[i * 3 + 2];
 
-			////		btVector3 vertex0(vertices[index0].m_pos.x, vertices[index0].m_pos.y, vertices[index0].m_pos.z);
-			////		btVector3 vertex1(vertices[index1].m_pos.x, vertices[index1].m_pos.y, vertices[index1].m_pos.z);
-			////		btVector3 vertex2(vertices[index2].m_pos.x, vertices[index2].m_pos.y, vertices[index2].m_pos.z);
+			//		btVector3 vertex0(vertices[index0].m_pos.x, vertices[index0].m_pos.y, vertices[index0].m_pos.z);
+			//		btVector3 vertex1(vertices[index1].m_pos.x, vertices[index1].m_pos.y, vertices[index1].m_pos.z);
+			//		btVector3 vertex2(vertices[index2].m_pos.x, vertices[index2].m_pos.y, vertices[index2].m_pos.z);
 
-			////		trimesh.addTriangle(vertex0, vertex1, vertex2);
-			////	}
-			////	btConvexShape *tmpshape = new btConvexTriangleMeshShape(&trimesh);
-			////	btShapeHull *hull = new btShapeHull(tmpshape);
-			////	btScalar margin = tmpshape->getMargin();
-			////	hull->buildHull(margin);
-			////	tmpshape->setUserPointer(hull);
+			//		trimesh.addTriangle(vertex0, vertex1, vertex2);
+			//	}
+			//	btConvexShape *tmpshape = new btConvexTriangleMeshShape(&trimesh);
+			//	btShapeHull *hull = new btShapeHull(tmpshape);
+			//	btScalar margin = tmpshape->getMargin();
+			//	hull->buildHull(margin);
+			//	tmpshape->setUserPointer(hull);
 			////}
 
 
@@ -1989,10 +1987,10 @@ public:
 
 			//btCollisionShape* sphereShape = new btSphereShape(btScalar(1.));
 			//
-			physicsBall->createRigidBody(convexHullShape, 0.0f);
+			physicsBall->createRigidBody(convexHullShape, 1.0f);
 			btTransform t;
-			t.setOrigin(btVector3(0., 0., 0.));
-			physicsBall->rigidBody->setWorldTransform(t);
+			t.setOrigin(btVector3(0., 0., 100.));
+			physicsBall->rigidBody->getMotionState()->setWorldTransform(t);
 			physicsObjects.push_back(physicsBall);
 
 

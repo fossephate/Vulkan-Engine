@@ -49,7 +49,9 @@ namespace vkx {
 		if (this->assetManager->meshes.present(filename)) {
 			pScene = this->assetManager->meshes.get(filename);
 		} else {
-			pScene = Importer.ReadFile(filename.c_str(), flags);
+			//pScene = Importer.ReadFile(filename.c_str(), flags);
+			Importer.ReadFile(filename.c_str(), flags);
+			pScene = Importer.GetOrphanedScene();
 			this->assetManager->meshes.add(filename, pScene);
 		}
 
