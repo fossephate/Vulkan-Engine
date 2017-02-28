@@ -1913,8 +1913,8 @@ public:
 			camera.isFirstPerson = !camera.isFirstPerson;
 		}
 
-		//if (keyStates.onKeyDown(&keyStates.r)) {
-		if (keyStates.r) {
+		if (keyStates.onKeyDown(&keyStates.r)) {
+		//if (keyStates.r) {
 			toggleDebugDisplay();
 		}
 
@@ -1924,8 +1924,8 @@ public:
 			updateOffscreen = true;
 		}
 
-		//if (keyStates.onKeyDown(&keyStates.y)) {
-		if (keyStates.y) {
+		if (keyStates.onKeyDown(&keyStates.y)) {
+		//if (keyStates.y) {
 			fullDeferred = !fullDeferred;
 			updateDraw = true;
 			updateOffscreen = true;
@@ -1971,7 +1971,7 @@ public:
 
 
 			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
-			testModel->load(getAssetPath() + "models/myCube.dae");
+			testModel->load(getAssetPath() + "models/monkey.fbx");
 			testModel->createMeshes(skinnedMeshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 			modelsDeferred.push_back(testModel);
 
@@ -1991,6 +1991,31 @@ public:
 
 
 		}
+
+
+		if (keyStates.b) {
+
+			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
+			testModel->load(getAssetPath() + "models/myCube.dae");
+			testModel->createMeshes(skinnedMeshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+			modelsDeferred.push_back(testModel);
+
+
+
+			auto physicsBall = std::make_shared<vkx::PhysicsObject>(&physicsManager, testModel);
+			btConvexHullShape *convexHullShape = createConvexHullFromMesh(testModel->meshLoader);
+			physicsBall->createRigidBody(convexHullShape, 1.0f);
+			physicsBall->rigidBody->activate();
+			physicsBall->rigidBody->translate(btVector3(0., 0., 10.));
+			physicsObjects.push_back(physicsBall);
+
+
+
+			updateOffscreen = true;
+		}
+
+
+
 
 		if (keyStates.m) {
 			if (modelsDeferred.size() > 4) {
