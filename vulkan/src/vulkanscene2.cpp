@@ -64,6 +64,19 @@ std::vector<vkx::VertexLayout> deferredVertexLayout =
 
 
 
+std::vector<vkx::VertexLayout> SSAOVertexLayout =
+{
+	vkx::VertexLayout::VERTEX_LAYOUT_POSITION,
+	vkx::VertexLayout::VERTEX_LAYOUT_UV,
+	vkx::VertexLayout::VERTEX_LAYOUT_COLOR,
+	vkx::VertexLayout::VERTEX_LAYOUT_NORMAL,
+	vkx::VertexLayout::VERTEX_LAYOUT_TANGENT,
+	vkx::VertexLayout::VERTEX_LAYOUT_DUMMY_VEC4,
+	vkx::VertexLayout::VERTEX_LAYOUT_DUMMY_VEC4
+};
+
+
+
 inline size_t alignedSize(size_t align, size_t sz) {
 	return ((sz + align - 1) / align)*align;
 }
@@ -2008,6 +2021,7 @@ public:
 			physicsBall->rigidBody->activate();
 			physicsBall->rigidBody->translate(btVector3(0., 0., 10.));
 			physicsObjects.push_back(physicsBall);
+
 
 
 
