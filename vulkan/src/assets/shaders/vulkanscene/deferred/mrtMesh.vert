@@ -7,8 +7,13 @@ layout (location = 0) in vec4 inPos;
 layout (location = 1) in vec2 inUV;
 layout (location = 2) in vec3 inColor;
 layout (location = 3) in vec3 inNormal;
+layout (location = 4) in vec3 inTangent;
 
-//layout (location = 4) in vec3 inTangent;
+layout (location = 0) out vec3 outNormal;
+layout (location = 1) out vec2 outUV;
+layout (location = 2) out vec3 outColor;
+layout (location = 3) out vec3 outWorldPos;
+layout (location = 4) out vec3 outTangent;
 
 // scene
 layout (set = 0, binding = 0) uniform sceneBuffer 
@@ -29,11 +34,7 @@ layout (set = 1, binding = 0) uniform matrixBuffer
 	mat4 g2;
 } instance;
 
-layout (location = 0) out vec3 outNormal;
-layout (location = 1) out vec2 outUV;
-layout (location = 2) out vec3 outColor;
-layout (location = 3) out vec3 outWorldPos;
-layout (location = 4) out vec3 outTangent;
+
 
 void main() 
 {

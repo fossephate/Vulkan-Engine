@@ -460,11 +460,11 @@ public:
 		// Binding description
 		vertices.bindingDescriptions.resize(1);
 		vertices.bindingDescriptions[0] =
-			vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, vkx::vertexSize(skinnedMeshVertexLayout), vk::VertexInputRate::eVertex);
+			vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, vkx::vertexSize(SSAOVertexLayout), vk::VertexInputRate::eVertex);
 
 		// Attribute descriptions
 		// Describes memory layout and shader positions
-		vertices.attributeDescriptions.resize(6);
+		vertices.attributeDescriptions.resize(7);
 		// Location 0 : Position
 		vertices.attributeDescriptions[0] =
 			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 0, vk::Format::eR32G32B32Sfloat, 0);
@@ -477,12 +477,15 @@ public:
 		// Location 3 : Normal
 		vertices.attributeDescriptions[3] =
 			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 3, vk::Format::eR32G32B32Sfloat, sizeof(float) * 8);
-		// Location 4 : Bone weights
+		// Location 4 : Tangent
 		vertices.attributeDescriptions[4] =
-			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 4, vk::Format::eR32G32B32A32Sfloat, sizeof(float) * 11);
-		// Location 5 : Bone IDs
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 4, vk::Format::eR32G32B32Sfloat, sizeof(float) * 11);
+		// Location 5 : Bone weights
 		vertices.attributeDescriptions[5] =
-			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 5, vk::Format::eR32G32B32A32Sint, sizeof(float) * 15);
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 4, vk::Format::eR32G32B32A32Sfloat, sizeof(float) * 14);
+		// Location 6 : Bone IDs
+		vertices.attributeDescriptions[6] =
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 5, vk::Format::eR32G32B32A32Sint, sizeof(float) * 18);
 
 
 
@@ -753,7 +756,17 @@ public:
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
 				0),// binding 0
-			// todo: add specular / bump map here
+
+			// Set 3: Binding 1: Fragment shader specular
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eCombinedImageSampler,
+				vk::ShaderStageFlagBits::eFragment,
+				1),// binding 1
+			// Set 3: Binding 2: Fragment shader bump
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eCombinedImageSampler,
+				vk::ShaderStageFlagBits::eFragment,
+				2),// binding 2
 		};
 
 		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo3 =
@@ -904,12 +917,21 @@ public:
 		// combined image sampler
 		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings7 =
 		{
-			// Set 2: Binding 0 : Fragment shader color map image sampler
+			// Set 2: Binding 0: Fragment shader color map image sampler
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
 				0),// binding 0
-				   // todo: add specular / bump map here
+			// Set 2: Binding 1: Fragment shader specular
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eCombinedImageSampler,
+				vk::ShaderStageFlagBits::eFragment,
+				1),// binding 1
+			// Set 2: Binding 2: Fragment shader bump
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eCombinedImageSampler,
+				vk::ShaderStageFlagBits::eFragment,
+				2),// binding 2
 		};
 
 		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo7 =
@@ -1070,7 +1092,7 @@ public:
 			vkx::writeDescriptorSet(
 				rscs.descriptorSets->get("forward.scene"),// descriptor set 0
 				vk::DescriptorType::eUniformBuffer,
-				1,// binding 0
+				1,// binding 1
 				&uniformData.bonesVS.descriptor),
 
 			// Set 1: Binding 0: vertex shader matrix dynamic buffer
@@ -1493,6 +1515,12 @@ public:
 		vk::Pipeline deferredSkinnedMeshPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
 		rscs.pipelines->add("deferred.skinnedMeshes", deferredSkinnedMeshPipeline);
 
+		// Offscreen pipeline
+		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/mrtMesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/mrtMesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
+		vk::Pipeline deferredMeshSSAOPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		rscs.pipelines->add("deferred.meshes.ssao", deferredMeshSSAOPipeline);
+
 
 	}
 
@@ -1682,7 +1710,7 @@ public:
 		// add plane model
 		auto planeModel = std::make_shared<vkx::Model>(&context, &assetManager);
 		planeModel->load(getAssetPath() + "models/plane.fbx");
-		planeModel->createMeshes(skinnedMeshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		planeModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 		models.push_back(planeModel);
 
 		
@@ -1691,19 +1719,19 @@ public:
 		for (int i = 0; i < 10; ++i) {
 			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			testModel->load(getAssetPath() + "models/cube.fbx");
-			testModel->createMeshes(skinnedMeshVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
+			testModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
 
 			models.push_back(testModel);
 		}
 
 
-		for (int i = 0; i < 2; ++i) {
+		for (int i = 0; i < 1; ++i) {
 
 			auto testSkinnedMesh = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
 			testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");
-			testSkinnedMesh->createSkinnedMeshBuffer(skinnedMeshVertexLayout, 0.0005f);
+			testSkinnedMesh->createSkinnedMeshBuffer(SSAOVertexLayout, 0.0005f);
 
-			//skinnedMeshes.push_back(testSkinnedMesh);
+			skinnedMeshes.push_back(testSkinnedMesh);
 		}
 
 		auto physicsPlane = std::make_shared<vkx::PhysicsObject>(&physicsManager, planeModel);
@@ -1730,10 +1758,10 @@ public:
 
 		// deferred
 
-		if (!false) {
+		if (false) {
 			auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			sponzaModel->load(getAssetPath() + "models/sponza.dae");
-			sponzaModel->createMeshes(meshVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
+			sponzaModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
 			sponzaModel->rotateWorldX(PI / 2.0);
 			modelsDeferred.push_back(sponzaModel);
 		}
@@ -1768,7 +1796,7 @@ public:
 		for (int i = 0; i < 6; ++i) {
 			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			testModel->load(getAssetPath() + "models/monkey.fbx");
-			testModel->createMeshes(meshVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
+			testModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
 
 			modelsDeferred.push_back(testModel);
 		}
@@ -1778,8 +1806,9 @@ public:
 
 			auto testSkinnedMesh = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
 			testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");
-			testSkinnedMesh->createSkinnedMeshBuffer(skinnedMeshVertexLayout, 0.0005f);
-
+			testSkinnedMesh->createSkinnedMeshBuffer(SSAOVertexLayout, 0.0005f);
+			// todo: figure out why there must be atleast one deferred skinned mesh here
+			// inorder to not cause problems
 			skinnedMeshesDeferred.push_back(testSkinnedMesh);
 		}
 
@@ -1789,7 +1818,7 @@ public:
 
 		auto wallModel1 = std::make_shared<vkx::Model>(&context, &assetManager);
 		wallModel1->load(getAssetPath() + "models/plane.fbx");
-		wallModel1->createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		wallModel1->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 		modelsDeferred.push_back(wallModel1);
 
 
@@ -1985,7 +2014,7 @@ public:
 
 			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			testModel->load(getAssetPath() + "models/monkey.fbx");
-			testModel->createMeshes(skinnedMeshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+			testModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 			modelsDeferred.push_back(testModel);
 
 
@@ -2010,7 +2039,7 @@ public:
 
 			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			testModel->load(getAssetPath() + "models/myCube.dae");
-			testModel->createMeshes(skinnedMeshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+			testModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 			modelsDeferred.push_back(testModel);
 
 
@@ -2035,7 +2064,7 @@ public:
 			if (modelsDeferred.size() > 4) {
 				modelsDeferred[modelsDeferred.size() - 1]->destroy();
 				modelsDeferred.pop_back();
-				updateDraw = true;
+				//updateDraw = true;
 				updateOffscreen = true;
 			}
 		}
@@ -2895,6 +2924,7 @@ public:
 			float uv[2];
 			float col[3];
 			float normal[3];
+			float tangent[3];
 			float dummy1[4];
 			float dummy2[4];
 		};

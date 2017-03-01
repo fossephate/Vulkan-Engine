@@ -260,18 +260,18 @@ namespace vkx {
 					vk::DescriptorType::eCombinedImageSampler,
 					0,
 					&material.diffuse.descriptor),
-				//// binding 1: specular
-				//vkx::writeDescriptorSet(
-				//	material.descriptorSet,
-				//	vk::DescriptorType::eCombinedImageSampler,
-				//	1,
-				//	&material.specular.descriptor),
-				//// binding 2: normal
-				//vkx::writeDescriptorSet(
-				//	material.descriptorSet,
-				//	vk::DescriptorType::eCombinedImageSampler,
-				//	2,
-				//	&material.bump.descriptor)
+				// binding 1: specular
+				vkx::writeDescriptorSet(
+					material.descriptorSet,
+					vk::DescriptorType::eCombinedImageSampler,
+					1,
+					&material.specular.descriptor),
+				// binding 2: normal
+				vkx::writeDescriptorSet(
+					material.descriptorSet,
+					vk::DescriptorType::eCombinedImageSampler,
+					2,
+					&material.bump.descriptor)
 			};
 			// need to update shaders to reflect new bindings
 
@@ -662,10 +662,12 @@ namespace vkx {
 			for (uint32_t i = 0; i < m_Entries[m].Vertices.size(); i++) {
 				skinnedMeshVertex vertex;
 
+				// todo: do this by vertex layout, bones make this difficult
 				vertex.pos = m_Entries[m].Vertices[i].m_pos;//*scale
-				vertex.normal = m_Entries[m].Vertices[i].m_normal;
 				vertex.uv = m_Entries[m].Vertices[i].m_tex;
 				vertex.color = m_Entries[m].Vertices[i].m_color;
+				vertex.normal = m_Entries[m].Vertices[i].m_normal;
+				vertex.tangent = m_Entries[m].Vertices[i].m_tangent;
 
 				// Fetch bone weights and IDs
 				for (uint32_t j = 0; j < MAX_BONES_PER_VERTEX; j++) {

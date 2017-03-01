@@ -3,12 +3,14 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 
-layout (location = 0) in vec3 inPos;
+layout (location = 0) in vec4 inPos;
 layout (location = 1) in vec2 inUV;
 layout (location = 2) in vec3 inColor;
 layout (location = 3) in vec3 inNormal;
-layout (location = 4) in vec4 inBoneWeights;
-layout (location = 5) in ivec4 inBoneIDs;
+layout (location = 4) in vec3 inTangent;
+
+layout (location = 5) in vec4 inBoneWeights;
+layout (location = 6) in ivec4 inBoneIDs;
 
 
 
@@ -93,10 +95,10 @@ void main() {
 	mat4 modelView = scene.view * instance.model;
 	mat4 MVP = scene.projection * scene.view * instance.model;
 
-	gl_Position = scene.projection * scene.view * instance.model * boneTransform * vec4(inPos.xyz, 1.0);
+	gl_Position = scene.projection * scene.view * instance.model * boneTransform * inPos;
 
 
-	vec4 pos = instance.model * vec4(inPos, 1.0);
+	vec4 pos = instance.model * vec4(inPos.xyz, 1.0);
 
 	// outNormal = mat3(inverse(transpose(ubo.model * boneTransform))) * inNormal;
 	// outLightVec = ubo.lightPos.xyz - pos.xyz;

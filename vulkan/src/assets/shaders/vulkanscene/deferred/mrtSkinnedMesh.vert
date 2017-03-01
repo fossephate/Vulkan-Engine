@@ -7,8 +7,16 @@ layout (location = 0) in vec4 inPos;
 layout (location = 1) in vec2 inUV;
 layout (location = 2) in vec3 inColor;
 layout (location = 3) in vec3 inNormal;
-layout (location = 4) in vec4 inBoneWeights;
-layout (location = 5) in ivec4 inBoneIDs;
+layout (location = 4) in vec3 inTangent;
+
+layout (location = 5) in vec4 inBoneWeights;
+layout (location = 6) in ivec4 inBoneIDs;
+
+layout (location = 0) out vec3 outNormal;
+layout (location = 1) out vec2 outUV;
+layout (location = 2) out vec3 outColor;
+layout (location = 3) out vec3 outWorldPos;
+layout (location = 4) out vec3 outTangent;
 
 
 //layout (location = 4) in vec3 inTangent;
@@ -45,11 +53,7 @@ layout (set = 1, binding = 0) uniform matrixBuffer
 	mat4 g2;
 } instance;
 
-layout (location = 0) out vec3 outNormal;
-layout (location = 1) out vec2 outUV;
-layout (location = 2) out vec3 outColor;
-layout (location = 3) out vec3 outWorldPos;
-layout (location = 4) out vec3 outTangent;
+
 
 void main() 
 {
@@ -79,7 +83,7 @@ void main()
 	// todo: do the inverse transpose on cpu
 	mat3 mNormal = transpose(inverse(mat3(instance.model)));
     outNormal = mNormal * normalize(inNormal);
-    //outTangent = mNormal * normalize(inTangent);
+    outTangent = mNormal * normalize(inTangent);
 	
 	// Currently just vertex color
 	outColor = inColor;

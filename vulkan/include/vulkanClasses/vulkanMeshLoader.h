@@ -125,6 +125,12 @@ namespace vkx {
 				case VERTEX_LAYOUT_DUMMY_VEC4:
 					vSize += 4 * sizeof(float);
 					break;
+				case VERTEX_LAYOUT_BONE_ID:
+					vSize += 4 * sizeof(float);
+					break;
+				case VERTEX_LAYOUT_BONE_WEIGHT:
+					vSize += 4 * sizeof(float);
+					break;
 				default:
 					vSize += 3 * sizeof(float);
 					break;
@@ -173,6 +179,7 @@ namespace vkx {
 				glm::vec2 uv;
 				glm::vec3 color;
 				glm::vec3 normal;
+				glm::vec3 tangent;// added 3/1/17
 				// Max. four bones per vertex
 				float boneWeights[4];
 				uint32_t boneIDs[4];
