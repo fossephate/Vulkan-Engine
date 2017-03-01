@@ -54,7 +54,7 @@ void main()
 	// todo: do the inverse transpose on cpu
 	mat3 mNormal = transpose(inverse(mat3(instance.model)));
     outNormal = mNormal * normalize(inNormal);
-    //outTangent = mNormal * normalize(inTangent);
+    outTangent = mNormal * normalize(inTangent);
 	
 	// Currently just vertex color
 	outColor = inColor;

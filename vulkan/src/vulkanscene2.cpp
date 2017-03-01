@@ -482,10 +482,10 @@ public:
 			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 4, vk::Format::eR32G32B32Sfloat, sizeof(float) * 11);
 		// Location 5 : Bone weights
 		vertices.attributeDescriptions[5] =
-			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 4, vk::Format::eR32G32B32A32Sfloat, sizeof(float) * 14);
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 5, vk::Format::eR32G32B32A32Sfloat, sizeof(float) * 14);
 		// Location 6 : Bone IDs
 		vertices.attributeDescriptions[6] =
-			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 5, vk::Format::eR32G32B32A32Sint, sizeof(float) * 18);
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 6, vk::Format::eR32G32B32A32Sint, sizeof(float) * 18);
 
 
 
