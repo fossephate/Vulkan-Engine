@@ -141,6 +141,9 @@ btConvexHullShape* createConvexHullFromMeshEntry(vkx::MeshLoader *meshLoader, in
 
 
 
+
+
+
 // Wrapper functions for aligned memory allocation
 // There is currently no standard for this in C++ that works across all platforms and vendors, so we abstract this
 void* alignedAlloc(size_t size, size_t alignment) {
@@ -334,9 +337,12 @@ public:
 	uint32_t lastMaterialIndex = -1;
 	std::string lastMaterialName;
 
-	
-
-
+	bool rayPicking = false;
+	btRigidBody *m_pickedBody;
+	btScalar m_oldPickingDist;
+	btPoint2PointConstraint *m_pickedConstraint = nullptr;
+	btVector3 m_oldPickingPos;
+	int m_savedState;
 
 
 
@@ -446,6 +452,40 @@ public:
 
 	}
 
+
+	glm::vec3 generateRay() {
+
+		float mouseX = mouse.current.x;
+		float mouseY = mouse.current.y;
+		float screenWidth = size.width;
+		float screenHeight = size.height;
+
+		// The ray Start and End positions, in Normalized Device Coordinates (Have you read Tutorial 4 ?)
+		glm::vec4 lRayStart_NDC(
+			((float)mouseX / (float)screenWidth - 0.5f) * 2.0f, // [0,1024] -> [-1,1]
+			((float)mouseY / (float)screenHeight - 0.5f) * 2.0f, // [0, 768] -> [-1,1]
+			-1.0, // The near plane maps to Z=-1 in Normalized Device Coordinates
+			1.0f
+		);
+		glm::vec4 lRayEnd_NDC(
+			((float)mouseX / (float)screenWidth - 0.5f) * 2.0f,
+			((float)mouseY / (float)screenHeight - 0.5f) * 2.0f,
+			0.0,
+			1.0f
+		);
+
+
+		glm::mat4 M = glm::inverse(camera.matrices.projection * camera.matrices.view);
+		glm::vec4 lRayStart_world = M * lRayStart_NDC; lRayStart_world /= lRayStart_world.w;
+		glm::vec4 lRayEnd_world = M * lRayEnd_NDC; lRayEnd_world /= lRayEnd_world.w;
+
+
+		glm::vec3 lRayDir_world(lRayEnd_world - lRayStart_world);
+		lRayDir_world = glm::normalize(lRayDir_world);
+
+		glm::vec3 ray_end = camera.transform.translation + lRayDir_world*200.0f;
+		return ray_end;
+	}
 
 
 
@@ -1758,7 +1798,7 @@ public:
 
 		// deferred
 
-		if (false) {
+		if (!false) {
 			auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			sponzaModel->load(getAssetPath() + "models/sponza.dae");
 			sponzaModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
@@ -2111,6 +2151,81 @@ public:
 
 
 
+		if (keyStates.onKeyDown(&keyStates.u)) {
+
+			glm::vec3 ray_end = generateRay();
+			btVector3 rayFromWorld = btVector3(camera.transform.translation.x, camera.transform.translation.y, camera.transform.translation.z);
+			btVector3 rayToWorld = btVector3(ray_end.x, ray_end.y, ray_end.z);
+
+			btCollisionWorld::ClosestRayResultCallback rayCallback(rayFromWorld, rayToWorld);
+			this->physicsManager.dynamicsWorld->rayTest(rayFromWorld, rayToWorld, rayCallback);
+			if (rayCallback.hasHit()) {
+				btVector3 pickPos = rayCallback.m_hitPointWorld;
+				btRigidBody* body = (btRigidBody*)btRigidBody::upcast(rayCallback.m_collisionObject);
+
+				if (body) {
+
+					if (!(body->isStaticObject() || body->isKinematicObject())) {
+						m_pickedBody = body;
+						m_savedState = m_pickedBody->getActivationState();
+						m_pickedBody->setActivationState(DISABLE_DEACTIVATION);
+
+						btVector3 localPivot = body->getCenterOfMassTransform().inverse() * pickPos;
+						btPoint2PointConstraint* p2p = new btPoint2PointConstraint(*body, localPivot);
+						this->physicsManager.dynamicsWorld->addConstraint(p2p, true);
+						m_pickedConstraint = p2p;
+
+						btScalar mousePickClamping = 30.f;
+						p2p->m_setting.m_impulseClamp = mousePickClamping;
+						p2p->m_setting.m_tau = 0.001f;
+					}
+					rayPicking = true;
+				}
+				m_oldPickingPos = rayToWorld;
+				auto m_hitPos = pickPos;
+				m_oldPickingDist = (pickPos - rayFromWorld).length();
+				//rayPicking = true;
+			}
+		}
+
+
+
+		if (/*keyStates.o && */(rayPicking == true)) {
+
+			glm::vec3 ray_end = generateRay();
+			btVector3 rayFromWorld = btVector3(camera.transform.translation.x, camera.transform.translation.y, camera.transform.translation.z);
+			btVector3 rayToWorld = btVector3(ray_end.x, ray_end.y, ray_end.z);
+
+			if (m_pickedBody  && m_pickedConstraint) {
+				btPoint2PointConstraint* pickCon = static_cast<btPoint2PointConstraint*>(m_pickedConstraint);
+				if (pickCon) {
+					btVector3 newPivotB;
+					btVector3 dir = rayToWorld - rayFromWorld;
+					dir.normalize();
+					dir *= m_oldPickingDist;
+					newPivotB = rayFromWorld + dir;
+					pickCon->setPivotB(newPivotB);
+				}
+			}
+
+		}
+
+		if (keyStates.onKeyUp(&keyStates.u)) {
+			rayPicking = false;
+
+			if (m_pickedConstraint) {
+				m_pickedBody->forceActivationState(m_savedState);
+				m_pickedBody->activate();
+				this->physicsManager.dynamicsWorld->removeConstraint(m_pickedConstraint);
+				delete m_pickedConstraint;
+				m_pickedConstraint = 0;
+				m_pickedBody = 0;
+			}
+		}
+
+
+
+
 
 		camera.updateViewMatrix();
 
@@ -2354,7 +2469,7 @@ public:
 		auto tDuration = std::chrono::duration<double, std::milli>(tNow - this->physicsManager.tLastTimeStep);
 		
 		// todo: fix
-		this->physicsManager.dynamicsWorld->stepSimulation(tDuration.count()/1000.0, 10);
+		this->physicsManager.dynamicsWorld->stepSimulation(tDuration.count()/1000.0, 2);
 
 
 

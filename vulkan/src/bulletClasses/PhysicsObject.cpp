@@ -22,6 +22,7 @@ namespace vkx {
 
 	void PhysicsObject::addRigidBody(btRigidBody *body) {
 		this->rigidBody = body;
+		this->rigidBody->setUserPointer((void*)this);
 		this->physicsManager->dynamicsWorld->addRigidBody(this->rigidBody);
 	}
 
