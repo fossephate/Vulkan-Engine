@@ -67,6 +67,7 @@
 
 #include "vulkanTextOverlay.h"
 #include "vulkanFrameBuffer.h"
+#include "vulkanOffscreen.h"
 #include "Object3D.h"
 #include "camera.h"
 
@@ -176,10 +177,14 @@ namespace vkx
 			// Synchronization semaphores
 			struct {
 				// Swap chain image presentation
-				vk::Semaphore acquireComplete;
+				vk::Semaphore presentComplete;
 				// Command buffer submission and execution
 				vk::Semaphore renderComplete;
+
 				vk::Semaphore transferComplete;
+
+				// Text overlay submission and execution
+				vk::Semaphore textOverlayComplete;
 			} semaphores;
 
 			// Simple texture loader

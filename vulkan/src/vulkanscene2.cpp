@@ -170,7 +170,7 @@ void alignedFree(void* data) {
 
 
 
-class VulkanExample : public vkx::OffscreenExampleBase {
+class VulkanExample : public vkx::vulkanApp {
 
 public:
 
@@ -345,13 +345,13 @@ public:
 	int m_savedState;
 
 
+	vkx::Offscreen offscreen;
 
 
 
 
 
-
-	VulkanExample() : /*vkx::vulkanApp*/ vkx::OffscreenExampleBase(ENABLE_VALIDATION)/*, offscreen(context)*/ {
+	VulkanExample() : vkx::vulkanApp(ENABLE_VALIDATION), offscreen(context) {
 
 
 
@@ -400,6 +400,7 @@ public:
 
 		// todo: fix this all up
 
+		offscreen.destroy();
 
 
 		// destroy pipelines
@@ -1336,8 +1337,6 @@ public:
 
 
 	void preparePipelines() {
-		// todo:
-		// understand this:
 
 		vk::PipelineInputAssemblyStateCreateInfo inputAssemblyState;
 		inputAssemblyState.topology = vk::PrimitiveTopology::eTriangleList;
@@ -1381,7 +1380,11 @@ public:
 		std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStages;
 
 
-		vk::GraphicsPipelineCreateInfo pipelineCreateInfo = vkx::pipelineCreateInfo(rscs.pipelineLayouts->get("forward.basic"), renderPass);
+		vk::GraphicsPipelineCreateInfo pipelineCreateInfo;// = vkx::pipelineCreateInfo(rscs.pipelineLayouts->get("forward.basic"), renderPass);
+		// set pipeline layout
+		pipelineCreateInfo.layout = rscs.pipelineLayouts->get("forward.basic");
+		// set render pass
+		pipelineCreateInfo.renderPass = renderPass;
 
 		pipelineCreateInfo.pVertexInputState = &vertices.inputState;
 		pipelineCreateInfo.pInputAssemblyState = &inputAssemblyState;
@@ -1395,11 +1398,9 @@ public:
 		pipelineCreateInfo.pStages = shaderStages.data();
 
 
-
+		// meshes:
 		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/mesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/mesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		
-		
 		vk::Pipeline meshPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
 		rscs.pipelines->add("forward.meshes", meshPipeline);
 
@@ -1414,105 +1415,25 @@ public:
 
 
 
-		// vk::Pipeline for the sky box
-		//rasterizationState.cullMode = vk::CullModeFlagBits::eFront; // Inverted culling
-		//depthStencilState.depthWriteEnable = VK_FALSE; // No depth writes
-		//shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/skybox.vert.spv", vk::ShaderStageFlagBits::eVertex);
-		//shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/skybox.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		//pipelines.skybox = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo, nullptr)[0];
 
 
 
 
+		
+		// deferred quad that is blitted to:
+		// not offscreen
+		// fullscreen quad
+		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/composition.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/composition.frag.spv", vk::ShaderStageFlagBits::eFragment);
+		vk::Pipeline deferredPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		rscs.pipelines->add("deferred.composition", deferredPipeline);
 
-		//// Alpha blended pipeline
-		//// transparency
-		//rasterizationState.cullMode = vk::CullModeFlagBits::eNone;
-		//blendAttachmentState.blendEnable = VK_TRUE;
-		//blendAttachmentState.colorBlendOp = vk::BlendOp::eAdd;
-		//blendAttachmentState.srcColorBlendFactor = vk::BlendFactor::eSrcColor;
-		//blendAttachmentState.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcColor;
-		//vk::Pipeline meshPipelineBlending = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)[0];
-		//rscs.pipelines->resources["forward.meshes.blending"] = meshPipelineBlending;
-		//blendAttachmentState.blendEnable = VK_TRUE;
-
-
-		//// Wire frame rendering pipeline
-		//rasterizationState.cullMode = vk::CullModeFlagBits::eBack;
-		//blendAttachmentState.blendEnable = VK_FALSE;
-		//rasterizationState.polygonMode = vk::PolygonMode::eLine;
-		//rasterizationState.lineWidth = 1.0f;
-		//pipelines.wireframe = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)[0];
-
-	}
-
-
-	void prepareDeferredPipelines() {
-		vk::PipelineInputAssemblyStateCreateInfo inputAssemblyState =
-			vkx::pipelineInputAssemblyStateCreateInfo(vk::PrimitiveTopology::eTriangleList);
-
-		vk::PipelineRasterizationStateCreateInfo rasterizationState =
-			vkx::pipelineRasterizationStateCreateInfo(vk::PolygonMode::eFill, vk::CullModeFlagBits::eNone, vk::FrontFace::eClockwise);
-
-		vk::PipelineColorBlendAttachmentState blendAttachmentState =
-			vkx::pipelineColorBlendAttachmentState();
-
-		vk::PipelineColorBlendStateCreateInfo colorBlendState =
-			vkx::pipelineColorBlendStateCreateInfo(1, &blendAttachmentState);
-
-		vk::PipelineDepthStencilStateCreateInfo depthStencilState;
-		depthStencilState.depthTestEnable = VK_TRUE;
-		depthStencilState.depthWriteEnable = VK_TRUE;
-		depthStencilState.depthCompareOp = vk::CompareOp::eLessOrEqual;
-
-		vk::PipelineViewportStateCreateInfo viewportState =
-			vkx::pipelineViewportStateCreateInfo(1, 1);
-
-		vk::PipelineMultisampleStateCreateInfo multisampleState;
-
-		std::vector<vk::DynamicState> dynamicStateEnables = {
-			vk::DynamicState::eViewport,
-			vk::DynamicState::eScissor
-		};
-		vk::PipelineDynamicStateCreateInfo dynamicState;
-		dynamicState.dynamicStateCount = dynamicStateEnables.size();
-		dynamicState.pDynamicStates = dynamicStateEnables.data();
-
-		// Final fullscreen pass pipeline
-		std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStages;
-
-		vk::GraphicsPipelineCreateInfo pipelineCreateInfo = vkx::pipelineCreateInfo(rscs.pipelineLayouts->get("deferred.deferred"), renderPass);
-		pipelineCreateInfo.pVertexInputState = &vertices.inputState;
-		pipelineCreateInfo.pInputAssemblyState = &inputAssemblyState;
-		pipelineCreateInfo.pRasterizationState = &rasterizationState;
-		pipelineCreateInfo.pColorBlendState = &colorBlendState;
-		pipelineCreateInfo.pMultisampleState = &multisampleState;
-		pipelineCreateInfo.pViewportState = &viewportState;
-		pipelineCreateInfo.pDepthStencilState = &depthStencilState;
-		pipelineCreateInfo.pDynamicState = &dynamicState;
-		pipelineCreateInfo.stageCount = shaderStages.size();
-		pipelineCreateInfo.pStages = shaderStages.data();
-
-
-		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/deferred.vert.spv", vk::ShaderStageFlagBits::eVertex);
-		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/deferred.frag.spv", vk::ShaderStageFlagBits::eFragment);
 
 		// fullscreen quad
-		vk::Pipeline deferredPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
-		rscs.pipelines->add("deferred.deferred", deferredPipeline);
-
-
-		// Alpha blended pipeline
-		// transparency
-		rasterizationState.cullMode = vk::CullModeFlagBits::eNone;
-		blendAttachmentState.blendEnable = VK_TRUE;
-		blendAttachmentState.colorBlendOp = vk::BlendOp::eAdd;
-		blendAttachmentState.srcColorBlendFactor = vk::BlendFactor::eOne;
-		blendAttachmentState.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha;
-		vk::Pipeline deferredPipelineBlending = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)[0];
-		rscs.pipelines->add("deferred.deferred.blending", deferredPipelineBlending);
-		blendAttachmentState.blendEnable = VK_FALSE;
-
+		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/composition.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/composition.frag.spv", vk::ShaderStageFlagBits::eFragment);
+		vk::Pipeline deferredSSAOQuadPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		rscs.pipelines->add("deferred.composition.ssao", deferredSSAOQuadPipeline);
 
 
 		// Debug display pipeline
@@ -1523,6 +1444,10 @@ public:
 
 
 
+
+
+
+		//////////////////////////////////////////////////////////////////////////////////////////
 		// OFFSCREEN PIPELINES:
 
 		// Separate render pass
@@ -1543,23 +1468,196 @@ public:
 		colorBlendState.attachmentCount = blendAttachmentStates.size();
 		colorBlendState.pAttachments = blendAttachmentStates.data();
 
+		// todo: rename these to offscreen.meshes /etc
+
 		// Offscreen pipeline
 		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/mrtMesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/mrtMesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
 		vk::Pipeline deferredMeshPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
-		rscs.pipelines->add("deferred.meshes", deferredMeshPipeline);
+		rscs.pipelines->add("offscreen.meshes", deferredMeshPipeline);
 
 		// Offscreen pipeline
 		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/mrtSkinnedMesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/mrtSkinnedMesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
 		vk::Pipeline deferredSkinnedMeshPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
-		rscs.pipelines->add("deferred.skinnedMeshes", deferredSkinnedMeshPipeline);
+		rscs.pipelines->add("offscreen.skinnedMeshes", deferredSkinnedMeshPipeline);
 
 		// Offscreen pipeline
 		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/mrtMesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/mrtMesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
 		vk::Pipeline deferredMeshSSAOPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
-		rscs.pipelines->add("deferred.meshes.ssao", deferredMeshSSAOPipeline);
+		rscs.pipelines->add("offscreen.meshes.ssao", deferredMeshSSAOPipeline);
+
+
+
+		//////////////////////////////////////////////////////////////////////
+		// SSAO
+
+
+		colorBlendState.attachmentCount = 1;
+
+		vk::PipelineVertexInputStateCreateInfo emptyInputState{};
+		emptyInputState.vertexAttributeDescriptionCount = 0;
+		emptyInputState.pVertexAttributeDescriptions = nullptr;
+		emptyInputState.vertexBindingDescriptionCount = 0;
+		emptyInputState.pVertexBindingDescriptions = nullptr;
+		pipelineCreateInfo.pVertexInputState = &emptyInputState;
+
+		// SSAO Pass
+		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/fullscreen.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/ssao.frag.spv", vk::ShaderStageFlagBits::eFragment);
+		{
+			//// Set constant parameters via specialization constants
+			//struct SpecializationData {
+			//	uint32_t kernelSize = SSAO_KERNEL_SIZE;
+			//	float radius = SSAO_RADIUS;
+			//	float power = 1.5f;
+			//} specializationData;
+
+			//std::vector<VkSpecializationMapEntry> specializationMapEntries;
+			//specializationMapEntries = {
+			//	vkTools::initializers::specializationMapEntry(0, offsetof(SpecializationData, kernelSize), sizeof(uint32_t)),	// SSAO Kernel size
+			//	vkTools::initializers::specializationMapEntry(1, offsetof(SpecializationData, radius), sizeof(float)),			// SSAO radius
+			//	vkTools::initializers::specializationMapEntry(2, offsetof(SpecializationData, power), sizeof(float)),			// SSAO power
+			//};
+
+			//VkSpecializationInfo specializationInfo = vkTools::initializers::specializationInfo(specializationMapEntries.size(), specializationMapEntries.data(), sizeof(specializationData), &specializationData);
+			//shaderStages[1].pSpecializationInfo = &specializationInfo;
+			
+			pipelineCreateInfo.renderPass = frameBuffers.ssao.renderPass;
+			pipelineCreateInfo.layout = rscs.pipelineLayouts->get("ssao.generate");
+			vk::Pipeline ssaoGenerate = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+			rscs.pipelines->add("ssao.generate", ssaoGenerate);
+		}
+
+		// SSAO blur pass
+		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/fullscreen.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/blur.frag.spv", vk::ShaderStageFlagBits::eFragment);
+
+		pipelineCreateInfo.renderPass = frameBuffers.ssaoBlur.renderPass;
+		pipelineCreateInfo.layout = rscs.pipelineLayouts->get("ssao.blur");
+
+		vk::Pipeline ssaoBlur = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		rscs.pipelines->add("ssao.blur", ssaoBlur);
+
+
+
+	}
+
+
+	void prepareDeferredPipelines() {
+		//vk::PipelineInputAssemblyStateCreateInfo inputAssemblyState =
+		//	vkx::pipelineInputAssemblyStateCreateInfo(vk::PrimitiveTopology::eTriangleList);
+
+		//vk::PipelineRasterizationStateCreateInfo rasterizationState =
+		//	vkx::pipelineRasterizationStateCreateInfo(vk::PolygonMode::eFill, vk::CullModeFlagBits::eNone, vk::FrontFace::eClockwise);
+
+		//vk::PipelineColorBlendAttachmentState blendAttachmentState =
+		//	vkx::pipelineColorBlendAttachmentState();
+
+		//vk::PipelineColorBlendStateCreateInfo colorBlendState =
+		//	vkx::pipelineColorBlendStateCreateInfo(1, &blendAttachmentState);
+
+		//vk::PipelineDepthStencilStateCreateInfo depthStencilState;
+		//depthStencilState.depthTestEnable = VK_TRUE;
+		//depthStencilState.depthWriteEnable = VK_TRUE;
+		//depthStencilState.depthCompareOp = vk::CompareOp::eLessOrEqual;
+
+		//vk::PipelineViewportStateCreateInfo viewportState =
+		//	vkx::pipelineViewportStateCreateInfo(1, 1);
+
+		//vk::PipelineMultisampleStateCreateInfo multisampleState;
+
+		//std::vector<vk::DynamicState> dynamicStateEnables = {
+		//	vk::DynamicState::eViewport,
+		//	vk::DynamicState::eScissor
+		//};
+		//vk::PipelineDynamicStateCreateInfo dynamicState;
+		//dynamicState.dynamicStateCount = dynamicStateEnables.size();
+		//dynamicState.pDynamicStates = dynamicStateEnables.data();
+
+		//// Final fullscreen pass pipeline
+		//std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStages;
+
+		//vk::GraphicsPipelineCreateInfo pipelineCreateInfo = vkx::pipelineCreateInfo(rscs.pipelineLayouts->get("deferred.deferred"), renderPass);
+		//pipelineCreateInfo.pVertexInputState = &vertices.inputState;
+		//pipelineCreateInfo.pInputAssemblyState = &inputAssemblyState;
+		//pipelineCreateInfo.pRasterizationState = &rasterizationState;
+		//pipelineCreateInfo.pColorBlendState = &colorBlendState;
+		//pipelineCreateInfo.pMultisampleState = &multisampleState;
+		//pipelineCreateInfo.pViewportState = &viewportState;
+		//pipelineCreateInfo.pDepthStencilState = &depthStencilState;
+		//pipelineCreateInfo.pDynamicState = &dynamicState;
+		//pipelineCreateInfo.stageCount = shaderStages.size();
+		//pipelineCreateInfo.pStages = shaderStages.data();
+
+
+		//shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/deferred.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		//shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/deferred.frag.spv", vk::ShaderStageFlagBits::eFragment);
+
+		//// fullscreen quad
+		//vk::Pipeline deferredPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		//rscs.pipelines->add("deferred.deferred", deferredPipeline);
+
+
+		//// Alpha blended pipeline
+		//// transparency
+		//rasterizationState.cullMode = vk::CullModeFlagBits::eNone;
+		//blendAttachmentState.blendEnable = VK_TRUE;
+		//blendAttachmentState.colorBlendOp = vk::BlendOp::eAdd;
+		//blendAttachmentState.srcColorBlendFactor = vk::BlendFactor::eOne;
+		//blendAttachmentState.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha;
+		//vk::Pipeline deferredPipelineBlending = device.createGraphicsPipelines(pipelineCache, pipelineCreateInfo)[0];
+		//rscs.pipelines->add("deferred.deferred.blending", deferredPipelineBlending);
+		//blendAttachmentState.blendEnable = VK_FALSE;
+
+
+
+		//// Debug display pipeline
+		//shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/debug.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		//shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/debug.frag.spv", vk::ShaderStageFlagBits::eFragment);
+		//vk::Pipeline debugPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		//rscs.pipelines->add("deferred.debug", debugPipeline);
+
+
+
+		//// OFFSCREEN PIPELINES:
+
+		//// Separate render pass
+		//pipelineCreateInfo.renderPass = offscreen.renderPass;
+
+		//// Separate layout
+		//pipelineCreateInfo.layout = rscs.pipelineLayouts->get("deferred.offscreen");
+
+		//// Blend attachment states required for all color attachments
+		//// This is important, as color write mask will otherwise be 0x0 and you
+		//// won't see anything rendered to the attachment
+		//std::array<vk::PipelineColorBlendAttachmentState, 3> blendAttachmentStates = {
+		//	vkx::pipelineColorBlendAttachmentState(),
+		//	vkx::pipelineColorBlendAttachmentState(),
+		//	vkx::pipelineColorBlendAttachmentState()
+		//};
+
+		//colorBlendState.attachmentCount = blendAttachmentStates.size();
+		//colorBlendState.pAttachments = blendAttachmentStates.data();
+
+		//// Offscreen pipeline
+		//shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/mrtMesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		//shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/mrtMesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
+		//vk::Pipeline deferredMeshPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		//rscs.pipelines->add("deferred.meshes", deferredMeshPipeline);
+
+		//// Offscreen pipeline
+		//shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/mrtSkinnedMesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		//shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/mrtSkinnedMesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
+		//vk::Pipeline deferredSkinnedMeshPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		//rscs.pipelines->add("deferred.skinnedMeshes", deferredSkinnedMeshPipeline);
+
+		//// Offscreen pipeline
+		//shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/mrtMesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		//shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/mrtMesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
+		//vk::Pipeline deferredMeshSSAOPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		//rscs.pipelines->add("deferred.meshes.ssao", deferredMeshSSAOPipeline);
 
 
 	}
@@ -1798,7 +1896,7 @@ public:
 
 		// deferred
 
-		if (!false) {
+		if (false) {
 			auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			sponzaModel->load(getAssetPath() + "models/sponza.dae");
 			sponzaModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
@@ -2751,7 +2849,7 @@ public:
 
 			cmdBuffer.setViewport(0, viewport);
 			// Final composition as full screen quad
-			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.deferred"));
+			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.composition"));
 			cmdBuffer.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, meshBuffers.quad.vertices.buffer, { 0 });
 			cmdBuffer.bindIndexBuffer(meshBuffers.quad.indices.buffer, 0, vk::IndexType::eUint32);
 			cmdBuffer.drawIndexed(6, 1, 0, 0, 1);
@@ -2768,7 +2866,7 @@ public:
 
 	// Build command buffer for rendering the scene to the offscreen frame buffer 
 	// and blitting it to the different texture targets
-	void buildOffscreenCommandBuffer() override {
+	void buildOffscreenCommandBuffer() {
 		// Create separate command buffer for offscreen 
 		// rendering
 		if (!offscreenCmdBuffer) {
@@ -2838,7 +2936,7 @@ public:
 		// bind mesh pipeline
 		// don't have to do this for every mesh
 		// todo: create pipelinesDefferd.mesh
-		offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.meshes"));
+		offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("offscreen.meshes.ssao"));
 
 		// for each model
 		// model = group of meshes
@@ -2913,7 +3011,7 @@ public:
 		// SKINNED MESHES:
 
 		// bind skinned mesh pipeline
-		offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.skinnedMeshes"));
+		offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("offscreen.skinnedMeshes"));
 		for (auto &skinnedMesh : skinnedMeshesDeferred) {
 			// bind vertex & index buffers
 			offscreenCmdBuffer.bindVertexBuffers(skinnedMesh->vertexBufferBinding, skinnedMesh->meshBuffer.vertices.buffer, vk::DeviceSize());
@@ -3093,7 +3191,7 @@ public:
 				vk::Format::eR16G16B16A16Sfloat,
 				vk::Format::eR16G16B16A16Sfloat,
 				vk::Format::eR8G8B8A8Unorm
-			} };
+			}};
 
 		vulkanApp::prepare();
 		offscreen.prepare();
@@ -3134,17 +3232,90 @@ public:
 	void draw() override {
 		prepareFrame();
 		{
+
+			//vk::SubmitInfo submitInfo;
+			//submitInfo.pWaitDstStageMask = this->submitInfo.pWaitDstStageMask;
+
+			//// submit work?
+			//submitInfo.commandBufferCount = 1;
+			//submitInfo.pCommandBuffers = &offscreenCmdBuffer;
+
+
+			//submitInfo.waitSemaphoreCount = 1;
+			//submitInfo.pWaitSemaphores = &semaphores.presentComplete;
+
+
+			//submitInfo.signalSemaphoreCount = 1;
+
+			//submitInfo.pSignalSemaphores = &offscreen.renderComplete;
+
+			//queue.submit(submitInfo, VK_NULL_HANDLE);
+
+
+
+
+
+
+
+
+
+
+
+			// render to offscreen, then onscreen, use signal and wait semaphores to
+			// ensure they happen in order
+
+
+			// Offscreen rendering
+
 			vk::SubmitInfo submitInfo;
 			submitInfo.pWaitDstStageMask = this->submitInfo.pWaitDstStageMask;
-			submitInfo.commandBufferCount = 1;
-			submitInfo.pCommandBuffers = &offscreenCmdBuffer;
+
+			// Wait for swap chain presentation to finish
 			submitInfo.waitSemaphoreCount = 1;
-			submitInfo.pWaitSemaphores = &semaphores.acquireComplete;
+			submitInfo.pWaitSemaphores = &semaphores.presentComplete;
+
+			// Signal ready with offscreen render complete semaphore
 			submitInfo.signalSemaphoreCount = 1;
 			submitInfo.pSignalSemaphores = &offscreen.renderComplete;
+
+			// Submit work
+			submitInfo.commandBufferCount = 1;
+			submitInfo.pCommandBuffers = &offscreenCmdBuffer;
+
+			// Submit
 			queue.submit(submitInfo, VK_NULL_HANDLE);
+
+
+
+
+
+
+			//// Scene rendering
+
+			//// Wait for offscreen render complete
+			//submitInfo.waitSemaphoreCount = 1;
+			//submitInfo.pWaitSemaphores = &offscreen.renderComplete;
+
+			//// Signal ready with regular render complete semaphore
+			//submitInfo.signalSemaphoreCount = 1;
+			//submitInfo.pSignalSemaphores = &semaphores.renderComplete;
+
+			//// Submit work
+			//submitInfo.commandBufferCount = 1;
+			//submitInfo.pCommandBuffers = &primaryCmdBuffers[currentBuffer];
+
+			//// Submit
+			//queue.submit(submitInfo, VK_NULL_HANDLE);
+
+
+
+
 		}
+		// draw scene
 		drawCurrentCommandBuffer(offscreen.renderComplete);
+
+
+
 		submitFrame();
 	}
 

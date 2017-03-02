@@ -79,8 +79,9 @@ vulkanApp::~vulkanApp() {
 		delete textOverlay;
 	}
 
-	device.destroySemaphore(semaphores.acquireComplete);
+	device.destroySemaphore(semaphores.presentComplete);
 	device.destroySemaphore(semaphores.renderComplete);
+	device.destroySemaphore(semaphores.textOverlayComplete);
 
 	context.destroyContext();
 
@@ -128,10 +129,15 @@ void vulkanApp::initVulkan(bool enableValidation) {
 	vk::SemaphoreCreateInfo semaphoreCreateInfo;
 	// Create a semaphore used to synchronize image presentation
 	// Ensures that the image is displayed before we start submitting new commands to the queu
-	semaphores.acquireComplete = device.createSemaphore(semaphoreCreateInfo);
+	semaphores.presentComplete = device.createSemaphore(semaphoreCreateInfo);
 	// Create a semaphore used to synchronize command submission
 	// Ensures that the image is not presented until all commands have been sumbitted and executed
 	semaphores.renderComplete = device.createSemaphore(semaphoreCreateInfo);
+	// Create a semaphore used to synchronize command submission
+	// Ensures that the image is not presented until all commands for the text overlay have been sumbitted and executed
+	// Will be inserted after the render complete semaphore if the text overlay is enabled
+	semaphores.textOverlayComplete = device.createSemaphore(semaphoreCreateInfo);
+
 
 	// Set up submit info structure
 	// Semaphores will stay the same during application lifetime
@@ -139,7 +145,7 @@ void vulkanApp::initVulkan(bool enableValidation) {
 	submitInfo = vk::SubmitInfo();
 	submitInfo.pWaitDstStageMask = &submitPipelineStages;
 	submitInfo.waitSemaphoreCount = 1;
-	submitInfo.pWaitSemaphores = &semaphores.acquireComplete;
+	submitInfo.pWaitSemaphores = &semaphores.presentComplete;
 	submitInfo.signalSemaphoreCount = 1;
 	submitInfo.pSignalSemaphores = &semaphores.renderComplete;
 }
@@ -463,7 +469,7 @@ void vulkanApp::drawCurrentCommandBuffer(const vk::Semaphore& semaphore) {
 	}
 
 	// Command buffer(s) to be sumitted to the queue
-	std::vector<vk::Semaphore> waitSemaphores{ { semaphore == vk::Semaphore() ? semaphores.acquireComplete : semaphore } };
+	std::vector<vk::Semaphore> waitSemaphores{ { semaphore == vk::Semaphore() ? semaphores.presentComplete : semaphore } };
 	std::vector<vk::PipelineStageFlags> waitStages{ submitPipelineStages };
 	if (semaphores.transferComplete) {
 		auto transferComplete = semaphores.transferComplete;
@@ -890,7 +896,7 @@ vk::SubmitInfo vulkanApp::prepareSubmitInfo(
 	vk::SubmitInfo submitInfo;
 	submitInfo.pWaitDstStageMask = pipelineStages;
 	submitInfo.waitSemaphoreCount = 1;
-	submitInfo.pWaitSemaphores = &semaphores.acquireComplete;
+	submitInfo.pWaitSemaphores = &semaphores.presentComplete;
 	submitInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
 	submitInfo.pCommandBuffers = commandBuffers.data();
 	submitInfo.signalSemaphoreCount = 1;
@@ -928,7 +934,7 @@ void vulkanApp::prepareFrame() {
 		buildCommandBuffers();
 	}
 	// Acquire the next image from the swap chain
-	currentBuffer = swapChain.acquireNextImage(semaphores.acquireComplete);
+	currentBuffer = swapChain.acquireNextImage(semaphores.presentComplete);
 }
 
 void vulkanApp::submitFrame() {
