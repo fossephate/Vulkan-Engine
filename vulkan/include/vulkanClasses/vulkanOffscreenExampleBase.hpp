@@ -84,7 +84,7 @@ namespace vkx {
 						}
 					}
 					if (depthAttachmentUsage | vk::ImageUsageFlagBits::eSampled) {
-						framebuffer.depth.sampler = context.device.createSampler(sampler);
+						framebuffer.depthAttachment.sampler = context.device.createSampler(sampler);
 					}
 				}
 			}

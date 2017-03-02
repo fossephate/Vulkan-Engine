@@ -8,9 +8,26 @@ namespace vkx {
 	struct Offscreen {
 		const vkx::Context& context;
 		bool active{ true };
+
 		vk::RenderPass renderPass;
+
 		vk::CommandBuffer cmdBuffer;
 		vk::Semaphore renderComplete;
+
+
+
+		struct {
+			//struct Offscreen : public FrameBuffer {
+			//	std::array<FrameBufferAttachment, 3> attachments;
+			//} offscreen;
+			//struct SSAO : public FrameBuffer {
+			//	std::array<FrameBufferAttachment, 1 > attachments;
+			//} ssao, ssaoBlur;
+			vkx::MyFrameBuffer offscreen;
+			vkx::MyFrameBuffer ssaoGenerate;
+			vkx::MyFrameBuffer ssaoBlur;
+		} frameBuffers;
+
 
 		glm::uvec2 size;
 		std::vector<vk::Format> colorFormats{ { vk::Format::eB8G8R8A8Unorm } };
@@ -29,6 +46,7 @@ namespace vkx {
 			assert(!colorFormats.empty());
 			assert(size != glm::uvec2());
 
+			// Find a suitable depth format
 			if (depthFormat == vk::Format::eR8Uscaled) {
 				depthFormat = vkx::getSupportedDepthFormat(context.physicalDevice);
 			}
@@ -38,6 +56,10 @@ namespace vkx {
 			if (!renderPass) {
 				prepareRenderPass();
 			}
+
+			frameBuffers.offscreen.attachments.resize(3);
+			frameBuffers.ssaoGenerate.attachments.resize(1);
+			frameBuffers.ssaoBlur.attachments.resize(1);
 
 			for (auto& framebuffer : framebuffers) {
 				framebuffer.create(context, size, colorFormats, depthFormat, renderPass, attachmentUsage, depthAttachmentUsage);
@@ -78,7 +100,7 @@ namespace vkx {
 					}
 				}
 				if (depthAttachmentUsage | vk::ImageUsageFlagBits::eSampled) {
-					framebuffer.depth.sampler = context.device.createSampler(sampler);
+					framebuffer.depthAttachment.sampler = context.device.createSampler(sampler);
 				}
 			}
 		}

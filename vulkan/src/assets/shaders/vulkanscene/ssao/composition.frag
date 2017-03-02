@@ -19,7 +19,7 @@ struct Light {
 };
 
 // todo: make this another set(1) rather than binding = 4
-layout (set = 3, binding = 4) uniform UBO 
+layout (set = 3, binding = 5) uniform UBO 
 {
     Light lights[51];
     vec4 viewPos;

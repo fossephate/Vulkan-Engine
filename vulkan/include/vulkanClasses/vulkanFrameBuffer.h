@@ -19,8 +19,13 @@ namespace vkx {
 		using Attachment = CreateImageResult;
 		vk::Device device;
 		vk::Framebuffer framebuffer;
-		Attachment depth;
+
+		// frame buffer attachments
+		Attachment depthAttachment;
 		std::vector<Attachment> colors;
+
+		std::vector<Attachment> attachments;
+
 
 		void destroy();
 
@@ -28,5 +33,24 @@ namespace vkx {
 		// The contents of this framebuffer are then
 		// blitted to our render target
 		void create(const vkx::Context &context, const glm::uvec2& size, const std::vector<vk::Format> &colorFormats, vk::Format depthFormat, const vk::RenderPass &renderPass, vk::ImageUsageFlags colorUsage = vk::ImageUsageFlagBits::eSampled, vk::ImageUsageFlags depthUsage = vk::ImageUsageFlags());
+	};
+
+	struct MyFrameBuffer {
+		using Attachment = CreateImageResult;
+		vk::Device device;
+		vk::Framebuffer framebuffer;
+		vk::RenderPass renderPass;
+
+
+		// frame buffer attachments
+		Attachment depthAttachment;
+		std::vector<Attachment> attachments;
+
+		//void destroy();
+
+		// Prepare a new framebuffer for offscreen rendering
+		// The contents of this framebuffer are then
+		// blitted to our render target
+		//void create(const vkx::Context &context, const glm::uvec2& size, const std::vector<vk::Format> &colorFormats, vk::Format depthFormat, const vk::RenderPass &renderPass, vk::ImageUsageFlags colorUsage = vk::ImageUsageFlagBits::eSampled, vk::ImageUsageFlags depthUsage = vk::ImageUsageFlags());
 	};
 }

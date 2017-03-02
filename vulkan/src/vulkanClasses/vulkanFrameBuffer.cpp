@@ -4,8 +4,8 @@ void vkx::Framebuffer::destroy() {
 	for (auto& color : colors) {
 		color.destroy();
 	}
-	if (depth.format != vk::Format::eUndefined) {
-		depth.destroy();
+	if (depthAttachment.format != vk::Format::eUndefined) {
+		depthAttachment.destroy();
 	}
 	if (framebuffer) {
 		device.destroyFramebuffer(framebuffer);
@@ -56,7 +56,7 @@ void vkx::Framebuffer::create(const vkx::Context & context, const glm::uvec2 & s
 	if (useDepth) {
 		image.format = depthFormat;
 		image.usage = vk::ImageUsageFlagBits::eDepthStencilAttachment | depthUsage;
-		depth = context.createImage(image, vk::MemoryPropertyFlagBits::eDeviceLocal);
+		depthAttachment = context.createImage(image, vk::MemoryPropertyFlagBits::eDeviceLocal);
 
 		vk::ImageViewCreateInfo depthStencilView;
 		depthStencilView.viewType = vk::ImageViewType::e2D;
@@ -64,8 +64,8 @@ void vkx::Framebuffer::create(const vkx::Context & context, const glm::uvec2 & s
 		depthStencilView.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eDepth;
 		depthStencilView.subresourceRange.levelCount = 1;
 		depthStencilView.subresourceRange.layerCount = 1;
-		depthStencilView.image = depth.image;
-		depth.view = device.createImageView(depthStencilView);
+		depthStencilView.image = depthAttachment.image;
+		depthAttachment.view = device.createImageView(depthStencilView);
 
 	}
 
@@ -75,7 +75,7 @@ void vkx::Framebuffer::create(const vkx::Context & context, const glm::uvec2 & s
 		attachments[i] = colors[i].view;
 	}
 	if (useDepth) {
-		attachments.push_back(depth.view);
+		attachments.push_back(depthAttachment.view);
 	}
 
 	vk::FramebufferCreateInfo fbufCreateInfo;

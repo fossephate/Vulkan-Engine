@@ -1228,53 +1228,50 @@ public:
 		vk::DescriptorImageInfo texDescriptorAlbedo =
 			vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[2].sampler, offscreen.framebuffers[0].colors[2].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 
+		vk::DescriptorImageInfo texDescriptorSSAOBlurred =
+			vkx::descriptorImageInfo(offscreen.frameBuffers.ssaoBlur.attachments[0].sampler, offscreen.frameBuffers.ssaoBlur.attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+
+
 		std::vector<vk::WriteDescriptorSet> writeDescriptorSets2 =
 		{
 
-			//// Set 0: Binding 0: scene uniform buffer
-			//vkx::writeDescriptorSet(
-			//	rscs.descriptorSets->get("deferred.scene"),
-			//	vk::DescriptorType::eUniformBuffer,
-			//	0,// binding 0
-			//	&uniformData.sceneVS.descriptor),
 
-			//// Set 1: Binding 0: vertex shader matrix dynamic buffer
-			//vkx::writeDescriptorSet(
-			//	rscs.descriptorSets->get("deferred.matrix"),
-			//	vk::DescriptorType::eUniformBufferDynamic,
-			//	0,// binding 0
-			//	&uniformData.matrixVS.descriptor),
-
-
-			// set 3: Binding 0 : Vertex shader uniform buffer
+			// set 3: Binding 0: Vertex shader uniform buffer
 			vkx::writeDescriptorSet(
 				rscs.descriptorSets->get("deferred.deferred"),
 				vk::DescriptorType::eUniformBuffer,
 				0,
 				&uniformDataDeferred.vsFullScreen.descriptor),
-			// set 3: Binding 1 : Position texture target
+			// set 3: Binding 1: Position texture target
 			vkx::writeDescriptorSet(
 				rscs.descriptorSets->get("deferred.deferred"),
 				vk::DescriptorType::eCombinedImageSampler,
 				1,
 				&texDescriptorPosition),
-			// set 3: Binding 2 : Normals texture target
+			// set 3: Binding 2: Normals texture target
 			vkx::writeDescriptorSet(
 				rscs.descriptorSets->get("deferred.deferred"),
 				vk::DescriptorType::eCombinedImageSampler,
 				2,
 				&texDescriptorNormal),
-			// set 3: Binding 3 : Albedo texture target
+			// set 3: Binding 3: Albedo texture target
 			vkx::writeDescriptorSet(
 				rscs.descriptorSets->get("deferred.deferred"),
 				vk::DescriptorType::eCombinedImageSampler,
 				3,
 				&texDescriptorAlbedo),
-			// set 3: Binding 4 : Fragment shader uniform buffer
+			// set 3: Binding 4: SSAO Blurred
+			vkx::writeDescriptorSet(
+				rscs.descriptorSets->get("deferred.deferred"),
+				vk::DescriptorType::eCombinedImageSampler,
+				4,
+				&texDescriptorSSAOBlurred),
+			// set 3: Binding 5: Fragment shader uniform buffer// lights
 			vkx::writeDescriptorSet(
 				rscs.descriptorSets->get("deferred.deferred"),
 				vk::DescriptorType::eUniformBuffer,
-				4,
+				5,
 				&uniformDataDeferred.fsLights.descriptor),
 
 		};
@@ -1524,21 +1521,21 @@ public:
 			//VkSpecializationInfo specializationInfo = vkTools::initializers::specializationInfo(specializationMapEntries.size(), specializationMapEntries.data(), sizeof(specializationData), &specializationData);
 			//shaderStages[1].pSpecializationInfo = &specializationInfo;
 			
-			pipelineCreateInfo.renderPass = frameBuffers.ssao.renderPass;
-			pipelineCreateInfo.layout = rscs.pipelineLayouts->get("ssao.generate");
-			vk::Pipeline ssaoGenerate = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
-			rscs.pipelines->add("ssao.generate", ssaoGenerate);
+			//pipelineCreateInfo.renderPass = frameBuffers.ssao.renderPass;
+			//pipelineCreateInfo.layout = rscs.pipelineLayouts->get("ssao.generate");
+			//vk::Pipeline ssaoGenerate = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+			//rscs.pipelines->add("ssao.generate", ssaoGenerate);
 		}
 
 		// SSAO blur pass
-		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/fullscreen.vert.spv", vk::ShaderStageFlagBits::eVertex);
-		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/blur.frag.spv", vk::ShaderStageFlagBits::eFragment);
+		//shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/fullscreen.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		//shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/blur.frag.spv", vk::ShaderStageFlagBits::eFragment);
 
-		pipelineCreateInfo.renderPass = frameBuffers.ssaoBlur.renderPass;
-		pipelineCreateInfo.layout = rscs.pipelineLayouts->get("ssao.blur");
+		//pipelineCreateInfo.renderPass = frameBuffers.ssaoBlur.renderPass;
+		//pipelineCreateInfo.layout = rscs.pipelineLayouts->get("ssao.blur");
 
-		vk::Pipeline ssaoBlur = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
-		rscs.pipelines->add("ssao.blur", ssaoBlur);
+		//vk::Pipeline ssaoBlur = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		//rscs.pipelines->add("ssao.blur", ssaoBlur);
 
 
 
@@ -2617,30 +2614,6 @@ public:
 
 
 
-		
-
-		/*for (int i = 2; i < 5; ++i) {
-			models[i]->setTranslation(glm::vec3((2.0f*i)-(models.size()), 0.0f, sin(globalP*i) + 2.0f));
-		}*/
-
-		// todo: move this
-		/*for (int i = 2; i < 5; ++i) {
-			modelsDeferred[i]->setTranslation(glm::vec3((2.0f*i) - (modelsDeferred.size()), 0.0f, sin(globalP*i) + 2.0f));
-		}*/
-
-
-		//for (int i = 2; i < 50; ++i) {
-		//	int off = i*5;
-		//	for (int j = 0; j < 5; ++j) {
-		//		int n = j + off;
-		//		models[n]->setTranslation(glm::vec3((2.0f*i) - (models.size()), 0.0f, sin(globalP*i) + 2.0f));
-		//	}
-		//}
-
-
-
-
-
 
 
 
@@ -2867,6 +2840,7 @@ public:
 	// Build command buffer for rendering the scene to the offscreen frame buffer 
 	// and blitting it to the different texture targets
 	void buildOffscreenCommandBuffer() {
+
 		// Create separate command buffer for offscreen 
 		// rendering
 		if (!offscreenCmdBuffer) {
@@ -2877,39 +2851,117 @@ public:
 		vk::CommandBufferBeginInfo cmdBufInfo;
 		cmdBufInfo.flags = vk::CommandBufferUsageFlagBits::eSimultaneousUse;
 
-		// Clear values for all attachments written in the fragment shader
-		std::array<vk::ClearValue, 4> clearValues;
-		clearValues[0].color = vkx::clearColor({ 0.0f, 0.0f, 0.0f, 0.0f });
-		clearValues[1].color = vkx::clearColor({ 0.0f, 0.0f, 0.0f, 0.0f });
-		clearValues[2].color = vkx::clearColor({ 0.0f, 0.0f, 0.0f, 0.0f });
-		clearValues[3].depthStencil = { 1.0f, 0 };
-
-		vk::RenderPassBeginInfo renderPassBeginInfo;
-		renderPassBeginInfo.renderPass = offscreen.renderPass;
-		renderPassBeginInfo.framebuffer = offscreen.framebuffers[0].framebuffer;
-		renderPassBeginInfo.renderArea.extent.width = offscreen.size.x;
-		renderPassBeginInfo.renderArea.extent.height = offscreen.size.y;
-		renderPassBeginInfo.clearValueCount = clearValues.size();
-		renderPassBeginInfo.pClearValues = clearValues.data();
-		
-
+		// begin offscreen command buffer
 		offscreenCmdBuffer.begin(cmdBufInfo);
-		offscreenCmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
-
-
-		// start of render pass
-
-
-		vk::Viewport viewport = vkx::viewport(offscreen.size);
-		offscreenCmdBuffer.setViewport(0, viewport);
-
-		vk::Rect2D scissor = vkx::rect2D(offscreen.size);
-		offscreenCmdBuffer.setScissor(0, scissor);
-
-		vk::DeviceSize offsets = { 0 };
 
 
 
+		// Offscreen render pass:
+		{
+			// Clear values for all attachments written in the fragment shader
+			std::array<vk::ClearValue, 4> clearValues;
+			clearValues[0].color = vkx::clearColor({ 0.0f, 0.0f, 0.0f, 0.0f });
+			clearValues[1].color = vkx::clearColor({ 0.0f, 0.0f, 0.0f, 0.0f });
+			clearValues[2].color = vkx::clearColor({ 0.0f, 0.0f, 0.0f, 0.0f });
+			clearValues[3].depthStencil = { 1.0f, 0 };
+
+			vk::RenderPassBeginInfo renderPassBeginInfo;
+			renderPassBeginInfo.renderPass = offscreen.renderPass;
+			renderPassBeginInfo.framebuffer = offscreen.framebuffers[0].framebuffer;
+			renderPassBeginInfo.renderArea.extent.width = offscreen.size.x;
+			renderPassBeginInfo.renderArea.extent.height = offscreen.size.y;
+			renderPassBeginInfo.clearValueCount = clearValues.size();
+			renderPassBeginInfo.pClearValues = clearValues.data();
+
+
+			// begin offscreen render pass
+			offscreenCmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
+
+
+			// start of render pass
+
+
+			vk::Viewport viewport = vkx::viewport(offscreen.size);
+			offscreenCmdBuffer.setViewport(0, viewport);
+			vk::Rect2D scissor = vkx::rect2D(offscreen.size);
+			offscreenCmdBuffer.setScissor(0, scissor);
+			vk::DeviceSize offsets = { 0 };
+
+
+
+			float t = 0;
+
+
+
+			// todo: add matrix indices for deferred models
+			// for(int i = 0; i < deferredModels.size(); ++i) {
+
+
+
+
+			// MODELS:
+
+			// bind mesh pipeline
+			// don't have to do this for every mesh
+			// todo: create pipelinesDefferd.mesh
+			offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("offscreen.meshes.ssao"));
+
+			// for each model
+			// model = group of meshes
+			// todo: add skinned / animated model support
+			for (auto &model : modelsDeferred) {
+				// for each of the model's meshes
+				for (auto &mesh : model->meshes) {
+
+
+					// bind vertex & index buffers
+					offscreenCmdBuffer.bindVertexBuffers(mesh.vertexBufferBinding, mesh.meshBuffer.vertices.buffer, vk::DeviceSize());
+					offscreenCmdBuffer.bindIndexBuffer(mesh.meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
+
+					// descriptor set #
+					uint32_t setNum;
+
+					// bind scene descriptor set
+					setNum = 0;
+					offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.offscreen"), setNum, rscs.descriptorSets->get("deferred.scene"), nullptr);
+
+
+					//uint32_t offset1 = model->matrixIndex * alignedMatrixSize;
+					uint32_t offset1 = model->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
+					setNum = 1;
+					offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.offscreen"), setNum, 1, &rscs.descriptorSets->get("deferred.matrix"), 1, &offset1);
+
+
+					if (lastMaterialName != mesh.meshBuffer.materialName) {
+
+						lastMaterialName = mesh.meshBuffer.materialName;
+
+						vkx::Material m = this->assetManager.materials.get(mesh.meshBuffer.materialName);
+						//uint32_t materialIndex = this->assetManager.materials.get(mesh.meshBuffer.materialName).index;
+
+						//uint32_t offset2 = m.index * alignedMaterialSize;
+						uint32_t offset2 = m.index * static_cast<uint32_t>(alignedMaterialSize);
+						// the third param is the set number!
+						setNum = 2;
+						//offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.offscreen, setNum, 1, &descriptorSets[setNum], 1, &offset2);
+
+
+
+						//lastMaterialIndex = mesh.meshBuffer.materialIndex;
+
+						// bind texture: // todo: implement a better way to bind textures
+						// must make pipeline layout compatible
+
+						setNum = 2;
+						offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.offscreen"), setNum, m.descriptorSet, nullptr);
+					}
+
+
+					// draw:
+					offscreenCmdBuffer.drawIndexed(mesh.meshBuffer.indexCount, 1, 0, 0, 0);
+				}
+
+			}
 
 
 
@@ -2921,77 +2973,63 @@ public:
 
 
 
-		float t = 0;
 
 
 
-		// todo: add matrix indices for deferred models
-		// for(int i = 0; i < deferredModels.size(); ++i) {
+			// SKINNED MESHES:
 
-
-
-
-		// MODELS:
-
-		// bind mesh pipeline
-		// don't have to do this for every mesh
-		// todo: create pipelinesDefferd.mesh
-		offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("offscreen.meshes.ssao"));
-
-		// for each model
-		// model = group of meshes
-		// todo: add skinned / animated model support
-		for (auto &model : modelsDeferred) {
-			// for each of the model's meshes
-			for (auto &mesh : model->meshes) {
-
-
+			// bind skinned mesh pipeline
+			offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("offscreen.skinnedMeshes"));
+			for (auto &skinnedMesh : skinnedMeshesDeferred) {
 				// bind vertex & index buffers
-				offscreenCmdBuffer.bindVertexBuffers(mesh.vertexBufferBinding, mesh.meshBuffer.vertices.buffer, vk::DeviceSize());
-				offscreenCmdBuffer.bindIndexBuffer(mesh.meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
+				offscreenCmdBuffer.bindVertexBuffers(skinnedMesh->vertexBufferBinding, skinnedMesh->meshBuffer.vertices.buffer, vk::DeviceSize());
+				offscreenCmdBuffer.bindIndexBuffer(skinnedMesh->meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
 
 				// descriptor set #
 				uint32_t setNum;
 
 				// bind scene descriptor set
+				// Set 0: Binding 0:
 				setNum = 0;
 				offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.offscreen"), setNum, rscs.descriptorSets->get("deferred.scene"), nullptr);
 
+				// there is a bone uniform, set: 0, binding: 1
 
-				//uint32_t offset1 = model->matrixIndex * alignedMatrixSize;
-				uint32_t offset1 = model->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
+
+				// Set 1: Binding 0:
+				//uint32_t offset1 = skinnedMesh->matrixIndex * alignedMatrixSize;
+				uint32_t offset1 = skinnedMesh->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
 				setNum = 1;
 				offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.offscreen"), setNum, 1, &rscs.descriptorSets->get("deferred.matrix"), 1, &offset1);
 
+				if (lastMaterialName != skinnedMesh->meshBuffer.materialName) {
+					lastMaterialName = skinnedMesh->meshBuffer.materialName;
+					vkx::Material m = this->assetManager.materials.get(skinnedMesh->meshBuffer.materialName);
 
-				if (lastMaterialName != mesh.meshBuffer.materialName) {
-
-					lastMaterialName = mesh.meshBuffer.materialName;
-
-					vkx::Material m = this->assetManager.materials.get(mesh.meshBuffer.materialName);
-					//uint32_t materialIndex = this->assetManager.materials.get(mesh.meshBuffer.materialName).index;
-
+					// Set 2: Binding: 0
 					//uint32_t offset2 = m.index * alignedMaterialSize;
-					uint32_t offset2 = m.index * static_cast<uint32_t>(alignedMaterialSize);
-					// the third param is the set number!
-					setNum = 2;
-					//offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.offscreen, setNum, 1, &descriptorSets[setNum], 1, &offset2);
+					//uint32_t offset2 = m.index * static_cast<uint32_t>(alignedMaterialSize);
+					//setNum = 2;
+					//offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.material"), 1, &offset2);
 
-
-
-					//lastMaterialIndex = mesh.meshBuffer.materialIndex;
-
-					// bind texture: // todo: implement a better way to bind textures
-					// must make pipeline layout compatible
-
+					// bind texture:
+					// Set 2: Binding 0:
 					setNum = 2;
 					offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.offscreen"), setNum, m.descriptorSet, nullptr);
 				}
 
 
 				// draw:
-				offscreenCmdBuffer.drawIndexed(mesh.meshBuffer.indexCount, 1, 0, 0, 0);
+				offscreenCmdBuffer.drawIndexed(skinnedMesh->meshBuffer.indexCount, 1, 0, 0, 0);
 			}
+
+
+
+
+			// end offscreen render pass
+
+			offscreenCmdBuffer.endRenderPass();
+
 
 		}
 
@@ -3002,94 +3040,100 @@ public:
 
 
 
+		//// SSAO Generation pass:
+		//{
+
+		//	// Clear values for all attachments written in the fragment shader
+		//	clearValues[0].color = vkx::clearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
+		//	clearValues[1].depthStencil = { 1.0f, 0 };
+
+		//	vk::RenderPassBeginInfo renderPassBeginInfo2;
+		//	renderPassBeginInfo2.renderPass = offscreen.renderPass;
+		//	renderPassBeginInfo2.framebuffer = offscreen.framebuffers[0].framebuffer;
+		//	renderPassBeginInfo2.renderArea.extent.width = offscreen.size.x;
+		//	renderPassBeginInfo2.renderArea.extent.height = offscreen.size.y;
+		//	renderPassBeginInfo2.clearValueCount = clearValues.size();//2
+		//	renderPassBeginInfo2.pClearValues = clearValues.data();
+
+		//	// begin SSAO render pass
+		//	offscreenCmdBuffer.beginRenderPass(renderPassBeginInfo2, vk::SubpassContents::eInline);
+
+
+		//	vk::Viewport viewport = vkx::viewport(offscreen.size);
+		//	offscreenCmdBuffer.setViewport(0, viewport);
+		//	vk::Rect2D scissor = vkx::rect2D(offscreen.size);
+		//	offscreenCmdBuffer.setScissor(0, scissor);
+		//	vk::DeviceSize offsets = { 0 };
+
+
+
+
+		//	offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("ssao.generate"), 0, 1, rscs.descriptorSets->getPtr("ssao.generate"), 0, nullptr);
+		//	offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("ssao.generate"));
+		//	offscreenCmdBuffer.draw(3, 1, 0, 0);
+
+
+		//	offscreenCmdBuffer.endRenderPass();
+		//}
+
+
+
+		//// Third pass: SSAO blur
+		//// -------------------------------------------------------------------------------------------------------
+		//{
+
+		//	vk::RenderPassBeginInfo renderPassBeginInfo3;
+		//	renderPassBeginInfo3.renderPass = offscreen.renderPass;
+		//	renderPassBeginInfo3.framebuffer = offscreen.framebuffers[0].framebuffer;
+		//	renderPassBeginInfo3.renderArea.extent.width = offscreen.size.x;
+		//	renderPassBeginInfo3.renderArea.extent.height = offscreen.size.y;
+		//	renderPassBeginInfo3.clearValueCount = clearValues.size();//2
+		//	renderPassBeginInfo3.pClearValues = clearValues.data();
+
+		//	//renderPassBeginInfo.framebuffer = frameBuffers.ssaoBlur.frameBuffer;
+		//	//renderPassBeginInfo.renderPass = frameBuffers.ssaoBlur.renderPass;
+		//	//renderPassBeginInfo.renderArea.extent.width = frameBuffers.ssaoBlur.width;
+		//	//renderPassBeginInfo.renderArea.extent.height = frameBuffers.ssaoBlur.height;
+
+		//	offscreenCmdBuffer.beginRenderPass(renderPassBeginInfo3, vk::SubpassContents::eInline);
+
+		//	//viewport = vkTools::initializers::viewport((float)frameBuffers.ssaoBlur.width, (float)frameBuffers.ssaoBlur.height, 0.0f, 1.0f);
+		//	//vkCmdSetViewport(offScreenCmdBuffer, 0, 1, &viewport);
+		//	//scissor = vkTools::initializers::rect2D(frameBuffers.ssaoBlur.width, frameBuffers.ssaoBlur.height, 0, 0);
+		//	//vkCmdSetScissor(offScreenCmdBuffer, 0, 1, &scissor);
+
+		//	vk::Viewport viewport = vkx::viewport(offscreen.size);
+		//	offscreenCmdBuffer.setViewport(0, viewport);
+		//	vk::Rect2D scissor = vkx::rect2D(offscreen.size);
+		//	offscreenCmdBuffer.setScissor(0, scissor);
+		//	vk::DeviceSize offsets = { 0 };
+
+
+
+		//	offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("ssao.blur"), 0, 1, rscs.descriptorSets->getPtr("ssao.blur"), 0, nullptr);
+		//	offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("ssao.blur"));
+		//	offscreenCmdBuffer.draw(3, 1, 0, 0);
+
+		//	offscreenCmdBuffer.endRenderPass();
+
+		//}
+
+
+
+		
 
 
 
 
 
 
-		// SKINNED MESHES:
-
-		// bind skinned mesh pipeline
-		offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("offscreen.skinnedMeshes"));
-		for (auto &skinnedMesh : skinnedMeshesDeferred) {
-			// bind vertex & index buffers
-			offscreenCmdBuffer.bindVertexBuffers(skinnedMesh->vertexBufferBinding, skinnedMesh->meshBuffer.vertices.buffer, vk::DeviceSize());
-			offscreenCmdBuffer.bindIndexBuffer(skinnedMesh->meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
-
-			// descriptor set #
-			uint32_t setNum;
-
-			// bind scene descriptor set
-			// Set 0: Binding 0:
-			setNum = 0;
-			offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.offscreen"), setNum, rscs.descriptorSets->get("deferred.scene"), nullptr);
-
-			// there is a bone uniform, set: 0, binding: 1
-
-
-			// Set 1: Binding 0:
-			//uint32_t offset1 = skinnedMesh->matrixIndex * alignedMatrixSize;
-			uint32_t offset1 = skinnedMesh->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
-			setNum = 1;
-			offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.offscreen"), setNum, 1, &rscs.descriptorSets->get("deferred.matrix"), 1, &offset1);
-
-			if (lastMaterialName != skinnedMesh->meshBuffer.materialName) {
-				lastMaterialName = skinnedMesh->meshBuffer.materialName;
-				vkx::Material m = this->assetManager.materials.get(skinnedMesh->meshBuffer.materialName);
-
-				// Set 2: Binding: 0
-				//uint32_t offset2 = m.index * alignedMaterialSize;
-				//uint32_t offset2 = m.index * static_cast<uint32_t>(alignedMaterialSize);
-				//setNum = 2;
-				//offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.material"), 1, &offset2);
-
-				// bind texture:
-				// Set 2: Binding 0:
-				setNum = 2;
-				offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred.offscreen"), setNum, m.descriptorSet, nullptr);
-			}
-
-
-			// draw:
-			offscreenCmdBuffer.drawIndexed(skinnedMesh->meshBuffer.indexCount, 1, 0, 0, 0);
-		}
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		// end render pass
-
-		offscreenCmdBuffer.endRenderPass();
+		// end offscreen command buffer
 		offscreenCmdBuffer.end();
+
+
 	}
 
 
