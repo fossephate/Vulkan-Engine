@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CaptureSettings xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Options>
+    <AllowVSync>true</AllowVSync>
+    <AllowFullscreen>true</AllowFullscreen>
+    <APIValidation>true</APIValidation>
+    <CaptureCallstacks>false</CaptureCallstacks>
+    <CaptureCallstacksOnlyDraws>false</CaptureCallstacksOnlyDraws>
+    <DelayForDebugger>0</DelayForDebugger>
+    <VerifyMapWrites>false</VerifyMapWrites>
+    <HookIntoChildren>true</HookIntoChildren>
+    <RefAllResources>false</RefAllResources>
+    <SaveAllInitials>false</SaveAllInitials>
+    <CaptureAllCmdLists>false</CaptureAllCmdLists>
+    <DebugOutputMute>true</DebugOutputMute>
+  </Options>
+  <Inject>false</Inject>
+  <AutoStart>false</AutoStart>
+  <Executable>C:\Users\Matt\Documents\Visual Studio 2017\Projects\graphicalProjects\vulkan\build\x64\Debug\vulkan.exe</Executable>
+  <WorkingDir>C:\Users\Matt\Documents\Visual Studio 2017\Projects\graphicalProjects\vulkan\build\x64\Debug\</WorkingDir>
+  <CmdLine />
+  <Environment />
+</CaptureSettings>
