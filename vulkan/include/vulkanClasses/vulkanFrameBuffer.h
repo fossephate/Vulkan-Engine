@@ -22,10 +22,14 @@ namespace vkx {
 		vk::RenderPass renderPass;
 
 		// frame buffer attachments
-		Attachment depthAttachment;
 		std::vector<Attachment> colors;
-
 		std::vector<Attachment> attachments;
+
+		
+
+		// depth attachment
+		Attachment depthAttachment;
+		bool hasDepth = false;
 
 
 		void destroy();

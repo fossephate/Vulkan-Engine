@@ -11,6 +11,9 @@ void vkx::Framebuffer::destroy() {
 		device.destroyFramebuffer(framebuffer);
 		framebuffer = vk::Framebuffer();
 	}
+	if (renderPass) {
+		device.destroyRenderPass(renderPass);
+	}
 }
 
 // Prepare a new framebuffer for offscreen rendering
@@ -78,8 +81,12 @@ void vkx::Framebuffer::create(const vkx::Context & context, const glm::uvec2 & s
 		attachments.push_back(depthAttachment.view);
 	}
 
+	//const vk::RenderPass &rp = this->renderPass;
+
 	vk::FramebufferCreateInfo fbufCreateInfo;
-	fbufCreateInfo.renderPass = renderPass;
+	fbufCreateInfo.renderPass = /*this->renderPass;*/renderPass;
+	//fbufCreateInfo.renderPass = rp;
+
 	fbufCreateInfo.attachmentCount = (uint32_t)attachments.size();
 	fbufCreateInfo.pAttachments = attachments.data();
 	fbufCreateInfo.width = size.x;

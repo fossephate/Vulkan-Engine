@@ -1230,9 +1230,9 @@ class VulkanExample : public vkx::vulkanApp {
 		vk::DescriptorImageInfo texDescriptorAlbedo =
 			vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[2].sampler, offscreen.framebuffers[0].colors[2].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-		// todo: fix
-		vk::DescriptorImageInfo texDescriptorSSAOBlurred =
-			vkx::descriptorImageInfo(offscreen.SSAOFrameBuffers.ssaoBlur.attachments[0].sampler, offscreen.SSAOFrameBuffers.ssaoBlur.attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
+		//// todo: fix
+		//vk::DescriptorImageInfo texDescriptorSSAOBlurred =
+		//	vkx::descriptorImageInfo(offscreen.SSAOFrameBuffers.ssaoBlur.attachments[0].sampler, offscreen.SSAOFrameBuffers.ssaoBlur.attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 		
 
@@ -1266,18 +1266,18 @@ class VulkanExample : public vkx::vulkanApp {
 				vk::DescriptorType::eCombinedImageSampler,
 				3,
 				&texDescriptorAlbedo),
-			// set 3: Binding 4: SSAO Blurred
-			vkx::writeDescriptorSet(
-				rscs.descriptorSets->get("deferred.deferred"),
-				vk::DescriptorType::eCombinedImageSampler,
-				4,
-				&texDescriptorSSAOBlurred),
+			//// set 3: Binding 4: SSAO Blurred
+			//vkx::writeDescriptorSet(
+			//	rscs.descriptorSets->get("deferred.deferred"),
+			//	vk::DescriptorType::eCombinedImageSampler,
+			//	4,
+			//	&texDescriptorSSAOBlurred),
 
 			// set 3: Binding 5: Fragment shader uniform buffer// lights
 			vkx::writeDescriptorSet(
 				rscs.descriptorSets->get("deferred.deferred"),
 				vk::DescriptorType::eUniformBuffer,
-				5,
+				4,
 				&uniformDataDeferred.fsLights.descriptor),
 
 		};
@@ -1466,7 +1466,7 @@ class VulkanExample : public vkx::vulkanApp {
 		// OFFSCREEN PIPELINES:
 
 		// Separate render pass
-		pipelineCreateInfo.renderPass = offscreen.renderPass;
+		pipelineCreateInfo.renderPass = offscreen.framebuffers[0].renderPass;
 
 		// Separate layout
 		pipelineCreateInfo.layout = rscs.pipelineLayouts->get("offscreen");
@@ -1482,8 +1482,6 @@ class VulkanExample : public vkx::vulkanApp {
 
 		colorBlendState.attachmentCount = blendAttachmentStates.size();
 		colorBlendState.pAttachments = blendAttachmentStates.data();
-
-		// todo: rename these to offscreen.meshes /etc
 
 		// Offscreen pipeline
 		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/mrtMesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
@@ -2883,7 +2881,7 @@ class VulkanExample : public vkx::vulkanApp {
 			clearValues[3].depthStencil = { 1.0f, 0 };
 
 			vk::RenderPassBeginInfo renderPassBeginInfo;
-			renderPassBeginInfo.renderPass = offscreen.renderPass;
+			renderPassBeginInfo.renderPass = offscreen.framebuffers[0].renderPass;
 			renderPassBeginInfo.framebuffer = offscreen.framebuffers[0].framebuffer;
 			renderPassBeginInfo.renderArea.extent.width = offscreen.size.x;
 			renderPassBeginInfo.renderArea.extent.height = offscreen.size.y;
@@ -3248,16 +3246,17 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 		offscreen.size = glm::uvec2(TEX_DIM);
-		offscreen.colorFormats = std::vector<vk::Format>{ {
-				vk::Format::eR16G16B16A16Sfloat,
-				vk::Format::eR16G16B16A16Sfloat,
-				vk::Format::eR8G8B8A8Unorm
-			} };
+		//offscreen.colorFormats = std::vector<vk::Format>{ {
+		//		vk::Format::eR16G16B16A16Sfloat,
+		//		vk::Format::eR16G16B16A16Sfloat,
+		//		vk::Format::eR8G8B8A8Unorm
+		//}};
+		//offscreen.addDeferredFramebuffer();
 
 		vulkanApp::prepare();
 		offscreen.prepare();
 
-		offscreen.depthFinalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+		//offscreen.depthFinalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 
 		//OffscreenExampleBase::prepare();
 
