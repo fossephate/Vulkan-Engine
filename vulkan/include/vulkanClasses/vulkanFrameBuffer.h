@@ -19,6 +19,7 @@ namespace vkx {
 		using Attachment = CreateImageResult;
 		vk::Device device;
 		vk::Framebuffer framebuffer;
+		vk::RenderPass renderPass;
 
 		// frame buffer attachments
 		Attachment depthAttachment;

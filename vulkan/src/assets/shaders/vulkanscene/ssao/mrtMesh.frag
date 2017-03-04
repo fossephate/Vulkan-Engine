@@ -24,7 +24,7 @@ layout (location = 2) out vec4 outAlbedo;
 
 
 // diffuse texture (from material)
-layout (set = 2, binding = 0) uniform sampler2D samplerColorMap;
+layout (set = 2, binding = 0) uniform sampler2D samplerColor;
 layout (set = 2, binding = 1) uniform sampler2D samplerSpecular;
 layout (set = 2, binding = 2) uniform sampler2D samplerNormal;
 
@@ -40,7 +40,7 @@ void main()
 {
 	outPosition = vec4(inWorldPos, linearDepth(gl_FragCoord.z));
 
-	vec4 color = texture(samplerColorMap, inUV);
+	vec4 color = texture(samplerColor, inUV);
 
 	// Discard by alpha for transparent objects if enabled via specialization constant
 	if (ENABLE_DISCARD == 0)

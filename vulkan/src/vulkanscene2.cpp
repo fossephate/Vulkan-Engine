@@ -1014,6 +1014,8 @@ class VulkanExample : public vkx::vulkanApp {
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
 				3),
+
+
 			// todo: seperate this, it doesn't need to be updated with the textures
 			// Set 0: Binding 4: Fragment shader uniform buffer
 			vkx::descriptorSetLayoutBinding(
@@ -1230,7 +1232,9 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// todo: fix
 		vk::DescriptorImageInfo texDescriptorSSAOBlurred =
-			vkx::descriptorImageInfo(offscreen.frameBuffers.ssaoBlur.attachments[0].sampler, offscreen.frameBuffers.ssaoBlur.attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
+			vkx::descriptorImageInfo(offscreen.SSAOFrameBuffers.ssaoBlur.attachments[0].sampler, offscreen.SSAOFrameBuffers.ssaoBlur.attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+		
 
 
 		// Offscreen texture targets:
@@ -1262,17 +1266,18 @@ class VulkanExample : public vkx::vulkanApp {
 				vk::DescriptorType::eCombinedImageSampler,
 				3,
 				&texDescriptorAlbedo),
-			//// set 3: Binding 4: SSAO Blurred
-			//vkx::writeDescriptorSet(
-			//	rscs.descriptorSets->get("deferred.deferred"),
-			//	vk::DescriptorType::eCombinedImageSampler,
-			//	4,
-			//	&texDescriptorSSAOBlurred),
+			// set 3: Binding 4: SSAO Blurred
+			vkx::writeDescriptorSet(
+				rscs.descriptorSets->get("deferred.deferred"),
+				vk::DescriptorType::eCombinedImageSampler,
+				4,
+				&texDescriptorSSAOBlurred),
+
 			// set 3: Binding 5: Fragment shader uniform buffer// lights
 			vkx::writeDescriptorSet(
 				rscs.descriptorSets->get("deferred.deferred"),
 				vk::DescriptorType::eUniformBuffer,
-				4,
+				5,
 				&uniformDataDeferred.fsLights.descriptor),
 
 		};
@@ -3288,41 +3293,11 @@ class VulkanExample : public vkx::vulkanApp {
 	void draw() override {
 		prepareFrame();
 		{
-
-			//vk::SubmitInfo submitInfo;
-			//submitInfo.pWaitDstStageMask = this->submitInfo.pWaitDstStageMask;
-
-			//// submit work?
-			//submitInfo.commandBufferCount = 1;
-			//submitInfo.pCommandBuffers = &offscreenCmdBuffer;
-
-
-			//submitInfo.waitSemaphoreCount = 1;
-			//submitInfo.pWaitSemaphores = &semaphores.presentComplete;
-
-
-			//submitInfo.signalSemaphoreCount = 1;
-
-			//submitInfo.pSignalSemaphores = &offscreen.renderComplete;
-
-			//queue.submit(submitInfo, VK_NULL_HANDLE);
-
-
-
-
-
-
-
-
-
-
-
 			// render to offscreen, then onscreen, use signal and wait semaphores to
 			// ensure they happen in order
 
 
 			// Offscreen rendering
-
 			vk::SubmitInfo submitInfo;
 			submitInfo.pWaitDstStageMask = this->submitInfo.pWaitDstStageMask;
 
@@ -3362,10 +3337,6 @@ class VulkanExample : public vkx::vulkanApp {
 
 			//// Submit
 			//queue.submit(submitInfo, VK_NULL_HANDLE);
-
-
-
-
 		}
 		// draw scene
 		drawCurrentCommandBuffer(offscreen.renderComplete);
