@@ -3,21 +3,21 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 
-layout (binding = 0) uniform sampler2D samplerPositionDepth;
-layout (binding = 1) uniform sampler2D samplerNormal;
-layout (binding = 2) uniform sampler2D ssaoNoise;
+layout (set = 0, binding = 0) uniform sampler2D samplerPositionDepth;
+layout (set = 0, binding = 1) uniform sampler2D samplerNormal;
+layout (set = 0, binding = 2) uniform sampler2D ssaoNoise;
 
 /*layout (constant_id = 0) */const int SSAO_KERNEL_SIZE = 64;
 /*layout (constant_id = 1) */const float SSAO_RADIUS = 0.5;
 /*layout (constant_id = 2) */const float SSAO_POWER = 1.0;
 
-// todo: figure out the actual set number
-layout (/*set = 0, */binding = 3) uniform UBOSSAOKernel
+
+layout (set = 0, binding = 3) uniform UBOSSAOKernel
 {
 	vec4 samples[SSAO_KERNEL_SIZE];
 } uboSSAOKernel;
 
-layout (binding = 4) uniform UBO 
+layout (set = 0, binding = 4) uniform UBO 
 {
 	mat4 projection;
 } ubo;
