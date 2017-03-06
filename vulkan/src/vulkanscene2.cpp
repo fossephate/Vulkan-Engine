@@ -2007,14 +2007,19 @@ class VulkanExample : public vkx::vulkanApp {
 		updateDraw = false;
 		updateOffscreen = false;
 
+		camera.movementSpeed = 0.05f;
+
+		if (keyStates.shift) {
+			camera.movementSpeed *= 2;
+		}
 
 		// z-up translations
-		if (!keyStates.shift) {
+		//if (!keyStates.shift) {
 			if (keyStates.w) {
-				camera.translateLocal(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
+				camera.translateLocal(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
 			}
 			if (keyStates.s) {
-				camera.translateLocal(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
+				camera.translateLocal(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
 			}
 			if (keyStates.a) {
 				camera.translateLocal(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
@@ -2023,31 +2028,31 @@ class VulkanExample : public vkx::vulkanApp {
 				camera.translateLocal(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
 			}
 			if (keyStates.q) {
-				camera.translateLocal(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
+				camera.translateLocal(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
 			}
 			if (keyStates.e) {
-				camera.translateLocal(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
+				camera.translateLocal(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
 			}
-		} else {
-			if (keyStates.w) {
-				camera.translateWorld(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
-			}
-			if (keyStates.s) {
-				camera.translateWorld(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
-			}
-			if (keyStates.a) {
-				camera.translateWorld(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
-			}
-			if (keyStates.d) {
-				camera.translateWorld(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
-			}
-			if (keyStates.q) {
-				camera.translateWorld(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
-			}
-			if (keyStates.e) {
-				camera.translateWorld(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
-			}
-		}
+		//} else {
+		//	if (keyStates.w) {
+		//		camera.translateWorld(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
+		//	}
+		//	if (keyStates.s) {
+		//		camera.translateWorld(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
+		//	}
+		//	if (keyStates.a) {
+		//		camera.translateWorld(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
+		//	}
+		//	if (keyStates.d) {
+		//		camera.translateWorld(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
+		//	}
+		//	if (keyStates.q) {
+		//		camera.translateWorld(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
+		//	}
+		//	if (keyStates.e) {
+		//		camera.translateWorld(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
+		//	}
+		//}
 
 
 
@@ -2101,7 +2106,7 @@ class VulkanExample : public vkx::vulkanApp {
 		}
 
 		//if (keyStates.onKeyDown(&keyStates.t)) {
-		if (keyStates.t) {
+		if (keyStates.onKeyDown(&keyStates.t)) {
 			camera.isFirstPerson = !camera.isFirstPerson;
 		}
 

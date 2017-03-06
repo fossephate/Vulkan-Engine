@@ -140,6 +140,7 @@ namespace vkx {
 
 
 			vkx::Framebuffer deferredFramebuffer;
+			deferredFramebuffer.device = context.device;
 
 
 			// create deferred render pass
@@ -380,7 +381,7 @@ namespace vkx {
 
 
 
-
+		// add SSAO frame buffer
 		void addSSAOGenerateFramebuffer() {
 
 			// -------------------------------------------------------------------------------
@@ -392,7 +393,7 @@ namespace vkx {
 					vk::Format::eR16G16B16A16Sfloat,
 					vk::Format::eR16G16B16A16Sfloat,
 					vk::Format::eR8G8B8A8Unorm
-				} };
+			}};
 			// This value is chosen as an invalid default that signals that the code should pick a specific depth buffer
 			// Alternative, you can set this to undefined to explicitly declare you want no depth buffer.
 			vk::Format depthFormat = vk::Format::eR8Uscaled;
@@ -413,6 +414,7 @@ namespace vkx {
 
 
 			vkx::Framebuffer deferredFramebuffer;
+			deferredFramebuffer.device = context.device;
 
 
 			// create deferred render pass
