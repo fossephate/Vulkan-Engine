@@ -1230,9 +1230,9 @@ class VulkanExample : public vkx::vulkanApp {
 		vk::DescriptorImageInfo texDescriptorAlbedo =
 			vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[2].sampler, offscreen.framebuffers[0].colors[2].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-		//// todo: fix
-		//vk::DescriptorImageInfo texDescriptorSSAOBlurred =
-		//	vkx::descriptorImageInfo(offscreen.SSAOFrameBuffers.ssaoBlur.attachments[0].sampler, offscreen.SSAOFrameBuffers.ssaoBlur.attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
+		// todo: fix
+		vk::DescriptorImageInfo texDescriptorSSAOBlurred =
+			vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[2].attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 		
 
@@ -1266,18 +1266,18 @@ class VulkanExample : public vkx::vulkanApp {
 				vk::DescriptorType::eCombinedImageSampler,
 				3,
 				&texDescriptorAlbedo),
-			//// set 3: Binding 4: SSAO Blurred
-			//vkx::writeDescriptorSet(
-			//	rscs.descriptorSets->get("deferred.deferred"),
-			//	vk::DescriptorType::eCombinedImageSampler,
-			//	4,
-			//	&texDescriptorSSAOBlurred),
+			// set 3: Binding 4: SSAO Blurred
+			vkx::writeDescriptorSet(
+				rscs.descriptorSets->get("deferred.deferred"),
+				vk::DescriptorType::eCombinedImageSampler,
+				4,
+				&texDescriptorSSAOBlurred),
 
 			// set 3: Binding 5: Fragment shader uniform buffer// lights
 			vkx::writeDescriptorSet(
 				rscs.descriptorSets->get("deferred.deferred"),
 				vk::DescriptorType::eUniformBuffer,
-				4,
+				5,
 				&uniformDataDeferred.fsLights.descriptor),
 
 		};
@@ -2007,7 +2007,9 @@ class VulkanExample : public vkx::vulkanApp {
 		updateDraw = false;
 		updateOffscreen = false;
 
-		camera.movementSpeed = 0.05f;
+		camera.movementSpeed = 0.005f;
+
+		camera.movementSpeed = camera.movementSpeed*frameTimer*1000.0;
 
 		if (keyStates.shift) {
 			camera.movementSpeed *= 2;
@@ -2079,7 +2081,8 @@ class VulkanExample : public vkx::vulkanApp {
 		}
 
 
-		camera.rotationSpeed = -0.02f;
+		camera.rotationSpeed = -0.002f;
+		camera.rotationSpeed = camera.rotationSpeed*frameTimer*1000.0;
 
 
 		if (keyStates.up_arrow) {
