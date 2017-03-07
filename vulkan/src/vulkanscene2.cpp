@@ -252,6 +252,7 @@ class VulkanExample : public vkx::vulkanApp {
 	// todo: remove this:
 	struct {
 		vkx::Texture colorMap;
+		vkx::Texture ssaoNoise;
 	} textures;
 
 
@@ -745,9 +746,20 @@ class VulkanExample : public vkx::vulkanApp {
 		};
 
 		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfoDeferred =
-			vkx::descriptorPoolCreateInfo(descriptorPoolSizesDeferred.size(), descriptorPoolSizesDeferred.data(), 2);
+			vkx::descriptorPoolCreateInfo(descriptorPoolSizesDeferred.size(), descriptorPoolSizesDeferred.data(), /*2*//*max descriptor sets:*/4);
 
 		rscs.descriptorPools->add("deferred.deferred", descriptorPoolCreateInfoDeferred);
+
+
+
+		//std::vector<vk::DescriptorPoolSize> descriptorPoolSizesDeferred2 =
+		//{
+		//	vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 16),
+		//	vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 16)
+		//};
+		//vk::DescriptorPoolCreateInfo descriptorPoolCreateInfoDeferred2 =
+		//	vkx::descriptorPoolCreateInfo(descriptorPoolSizesDeferred2.size(), descriptorPoolSizesDeferred2.data(), /*2*//*max descriptor sets:*/4);
+		//rscs.descriptorPools->add("deferred.deferred2", descriptorPoolCreateInfoDeferred2);
 
 	}
 
@@ -1098,14 +1110,10 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
+		// ---------------------------------------------------------------------------------------
+		// SSAO Generate:
 
 
-
-
-
-
-		// descriptor set layout 3
-		// combined image sampler
 		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings9 =
 		{
 			// Set 0: Binding 0 : // FS Position+Depth
@@ -1167,8 +1175,6 @@ class VulkanExample : public vkx::vulkanApp {
 		// SSAO Blur:
 
 
-
-		// descriptor set layout 3
 		// combined image sampler
 		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings10 =
 		{
@@ -1227,21 +1233,6 @@ class VulkanExample : public vkx::vulkanApp {
 		rscs.descriptorSets->add("forward.material", descriptorSetAllocateInfo2);
 
 
-		//// descriptor set 0
-		//// bone data
-		//vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo3 =
-		//	vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("forward.bones"), &rscs.descriptorSetLayouts->get("forward.bones"), 1);
-		//rscs.descriptorSets->add("forward.bones", descriptorSetAllocateInfo3);
-
-		// descriptor set 4
-		// image sampler
-		//vk::DescriptorSetAllocateInfo descriptorSetInfo4 =
-		//	vkx::descriptorSetAllocateInfo(descriptorPool4[4], &descriptorSetLayouts[4], 1);
-
-		//std::vector<vk::DescriptorSet> descriptorSets4 = device.allocateDescriptorSets(descriptorSetInfo4);
-		//descriptorSets.push_back(descriptorSets4[0]);// descriptor set 4
-
-
 
 
 		std::vector<vk::WriteDescriptorSet> writeDescriptorSets =
@@ -1273,21 +1264,6 @@ class VulkanExample : public vkx::vulkanApp {
 				vk::DescriptorType::eUniformBufferDynamic,
 				0,// binding 0
 				&uniformData.materialVS.descriptor),
-
-			//// Set 4: Binding 0: bones uniform buffer
-			//vkx::writeDescriptorSet(
-			//	rscs.descriptorSets->get("forward.bones"),// descriptor set 4
-			//	vk::DescriptorType::eUniformBuffer,
-			//	0,// binding 0
-			//	&uniformData.bonesVS.descriptor),
-
-
-			//// Set 4?: Binding 0: static bone data buffer
-			//vkx::writeDescriptorSet(
-			//	descriptorSets[3],// descriptor set 3
-			//	vk::DescriptorType::eUniformBuffer,// static
-			//	0,// binding 0
-			//	&uniformData.bonesVS.descriptor)
 
 			// set 4 is set later (textures)
 
@@ -1397,12 +1373,12 @@ class VulkanExample : public vkx::vulkanApp {
 				4,
 				&uniformDataDeferred.fsLights.descriptor),
 
-			//// set 3: Binding 5: SSAO Blurred
-			//vkx::writeDescriptorSet(
-			//	rscs.descriptorSets->get("deferred.deferred"),
-			//	vk::DescriptorType::eCombinedImageSampler,
-			//	5,
-			//	&texDescriptorSSAOBlurred),
+			// set 3: Binding 5: SSAO Blurred
+			vkx::writeDescriptorSet(
+				rscs.descriptorSets->get("deferred.deferred"),
+				vk::DescriptorType::eCombinedImageSampler,
+				5,
+				&texDescriptorSSAOBlurred),
 
 		};
 
@@ -1463,84 +1439,81 @@ class VulkanExample : public vkx::vulkanApp {
 		// SSAO ------------------------------------------------------------------------------
 		
 
-		//// descriptor set 
-		//vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo9 =
-		//	vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred.deferred"), &rscs.descriptorSetLayouts->get("offscreen.ssao.generate"), 1);
-		//rscs.descriptorSets->add("offscreen.ssao.generate", descriptorSetAllocateInfo9);
-
-		//std::vector<vk::WriteDescriptorSet> ssaoGenerateWriteDescriptorSets =
-		//{
-		//	//// Set 0: Binding 0: Vertex shader uniform buffer
-		//	//vkx::writeDescriptorSet(
-		//	//	rscs.descriptorSets->get("offscreen.scene"),
-		//	//	vk::DescriptorType::eUniformBuffer,
-		//	//	0,
-		//	//	&uniformDataDeferred.vsOffscreen.descriptor),
-
-		//	//// Set 0: Binding 1: bones uniform buffer
-		//	//vkx::writeDescriptorSet(
-		//	//	rscs.descriptorSets->get("offscreen.scene"),// descriptor set 0
-		//	//	vk::DescriptorType::eUniformBuffer,
-		//	//	1,// binding 1
-		//	//	&uniformData.bonesVS.descriptor),// bind to forward descriptor since it's the same
+		// descriptor set 
+		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo9 =
+			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred.deferred"), &rscs.descriptorSetLayouts->get("offscreen.ssao.generate"), 1);
+		rscs.descriptorSets->add("offscreen.ssao.generate", descriptorSetAllocateInfo9);
 
 
-		//	//// Set 1: Binding 0: Vertex shader uniform buffer
-		//	//vkx::writeDescriptorSet(
-		//	//	rscs.descriptorSets->get("offscreen.matrix"),
-		//	//	vk::DescriptorType::eUniformBufferDynamic,
-		//	//	0,
-		//	//	&uniformData.matrixVS.descriptor),// bind to forward descriptor since it's the same
+		vk::DescriptorImageInfo texDescriptorPosDepth =
+			vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[0].colors[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
+			//vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[0].attachments[0].view, vk::ImageLayout::eGeneral);
 
-		//	//// Set 2: Binding 0: Scene color map
-		//	//vkx::writeDescriptorSet(
-		//	//	rscs.descriptorSets->get("deferred.textures"),
-		//	//	vk::DescriptorType::eCombinedImageSampler,
-		//	//	0,
-		//	//	&textures.colorMap.descriptor),
-		//};
-		//device.updateDescriptorSets(ssaoGenerateWriteDescriptorSets, nullptr);
+		vk::DescriptorImageInfo texDescriptorNorm =
+			vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[0].colors[1].view, vk::ImageLayout::eShaderReadOnlyOptimal);
+			//vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[0].attachments[1].view, vk::ImageLayout::eGeneral);
 
 
 
 
-		//// descriptor set 
-		//vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo10 =
-		//	vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred.deferred"), &rscs.descriptorSetLayouts->get("offscreen.ssao.blur"), 1);
-		//rscs.descriptorSets->add("offscreen.ssao.blur", descriptorSetAllocateInfo10);
 
-		//std::vector<vk::WriteDescriptorSet> ssaoBlurWriteDescriptorSets =
-		//{
-		//	//// Set 0: Binding 0: Vertex shader uniform buffer
-		//	//vkx::writeDescriptorSet(
-		//	//	rscs.descriptorSets->get("offscreen.scene"),
-		//	//	vk::DescriptorType::eUniformBuffer,
-		//	//	0,
-		//	//	&uniformDataDeferred.vsOffscreen.descriptor),
+		std::vector<vk::WriteDescriptorSet> ssaoGenerateWriteDescriptorSets =
+		{
+			// Set 0: Binding 0: Fragment shader image sampler// FS Position+Depth
+			vkx::writeDescriptorSet(
+				rscs.descriptorSets->get("offscreen.ssao.generate"),
+				vk::DescriptorType::eCombinedImageSampler,
+				0,
+				&texDescriptorPosDepth),
+			// Set 0: Binding 1: Fragment shader image sampler// FS Normals
+			vkx::writeDescriptorSet(
+				rscs.descriptorSets->get("offscreen.ssao.generate"),
+				vk::DescriptorType::eCombinedImageSampler,
+				1,
+				&texDescriptorNorm),
+			// Set 0: Binding 2: Fragment shader image sampler// FS SSAO Noise
+			vkx::writeDescriptorSet(
+				rscs.descriptorSets->get("offscreen.ssao.generate"),
+				vk::DescriptorType::eCombinedImageSampler,
+				2,
+				&textures.ssaoNoise.descriptor),
+			// Set 0: Binding 3: Fragment shader uniform buffer// FS SSAO Kernel UBO
+			vkx::writeDescriptorSet(
+				rscs.descriptorSets->get("offscreen.ssao.generate"),
+				vk::DescriptorType::eUniformBuffer,
+				3,
+				&uniformDataDeferred.ssaoKernel.descriptor),
+			// Set 0: Binding 4: Fragment shader uniform buffer// FS SSAO Params UBO
+			vkx::writeDescriptorSet(
+				rscs.descriptorSets->get("offscreen.ssao.generate"),
+				vk::DescriptorType::eUniformBuffer,
+				4,
+				&uniformDataDeferred.ssaoParams.descriptor),
+		};
+		device.updateDescriptorSets(ssaoGenerateWriteDescriptorSets, nullptr);
 
-		//	//// Set 0: Binding 1: bones uniform buffer
-		//	//vkx::writeDescriptorSet(
-		//	//	rscs.descriptorSets->get("offscreen.scene"),// descriptor set 0
-		//	//	vk::DescriptorType::eUniformBuffer,
-		//	//	1,// binding 1
-		//	//	&uniformData.bonesVS.descriptor),// bind to forward descriptor since it's the same
 
 
-		//	//// Set 1: Binding 0: Vertex shader uniform buffer
-		//	//vkx::writeDescriptorSet(
-		//	//	rscs.descriptorSets->get("offscreen.matrix"),
-		//	//	vk::DescriptorType::eUniformBufferDynamic,
-		//	//	0,
-		//	//	&uniformData.matrixVS.descriptor),// bind to forward descriptor since it's the same
 
-		//	//// Set 2: Binding 0: Scene color map
-		//	//vkx::writeDescriptorSet(
-		//	//	rscs.descriptorSets->get("deferred.textures"),
-		//	//	vk::DescriptorType::eCombinedImageSampler,
-		//	//	0,
-		//	//	&textures.colorMap.descriptor),
-		//};
-		//device.updateDescriptorSets(ssaoBlurWriteDescriptorSets, nullptr);
+		// descriptor set 
+		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo10 =
+			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred.deferred"), &rscs.descriptorSetLayouts->get("offscreen.ssao.blur"), 1);
+		rscs.descriptorSets->add("offscreen.ssao.blur", descriptorSetAllocateInfo10);
+
+		vk::DescriptorImageInfo texDescriptorSSAOBlur =
+			vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[1].attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
+		//vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[1].attachments[0].view, vk::ImageLayout::eGeneral);
+
+		std::vector<vk::WriteDescriptorSet> ssaoBlurWriteDescriptorSets =
+		{
+			// Set 0: Binding 0: Fragment shader image sampler
+			vkx::writeDescriptorSet(
+				rscs.descriptorSets->get("offscreen.scene"),
+				vk::DescriptorType::eCombinedImageSampler,
+				0,
+				&texDescriptorSSAOBlur),
+		};
+		device.updateDescriptorSets(ssaoBlurWriteDescriptorSets, nullptr);
 
 
 	}
@@ -1983,10 +1956,6 @@ class VulkanExample : public vkx::vulkanApp {
 
 		uniformDataDeferred.matrixVS = context.createDynamicUniformBuffer(matrixNodes);
 
-		// ssao
-		uniformDataDeferred.ssaoParams = context.createUniformBuffer(uboSSAOParams);
-		uniformDataDeferred.ssaoKernel = context.createUniformBuffer(uboSSAOKernel);
-
 
 		// Update
 		updateUniformBuffersScreen();
@@ -1994,6 +1963,12 @@ class VulkanExample : public vkx::vulkanApp {
 		updateMatrixBufferDeferred();
 		updateUniformBufferDeferredLights();
 
+		// ssao
+		uniformDataDeferred.ssaoParams = context.createUniformBuffer(uboSSAOParams);
+		uniformDataDeferred.ssaoKernel = context.createUniformBuffer(uboSSAOKernel);
+
+		updateUniformBufferSSAOParams();
+		updateUniformBufferSSAOKernel();
 
 	}
 
@@ -2088,6 +2063,18 @@ class VulkanExample : public vkx::vulkanApp {
 		}
 
 		uniformDataDeferred.ssaoKernel.copy(uboSSAOKernel);
+
+
+		// todo: fix
+
+		// Random noise
+		std::vector<glm::vec4> ssaoNoise(SSAO_NOISE_DIM * SSAO_NOISE_DIM);
+		for (uint32_t i = 0; i < static_cast<uint32_t>(ssaoNoise.size()); i++) {
+			ssaoNoise[i] = glm::vec4(rndDist(rndGen) * 2.0f - 1.0f, rndDist(rndGen) * 2.0f - 1.0f, 0.0f, 0.0f);
+		}
+		// Upload as texture
+		//textureLoader->createTexture(ssaoNoise.data(), ssaoNoise.size() * sizeof(glm::vec4), VK_FORMAT_R32G32B32A32_SFLOAT, SSAO_NOISE_DIM, SSAO_NOISE_DIM, &textures.ssaoNoise, VK_FILTER_NEAREST);
+
 	}
 
 	void toggleDebugDisplay() {
@@ -3306,83 +3293,83 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-		//// SSAO Generation pass:
-		//{
+		// SSAO Generation pass:
+		{
 
-		//	// Clear values for all attachments written in the fragment shader
-		//	clearValues[0].color = vkx::clearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
-		//	clearValues[1].depthStencil = { 1.0f, 0 };
+			// Clear values for all attachments written in the fragment shader
+			clearValues[0].color = vkx::clearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
+			clearValues[1].depthStencil = { 1.0f, 0 };
 
-		//	vk::RenderPassBeginInfo renderPassBeginInfo2;
-		//	renderPassBeginInfo2.renderPass = offscreen.renderPass;
-		//	renderPassBeginInfo2.framebuffer = offscreen.framebuffers[1].framebuffer;
-		//	renderPassBeginInfo2.renderArea.extent.width = offscreen.size.x;
-		//	renderPassBeginInfo2.renderArea.extent.height = offscreen.size.y;
-		//	renderPassBeginInfo2.clearValueCount = clearValues.size();//2
-		//	renderPassBeginInfo2.pClearValues = clearValues.data();
+			vk::RenderPassBeginInfo renderPassBeginInfo2;
+			renderPassBeginInfo2.renderPass = offscreen.renderPass;
+			renderPassBeginInfo2.framebuffer = offscreen.framebuffers[1].framebuffer;
+			renderPassBeginInfo2.renderArea.extent.width = offscreen.size.x;
+			renderPassBeginInfo2.renderArea.extent.height = offscreen.size.y;
+			renderPassBeginInfo2.clearValueCount = clearValues.size();//2
+			renderPassBeginInfo2.pClearValues = clearValues.data();
 
-		//	// begin SSAO render pass
-		//	offscreenCmdBuffer.beginRenderPass(renderPassBeginInfo2, vk::SubpassContents::eInline);
-
-
-		//	vk::Viewport viewport = vkx::viewport(offscreen.size);
-		//	offscreenCmdBuffer.setViewport(0, viewport);
-		//	vk::Rect2D scissor = vkx::rect2D(offscreen.size);
-		//	offscreenCmdBuffer.setScissor(0, scissor);
-		//	vk::DeviceSize offsets = { 0 };
+			// begin SSAO render pass
+			offscreenCmdBuffer.beginRenderPass(renderPassBeginInfo2, vk::SubpassContents::eInline);
 
 
-
-
-		//	offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("ssao.generate"), 0, 1, rscs.descriptorSets->getPtr("ssao.generate"), 0, nullptr);
-		//	offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("ssao.generate"));
-		//	offscreenCmdBuffer.draw(3, 1, 0, 0);
-
-
-		//	offscreenCmdBuffer.endRenderPass();
-		//}
+			vk::Viewport viewport = vkx::viewport(offscreen.size);
+			offscreenCmdBuffer.setViewport(0, viewport);
+			vk::Rect2D scissor = vkx::rect2D(offscreen.size);
+			offscreenCmdBuffer.setScissor(0, scissor);
+			vk::DeviceSize offsets = { 0 };
 
 
 
-		//// Third pass: SSAO blur
-		//// -------------------------------------------------------------------------------------------------------
-		//{
 
-		//	vk::RenderPassBeginInfo renderPassBeginInfo3;
-		//	renderPassBeginInfo3.renderPass = offscreen.renderPass;
-		//	renderPassBeginInfo3.framebuffer = offscreen.framebuffers[2].framebuffer;
-		//	renderPassBeginInfo3.renderArea.extent.width = offscreen.size.x;
-		//	renderPassBeginInfo3.renderArea.extent.height = offscreen.size.y;
-		//	renderPassBeginInfo3.clearValueCount = clearValues.size();//2
-		//	renderPassBeginInfo3.pClearValues = clearValues.data();
+			offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("ssao.generate"), 0, 1, rscs.descriptorSets->getPtr("ssao.generate"), 0, nullptr);
+			offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("ssao.generate"));
+			offscreenCmdBuffer.draw(3, 1, 0, 0);
 
-		//	//renderPassBeginInfo.framebuffer = frameBuffers.ssaoBlur.frameBuffer;
-		//	//renderPassBeginInfo.renderPass = frameBuffers.ssaoBlur.renderPass;
-		//	//renderPassBeginInfo.renderArea.extent.width = frameBuffers.ssaoBlur.width;
-		//	//renderPassBeginInfo.renderArea.extent.height = frameBuffers.ssaoBlur.height;
 
-		//	offscreenCmdBuffer.beginRenderPass(renderPassBeginInfo3, vk::SubpassContents::eInline);
-
-		//	//viewport = vkTools::initializers::viewport((float)frameBuffers.ssaoBlur.width, (float)frameBuffers.ssaoBlur.height, 0.0f, 1.0f);
-		//	//vkCmdSetViewport(offScreenCmdBuffer, 0, 1, &viewport);
-		//	//scissor = vkTools::initializers::rect2D(frameBuffers.ssaoBlur.width, frameBuffers.ssaoBlur.height, 0, 0);
-		//	//vkCmdSetScissor(offScreenCmdBuffer, 0, 1, &scissor);
-
-		//	vk::Viewport viewport = vkx::viewport(offscreen.size);
-		//	offscreenCmdBuffer.setViewport(0, viewport);
-		//	vk::Rect2D scissor = vkx::rect2D(offscreen.size);
-		//	offscreenCmdBuffer.setScissor(0, scissor);
-		//	vk::DeviceSize offsets = { 0 };
+			offscreenCmdBuffer.endRenderPass();
+		}
 
 
 
-		//	offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("ssao.blur"), 0, 1, rscs.descriptorSets->getPtr("ssao.blur"), 0, nullptr);
-		//	offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("ssao.blur"));
-		//	offscreenCmdBuffer.draw(3, 1, 0, 0);
+		// Third pass: SSAO blur
+		// -------------------------------------------------------------------------------------------------------
+		{
 
-		//	offscreenCmdBuffer.endRenderPass();
+			vk::RenderPassBeginInfo renderPassBeginInfo3;
+			renderPassBeginInfo3.renderPass = offscreen.renderPass;
+			renderPassBeginInfo3.framebuffer = offscreen.framebuffers[2].framebuffer;
+			renderPassBeginInfo3.renderArea.extent.width = offscreen.size.x;
+			renderPassBeginInfo3.renderArea.extent.height = offscreen.size.y;
+			renderPassBeginInfo3.clearValueCount = clearValues.size();//2
+			renderPassBeginInfo3.pClearValues = clearValues.data();
 
-		//}
+			//renderPassBeginInfo.framebuffer = frameBuffers.ssaoBlur.frameBuffer;
+			//renderPassBeginInfo.renderPass = frameBuffers.ssaoBlur.renderPass;
+			//renderPassBeginInfo.renderArea.extent.width = frameBuffers.ssaoBlur.width;
+			//renderPassBeginInfo.renderArea.extent.height = frameBuffers.ssaoBlur.height;
+
+			offscreenCmdBuffer.beginRenderPass(renderPassBeginInfo3, vk::SubpassContents::eInline);
+
+			//viewport = vkTools::initializers::viewport((float)frameBuffers.ssaoBlur.width, (float)frameBuffers.ssaoBlur.height, 0.0f, 1.0f);
+			//vkCmdSetViewport(offScreenCmdBuffer, 0, 1, &viewport);
+			//scissor = vkTools::initializers::rect2D(frameBuffers.ssaoBlur.width, frameBuffers.ssaoBlur.height, 0, 0);
+			//vkCmdSetScissor(offScreenCmdBuffer, 0, 1, &scissor);
+
+			vk::Viewport viewport = vkx::viewport(offscreen.size);
+			offscreenCmdBuffer.setViewport(0, viewport);
+			vk::Rect2D scissor = vkx::rect2D(offscreen.size);
+			offscreenCmdBuffer.setScissor(0, scissor);
+			vk::DeviceSize offsets = { 0 };
+
+
+
+			offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("ssao.blur"), 0, 1, rscs.descriptorSets->getPtr("ssao.blur"), 0, nullptr);
+			offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("ssao.blur"));
+			offscreenCmdBuffer.draw(3, 1, 0, 0);
+
+			offscreenCmdBuffer.endRenderPass();
+
+		}
 
 
 

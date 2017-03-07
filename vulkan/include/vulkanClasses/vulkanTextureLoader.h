@@ -72,5 +72,7 @@ namespace vkx {
 
 			// Load an array texture (single file)
 			Texture loadTextureArray(const std::string& filename, vk::Format format);
+			
+			//void createTexture(void * buffer, VkDeviceSize bufferSize, VkFormat format, uint32_t width, uint32_t height, vkx::Texture * texture, VkFilter filter, VkImageUsageFlags imageUsageFlags);
 		};
 }
