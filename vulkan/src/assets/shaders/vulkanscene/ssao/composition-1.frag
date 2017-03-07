@@ -38,7 +38,7 @@ layout (binding = 5) uniform UBO
 void main() 
 {
 	// Get G-Buffer values
-	vec3 fragPos = texture(samplerposition, inUV).rgb;
+	vec3 fragPos = texture(samplerPosition, inUV).rgb;
 	vec3 normal = texture(samplerNormal, inUV).rgb * 2.0 - 1.0;
 
 	// unpack
