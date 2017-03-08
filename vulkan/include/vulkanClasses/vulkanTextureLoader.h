@@ -52,11 +52,16 @@ namespace vkx {
 
 			vk::CommandBuffer cmdBuffer;
 
+			vk::Queue queue;
+			vk::CommandPool cmdPool;
+
 		
 
 		public:
 
 			TextureLoader(const Context &context);
+
+			TextureLoader(const Context &context, vk::Queue queue, vk::CommandPool cmdPool);
 
 			~TextureLoader();
 
@@ -72,6 +77,8 @@ namespace vkx {
 
 			// Load an array texture (single file)
 			Texture loadTextureArray(const std::string& filename, vk::Format format);
+
+			void createTexture(void * buffer, vk::DeviceSize bufferSize, vk::Format format, uint32_t width, uint32_t height, vkx::Texture * texture, vk::Filter filter = vk::Filter::eLinear, vk::ImageUsageFlags imageUsageFlags = vk::ImageUsageFlagBits::eSampled);
 			
 			//void createTexture(void * buffer, VkDeviceSize bufferSize, VkFormat format, uint32_t width, uint32_t height, vkx::Texture * texture, VkFilter filter, VkImageUsageFlags imageUsageFlags);
 		};

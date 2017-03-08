@@ -32,6 +32,8 @@
 #define SSAO_RADIUS 2.0f
 #define SSAO_NOISE_DIM 4
 
+#define SSAO_ON 1
+
 
 
 
@@ -302,6 +304,8 @@ class VulkanExample : public vkx::vulkanApp {
 	struct {
 		Light lights[100];
 		glm::vec4 viewPos;
+		glm::mat4 model;// added
+		glm::mat4 view;// added
 	} uboFSLights;
 
 	// ssao
@@ -1054,6 +1058,12 @@ class VulkanExample : public vkx::vulkanApp {
 				vk::DescriptorType::eUniformBuffer,
 				vk::ShaderStageFlagBits::eFragment,
 				4),
+
+			// Set 0: Binding 5: SSAO Sampler texture target
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eCombinedImageSampler,
+				vk::ShaderStageFlagBits::eFragment,
+				5),
 		};
 
 
@@ -1707,7 +1717,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		colorBlendState.attachmentCount = 1;
 
-		vk::PipelineVertexInputStateCreateInfo emptyInputState{};
+		vk::PipelineVertexInputStateCreateInfo emptyInputState;
 		emptyInputState.vertexAttributeDescriptionCount = 0;
 		emptyInputState.pVertexAttributeDescriptions = nullptr;
 		emptyInputState.vertexBindingDescriptionCount = 0;
@@ -2052,13 +2062,22 @@ class VulkanExample : public vkx::vulkanApp {
 		//uboFragmentLights.viewPos = glm::vec4(-camera.transform.translation.x, -camera.transform.translation.y, -camera.transform.translation.z, 0.0f);
 		uboFSLights.viewPos = glm::vec4(camera.transform.translation, 0.0f) * glm::vec4(-1.0f, -1.0f, -1.0f, 1.0f);
 
+		uboFSLights.view = camera.matrices.view;
+		uboFSLights.model = glm::mat4();
+
 		uniformDataDeferred.fsLights.copy(uboFSLights);
 	}
 
 
 
 	void updateUniformBufferSSAOParams() {
+		uboSSAOParams.projection = camera.matrices.projection;
 		uniformDataDeferred.ssaoParams.copy(uboSSAOParams);
+	}
+
+	inline float lerp(float a, float b, float f)
+	{
+		return a + f * (b - a);
 	}
 
 	void updateUniformBufferSSAOKernel() {
@@ -2076,7 +2095,7 @@ class VulkanExample : public vkx::vulkanApp {
 			sample = glm::normalize(sample);
 			sample *= rndDist(rndGen);
 			float scale = float(i) / float(SSAO_KERNEL_SIZE);
-			//scale = lerp(0.1f, 1.0f, scale * scale);// todo: fix
+			scale = lerp(0.1f, 1.0f, scale * scale);// todo: fix
 			ssaoKernel[i] = glm::vec4(sample * scale, 0.0f);
 		}
 
@@ -2090,8 +2109,9 @@ class VulkanExample : public vkx::vulkanApp {
 		for (uint32_t i = 0; i < static_cast<uint32_t>(ssaoNoise.size()); i++) {
 			ssaoNoise[i] = glm::vec4(rndDist(rndGen) * 2.0f - 1.0f, rndDist(rndGen) * 2.0f - 1.0f, 0.0f, 0.0f);
 		}
+		
 		// Upload as texture
-		//textureLoader->createTexture(ssaoNoise.data(), ssaoNoise.size() * sizeof(glm::vec4), VK_FORMAT_R32G32B32A32_SFLOAT, SSAO_NOISE_DIM, SSAO_NOISE_DIM, &textures.ssaoNoise, VK_FILTER_NEAREST);
+		textureLoader->createTexture(ssaoNoise.data(), ssaoNoise.size() * sizeof(glm::vec4), vk::Format::eR32G32B32A32Sfloat, SSAO_NOISE_DIM, SSAO_NOISE_DIM, &textures.ssaoNoise, vk::Filter::eNearest);
 
 	}
 
@@ -3074,8 +3094,11 @@ class VulkanExample : public vkx::vulkanApp {
 			uint32_t setNum = 3;// important!
 			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred"), setNum, rscs.descriptorSets->get("deferred.deferred"), nullptr);
 			if (debugDisplay) {
-				cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.debug"));
-				//cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.debug.ssao"));
+				if (!SSAO_ON) {
+					cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.debug"));
+				} else {
+					cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.debug.ssao"));
+				}
 				cmdBuffer.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, meshBuffers.quad.vertices.buffer, { 0 });
 				cmdBuffer.bindIndexBuffer(meshBuffers.quad.indices.buffer, 0, vk::IndexType::eUint32);
 				cmdBuffer.drawIndexed(meshBuffers.quad.indexCount, 1, 0, 0, 1);
@@ -3093,8 +3116,11 @@ class VulkanExample : public vkx::vulkanApp {
 
 			cmdBuffer.setViewport(0, viewport);
 			// Final composition as full screen quad
-			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.composition"));
-			//cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.composition.ssao"));
+			if (!SSAO_ON) {
+				cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.composition"));
+			} else {
+				cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.composition.ssao"));
+			}
 			cmdBuffer.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, meshBuffers.quad.vertices.buffer, { 0 });
 			cmdBuffer.bindIndexBuffer(meshBuffers.quad.indices.buffer, 0, vk::IndexType::eUint32);
 			cmdBuffer.drawIndexed(6, 1, 0, 0, 1);
@@ -3120,8 +3146,11 @@ class VulkanExample : public vkx::vulkanApp {
 			offscreenCmdBuffer = device.allocateCommandBuffers(cmd)[0];
 		}
 
+		// todo: create semaphore here?:
+
 		vk::CommandBufferBeginInfo cmdBufInfo;
 		cmdBufInfo.flags = vk::CommandBufferUsageFlagBits::eSimultaneousUse;
+
 
 		// begin offscreen command buffer
 		offscreenCmdBuffer.begin(cmdBufInfo);
@@ -3176,7 +3205,12 @@ class VulkanExample : public vkx::vulkanApp {
 			// bind mesh pipeline
 			// don't have to do this for every mesh
 			// todo: create pipelinesDefferd.mesh
-			offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("offscreen.meshes"));
+			if (!SSAO_ON) {
+				offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("offscreen.meshes"));
+			} else {
+				offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("offscreen.meshes.ssao"));
+			}
+
 
 			// for each model
 			// model = group of meshes
@@ -3312,83 +3346,83 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-		//// SSAO Generation pass:
-		//{
+		// SSAO Generation pass:
+		{
 
-		//	// Clear values for all attachments written in the fragment shader
-		//	clearValues[0].color = vkx::clearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
-		//	clearValues[1].depthStencil = { 1.0f, 0 };
+			// Clear values for all attachments written in the fragment shader
+			clearValues[0].color = vkx::clearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
+			clearValues[1].depthStencil = { 1.0f, 0 };
 
-		//	vk::RenderPassBeginInfo renderPassBeginInfo2;
-		//	renderPassBeginInfo2.renderPass = offscreen.renderPass;
-		//	renderPassBeginInfo2.framebuffer = offscreen.framebuffers[1].framebuffer;
-		//	renderPassBeginInfo2.renderArea.extent.width = offscreen.size.x;
-		//	renderPassBeginInfo2.renderArea.extent.height = offscreen.size.y;
-		//	renderPassBeginInfo2.clearValueCount = clearValues.size();//2
-		//	renderPassBeginInfo2.pClearValues = clearValues.data();
+			vk::RenderPassBeginInfo renderPassBeginInfo2;
+			renderPassBeginInfo2.renderPass = offscreen.framebuffers[1].renderPass;
+			renderPassBeginInfo2.framebuffer = offscreen.framebuffers[1].framebuffer;
+			renderPassBeginInfo2.renderArea.extent.width = offscreen.size.x;
+			renderPassBeginInfo2.renderArea.extent.height = offscreen.size.y;
+			renderPassBeginInfo2.clearValueCount = 2;//clearValues.size();//2
+			renderPassBeginInfo2.pClearValues = clearValues.data();
 
-		//	// begin SSAO render pass
-		//	offscreenCmdBuffer.beginRenderPass(renderPassBeginInfo2, vk::SubpassContents::eInline);
-
-
-		//	vk::Viewport viewport = vkx::viewport(offscreen.size);
-		//	offscreenCmdBuffer.setViewport(0, viewport);
-		//	vk::Rect2D scissor = vkx::rect2D(offscreen.size);
-		//	offscreenCmdBuffer.setScissor(0, scissor);
-		//	vk::DeviceSize offsets = { 0 };
+			// begin SSAO render pass
+			offscreenCmdBuffer.beginRenderPass(renderPassBeginInfo2, vk::SubpassContents::eInline);
 
 
-
-
-		//	offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("offscreen.ssaoGenerate"), 0, 1, rscs.descriptorSets->getPtr("ssao.generate"), 0, nullptr);
-		//	offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("ssao.generate"));
-		//	offscreenCmdBuffer.draw(3, 1, 0, 0);
-
-
-		//	offscreenCmdBuffer.endRenderPass();
-		//}
+			vk::Viewport viewport = vkx::viewport(offscreen.size);
+			offscreenCmdBuffer.setViewport(0, viewport);
+			vk::Rect2D scissor = vkx::rect2D(offscreen.size);
+			offscreenCmdBuffer.setScissor(0, scissor);
+			vk::DeviceSize offsets = { 0 };
 
 
 
-		//// Third pass: SSAO blur
-		//// -------------------------------------------------------------------------------------------------------
-		//{
 
-		//	vk::RenderPassBeginInfo renderPassBeginInfo3;
-		//	renderPassBeginInfo3.renderPass = offscreen.renderPass;
-		//	renderPassBeginInfo3.framebuffer = offscreen.framebuffers[2].framebuffer;
-		//	renderPassBeginInfo3.renderArea.extent.width = offscreen.size.x;
-		//	renderPassBeginInfo3.renderArea.extent.height = offscreen.size.y;
-		//	renderPassBeginInfo3.clearValueCount = clearValues.size();//2
-		//	renderPassBeginInfo3.pClearValues = clearValues.data();
+			offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("offscreen.ssaoGenerate"), 0, 1, rscs.descriptorSets->getPtr("offscreen.ssao.generate"), 0, nullptr);
+			offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("ssao.generate"));
+			offscreenCmdBuffer.draw(3, 1, 0, 0);
 
-		//	//renderPassBeginInfo.framebuffer = frameBuffers.ssaoBlur.frameBuffer;
-		//	//renderPassBeginInfo.renderPass = frameBuffers.ssaoBlur.renderPass;
-		//	//renderPassBeginInfo.renderArea.extent.width = frameBuffers.ssaoBlur.width;
-		//	//renderPassBeginInfo.renderArea.extent.height = frameBuffers.ssaoBlur.height;
 
-		//	offscreenCmdBuffer.beginRenderPass(renderPassBeginInfo3, vk::SubpassContents::eInline);
-
-		//	//viewport = vkTools::initializers::viewport((float)frameBuffers.ssaoBlur.width, (float)frameBuffers.ssaoBlur.height, 0.0f, 1.0f);
-		//	//vkCmdSetViewport(offScreenCmdBuffer, 0, 1, &viewport);
-		//	//scissor = vkTools::initializers::rect2D(frameBuffers.ssaoBlur.width, frameBuffers.ssaoBlur.height, 0, 0);
-		//	//vkCmdSetScissor(offScreenCmdBuffer, 0, 1, &scissor);
-
-		//	vk::Viewport viewport = vkx::viewport(offscreen.size);
-		//	offscreenCmdBuffer.setViewport(0, viewport);
-		//	vk::Rect2D scissor = vkx::rect2D(offscreen.size);
-		//	offscreenCmdBuffer.setScissor(0, scissor);
-		//	vk::DeviceSize offsets = { 0 };
+			offscreenCmdBuffer.endRenderPass();
+		}
 
 
 
-		//	offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("offscreen.ssaoBlur"), 0, 1, rscs.descriptorSets->getPtr("ssao.blur"), 0, nullptr);
-		//	offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("ssao.blur"));
-		//	offscreenCmdBuffer.draw(3, 1, 0, 0);
+		// Third pass: SSAO blur
+		// -------------------------------------------------------------------------------------------------------
+		{
 
-		//	offscreenCmdBuffer.endRenderPass();
+			vk::RenderPassBeginInfo renderPassBeginInfo3;
+			renderPassBeginInfo3.renderPass = offscreen.framebuffers[2].renderPass;
+			renderPassBeginInfo3.framebuffer = offscreen.framebuffers[2].framebuffer;
+			renderPassBeginInfo3.renderArea.extent.width = offscreen.size.x;
+			renderPassBeginInfo3.renderArea.extent.height = offscreen.size.y;
+			renderPassBeginInfo3.clearValueCount = 2;//clearValues.size();//2
+			renderPassBeginInfo3.pClearValues = clearValues.data();
 
-		//}
+			//renderPassBeginInfo.framebuffer = frameBuffers.ssaoBlur.frameBuffer;
+			//renderPassBeginInfo.renderPass = frameBuffers.ssaoBlur.renderPass;
+			//renderPassBeginInfo.renderArea.extent.width = frameBuffers.ssaoBlur.width;
+			//renderPassBeginInfo.renderArea.extent.height = frameBuffers.ssaoBlur.height;
+
+			offscreenCmdBuffer.beginRenderPass(renderPassBeginInfo3, vk::SubpassContents::eInline);
+
+			//viewport = vkTools::initializers::viewport((float)frameBuffers.ssaoBlur.width, (float)frameBuffers.ssaoBlur.height, 0.0f, 1.0f);
+			//vkCmdSetViewport(offScreenCmdBuffer, 0, 1, &viewport);
+			//scissor = vkTools::initializers::rect2D(frameBuffers.ssaoBlur.width, frameBuffers.ssaoBlur.height, 0, 0);
+			//vkCmdSetScissor(offScreenCmdBuffer, 0, 1, &scissor);
+
+			vk::Viewport viewport = vkx::viewport(offscreen.size);
+			offscreenCmdBuffer.setViewport(0, viewport);
+			vk::Rect2D scissor = vkx::rect2D(offscreen.size);
+			offscreenCmdBuffer.setScissor(0, scissor);
+			vk::DeviceSize offsets = { 0 };
+
+
+
+			offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("offscreen.ssaoBlur"), 0, 1, rscs.descriptorSets->getPtr("offscreen.ssao.blur"), 0, nullptr);
+			offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("ssao.blur"));
+			offscreenCmdBuffer.draw(3, 1, 0, 0);
+
+			offscreenCmdBuffer.endRenderPass();
+
+		}
 
 
 

@@ -135,9 +135,15 @@ namespace vkx {
 			std::unordered_map<std::string, T> resources;
 			VulkanResourceList(vk::Device &dev) : device(dev) {};
 			const T get(std::string name) {
+				if (!present(name)) {
+					throw;
+				}
 				return resources[name];
 			}
 			T *getPtr(std::string name) {
+				if (!present(name)) {
+					throw;
+				}
 				return &resources[name];
 			}
 			bool present(std::string name) {

@@ -22,4 +22,5 @@ void main()
 		}
 	}
 	outFragColor = result / (float(n));
+	//outFragColor = 1.0;
 }

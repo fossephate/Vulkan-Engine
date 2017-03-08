@@ -17,11 +17,15 @@ struct Light {
     float _pad;
 };
 
+#define NUM_LIGHTS 100
+
 // todo: make this another set(1) rather than binding = 4
 layout (set = 3, binding = 4) uniform UBO 
 {
-    Light lights[51];
+    Light lights[NUM_LIGHTS];
     vec4 viewPos;
+    mat4 model;// added
+    mat4 view;// added
 } ubo;
 
 layout (location = 0) in vec2 inUV;
@@ -40,7 +44,7 @@ void main()
     vec3 normal = texture(samplerNormal, inUV).rgb;
     vec4 albedo = texture(samplerAlbedo, inUV);
     
-	#define lightCount 50
+	#define lightCount 100
 	#define ambient 0.05
 	#define specularStrength 0.15
 	

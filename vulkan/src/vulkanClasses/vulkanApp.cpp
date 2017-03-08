@@ -582,7 +582,7 @@ void vulkanApp::prepare() {
 
 	// Create a simple texture loader class
 	// todo: move this into asset manager class
-	textureLoader = new TextureLoader(this->context);
+	textureLoader = new TextureLoader(this->context, this->queue, this->cmdPool);
 
 
 	// todo: add mesh loader here// important
@@ -832,12 +832,12 @@ void vulkanApp::renderLoop() {
 
 
 		fpsTimer += (float)tFrameTime.count();
-		if (fpsTimer > 1000.0f) {
-			lastFPS = frameCounter;
+		//if (fpsTimer > 1000.0f) {
+			//lastFPS = frameCounter;
 			updateTextOverlay();
 			fpsTimer = 0.0f;
 			frameCounter = 0;
-		}
+		//}
 
 		// start of frame
 		tFrameStart = std::chrono::high_resolution_clock::now();

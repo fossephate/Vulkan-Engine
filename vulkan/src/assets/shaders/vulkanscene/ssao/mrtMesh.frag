@@ -43,8 +43,7 @@ void main()
 	vec4 color = texture(samplerColor, inUV);
 
 	// Discard by alpha for transparent objects if enabled via specialization constant
-	if (ENABLE_DISCARD == 0)
-	{
+	if (ENABLE_DISCARD == 0) {
 		vec3 N = normalize(inNormal);
 		vec3 T = normalize(inTangent);
 		vec3 B = cross(N, T);
@@ -52,12 +51,9 @@ void main()
 		vec3 nm = texture(samplerNormal, inUV).xyz * 2.0 - vec3(1.0);
 		nm = TBN * normalize(nm);
 		outNormal = vec4(nm * 0.5 + 0.5, 0.0);
-	}
-	else
-	{
+	} else {
 		outNormal = vec4(normalize(inNormal) * 0.5 + 0.5, 0.0);
-		if (color.a < 0.5)
-		{
+		if (color.a < 0.5) {
 			discard;
 		}
 	}
@@ -70,6 +66,9 @@ void main()
 	outAlbedo.b = packHalf2x16(vec2(specular, 0.0));
 
 
-
+// test:
+	// outPosition = vec4(inWorldPos, 1.0);
+	// outNormal = vec4(inNormal, 1.0);
+	// outAlbedo = texture(samplerColor, inUV);
 	
 }
