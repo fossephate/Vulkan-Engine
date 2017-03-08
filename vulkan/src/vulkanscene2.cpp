@@ -405,7 +405,7 @@ class VulkanExample : public vkx::vulkanApp {
 		size.width = 1280;
 		size.height = 720;
 
-		camera.setProjection(80.0f, (float)size.width / (float)size.height, 0.01f, 128.0f);
+		camera.setProjection(80.0f, (float)size.width / (float)size.height, 1.0f, 512.0f);
 
 
 
@@ -2058,9 +2058,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 		// Current view position
-		//uboFragmentLights.viewPos = glm::vec4(0.0f, 0.0f, -camera.transform.translation.z, 0.0f);
-		//uboFragmentLights.viewPos = glm::vec4(-camera.transform.translation.x, -camera.transform.translation.y, -camera.transform.translation.z, 0.0f);
-		uboFSLights.viewPos = glm::vec4(camera.transform.translation, 0.0f) * glm::vec4(-1.0f, -1.0f, -1.0f, 1.0f);
+		uboFSLights.viewPos = glm::vec4(camera.transform.translation, 0.0f) * glm::vec4(-1.0f);
 
 		uboFSLights.view = camera.matrices.view;
 		uboFSLights.model = glm::mat4();
@@ -2175,7 +2173,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// deferred
 
-		if (false) {
+		if (!false) {
 			auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			sponzaModel->load(getAssetPath() + "models/sponza.dae");
 			sponzaModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
@@ -2960,123 +2958,123 @@ class VulkanExample : public vkx::vulkanApp {
 		//https://github.com/SaschaWillems/Vulkan/tree/master/dynamicuniformbuffer
 
 
+		// forward rendered:
+		{
+		//	// MODELS:
+
+		//	// bind mesh pipeline
+		//	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("forward.meshes"));
+
+		//	// for each model
+		//	// model = group of meshes
+		//	for (auto &model : models) {
+		//		// for each of the model's meshes
+		//		for (auto &mesh : model->meshes) {
 
 
-		// MODELS:
+		//			// bind vertex & index buffers
+		//			cmdBuffer.bindVertexBuffers(mesh.vertexBufferBinding, mesh.meshBuffer.vertices.buffer, vk::DeviceSize());
+		//			cmdBuffer.bindIndexBuffer(mesh.meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
 
-		// bind mesh pipeline
-		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("forward.meshes"));
+		//			// descriptor set #
+		//			uint32_t setNum;
 
-		// for each model
-		// model = group of meshes
-		for (auto &model : models) {
-			// for each of the model's meshes
-			for (auto &mesh : model->meshes) {
+		//			// bind scene descriptor set
+		//			setNum = 0;
+		//			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, rscs.descriptorSets->get("forward.scene"), nullptr);
 
-
-				// bind vertex & index buffers
-				cmdBuffer.bindVertexBuffers(mesh.vertexBufferBinding, mesh.meshBuffer.vertices.buffer, vk::DeviceSize());
-				cmdBuffer.bindIndexBuffer(mesh.meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
-
-				// descriptor set #
-				uint32_t setNum;
-
-				// bind scene descriptor set
-				setNum = 0;
-				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, rscs.descriptorSets->get("forward.scene"), nullptr);
-
-				//uint32_t offset1 = model->matrixIndex * alignedMatrixSize;
-				uint32_t offset1 = model->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
-				setNum = 1;
-				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.matrix"), 1, &offset1);
+		//			//uint32_t offset1 = model->matrixIndex * alignedMatrixSize;
+		//			uint32_t offset1 = model->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
+		//			setNum = 1;
+		//			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.matrix"), 1, &offset1);
 
 
-				if (lastMaterialName != mesh.meshBuffer.materialName) {
+		//			if (lastMaterialName != mesh.meshBuffer.materialName) {
 
-					lastMaterialName = mesh.meshBuffer.materialName;
-					vkx::Material m = this->assetManager.materials.get(mesh.meshBuffer.materialName);
+		//				lastMaterialName = mesh.meshBuffer.materialName;
+		//				vkx::Material m = this->assetManager.materials.get(mesh.meshBuffer.materialName);
 
-					// Set 2: Binding: 0
-					//uint32_t offset2 = m.index * alignedMaterialSize;
-					uint32_t offset2 = m.index * static_cast<uint32_t>(alignedMaterialSize);
-					setNum = 2;
-					cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.material"), 1, &offset2);
+		//				// Set 2: Binding: 0
+		//				//uint32_t offset2 = m.index * alignedMaterialSize;
+		//				uint32_t offset2 = m.index * static_cast<uint32_t>(alignedMaterialSize);
+		//				setNum = 2;
+		//				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.material"), 1, &offset2);
 
-					// bind texture: // todo: implement a better way to bind textures
-					// Set: 3 Binding: 0
-					setNum = 3;
-					cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, m.descriptorSet, nullptr);
-				}
+		//				// bind texture: // todo: implement a better way to bind textures
+		//				// Set: 3 Binding: 0
+		//				setNum = 3;
+		//				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, m.descriptorSet, nullptr);
+		//			}
 
-				// draw:
-				cmdBuffer.drawIndexed(mesh.meshBuffer.indexCount, 1, 0, 0, 0);
-			}
+		//			// draw:
+		//			cmdBuffer.drawIndexed(mesh.meshBuffer.indexCount, 1, 0, 0, 0);
+		//		}
+
+		//	}
+
+
+
+
+
+
+
+
+
+
+
+		//	// SKINNED MESHES:
+
+		//	// bind skinned mesh pipeline
+		//	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("forward.skinnedMeshes"));
+		//	for (auto &skinnedMesh : skinnedMeshes) {
+		//		// bind vertex & index buffers
+		//		cmdBuffer.bindVertexBuffers(skinnedMesh->vertexBufferBinding, skinnedMesh->meshBuffer.vertices.buffer, vk::DeviceSize());
+		//		cmdBuffer.bindIndexBuffer(skinnedMesh->meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
+
+		//		// descriptor set #
+		//		uint32_t setNum;
+
+		//		// bind scene descriptor set
+		//		// Set 0: Binding 0:
+		//		setNum = 0;
+		//		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, rscs.descriptorSets->get("forward.scene"), nullptr);
+
+		//		// there is a bone uniform, set: 0, binding: 1
+
+
+		//		// Set 1: Binding 0:
+		//		//uint32_t offset1 = skinnedMesh->matrixIndex * alignedMatrixSize;
+		//		uint32_t offset1 = skinnedMesh->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
+		//		setNum = 1;
+		//		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.matrix"), 1, &offset1);
+
+		//		if (lastMaterialName != skinnedMesh->meshBuffer.materialName) {
+		//			lastMaterialName = skinnedMesh->meshBuffer.materialName;
+		//			vkx::Material m = this->assetManager.materials.get(skinnedMesh->meshBuffer.materialName);
+
+		//			// Set 2: Binding: 0
+		//			//uint32_t offset2 = m.index * alignedMaterialSize;
+		//			uint32_t offset2 = m.index * static_cast<uint32_t>(alignedMaterialSize);
+		//			setNum = 2;
+		//			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.material"), 1, &offset2);
+
+		//			// bind texture:
+		//			// Set 3: Binding 0:
+		//			setNum = 3;
+		//			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, m.descriptorSet, nullptr);
+		//		}
+
+		//		// bind bone descriptor set
+		//		//setNum = 0;
+		//		// Set 0: Binding 1:
+		//		//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, rscs.descriptorSets->get("forward.bones"), nullptr);
+
+
+		//		// draw:
+		//		cmdBuffer.drawIndexed(skinnedMesh->meshBuffer.indexCount, 1, 0, 0, 0);
+		//	}
 
 		}
-
-
-
-
-
-
-
-
-
-
-
-		// SKINNED MESHES:
-
-		// bind skinned mesh pipeline
-		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("forward.skinnedMeshes"));
-		for (auto &skinnedMesh : skinnedMeshes) {
-			// bind vertex & index buffers
-			cmdBuffer.bindVertexBuffers(skinnedMesh->vertexBufferBinding, skinnedMesh->meshBuffer.vertices.buffer, vk::DeviceSize());
-			cmdBuffer.bindIndexBuffer(skinnedMesh->meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
-
-			// descriptor set #
-			uint32_t setNum;
-
-			// bind scene descriptor set
-			// Set 0: Binding 0:
-			setNum = 0;
-			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, rscs.descriptorSets->get("forward.scene"), nullptr);
-
-			// there is a bone uniform, set: 0, binding: 1
-
-
-			// Set 1: Binding 0:
-			//uint32_t offset1 = skinnedMesh->matrixIndex * alignedMatrixSize;
-			uint32_t offset1 = skinnedMesh->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
-			setNum = 1;
-			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.matrix"), 1, &offset1);
-
-			if (lastMaterialName != skinnedMesh->meshBuffer.materialName) {
-				lastMaterialName = skinnedMesh->meshBuffer.materialName;
-				vkx::Material m = this->assetManager.materials.get(skinnedMesh->meshBuffer.materialName);
-
-				// Set 2: Binding: 0
-				//uint32_t offset2 = m.index * alignedMaterialSize;
-				uint32_t offset2 = m.index * static_cast<uint32_t>(alignedMaterialSize);
-				setNum = 2;
-				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.material"), 1, &offset2);
-
-				// bind texture:
-				// Set 3: Binding 0:
-				setNum = 3;
-				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, m.descriptorSet, nullptr);
-			}
-
-			// bind bone descriptor set
-			//setNum = 0;
-			// Set 0: Binding 1:
-			//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, rscs.descriptorSets->get("forward.bones"), nullptr);
-
-
-			// draw:
-			cmdBuffer.drawIndexed(skinnedMesh->meshBuffer.indexCount, 1, 0, 0, 0);
-		}
-
-
 
 
 

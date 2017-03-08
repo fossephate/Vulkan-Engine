@@ -43,9 +43,14 @@ void main()
 	outUV = inUV;
 	outUV.t = 1.0 - outUV.t;
 
+	// // Vertex position in world space
+	// vec4 tmpPos = inPos;
+	// outWorldPos = vec3(instance.model * tmpPos);
+
 	// Vertex position in world space
-	vec4 tmpPos = inPos;
-	outWorldPos = vec3(instance.model * tmpPos);
+	outWorldPos = inPos.xyz;
+
+	outWorldPos = vec3(scene.view * instance.model * inPos);
 	
 	// GL to Vulkan coord space
 	//outWorldPos.y = -outWorldPos.y;
@@ -54,6 +59,12 @@ void main()
 	// todo: do the inverse transpose on cpu
 	mat3 mNormal = transpose(inverse(mat3(instance.model)));
     outNormal = mNormal * normalize(inNormal);
+
+	// Normal in view space
+	mat3 normalMatrix = transpose(inverse(mat3(scene.view * instance.model)));
+	outNormal = normalMatrix * inNormal;
+
+
     outTangent = mNormal * normalize(inTangent);
 	
 	// Currently just vertex color

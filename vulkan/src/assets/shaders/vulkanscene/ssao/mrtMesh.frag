@@ -12,11 +12,11 @@ layout (location = 4) in vec3 inTangent;
 
 layout (location = 0) out vec4 outPosition;
 layout (location = 1) out vec4 outNormal;
-layout (location = 2) out vec4 outAlbedo;
+layout (location = 2) out uvec4 outAlbedo;// this is a uvec
 
 
-/*layout (constant_id = 0) */const float NEAR_PLANE = 0.1f;
-/*layout (constant_id = 1) */const float FAR_PLANE = 64.0f;
+/*layout (constant_id = 0) */const float NEAR_PLANE = 1.0f;
+/*layout (constant_id = 1) */const float FAR_PLANE = 512.0f;
 /*layout (constant_id = 2) */const int ENABLE_DISCARD = 0;
 
 //layout (set = 0, binding = 1) uniform sampler2D samplerColorMap;
@@ -30,8 +30,7 @@ layout (set = 2, binding = 2) uniform sampler2D samplerNormal;
 
 
 
-float linearDepth(float depth)
-{
+float linearDepth(float depth) {
 	float z = depth * 2.0f - 1.0f; 
 	return (2.0f * NEAR_PLANE * FAR_PLANE) / (FAR_PLANE + NEAR_PLANE - z * (FAR_PLANE - NEAR_PLANE));	
 }
