@@ -86,6 +86,12 @@ namespace vkx {
 
 	void vkx::MeshLoader::loadMaterials(const aiScene *pScene) {
 
+		// todo:
+		// Add dummy textures for objects without texture
+		//resources.textures->addTexture2D("dummy.diffuse", assetPath + "sponza/dummy.dds", VK_FORMAT_BC2_UNORM_BLOCK);
+		//resources.textures->addTexture2D("dummy.specular", assetPath + "sponza/dummy_specular.dds", VK_FORMAT_BC2_UNORM_BLOCK);
+		//resources.textures->addTexture2D("dummy.bump", assetPath + "sponza/dummy_ddn.dds", VK_FORMAT_BC2_UNORM_BLOCK);
+
 
 
 		for (size_t i = 0; i < pScene->mNumMaterials; i++) {
@@ -147,7 +153,7 @@ namespace vkx {
 					material.diffuse = assetManager->textures.get(fileName);
 				} else {
 					// load from file
-					vkx::Texture tex = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc3UnormBlock);// this is the texture format! :O
+					vkx::Texture tex = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc2UnormBlock);// this is the texture format! :O
 					this->assetManager->textures.add(fileName, tex);
 					material.diffuse = tex;
 				}
@@ -155,7 +161,7 @@ namespace vkx {
 				std::string fileName = std::string(texturefile.C_Str());
 				printf("Error: Material has no diffuse, using dummy texture!\n");
 				// todo : separate pipeline and layout
-				material.diffuse = textureLoader->loadTexture(assetPath + "kamen.ktx", vk::Format::eBc2UnormBlock);
+				material.diffuse = textureLoader->loadTexture(assetPath + "dummy/dummy.dds", vk::Format::eBc2UnormBlock);
 			}
 
 
@@ -181,7 +187,7 @@ namespace vkx {
 					material.specular = assetManager->textures.get(fileName);
 				} else {
 					// load from file
-					vkx::Texture tex = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc3UnormBlock);// this is the texture format! :O
+					vkx::Texture tex = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc2UnormBlock);// this is the texture format! :O
 					this->assetManager->textures.add(fileName, tex);
 					material.specular = tex;
 				}
@@ -189,7 +195,7 @@ namespace vkx {
 				std::string fileName = std::string(texturefile.C_Str());
 				printf("Error: Material has no specular, using dummy texture!\n");
 				// todo : separate pipeline and layout
-				material.specular = textureLoader->loadTexture(assetPath + "dummy.ktx", vk::Format::eBc2UnormBlock);
+				material.specular = textureLoader->loadTexture(assetPath + "dummy/dummy_specular.dds", vk::Format::eBc2UnormBlock);
 			}
 
 
@@ -215,7 +221,7 @@ namespace vkx {
 					material.bump = assetManager->textures.get(fileName);
 				} else {
 					// load from file
-					vkx::Texture tex = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc3UnormBlock);// this is the texture format! :O
+					vkx::Texture tex = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc2UnormBlock);// this is the texture format! :O
 					this->assetManager->textures.add(fileName, tex);
 					material.bump = tex;
 				}
@@ -223,7 +229,7 @@ namespace vkx {
 				std::string fileName = std::string(texturefile.C_Str());
 				printf("Error: Material has no bump, using dummy texture!\n");
 				// todo : separate pipeline and layout
-				material.bump = textureLoader->loadTexture(assetPath + "dummy.ktx", vk::Format::eBc2UnormBlock);
+				material.bump = textureLoader->loadTexture(assetPath + "dummy/dummy_ddn.dds", vk::Format::eBc2UnormBlock);
 			}
 
 			// Mask

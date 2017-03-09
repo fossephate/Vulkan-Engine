@@ -20,6 +20,7 @@ layout (set = 0, binding = 3) uniform UBOSSAOKernel
 layout (set = 0, binding = 4) uniform UBO 
 {
 	mat4 projection;
+	mat4 g1;
 } ubo;
 
 layout (location = 0) in vec2 inUV;
@@ -33,7 +34,7 @@ void main()
 	vec3 normal = normalize(texture(samplerNormal, inUV).rgb * 2.0 - 1.0);
 
 	// Get a random vector using a noise lookup
-	ivec2 texDim = textureSize(samplerPositionDepth, 0); 
+	ivec2 texDim = textureSize(samplerPositionDepth, 0);
 	ivec2 noiseDim = textureSize(ssaoNoise, 0);
 	const vec2 noiseUV = vec2(float(texDim.x)/float(noiseDim.x), float(texDim.y)/(noiseDim.y)) * inUV;  
 	vec3 randomVec = texture(ssaoNoise, noiseUV).xyz * 2.0 - 1.0;
@@ -71,5 +72,6 @@ void main()
 	occlusion = pow(occlusion, SSAO_POWER);
 	  
 	outFragColor = occlusion;
+	//outFragColor = 1.0;
 }
 

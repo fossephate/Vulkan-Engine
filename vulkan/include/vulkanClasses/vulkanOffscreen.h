@@ -278,8 +278,8 @@ namespace vkx {
 			vk::ImageUsageFlags attachmentUsage{ vk::ImageUsageFlagBits::eSampled };
 			vk::ImageUsageFlags depthAttachmentUsage;
 			vk::ImageLayout colorFinalLayout{ vk::ImageLayout::eShaderReadOnlyOptimal };
-			vk::ImageLayout depthFinalLayout{ vk::ImageLayout::eUndefined };
-
+			//vk::ImageLayout depthFinalLayout{ vk::ImageLayout::eUndefined };
+			vk::ImageLayout depthFinalLayout{ vk::ImageLayout::eShaderReadOnlyOptimal };
 
 			// End of options
 			// ---------------------------------------------------------------------------------

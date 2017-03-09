@@ -54,6 +54,14 @@ void main()
 	// Discard by alpha for transparent objects if enabled via specialization constant
 	if (ENABLE_DISCARD == 0) {
 		vec3 N = normalize(inNormal);
+		// if(inNormal.x > 0 && inNormal.x < 2) {
+		// 	N = vec3(N.x, -N.z, N.y);
+		// } else if(inNormal.x > 2 && inNormal.x < 4) {
+		// 	N = vec3(-N.z, N.y, N.x);
+		// }
+		//N = vec3(N.x, -N.z, N.y);
+		//N = vec3(-N.z, N.y, N.x);
+
 		vec3 T = normalize(inTangent);
 		vec3 B = cross(N, T);
 		mat3 TBN = mat3(T, B, N);
@@ -61,10 +69,10 @@ void main()
 		nm = TBN * normalize(nm);
 		outNormal = vec4(nm * 0.5 + 0.5, 0.0);
 	} else {
-		// outNormal = vec4(normalize(inNormal) * 0.5 + 0.5, 0.0);
-		// if (color.a < 0.5) {
-		// 	discard;
-		// }
+		outNormal = vec4(normalize(inNormal) * 0.5 + 0.5, 0.0);
+		if (color.a < 0.5) {
+			discard;
+		}
 	}
 
 	// Pack

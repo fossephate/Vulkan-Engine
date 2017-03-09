@@ -311,9 +311,10 @@ class VulkanExample : public vkx::vulkanApp {
 	// ssao
 	struct {
 		glm::mat4 projection;
-		uint32_t ssao = true;
-		uint32_t ssaoOnly = false;
-		uint32_t ssaoBlur = true;
+		glm::mat4 g1;
+		//uint32_t ssao = true;
+		//uint32_t ssaoOnly = false;
+		//uint32_t ssaoBlur = true;
 	} uboSSAOParams;
 
 	struct {
@@ -1445,7 +1446,7 @@ class VulkanExample : public vkx::vulkanApp {
 		// SSAO ------------------------------------------------------------------------------
 
 		{
-			// descriptor set 
+			// descriptor set
 			vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo9 =
 				vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred.deferred"), &rscs.descriptorSetLayouts->get("offscreen.ssao.generate"), 1);
 			rscs.descriptorSets->add("offscreen.ssao.generate", descriptorSetAllocateInfo9);
@@ -2179,7 +2180,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// deferred
 
-		if (!false) {
+		if (false) {
 			auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			sponzaModel->load(getAssetPath() + "models/sponza.dae");
 			sponzaModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
