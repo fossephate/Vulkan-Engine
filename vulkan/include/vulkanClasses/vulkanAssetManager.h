@@ -299,7 +299,30 @@ namespace vkx {
 
 
 
+	class TextureList : public ResourceList<vkx::Texture> {
 
+		public:
+
+		//DescriptorPoolList(vk::Device &dev) : VulResourceList(dev) {};
+
+		~TextureList() {
+			//for (auto &descriptorPool : resources) {
+			//	//device.destroyPipelineLayout(pipelineLayout.second, nullptr);
+			//}
+		}
+
+		const vkx::Texture get(std::string name) {
+			return resources[name];
+		}
+
+		void add(std::string name, vkx::Texture texture) {
+			resources[name] = texture;
+		}
+
+		bool doExist(std::string name) {
+			return resources.find(name) != resources.end();
+		}
+	};
 
 
 
@@ -358,25 +381,27 @@ namespace vkx {
 
 
 
-			struct {
-				std::unordered_map<std::string, vkx::Texture> loadedTextures;
+			//struct {
+			//	std::unordered_map<std::string, vkx::Texture> loadedTextures;
 
-				const vkx::Texture get(std::string name) {
-					return loadedTextures[name];
-				}
+			//	const vkx::Texture get(std::string name) {
+			//		return loadedTextures[name];
+			//	}
 
-				void add(std::string name, vkx::Texture texture) {
-					loadedTextures[name] = texture;
-				}
+			//	void add(std::string name, vkx::Texture texture) {
+			//		loadedTextures[name] = texture;
+			//	}
 
-				vkx::Texture* getPtr(std::string name) {
-					return &loadedTextures[name];
-				}
+			//	vkx::Texture* getPtr(std::string name) {
+			//		return &loadedTextures[name];
+			//	}
 
-				bool doExist(std::string name) {
-					return loadedTextures.find(name) != loadedTextures.end();
-				}
-			} textures;
+			//	bool doExist(std::string name) {
+			//		return loadedTextures.find(name) != loadedTextures.end();
+			//	}
+			//} textures;
+
+			TextureList textures;
 
 			MeshList meshes;
 

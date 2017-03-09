@@ -25,7 +25,7 @@ namespace vkx {
 
 		// options
 
-		glm::uvec2 size = glm::uvec2(1024);
+		glm::uvec2 size;
 		//std::vector<vk::Format> colorFormats = std::vector<vk::Format>{ {
 		//		vk::Format::eR16G16B16A16Sfloat,
 		//		vk::Format::eR16G16B16A16Sfloat,
@@ -254,12 +254,18 @@ namespace vkx {
 			// -------------------------------------------------------------------------------
 			// Options
 			
-			glm::uvec2 size = glm::uvec2(1024);
-			std::vector<vk::Format> colorFormats = std::vector<vk::Format>{{
-					vk::Format::eR16G16B16A16Sfloat,
-					vk::Format::eR16G16B16A16Sfloat,
-					vk::Format::eR8G8B8A8Unorm
+			glm::uvec2 size = this->size;
+			//std::vector<vk::Format> colorFormats = std::vector<vk::Format>{{
+			//		vk::Format::eR16G16B16A16Sfloat,
+			//		vk::Format::eR16G16B16A16Sfloat,
+			//		vk::Format::eR8G8B8A8Unorm
+			//}};
+			std::vector<vk::Format> colorFormats = std::vector<vk::Format>{ {
+					vk::Format::eR32G32B32A32Sfloat,
+					vk::Format::eR8G8B8A8Unorm,
+					vk::Format::eR32G32B32A32Uint
 			}};
+
 			// This value is chosen as an invalid default that signals that the code should pick a specific depth buffer
 			// Alternative, you can set this to undefined to explicitly declare you want no depth buffer.
 			vk::Format depthFormat = vk::Format::eR8Uscaled;
@@ -554,7 +560,7 @@ namespace vkx {
 			// -------------------------------------------------------------------------------
 			// Options
 
-			glm::uvec2 size = glm::uvec2(1024);
+			glm::uvec2 size = this->size;
 			std::vector<vk::Format> colorFormats = std::vector<vk::Format>{ {
 					vk::Format::eR16G16B16A16Sfloat,
 					vk::Format::eR16G16B16A16Sfloat,

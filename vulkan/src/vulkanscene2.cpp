@@ -2179,7 +2179,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// deferred
 
-		if (false) {
+		if (!false) {
 			auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			sponzaModel->load(getAssetPath() + "models/sponza.dae");
 			sponzaModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
@@ -3550,6 +3550,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 		offscreen.size = glm::uvec2(TEX_DIM);
+		//offscreen.size = glm::uvec2(1280, 720);
 		//offscreen.colorFormats = std::vector<vk::Format>{ {
 		//		vk::Format::eR16G16B16A16Sfloat,
 		//		vk::Format::eR16G16B16A16Sfloat,
