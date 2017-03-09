@@ -7,10 +7,10 @@ layout (location = 0) in vec4 inPos;
 layout (location = 1) in vec2 inUV;
 layout (location = 2) in vec3 inColor;
 layout (location = 3) in vec3 inNormal;
-//layout (location = 4) in vec3 inTangent;
+layout (location = 4) in vec3 inTangent;
 // lol what? how does this work? need to fix
-layout (location = 4) in vec4 inBoneWeights;
-layout (location = 5) in ivec4 inBoneIDs;
+layout (location = 5) in vec4 inBoneWeights;
+layout (location = 6) in ivec4 inBoneIDs;
 
 layout (location = 0) out vec3 outNormal;
 layout (location = 1) out vec2 outUV;
@@ -72,9 +72,14 @@ void main()
 	outUV = inUV;
 	outUV.t = 1.0 - outUV.t;
 
+	// // Vertex position in world space
+	// vec4 tmpPos = inPos;
+	// outWorldPos = vec3(instance.model * tmpPos);
+
 	// Vertex position in world space
-	vec4 tmpPos = inPos;
-	outWorldPos = vec3(instance.model * tmpPos);
+	outWorldPos = inPos.xyz;
+
+	outWorldPos = vec3(scene.view * instance.model * inPos);
 	
 	// GL to Vulkan coord space
 	//outWorldPos.y = -outWorldPos.y;
@@ -83,7 +88,13 @@ void main()
 	// todo: do the inverse transpose on cpu
 	mat3 mNormal = transpose(inverse(mat3(instance.model)));
     outNormal = mNormal * normalize(inNormal);
-    //outTangent = mNormal * normalize(inTangent);
+
+	// Normal in view space
+	mat3 normalMatrix = transpose(inverse(mat3(scene.view * instance.model)));
+	outNormal = normalMatrix * inNormal;
+
+
+    outTangent = mNormal * normalize(inTangent);
 	
 	// Currently just vertex color
 	outColor = inColor;

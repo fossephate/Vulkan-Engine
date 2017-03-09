@@ -43,13 +43,12 @@ void main()
 	outUV = inUV;
 	outUV.t = 1.0 - outUV.t;
 
-	// // Vertex position in world space
-	// vec4 tmpPos = inPos;
-	// outWorldPos = vec3(instance.model * tmpPos);
+	// Vertex position in world space
+	vec4 tmpPos = inPos;
+	outWorldPos = vec3(instance.model * tmpPos);
 
 	// Vertex position in world space
 	outWorldPos = inPos.xyz;
-
 	outWorldPos = vec3(scene.view * instance.model * inPos);
 	
 	// GL to Vulkan coord space

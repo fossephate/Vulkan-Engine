@@ -1426,12 +1426,12 @@ class VulkanExample : public vkx::vulkanApp {
 				0,
 				&uniformData.matrixVS.descriptor),// bind to forward descriptor since it's the same
 
-			// Set 2: Binding 0: Scene color map
-			vkx::writeDescriptorSet(
-				rscs.descriptorSets->get("deferred.textures"),
-				vk::DescriptorType::eCombinedImageSampler,
-				0,
-				&textures.colorMap.descriptor),
+			//// Set 2: Binding 0: Scene color map
+			//vkx::writeDescriptorSet(
+			//	rscs.descriptorSets->get("deferred.textures"),
+			//	vk::DescriptorType::eCombinedImageSampler,
+			//	0,
+			//	&textures.colorMap.descriptor),
 
 
 
@@ -1453,11 +1453,11 @@ class VulkanExample : public vkx::vulkanApp {
 
 			vk::DescriptorImageInfo texDescriptorPosDepth =
 				vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[0].colors[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
-			//vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[0].attachments[0].view, vk::ImageLayout::eGeneral);
+			//vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[0].colors[0].view, vk::ImageLayout::eGeneral);
 
 			vk::DescriptorImageInfo texDescriptorNorm =
 				vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[0].colors[1].view, vk::ImageLayout::eShaderReadOnlyOptimal);
-			//vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[0].attachments[1].view, vk::ImageLayout::eGeneral);
+			//vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[0].colors[1].view, vk::ImageLayout::eGeneral);
 
 
 
@@ -1708,6 +1708,12 @@ class VulkanExample : public vkx::vulkanApp {
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/mrtMesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
 		vk::Pipeline deferredMeshSSAOPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
 		rscs.pipelines->add("offscreen.meshes.ssao", deferredMeshSSAOPipeline);
+
+		// Offscreen pipeline
+		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/mrtSkinnedMesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/mrtSkinnedMesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
+		vk::Pipeline deferredSkinnedMeshSSAOPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		rscs.pipelines->add("offscreen.skinnedMeshes.ssao", deferredSkinnedMeshSSAOPipeline);
 
 
 
@@ -2173,7 +2179,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// deferred
 
-		if (!false) {
+		if (false) {
 			auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			sponzaModel->load(getAssetPath() + "models/sponza.dae");
 			sponzaModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
@@ -3283,7 +3289,11 @@ class VulkanExample : public vkx::vulkanApp {
 			// SKINNED MESHES:
 
 			// bind skinned mesh pipeline
-			offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("offscreen.skinnedMeshes"));
+			if (!SSAO_ON) {
+				offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("offscreen.skinnedMeshes"));
+			} else {
+				offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("offscreen.skinnedMeshes.ssao"));
+			}
 			for (auto &skinnedMesh : skinnedMeshesDeferred) {
 				// bind vertex & index buffers
 				offscreenCmdBuffer.bindVertexBuffers(skinnedMesh->vertexBufferBinding, skinnedMesh->meshBuffer.vertices.buffer, vk::DeviceSize());
@@ -3470,10 +3480,10 @@ class VulkanExample : public vkx::vulkanApp {
 			getAssetPath() + "models/kamen.ktx",
 			vk::Format::eBc3UnormBlock);
 
-		// todo: replace with noise:
-		textures.ssaoNoise = textureLoader->loadTexture(
-			getAssetPath() + "models/kamen.ktx",
-			vk::Format::eBc3UnormBlock);
+		//// todo: replace with noise:
+		//textures.ssaoNoise = textureLoader->loadTexture(
+		//	getAssetPath() + "models/kamen.ktx",
+		//	vk::Format::eBc3UnormBlock);
 	}
 
 	void generateQuads() {

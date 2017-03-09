@@ -19,7 +19,7 @@ layout (location = 2) out vec4 outAlbedo;
 
 
 // diffuse texture (from material)
-layout (set = 2, binding = 0) uniform sampler2D samplerColorMap;
+layout (set = 2, binding = 0) uniform sampler2D samplerColor;
 layout (set = 2, binding = 1) uniform sampler2D samplerSpecular;
 layout (set = 2, binding = 2) uniform sampler2D samplerNormal;
 
@@ -28,5 +28,5 @@ void main()
 {
 	outPosition = vec4(inWorldPos, 1.0);
 	outNormal = vec4(inNormal, 1.0);
-	outAlbedo = texture(samplerColorMap, inUV);
+	outAlbedo = texture(samplerColor, inUV);
 }

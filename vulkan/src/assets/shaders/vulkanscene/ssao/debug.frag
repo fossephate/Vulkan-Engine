@@ -29,7 +29,7 @@ layout (location = 0) out vec4 outFragColor;
 void main() 
 {
 	vec3 components[3];
-	//components[0] = texture(samplerPosition, inUV.st).rgb;  
+	components[0] = texture(samplerPosition, inUV.st).rgb;  
 	components[1] = texture(samplerNormal, inUV.st).rgb;  
 	ivec2 texDim = textureSize(samplerAlbedo, 0);
 	uvec4 albedo = texelFetch(samplerAlbedo, ivec2(inUV.st * texDim ), 0);
@@ -40,10 +40,13 @@ void main()
 	color.ba = unpackHalf2x16(albedo.g);
 	vec4 spec;
 	spec.rg = unpackHalf2x16(albedo.b);
-	vec4 ssao = texture(samplerSSAO, inUV.st);
+	components[2] = vec3(spec.r);
 
-	//components[2] = vec3(spec.r);
+	vec4 ssao = texture(samplerSSAO, inUV.st);
 	components[2] = vec3(ssao.r);
+
+
+
 	components[0] = color.rgb;
 
 	// Select component depending on z coordinate of quad

@@ -12,7 +12,7 @@ layout (location = 4) in vec3 inTangent;
 
 layout (location = 0) out vec4 outPosition;
 layout (location = 1) out vec4 outNormal;
-layout (location = 2) out uvec4 outAlbedo;// this is a uvec
+layout (location = 2) out /*u*/vec4 outAlbedo;// this is a uvec
 
 
 /*layout (constant_id = 0) */const float NEAR_PLANE = 1.0f;
@@ -35,6 +35,16 @@ float linearDepth(float depth) {
 	return (2.0f * NEAR_PLANE * FAR_PLANE) / (FAR_PLANE + NEAR_PLANE - z * (FAR_PLANE - NEAR_PLANE));	
 }
 
+
+
+// void main() 
+// {
+// 	outPosition = vec4(inWorldPos, 1.0);
+// 	outNormal = vec4(inNormal, 1.0);
+// 	outAlbedo = texture(samplerColor, inUV);
+// }
+
+
 void main() 
 {
 	outPosition = vec4(inWorldPos, linearDepth(gl_FragCoord.z));
@@ -52,7 +62,8 @@ void main()
 		outNormal = vec4(nm * 0.5 + 0.5, 0.0);
 	} else {
 		outNormal = vec4(normalize(inNormal) * 0.5 + 0.5, 0.0);
-		if (color.a < 0.5) {
+		if (color.a < 0.5)
+		{
 			discard;
 		}
 	}
@@ -68,6 +79,6 @@ void main()
 // test:
 	// outPosition = vec4(inWorldPos, 1.0);
 	// outNormal = vec4(inNormal, 1.0);
-	// outAlbedo = texture(samplerColor, inUV);
+	outAlbedo = texture(samplerColor, inUV);
 	
 }
