@@ -80,5 +80,6 @@ void main()
 	// outPosition = vec4(inWorldPos, 1.0);
 	// outNormal = vec4(inNormal, 1.0);
 	outAlbedo = texture(samplerColor, inUV);
+	outAlbedo.a = specular;
 	
 }

@@ -5,51 +5,58 @@
 
 layout (set = 3, binding = 1) uniform sampler2D samplerPosition;
 layout (set = 3, binding = 2) uniform sampler2D samplerNormal;
-layout (set = 3, binding = 3) uniform usampler2D samplerAlbedo;
+layout (set = 3, binding = 3) uniform /*u*/sampler2D samplerAlbedo;
 layout (set = 3, binding = 5) uniform sampler2D samplerSSAO;
 
 layout (location = 0) in vec3 inUV;
 
 layout (location = 0) out vec4 outFragColor;
 
-// void main() 
-// {
-// 	vec3 components[3];
-// 	components[0] = texture(samplerPosition, inUV.st).rgb;  
-// 	components[1] = texture(samplerNormal, inUV.st).rgb;  
-// 	components[2] = texture(samplerAlbedo, inUV.st).rgb;  
-// 	// Uncomment to display specular component
-// 	//components[2] = vec3(texture(samplerAlbedo, inUV.st).a);  
-	
-// 	// Select component depending on z coordinate of quad
-// 	highp int index = int(inUV.z);
-// 	outFragColor.rgb = components[index];
-// }
-
 void main() 
 {
 	vec3 components[3];
 	components[0] = texture(samplerPosition, inUV.st).rgb;  
 	components[1] = texture(samplerNormal, inUV.st).rgb;  
-	ivec2 texDim = textureSize(samplerAlbedo, 0);
-	uvec4 albedo = texelFetch(samplerAlbedo, ivec2(inUV.st * texDim ), 0);
-//	uvec4 albedo = texture(samplerAlbedo, inUV.st, 0);
-
-	vec4 color;
-	color.rg = unpackHalf2x16(albedo.r);
-	color.ba = unpackHalf2x16(albedo.g);
-	vec4 spec;
-	spec.rg = unpackHalf2x16(albedo.b);
-	components[2] = vec3(spec.r);
+	components[2] = texture(samplerAlbedo, inUV.st).rgb;  
+	// Uncomment to display specular component
+	//components[2] = vec3(texture(samplerAlbedo, inUV.st).a);  
 
 	vec4 ssao = texture(samplerSSAO, inUV.st);
 	components[2] = vec3(ssao.r);
-
-
-
-	components[0] = color.rgb;
-
+	
 	// Select component depending on z coordinate of quad
 	highp int index = int(inUV.z);
 	outFragColor.rgb = components[index];
 }
+
+// void main() 
+// {
+// 	vec3 components[3];
+// 	components[0] = texture(samplerPosition, inUV.st).rgb;  
+// 	components[1] = texture(samplerNormal, inUV.st).rgb;  
+// 	ivec2 texDim = textureSize(samplerAlbedo, 0);
+// 	uvec4 albedo = texelFetch(samplerAlbedo, ivec2(inUV.st * texDim ), 0);
+// //	uvec4 albedo = texture(samplerAlbedo, inUV.st, 0);
+
+// 	vec4 color;
+// 	color.rg = unpackHalf2x16(albedo.r);
+// 	color.ba = unpackHalf2x16(albedo.g);
+// 	vec4 spec;
+// 	spec.rg = unpackHalf2x16(albedo.b);
+// 	components[2] = vec3(spec.r);
+
+// 	vec4 ssao = texture(samplerSSAO, inUV.st);
+// 	components[2] = vec3(ssao.r);
+
+// 	//components[2] = texture(samplerAlbedo, inUV.st).rgb;
+
+
+
+// 	components[0] = color.rgb;
+
+
+
+// 	// Select component depending on z coordinate of quad
+// 	highp int index = int(inUV.z);
+// 	outFragColor.rgb = components[index];
+// }
