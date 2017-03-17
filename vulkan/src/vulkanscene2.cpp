@@ -206,11 +206,12 @@ class VulkanExample : public vkx::vulkanApp {
 
 	// static scene uniform buffer
 	struct {
+		glm::mat4 model;
 		glm::mat4 view;
 		glm::mat4 projection;
-
-		glm::vec4 lightPos;
-		glm::vec4 cameraPos;
+	
+		//glm::mat4 g1;
+		//glm::mat4 g2;
 	} uboScene;
 
 	// todo: fix this
@@ -245,7 +246,7 @@ class VulkanExample : public vkx::vulkanApp {
 	float fullDeferred = false;
 
 	//glm::vec3 lightPos = glm::vec3(1.0f, -2.0f, 2.0f);
-	glm::vec4 lightPos = glm::vec4(1.0f, -2.0f, 2.0f, 1.0f);
+	//glm::vec4 lightPos = glm::vec4(1.0f, -2.0f, 2.0f, 1.0f);
 
 	std::string consoleLog;
 
@@ -1327,17 +1328,17 @@ class VulkanExample : public vkx::vulkanApp {
 		// vk::Image descriptor for the offscreen texture targets
 		// not vk::ImageLayout::eGeneral, eShaderReadOnlyOptimal is important
 		vk::DescriptorImageInfo texDescriptorPosition =
-			vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[0].colors[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
+			vkx::descriptorImageInfo(offscreen.framebuffers[0].attachments[0].sampler, offscreen.framebuffers[0].attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 		vk::DescriptorImageInfo texDescriptorNormal =
-			vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[1].sampler, offscreen.framebuffers[0].colors[1].view, vk::ImageLayout::eShaderReadOnlyOptimal);
+			vkx::descriptorImageInfo(offscreen.framebuffers[0].attachments[0].sampler, offscreen.framebuffers[0].attachments[1].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 		vk::DescriptorImageInfo texDescriptorAlbedo =
-			vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[2].sampler, offscreen.framebuffers[0].colors[2].view, vk::ImageLayout::eShaderReadOnlyOptimal);
+			vkx::descriptorImageInfo(offscreen.framebuffers[0].attachments[0].sampler, offscreen.framebuffers[0].attachments[2].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 		// todo: fix
 		vk::DescriptorImageInfo texDescriptorSSAOBlurred =
-			vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[2].attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
+			vkx::descriptorImageInfo(offscreen.framebuffers[0].attachments[0].sampler, offscreen.framebuffers[2].attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 
 
@@ -1453,11 +1454,11 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 			vk::DescriptorImageInfo texDescriptorPosDepth =
-				vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[0].colors[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
+				vkx::descriptorImageInfo(offscreen.framebuffers[0].attachments[0].sampler, offscreen.framebuffers[0].attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 			//vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[0].colors[0].view, vk::ImageLayout::eGeneral);
 
 			vk::DescriptorImageInfo texDescriptorNorm =
-				vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[0].colors[1].view, vk::ImageLayout::eShaderReadOnlyOptimal);
+				vkx::descriptorImageInfo(offscreen.framebuffers[0].attachments[0].sampler, offscreen.framebuffers[0].attachments[1].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 			//vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[0].colors[1].view, vk::ImageLayout::eGeneral);
 
 
@@ -1510,7 +1511,7 @@ class VulkanExample : public vkx::vulkanApp {
 		rscs.descriptorSets->add("offscreen.ssao.blur", descriptorSetAllocateInfo10);
 
 		vk::DescriptorImageInfo texDescriptorSSAOBlur =
-			vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[1].attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
+			vkx::descriptorImageInfo(offscreen.framebuffers[0].attachments[0].sampler, offscreen.framebuffers[1].attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 		//vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[1].attachments[0].view, vk::ImageLayout::eGeneral);
 
 		std::vector<vk::WriteDescriptorSet> ssaoBlurWriteDescriptorSets =
@@ -1924,7 +1925,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		uboScene.view = camera.matrices.view;
 		uboScene.projection = camera.matrices.projection;
-		uboScene.cameraPos = glm::vec4(camera.transform.translation, 0.0f);
+		//uboScene.cameraPos = glm::vec4(camera.transform.translation, 0.0f);
 		uniformData.sceneVS.copy(uboScene);
 	}
 
@@ -2094,8 +2095,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// Sample kernel
 		std::vector<glm::vec4> ssaoKernel(SSAO_KERNEL_SIZE);
-		for (uint32_t i = 0; i < SSAO_KERNEL_SIZE; ++i)
-		{
+		for (uint32_t i = 0; i < SSAO_KERNEL_SIZE; ++i) {
 			glm::vec3 sample(rndDist(rndGen) * 2.0 - 1.0, rndDist(rndGen) * 2.0 - 1.0, rndDist(rndGen));
 			sample = glm::normalize(sample);
 			sample *= rndDist(rndGen);
@@ -2183,7 +2183,7 @@ class VulkanExample : public vkx::vulkanApp {
 		if (false) {
 			auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			sponzaModel->load(getAssetPath() + "models/sponza.dae");
-			sponzaModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
+			sponzaModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 			sponzaModel->rotateWorldX(PI / 2.0);
 			modelsDeferred.push_back(sponzaModel);
 		}
@@ -2240,7 +2240,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		auto wallModel1 = std::make_shared<vkx::Model>(&context, &assetManager);
 		wallModel1->load(getAssetPath() + "models/plane.fbx");
-		wallModel1->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		wallModel1->createMeshes(SSAOVertexLayout, 5.0f, VERTEX_BUFFER_BIND_ID);
 		modelsDeferred.push_back(wallModel1);
 
 
@@ -2689,7 +2689,7 @@ class VulkanExample : public vkx::vulkanApp {
 		}
 
 
-		uboScene.lightPos = glm::vec4(cos(globalP), 4.0f, cos(globalP) + 3.0f, 1.0f);
+		//uboScene.lightPos = glm::vec4(cos(globalP), 4.0f, cos(globalP) + 3.0f, 1.0f);
 
 
 
@@ -2859,12 +2859,12 @@ class VulkanExample : public vkx::vulkanApp {
 		auto tDuration = std::chrono::duration<double, std::milli>(tNow - this->physicsManager.tLastTimeStep);
 
 		// todo: fix
-		this->physicsManager.dynamicsWorld->stepSimulation(tDuration.count() / 1000.0, 2);
+		this->physicsManager.dynamicsWorld->stepSimulation(tDuration.count() / 1000.0, 4);
 
 
 
 
-
+		// sync:
 		for (int i = 0; i < this->physicsObjects.size(); ++i) {
 			this->physicsObjects[i]->sync();
 		}
@@ -3550,8 +3550,8 @@ class VulkanExample : public vkx::vulkanApp {
 	void prepare() override {
 
 
-		offscreen.size = glm::uvec2(TEX_DIM);
-		//offscreen.size = glm::uvec2(1280, 720);
+		//offscreen.size = glm::uvec2(TEX_DIM);
+		offscreen.size = glm::uvec2(1280, 720);
 		//offscreen.colorFormats = std::vector<vk::Format>{ {
 		//		vk::Format::eR16G16B16A16Sfloat,
 		//		vk::Format::eR16G16B16A16Sfloat,

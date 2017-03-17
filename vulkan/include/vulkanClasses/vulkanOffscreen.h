@@ -6,7 +6,7 @@
 namespace vkx {
 
 	struct Offscreen {
-		const vkx::Context& context;
+		const vkx::Context &context;
 		bool active{ true };
 
 		vk::RenderPass renderPass;
@@ -62,7 +62,8 @@ namespace vkx {
 
 			//prepareRenderPasses();
 			
-			addDeferredFramebuffer();
+			//addDeferredFramebuffer();
+			addDeferredFramebuffer2();
 			addSSAOGenerateFramebuffer();
 			addSSAOBlurFramebuffer();
 
@@ -266,14 +267,8 @@ namespace vkx {
 					vk::Format::eR32G32B32A32Uint
 			}};
 
-			// This value is chosen as an invalid default that signals that the code should pick a specific depth buffer
-			// Alternative, you can set this to undefined to explicitly declare you want no depth buffer.
-			vk::Format depthFormat = vk::Format::eR8Uscaled;
-
 			// Find a suitable depth format
-			if (depthFormat == vk::Format::eR8Uscaled) {
-				depthFormat = vkx::getSupportedDepthFormat(context.physicalDevice);
-			}
+			vk::Format depthFormat = vkx::getSupportedDepthFormat(context.physicalDevice);
 
 			vk::ImageUsageFlags attachmentUsage{ vk::ImageUsageFlagBits::eSampled };
 			vk::ImageUsageFlags depthAttachmentUsage;
@@ -300,14 +295,15 @@ namespace vkx {
 				attachments.resize(colorFormats.size());
 				colorAttachmentReferences.resize(attachments.size());
 				// Color attachment
-				for (size_t i = 0; i < attachments.size(); ++i) {
+				for (size_t i = 0; i < /*attachments.size()*/2; ++i) {
 					attachments[i].format = colorFormats[i];
 					attachments[i].loadOp = vk::AttachmentLoadOp::eClear;
-					attachments[i].storeOp = colorFinalLayout == vk::ImageLayout::eUndefined ? vk::AttachmentStoreOp::eDontCare : vk::AttachmentStoreOp::eStore;
+					attachments[i].storeOp = vk::AttachmentStoreOp::eStore;
 					attachments[i].initialLayout = vk::ImageLayout::eUndefined;
-					attachments[i].finalLayout = colorFinalLayout;
+					//attachments[i].finalLayout = colorFinalLayout;
+					attachments[i].finalLayout = vk::ImageLayout::eColorAttachmentOptimal;
 
-					vk::AttachmentReference& attachmentReference = colorAttachmentReferences[i];
+					vk::AttachmentReference &attachmentReference = colorAttachmentReferences[i];
 					attachmentReference.attachment = i;
 					attachmentReference.layout = vk::ImageLayout::eColorAttachmentOptimal;
 
@@ -428,20 +424,18 @@ namespace vkx {
 				}
 
 				std::vector<vk::ImageView> attachments;
-				attachments.resize(deferredFramebuffer.colors.size());
-				for (size_t i = 0; i < deferredFramebuffer.colors.size(); ++i) {
+				attachments.resize(3);
+				for (size_t i = 0; i < 3; ++i) {
 					attachments[i] = deferredFramebuffer.colors[i].view;
 				}
-				if (useDepth) {
-					attachments.push_back(deferredFramebuffer.depthAttachment.view);
-				}
+				attachments.push_back(deferredFramebuffer.depthAttachment.view);
 
 				vk::FramebufferCreateInfo fbufCreateInfo;
 				fbufCreateInfo.renderPass = deferredFramebuffer.renderPass;
-				fbufCreateInfo.attachmentCount = (uint32_t)attachments.size();
 				fbufCreateInfo.pAttachments = attachments.data();
-				fbufCreateInfo.width = size.x;
-				fbufCreateInfo.height = size.y;
+				fbufCreateInfo.attachmentCount = (uint32_t)attachments.size();
+				fbufCreateInfo.width = this->size.x;
+				fbufCreateInfo.height = this->size.y;
 				fbufCreateInfo.layers = 1;
 				deferredFramebuffer.framebuffer = context.device.createFramebuffer(fbufCreateInfo);
 
@@ -497,6 +491,27 @@ namespace vkx {
 			}
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 			framebuffers.push_back(deferredFramebuffer);
 		}
 
@@ -506,7 +521,199 @@ namespace vkx {
 
 
 
+		void addDeferredFramebuffer2() {
 
+			vkx::Framebuffer deferredFramebuffer;
+			deferredFramebuffer.device = context.device;
+
+
+			deferredFramebuffer.attachments.resize(3);
+
+			// Offscreen framebuffer, Color attachments
+
+			// Attachment 0: World space positions
+			deferredFramebuffer.attachments[0] = createAttachment(vk::Format::eR32G32B32A32Sfloat, vk::ImageUsageFlagBits::eColorAttachment, this->size.x, this->size.y);
+
+			// Attachment 1: World space normal
+			deferredFramebuffer.attachments[1] = createAttachment(vk::Format::eR8G8B8A8Unorm, vk::ImageUsageFlagBits::eColorAttachment, this->size.x, this->size.y);
+
+			// Attachment 2: Packed colors, specular
+			deferredFramebuffer.attachments[2] = createAttachment(vk::Format::eR32G32B32A32Uint, vk::ImageUsageFlagBits::eColorAttachment, this->size.x, this->size.y);
+
+
+			// Offscreen depth attachment:
+
+			// Find a suitable depth format
+			vk::Format depthFormat = vkx::getSupportedDepthFormat(context.physicalDevice);
+			deferredFramebuffer.depthAttachment = createAttachment(depthFormat, vk::ImageUsageFlagBits::eDepthStencilAttachment, this->size.x, this->size.y);
+
+			//VulkanExampleBase::flushCommandBuffer(layoutCmd, queue, true);
+
+			// G-Buffer creation
+			{
+				std::array<vk::AttachmentDescription, 4> attachmentDescs = {};
+
+				// Init attachment properties
+				for (uint32_t i = 0; i < static_cast<uint32_t>(attachmentDescs.size()); i++) {
+					attachmentDescs[i].samples = vk::SampleCountFlagBits::e1;
+					attachmentDescs[i].loadOp = vk::AttachmentLoadOp::eClear;
+					attachmentDescs[i].storeOp = vk::AttachmentStoreOp::eStore;
+					attachmentDescs[i].stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+					attachmentDescs[i].stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+					attachmentDescs[i].finalLayout = (i == 3) ? vk::ImageLayout::eDepthStencilAttachmentOptimal : vk::ImageLayout::eShaderReadOnlyOptimal;
+				}
+
+
+
+
+
+
+				// Formats
+				attachmentDescs[0].format = deferredFramebuffer.attachments[0].format;
+				attachmentDescs[1].format = deferredFramebuffer.attachments[1].format;
+				attachmentDescs[2].format = deferredFramebuffer.attachments[2].format;
+				attachmentDescs[3].format = deferredFramebuffer.depthAttachment.format;
+
+				// color attachment references
+				std::vector<vk::AttachmentReference> colorReferences;
+				colorReferences.push_back({ 0, vk::ImageLayout::eColorAttachmentOptimal });
+				colorReferences.push_back({ 1, vk::ImageLayout::eColorAttachmentOptimal });
+				colorReferences.push_back({ 2, vk::ImageLayout::eColorAttachmentOptimal });
+
+				// depth reference
+				vk::AttachmentReference depthReference;
+				depthReference.attachment = 3;
+				depthReference.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+
+				vk::SubpassDescription subpass;
+				subpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
+				subpass.pColorAttachments = colorReferences.data();
+				subpass.colorAttachmentCount = static_cast<uint32_t>(colorReferences.size());
+				subpass.pDepthStencilAttachment = &depthReference;
+
+				// Use subpass dependencies for attachment layout transitions
+				//std::array<vk::SubpassDependency, 2> dependencies;
+				std::vector<vk::SubpassDependency> dependencies;
+				dependencies.resize(2);
+
+				dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+				dependencies[0].dstSubpass = 0;
+				dependencies[0].srcStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
+				dependencies[0].dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+				dependencies[0].srcAccessMask = vk::AccessFlagBits::eMemoryRead;
+				dependencies[0].dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite;
+				dependencies[0].dependencyFlags = vk::DependencyFlagBits::eByRegion;
+
+				dependencies[1].srcSubpass = 0;
+				dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+				dependencies[1].srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+				dependencies[1].dstStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
+				dependencies[1].srcAccessMask = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite;
+				dependencies[1].dstAccessMask = vk::AccessFlagBits::eMemoryRead;
+				dependencies[1].dependencyFlags = vk::DependencyFlagBits::eByRegion;
+
+				// create offscreen render pass subpass?
+				vk::RenderPassCreateInfo renderPassInfo;
+				renderPassInfo.pAttachments = attachmentDescs.data();
+				renderPassInfo.attachmentCount = static_cast<uint32_t>(attachmentDescs.size());
+				renderPassInfo.subpassCount = 1;
+				renderPassInfo.pSubpasses = &subpass;
+				renderPassInfo.dependencyCount = 2;
+				renderPassInfo.pDependencies = dependencies.data();
+				deferredFramebuffer.renderPass = context.device.createRenderPass(renderPassInfo, nullptr);
+
+				std::vector<vk::ImageView> attachments;
+				attachments.resize(3);
+				for (size_t i = 0; i < 3; ++i) {
+					attachments[i] = deferredFramebuffer.attachments[i].view;// color attachments
+				}
+				attachments.push_back(deferredFramebuffer.depthAttachment.view);// depth attachment
+
+				vk::FramebufferCreateInfo fbufCreateInfo;/* = vkTools::initializers::framebufferCreateInfo();*/
+				fbufCreateInfo.renderPass = deferredFramebuffer.renderPass;
+				fbufCreateInfo.pAttachments = attachments.data();
+				fbufCreateInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+				fbufCreateInfo.width = this->size.x;
+				fbufCreateInfo.height = this->size.y;
+				fbufCreateInfo.layers = 1;
+				// create framebuffer
+				deferredFramebuffer.framebuffer = context.device.createFramebuffer(fbufCreateInfo, nullptr);
+			}
+
+
+
+
+			
+			
+			
+			
+			
+			
+			
+			// Shared sampler for color attachments
+			vk::SamplerCreateInfo samplerInfo;/* = vkTools::initializers::samplerCreateInfo();*/
+			samplerInfo.magFilter = vk::Filter::eLinear;
+			samplerInfo.minFilter = vk::Filter::eLinear;
+			samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
+			samplerInfo.addressModeU = vk::SamplerAddressMode::eClampToEdge;
+			samplerInfo.addressModeV = samplerInfo.addressModeU;
+			samplerInfo.addressModeW = samplerInfo.addressModeU;
+			samplerInfo.mipLodBias = 0.0f;
+			samplerInfo.maxAnisotropy = 0;
+			samplerInfo.minLod = 0.0f;
+			samplerInfo.maxLod = 1.0f;
+			samplerInfo.borderColor = vk::BorderColor::eFloatOpaqueWhite;
+
+			// SHARED!:
+			deferredFramebuffer.attachments[0].sampler = context.device.createSampler(samplerInfo, nullptr);
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			framebuffers.push_back(deferredFramebuffer);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		}
 
 
 

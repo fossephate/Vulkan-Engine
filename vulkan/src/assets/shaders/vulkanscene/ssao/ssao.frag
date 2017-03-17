@@ -27,8 +27,7 @@ layout (location = 0) in vec2 inUV;
 
 layout (location = 0) out float outFragColor;
 
-void main() 
-{
+void main() {
 	// Get G-Buffer values
 	vec3 fragPos = texture(samplerPositionDepth, inUV).rgb;
 	vec3 normal = normalize(texture(samplerNormal, inUV).rgb * 2.0 - 1.0);
@@ -46,8 +45,7 @@ void main()
 
 	// Calculate occlusion value
 	float occlusion = 0.0f;
-	for(int i = 0; i < SSAO_KERNEL_SIZE; i++)
-	{		
+	for(int i = 0; i < SSAO_KERNEL_SIZE; i++) {
 		vec3 samplePos = TBN * uboSSAOKernel.samples[i].xyz; 
 		samplePos = fragPos + samplePos * SSAO_RADIUS; 
 		
@@ -72,6 +70,7 @@ void main()
 	occlusion = pow(occlusion, SSAO_POWER);
 	  
 	outFragColor = occlusion;
-	//outFragColor = 1.0;
+	//outFragColor = 0.2;
+	//outFragColor = texture(samplerPositionDepth, inUV).a;
 }
 

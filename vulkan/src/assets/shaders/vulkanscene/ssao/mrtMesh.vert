@@ -19,10 +19,12 @@ layout (location = 4) out vec3 outTangent;
 layout (set = 0, binding = 0) uniform sceneBuffer 
 {
 	mat4 model;
+	
 	mat4 view;
 	mat4 projection;
 
-	mat4 test;
+	mat4 g1;
+	mat4 g2;
 } scene;
 
 // matrix data
@@ -36,6 +38,7 @@ layout (set = 1, binding = 0) uniform matrixBuffer
 
 
 
+
 void main() 
 {
 	gl_Position = scene.projection * scene.view * instance.model * inPos;
@@ -44,11 +47,9 @@ void main()
 	outUV.t = 1.0 - outUV.t;
 
 	// Vertex position in world space
-	vec4 tmpPos = inPos;
-	outWorldPos = vec3(instance.model * tmpPos);
-
-	// Vertex position in world space
-	outWorldPos = inPos.xyz;
+	outWorldPos = vec3(instance.model * inPos);
+	// Vertex position in view space
+	//outWorldPos = inPos.xyz;
 	outWorldPos = vec3(scene.view * instance.model * inPos);
 	
 	// GL to Vulkan coord space

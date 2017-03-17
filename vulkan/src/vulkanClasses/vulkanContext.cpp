@@ -265,7 +265,7 @@ CreateImageResult vkx::Context::createImage(const vk::ImageCreateInfo & imageCre
 	vk::MemoryRequirements memReqs = device.getImageMemoryRequirements(result.image);
 	vk::MemoryAllocateInfo memAllocInfo;
 	memAllocInfo.allocationSize = result.allocSize = memReqs.size;
-	memAllocInfo.memoryTypeIndex = getMemoryType(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
+	memAllocInfo.memoryTypeIndex = getMemoryType(memReqs.memoryTypeBits, memoryPropertyFlags);
 	result.memory = device.allocateMemory(memAllocInfo);
 	device.bindImageMemory(result.image, result.memory, 0);
 	return result;

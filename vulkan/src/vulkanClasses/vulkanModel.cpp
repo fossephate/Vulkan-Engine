@@ -21,7 +21,7 @@ namespace vkx {
 		this->meshLoader->load(filename, flags);
 	}
 
-	// rename to createMeshes?
+
 	void Model::createMeshes(const std::vector<VertexLayout> &layout, float scale, uint32_t binding) {
 
 		this->meshLoader->createMeshBuffers(layout, scale);

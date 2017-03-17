@@ -258,7 +258,7 @@ vkx::Texture vkx::TextureLoader::loadTexture(const std::string & filename, vk::F
 		// Submit command buffer containing copy and image layout commands
 		cmdBuffer.end();
 
-		vk::Fence nullFence = { VK_NULL_HANDLE };
+		vk::Fence nullFence;
 
 		vk::SubmitInfo submitInfo;
 		submitInfo.commandBufferCount = 1;

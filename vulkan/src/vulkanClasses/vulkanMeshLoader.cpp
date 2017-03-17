@@ -101,15 +101,16 @@ namespace vkx {
 			aiString name;
 			pScene->mMaterials[i]->Get(AI_MATKEY_NAME, name);
 
-			material.name = name.C_Str();
-			std::string ls = "Info: Material: \"" + material.name + "\"\n";
-			printf(ls.c_str());
-
 			// if a material with the same name has already been loaded, continue
 			if (this->assetManager->materials.doExist(material.name)) {
 				// skip this material
 				continue;
 			}
+
+			material.name = name.C_Str();
+			std::string ls = "Info: Material: \"" + material.name + "\"\n";
+			printf(ls.c_str());
+
 
 			// Properties
 			aiColor4D color;
@@ -501,58 +502,71 @@ namespace vkx {
 
 	void vkx::MeshLoader::createMeshBuffers(const std::vector<VertexLayout> &layout, float scale) {
 
+
+		//for (int i = 0; i < 10000; i++) {
+		//	printf("\rIn progress %d", i / 100);
+		//	fflush(stdout);
+		//}
+		//printf("\n");
+
+
 		for (int m = 0; m < m_Entries.size(); m++) {
+
+			//printf("\rIn progress %d", m / m_Entries.size());
+			//fflush(stdout);
 
 
 			std::vector<float> vertexBuffer;
 
 			for (int i = 0; i < m_Entries[m].Vertices.size(); i++) {
 				// Push vertex data depending on layout
-				for (auto& layoutDetail : layout) {
-					// Position
-					if (layoutDetail == VERTEX_LAYOUT_POSITION) {
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.x * scale);
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.y * scale);
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.z * scale);
-					}
-					// Normal
-					if (layoutDetail == VERTEX_LAYOUT_NORMAL) {
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.x);
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.y);// y was negative// important
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.z);
-					}
-					// Texture coordinates
-					if (layoutDetail == VERTEX_LAYOUT_UV) {
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tex.s);
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tex.t);
-					}
-					// Color
-					if (layoutDetail == VERTEX_LAYOUT_COLOR) {
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.r);
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.g);
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.b);
-					}
-					// Tangent
-					if (layoutDetail == VERTEX_LAYOUT_TANGENT) {
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.x);
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.y);
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.z);
-					}
-					// Bitangent
-					if (layoutDetail == VERTEX_LAYOUT_BITANGENT) {
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.x);
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.y);
-						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.z);
-					}
-					// Dummy layout components for padding
-					if (layoutDetail == VERTEX_LAYOUT_DUMMY_FLOAT) {
-						vertexBuffer.push_back(0.0f);
-					}
-					if (layoutDetail == VERTEX_LAYOUT_DUMMY_VEC4) {
-						vertexBuffer.push_back(0.0f);
-						vertexBuffer.push_back(0.0f);
-						vertexBuffer.push_back(0.0f);
-						vertexBuffer.push_back(0.0f);
+				for (auto &layoutDetail : layout) {
+					switch (layoutDetail) {
+						// Position
+						case VERTEX_LAYOUT_POSITION:
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.x * scale);
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.y * scale);
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.z * scale);
+							break;
+						// Normal
+						case VERTEX_LAYOUT_NORMAL:
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.x);
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.y);// y was negative// important
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.z);
+							break;
+						// Texture Coordinates
+						case VERTEX_LAYOUT_UV:
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tex.s);
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tex.t);
+							break;
+						// Color
+						case VERTEX_LAYOUT_COLOR:
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.r);
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.g);
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.b);
+							break;
+						// Tangent
+						case VERTEX_LAYOUT_TANGENT:
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.x);
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.y);
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.z);
+							break;
+						// Bitangent
+						case VERTEX_LAYOUT_BITANGENT:
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.x);
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.y);
+							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.z);
+							break;
+						// Dummy layout components for padding
+						case VERTEX_LAYOUT_DUMMY_FLOAT:
+							vertexBuffer.push_back(0.0f);
+							break;
+						case VERTEX_LAYOUT_DUMMY_VEC4:
+							vertexBuffer.push_back(0.0f);
+							vertexBuffer.push_back(0.0f);
+							vertexBuffer.push_back(0.0f);
+							vertexBuffer.push_back(0.0f);
+							break;
 					}
 				}
 			}
