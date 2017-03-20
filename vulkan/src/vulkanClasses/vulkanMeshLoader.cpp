@@ -509,6 +509,8 @@ namespace vkx {
 		//}
 		//printf("\n");
 
+		auto tStart = std::chrono::high_resolution_clock::now();
+
 
 		for (int m = 0; m < m_Entries.size(); m++) {
 
@@ -600,6 +602,13 @@ namespace vkx {
 			meshBuffers.push_back(meshBuffer);
 		}
 
+
+
+
+		auto tEnd = std::chrono::high_resolution_clock::now();
+
+		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(tEnd - tStart).count();
+		printf("Load Time: %d\n", duration);
 
 	}
 

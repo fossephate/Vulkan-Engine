@@ -19,9 +19,6 @@ layout (location = 2) out uvec4 outAlbedo;// this is a uvec
 /*layout (constant_id = 1) */const float FAR_PLANE = 512.0f;
 /*layout (constant_id = 2) */const int ENABLE_DISCARD = 0;
 
-//layout (set = 0, binding = 1) uniform sampler2D samplerColorMap;
-//layout (set = 0, binding = 2) uniform sampler2D samplerNormalMap;
-
 
 // diffuse texture (from material)
 layout (set = 2, binding = 0) uniform sampler2D samplerColor;
@@ -34,15 +31,6 @@ float linearDepth(float depth) {
 	float z = depth * 2.0f - 1.0f; 
 	return (2.0f * NEAR_PLANE * FAR_PLANE) / (FAR_PLANE + NEAR_PLANE - z * (FAR_PLANE - NEAR_PLANE));	
 }
-
-
-
-// void main() 
-// {
-// 	outPosition = vec4(inWorldPos, 1.0);
-// 	outNormal = vec4(inNormal, 1.0);
-// 	outAlbedo = texture(samplerColor, inUV);
-// }
 
 
 void main() 

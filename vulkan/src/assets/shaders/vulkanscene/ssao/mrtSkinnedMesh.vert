@@ -8,7 +8,7 @@ layout (location = 1) in vec2 inUV;
 layout (location = 2) in vec3 inColor;
 layout (location = 3) in vec3 inNormal;
 layout (location = 4) in vec3 inTangent;
-// lol what? how does this work? need to fix
+// skinned mesh:
 layout (location = 5) in vec4 inBoneWeights;
 layout (location = 6) in ivec4 inBoneIDs;
 
@@ -32,8 +32,6 @@ layout (set = 0, binding = 0) uniform sceneBuffer
 	mat4 model;
 	mat4 view;
 	mat4 projection;
-
-
 } scene;
 
 // bone data
@@ -73,12 +71,9 @@ void main()
 	outUV.t = 1.0 - outUV.t;
 
 	// // Vertex position in world space
-	// vec4 tmpPos = inPos;
-	// outWorldPos = vec3(instance.model * tmpPos);
+	//outWorldPos = vec3(instance.model * inPos);
 
 	// Vertex position in world space
-	outWorldPos = inPos.xyz;
-
 	outWorldPos = vec3(scene.view * instance.model * inPos);
 	
 	// GL to Vulkan coord space

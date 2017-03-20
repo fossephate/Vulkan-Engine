@@ -2135,6 +2135,14 @@ class VulkanExample : public vkx::vulkanApp {
 		planeModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 		models.push_back(planeModel);
 
+		auto physicsPlane = std::make_shared<vkx::PhysicsObject>(&physicsManager, planeModel);
+		btCollisionShape* boxShape = new btBoxShape(btVector3(btScalar(200.), btScalar(200.), btScalar(0.1)));
+		physicsPlane->createRigidBody(boxShape, 0.0f);
+		//btTransform t;
+		//t.setOrigin(btVector3(0., 0., 0.));
+		//physicsPlane->rigidBody->setWorldTransform(t);
+		physicsObjects.push_back(physicsPlane);
+
 
 
 
@@ -2156,13 +2164,7 @@ class VulkanExample : public vkx::vulkanApp {
 			skinnedMeshes.push_back(testSkinnedMesh);
 		}
 
-		auto physicsPlane = std::make_shared<vkx::PhysicsObject>(&physicsManager, planeModel);
-		btCollisionShape* boxShape = new btBoxShape(btVector3(btScalar(200.), btScalar(200.), btScalar(0.1)));
-		physicsPlane->createRigidBody(boxShape, 0.0f);
-		//btTransform t;
-		//t.setOrigin(btVector3(0., 0., 0.));
-		//physicsPlane->rigidBody->setWorldTransform(t);
-		physicsObjects.push_back(physicsPlane);
+
 
 
 		//auto physicsBall = std::make_shared<vkx::PhysicsObject>(&physicsManager, models[1]);
@@ -2180,7 +2182,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// deferred
 
-		if (false) {
+		if (!false) {
 			auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			sponzaModel->load(getAssetPath() + "models/sponza.dae");
 			sponzaModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
@@ -2215,7 +2217,7 @@ class VulkanExample : public vkx::vulkanApp {
 		//modelsDeferred.push_back(planeModel2);
 
 
-		for (int i = 0; i < 6; ++i) {
+		for (int i = 0; i < 0; ++i) {
 			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			testModel->load(getAssetPath() + "models/monkey.fbx");
 			testModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);

@@ -815,18 +815,21 @@ void vulkanApp::renderLoop() {
 		tNow = std::chrono::high_resolution_clock::now();
 		// number of frames that have been rendered
 		frameCounter++;
-		// the time it took to render the frame
-		auto tFrameTime = std::chrono::duration<double, std::milli>(tNow - tFrameStart);
+		// the time it took originally to render the frame
+		auto tOriginalFrameTime = std::chrono::duration<double, std::milli>(tNow - tFrameStart);
+		//auto tFrameTime = std::chrono::duration_cast<std::chrono::milliseconds>(tNow - tFrameStart);
 		// set FPS
 		//double FPS = 6000.0;
 		std::chrono::duration<double, std::milli> minWorkTime(1000.0 / settings.fpsCap);
+		//std::chrono::duration<std::chrono::milliseconds> minWorkTime(1000.0 / settings.fpsCap);
 
 		//if (tFrameTime < minWorkTime) {
-			std::this_thread::sleep_for(minWorkTime - tFrameTime);
+			std::this_thread::sleep_for(minWorkTime - tOriginalFrameTime);
 		//}
 		// calculate new frame time after sleeping
 		tNow = std::chrono::high_resolution_clock::now();
-		tFrameTime = std::chrono::duration<double, std::milli>(tNow - tFrameStart);
+		auto tFrameTime = std::chrono::duration<double, std::milli>(tNow - tFrameStart);
+		//auto tFrameTime = std::chrono::duration_cast<std::chrono::milliseconds>(tNow - tFrameStart);
 		frameTimer = tFrameTime.count() / 1000.0;
 		lastFPS = 1.0 / frameTimer;
 

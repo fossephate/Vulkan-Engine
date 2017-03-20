@@ -26,21 +26,13 @@ layout (location = 0) out vec4 outPosition;
 layout (location = 1) out vec4 outNormal;
 layout (location = 2) out uvec4 outAlbedo;
 
-// void main() 
-// {
-// 	outPosition = vec4(inWorldPos, 1.0);
-// 	outNormal = vec4(inNormal, 1.0);
-// 	outAlbedo = texture(samplerColor, inUV);
-// }
-
 
 float linearDepth(float depth) {
 	float z = depth * 2.0f - 1.0f; 
 	return (2.0f * NEAR_PLANE * FAR_PLANE) / (FAR_PLANE + NEAR_PLANE - z * (FAR_PLANE - NEAR_PLANE));	
 }
 
-void main() 
-{
+void main() {
 	outPosition = vec4(inWorldPos, linearDepth(gl_FragCoord.z));
 
 	vec4 color = texture(samplerColor, inUV);

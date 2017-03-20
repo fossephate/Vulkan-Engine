@@ -19,12 +19,8 @@ layout (location = 4) out vec3 outTangent;
 layout (set = 0, binding = 0) uniform sceneBuffer 
 {
 	mat4 model;
-	
 	mat4 view;
 	mat4 projection;
-
-	mat4 g1;
-	mat4 g2;
 } scene;
 
 // matrix data
@@ -35,8 +31,6 @@ layout (set = 1, binding = 0) uniform matrixBuffer
 	mat4 g1;
 	mat4 g2;
 } instance;
-
-
 
 
 void main() 
