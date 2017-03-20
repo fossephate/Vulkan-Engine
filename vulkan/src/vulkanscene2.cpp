@@ -1342,7 +1342,6 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-
 		// Offscreen texture targets:
 		std::vector<vk::WriteDescriptorSet> writeDescriptorSets2 =
 		{
@@ -1455,14 +1454,9 @@ class VulkanExample : public vkx::vulkanApp {
 
 			vk::DescriptorImageInfo texDescriptorPosDepth =
 				vkx::descriptorImageInfo(offscreen.framebuffers[0].attachments[0].sampler, offscreen.framebuffers[0].attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
-			//vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[0].colors[0].view, vk::ImageLayout::eGeneral);
 
 			vk::DescriptorImageInfo texDescriptorNorm =
 				vkx::descriptorImageInfo(offscreen.framebuffers[0].attachments[0].sampler, offscreen.framebuffers[0].attachments[1].view, vk::ImageLayout::eShaderReadOnlyOptimal);
-			//vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[0].colors[1].view, vk::ImageLayout::eGeneral);
-
-
-
 
 
 			std::vector<vk::WriteDescriptorSet> ssaoGenerateWriteDescriptorSets =
@@ -1505,14 +1499,25 @@ class VulkanExample : public vkx::vulkanApp {
 		// SSAO Blur
 
 
+		//// descriptor set 
+		//vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo10 =
+		//	vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred.deferred"), &rscs.descriptorSetLayouts->get("offscreen.ssao.blur"), 1);
+		//rscs.descriptorSets->add("offscreen.ssao.blur", descriptorSetAllocateInfo10);
+
+		//vk::DescriptorImageInfo texDescriptorSSAOBlur =
+		//	vkx::descriptorImageInfo(offscreen.framebuffers[0].attachments[0].sampler, offscreen.framebuffers[1].attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
+		////vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[1].attachments[0].view, vk::ImageLayout::eGeneral);
+
+
 		// descriptor set 
 		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo10 =
 			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred.deferred"), &rscs.descriptorSetLayouts->get("offscreen.ssao.blur"), 1);
 		rscs.descriptorSets->add("offscreen.ssao.blur", descriptorSetAllocateInfo10);
 
 		vk::DescriptorImageInfo texDescriptorSSAOBlur =
-			vkx::descriptorImageInfo(offscreen.framebuffers[0].attachments[0].sampler, offscreen.framebuffers[1].attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
-		//vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[1].attachments[0].view, vk::ImageLayout::eGeneral);
+			vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[1].attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+
 
 		std::vector<vk::WriteDescriptorSet> ssaoBlurWriteDescriptorSets =
 		{
@@ -2182,7 +2187,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// deferred
 
-		if (!false) {
+		if (false) {
 			auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			sponzaModel->load(getAssetPath() + "models/sponza.dae");
 			sponzaModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
@@ -2217,7 +2222,7 @@ class VulkanExample : public vkx::vulkanApp {
 		//modelsDeferred.push_back(planeModel2);
 
 
-		for (int i = 0; i < 0; ++i) {
+		for (int i = 0; i < 6; ++i) {
 			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			testModel->load(getAssetPath() + "models/monkey.fbx");
 			testModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);

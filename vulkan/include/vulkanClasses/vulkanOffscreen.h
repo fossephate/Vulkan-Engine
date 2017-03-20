@@ -62,8 +62,8 @@ namespace vkx {
 
 			//prepareRenderPasses();
 			
-			//addDeferredFramebuffer();
-			addDeferredFramebuffer2();
+			addDeferredFramebuffer();
+			//addDeferredFramebuffer2();
 			addSSAOGenerateFramebuffer();
 			addSSAOBlurFramebuffer();
 
@@ -249,12 +249,288 @@ namespace vkx {
 
 
 
+		//void addDeferredFramebuffer() {
+
+		//	// -------------------------------------------------------------------------------
+		//	// -------------------------------------------------------------------------------
+		//	// Options
+		//	
+		//	glm::uvec2 size = this->size;
+		//	//std::vector<vk::Format> colorFormats = std::vector<vk::Format>{{
+		//	//		vk::Format::eR16G16B16A16Sfloat,
+		//	//		vk::Format::eR16G16B16A16Sfloat,
+		//	//		vk::Format::eR8G8B8A8Unorm
+		//	//}};
+		//	std::vector<vk::Format> colorFormats = std::vector<vk::Format>{ {
+		//			vk::Format::eR32G32B32A32Sfloat,
+		//			vk::Format::eR8G8B8A8Unorm,
+		//			vk::Format::eR32G32B32A32Uint
+		//	}};
+
+		//	// Find a suitable depth format
+		//	vk::Format depthFormat = vkx::getSupportedDepthFormat(context.physicalDevice);
+
+		//	vk::ImageUsageFlags attachmentUsage{ vk::ImageUsageFlagBits::eSampled };
+		//	vk::ImageUsageFlags depthAttachmentUsage;
+		//	vk::ImageLayout colorFinalLayout{ vk::ImageLayout::eShaderReadOnlyOptimal };
+		//	//vk::ImageLayout depthFinalLayout{ vk::ImageLayout::eUndefined };
+		//	vk::ImageLayout depthFinalLayout{ vk::ImageLayout::eShaderReadOnlyOptimal };
+
+		//	// End of options
+		//	// ---------------------------------------------------------------------------------
+
+
+		//	vkx::Framebuffer deferredFramebuffer;
+		//	deferredFramebuffer.device = context.device;
+
+
+		//	// create deferred render pass
+		//	{
+
+		//		vk::SubpassDescription subpass;
+		//		subpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
+
+		//		std::vector<vk::AttachmentDescription> attachments;
+		//		std::vector<vk::AttachmentReference> colorAttachmentReferences;
+		//		attachments.resize(colorFormats.size());
+		//		colorAttachmentReferences.resize(attachments.size());
+		//		// Color attachment
+		//		for (size_t i = 0; i < /*attachments.size()*/2; ++i) {
+		//			attachments[i].format = colorFormats[i];
+		//			attachments[i].loadOp = vk::AttachmentLoadOp::eClear;
+		//			attachments[i].storeOp = vk::AttachmentStoreOp::eStore;
+		//			attachments[i].initialLayout = vk::ImageLayout::eUndefined;
+		//			//attachments[i].finalLayout = colorFinalLayout;
+		//			attachments[i].finalLayout = vk::ImageLayout::eColorAttachmentOptimal;
+
+		//			vk::AttachmentReference &attachmentReference = colorAttachmentReferences[i];
+		//			attachmentReference.attachment = i;
+		//			attachmentReference.layout = vk::ImageLayout::eColorAttachmentOptimal;
+
+		//			subpass.colorAttachmentCount = colorAttachmentReferences.size();
+		//			subpass.pColorAttachments = colorAttachmentReferences.data();
+		//		}
+
+		//		// Do we have a depth format?
+		//		vk::AttachmentReference depthAttachmentReference;
+		//		if (depthFormat != vk::Format::eUndefined) {
+		//			vk::AttachmentDescription depthAttachment;
+		//			depthAttachment.format = depthFormat;
+		//			depthAttachment.loadOp = vk::AttachmentLoadOp::eClear;
+		//			// We might be using the depth attacment for something, so preserve it if it's final layout is not undefined
+		//			depthAttachment.storeOp = depthFinalLayout == vk::ImageLayout::eUndefined ? vk::AttachmentStoreOp::eDontCare : vk::AttachmentStoreOp::eStore;
+		//			depthAttachment.initialLayout = vk::ImageLayout::eUndefined;
+		//			depthAttachment.finalLayout = depthFinalLayout;
+		//			attachments.push_back(depthAttachment);
+		//			depthAttachmentReference.attachment = attachments.size() - 1;
+		//			depthAttachmentReference.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+		//			subpass.pDepthStencilAttachment = &depthAttachmentReference;
+		//		}
+
+		//		std::vector<vk::SubpassDependency> subpassDependencies;
+		//		{
+		//			if ((colorFinalLayout != vk::ImageLayout::eColorAttachmentOptimal) && (colorFinalLayout != vk::ImageLayout::eUndefined)) {
+		//				// Implicit transition 
+		//				vk::SubpassDependency dependency;
+		//				dependency.srcSubpass = 0;
+		//				dependency.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+		//				dependency.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+
+		//				dependency.dstSubpass = VK_SUBPASS_EXTERNAL;
+		//				dependency.dstAccessMask = vkx::accessFlagsForLayout(colorFinalLayout);
+		//				dependency.dstStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
+		//				subpassDependencies.push_back(dependency);
+		//			}
+
+		//			if ((depthFinalLayout != vk::ImageLayout::eColorAttachmentOptimal) && (depthFinalLayout != vk::ImageLayout::eUndefined)) {
+		//				// Implicit transition 
+		//				vk::SubpassDependency dependency;
+		//				dependency.srcSubpass = 0;
+		//				dependency.srcAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+		//				dependency.srcStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
+
+		//				dependency.dstSubpass = VK_SUBPASS_EXTERNAL;
+		//				dependency.dstAccessMask = vkx::accessFlagsForLayout(depthFinalLayout);
+		//				dependency.dstStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
+		//				subpassDependencies.push_back(dependency);
+		//			}
+		//		}
+
+		//		//if (renderPass) {
+		//		//	context.device.destroyRenderPass(renderPass);
+		//		//}
+
+		//		vk::RenderPassCreateInfo renderPassInfo;
+		//		renderPassInfo.attachmentCount = attachments.size();
+		//		renderPassInfo.pAttachments = attachments.data();
+		//		renderPassInfo.subpassCount = 1;
+		//		renderPassInfo.pSubpasses = &subpass;
+		//		renderPassInfo.dependencyCount = subpassDependencies.size();
+		//		renderPassInfo.pDependencies = subpassDependencies.data();
+		//		
+		//		deferredFramebuffer.renderPass = context.device.createRenderPass(renderPassInfo);
+		//	}
+
+		//	// create frame buffer:
+		//	{
+
+
+		//		deferredFramebuffer.colors.resize(colorFormats.size());
+
+		//		// Color attachment
+		//		vk::ImageCreateInfo image;
+		//		image.imageType = vk::ImageType::e2D;
+		//		image.extent.width = size.x;
+		//		image.extent.height = size.y;
+		//		image.extent.depth = 1;
+		//		image.mipLevels = 1;
+		//		image.arrayLayers = 1;
+		//		image.samples = vk::SampleCountFlagBits::e1;
+		//		image.tiling = vk::ImageTiling::eOptimal;
+		//		// vk::Image of the framebuffer is blit source
+		//		image.usage = vk::ImageUsageFlagBits::eColorAttachment | attachmentUsage;
+
+		//		vk::ImageViewCreateInfo colorImageView;
+		//		colorImageView.viewType = vk::ImageViewType::e2D;
+		//		colorImageView.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+		//		colorImageView.subresourceRange.levelCount = 1;
+		//		colorImageView.subresourceRange.layerCount = 1;
+
+		//		for (size_t i = 0; i < colorFormats.size(); ++i) {
+		//			image.format = colorFormats[i];
+		//			deferredFramebuffer.colors[i] = context.createImage(image, vk::MemoryPropertyFlagBits::eDeviceLocal);
+		//			colorImageView.format = colorFormats[i];
+		//			colorImageView.image = deferredFramebuffer.colors[i].image;
+		//			deferredFramebuffer.colors[i].view = context.device.createImageView(colorImageView);
+		//		}
+
+
+		//		bool useDepth = depthFormat != vk::Format::eUndefined;
+		//		// Depth stencil attachment
+		//		if (useDepth) {
+		//			image.format = depthFormat;
+		//			image.usage = vk::ImageUsageFlagBits::eDepthStencilAttachment | depthAttachmentUsage;
+		//			deferredFramebuffer.depthAttachment = context.createImage(image, vk::MemoryPropertyFlagBits::eDeviceLocal);
+
+		//			vk::ImageViewCreateInfo depthStencilView;
+		//			depthStencilView.viewType = vk::ImageViewType::e2D;
+		//			depthStencilView.format = depthFormat;
+		//			depthStencilView.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eDepth;
+		//			depthStencilView.subresourceRange.levelCount = 1;
+		//			depthStencilView.subresourceRange.layerCount = 1;
+		//			depthStencilView.image = deferredFramebuffer.depthAttachment.image;
+		//			deferredFramebuffer.depthAttachment.view = context.device.createImageView(depthStencilView);
+
+		//		}
+
+		//		std::vector<vk::ImageView> attachments;
+		//		attachments.resize(3);
+		//		for (size_t i = 0; i < 3; ++i) {
+		//			attachments[i] = deferredFramebuffer.colors[i].view;
+		//		}
+		//		attachments.push_back(deferredFramebuffer.depthAttachment.view);
+
+		//		vk::FramebufferCreateInfo fbufCreateInfo;
+		//		fbufCreateInfo.renderPass = deferredFramebuffer.renderPass;
+		//		fbufCreateInfo.pAttachments = attachments.data();
+		//		fbufCreateInfo.attachmentCount = (uint32_t)attachments.size();
+		//		fbufCreateInfo.width = this->size.x;
+		//		fbufCreateInfo.height = this->size.y;
+		//		fbufCreateInfo.layers = 1;
+		//		deferredFramebuffer.framebuffer = context.device.createFramebuffer(fbufCreateInfo);
+
+
+		//	}
+
+
+
+
+
+
+		//	//deferredFramebuffer.create(context, size, colorFormats, depthFormat, renderPass, attachmentUsage, depthAttachmentUsage);
+
+
+		//	// create sampler
+		//	{
+		//		// Create sampler
+		//		vk::SamplerCreateInfo samplerInfo;
+		//		samplerInfo.magFilter = vk::Filter::eLinear;
+		//		samplerInfo.minFilter = vk::Filter::eLinear;
+		//		samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
+		//		samplerInfo.addressModeU = vk::SamplerAddressMode::eClampToEdge;
+		//		samplerInfo.addressModeV = samplerInfo.addressModeU;
+		//		samplerInfo.addressModeW = samplerInfo.addressModeU;
+		//		samplerInfo.mipLodBias = 0.0f;
+		//		samplerInfo.maxAnisotropy = 0;
+		//		samplerInfo.compareOp = vk::CompareOp::eNever;
+		//		samplerInfo.minLod = 0.0f;
+		//		samplerInfo.maxLod = 0.0f;
+		//		samplerInfo.borderColor = vk::BorderColor::eFloatOpaqueWhite;
+
+		//		//for (auto &framebuffer : framebuffers) {
+		//		//	if (attachmentUsage | vk::ImageUsageFlagBits::eSampled) {
+		//		//		for (auto& color : framebuffer.colors) {
+		//		//			color.sampler = context.device.createSampler(samplerInfo);
+		//		//		}
+		//		//	}
+		//		//	if (depthAttachmentUsage | vk::ImageUsageFlagBits::eSampled) {
+		//		//		framebuffer.depthAttachment.sampler = context.device.createSampler(samplerInfo);
+		//		//	}
+		//		//}
+
+		//		auto &framebuffer = deferredFramebuffer;
+		//		if (attachmentUsage | vk::ImageUsageFlagBits::eSampled) {
+		//			for (auto &color : framebuffer.colors) {
+		//				color.sampler = context.device.createSampler(samplerInfo);
+		//			}
+		//		}
+		//		if (depthAttachmentUsage | vk::ImageUsageFlagBits::eSampled) {
+		//			framebuffer.depthAttachment.sampler = context.device.createSampler(samplerInfo);
+		//		}
+
+		//	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		//	framebuffers.push_back(deferredFramebuffer);
+		//}
+
+
+
+
+
+
+
+
+
+
+
 		void addDeferredFramebuffer() {
 
 			// -------------------------------------------------------------------------------
 			// -------------------------------------------------------------------------------
 			// Options
-			
+
 			glm::uvec2 size = this->size;
 			//std::vector<vk::Format> colorFormats = std::vector<vk::Format>{{
 			//		vk::Format::eR16G16B16A16Sfloat,
@@ -265,10 +541,16 @@ namespace vkx {
 					vk::Format::eR32G32B32A32Sfloat,
 					vk::Format::eR8G8B8A8Unorm,
 					vk::Format::eR32G32B32A32Uint
-			}};
+				} };
+
+			// This value is chosen as an invalid default that signals that the code should pick a specific depth buffer
+			// Alternative, you can set this to undefined to explicitly declare you want no depth buffer.
+			vk::Format depthFormat = vk::Format::eR8Uscaled;
 
 			// Find a suitable depth format
-			vk::Format depthFormat = vkx::getSupportedDepthFormat(context.physicalDevice);
+			if (depthFormat == vk::Format::eR8Uscaled) {
+				depthFormat = vkx::getSupportedDepthFormat(context.physicalDevice);
+			}
 
 			vk::ImageUsageFlags attachmentUsage{ vk::ImageUsageFlagBits::eSampled };
 			vk::ImageUsageFlags depthAttachmentUsage;
@@ -295,15 +577,14 @@ namespace vkx {
 				attachments.resize(colorFormats.size());
 				colorAttachmentReferences.resize(attachments.size());
 				// Color attachment
-				for (size_t i = 0; i < /*attachments.size()*/2; ++i) {
+				for (size_t i = 0; i < attachments.size(); ++i) {
 					attachments[i].format = colorFormats[i];
 					attachments[i].loadOp = vk::AttachmentLoadOp::eClear;
-					attachments[i].storeOp = vk::AttachmentStoreOp::eStore;
+					attachments[i].storeOp = colorFinalLayout == vk::ImageLayout::eUndefined ? vk::AttachmentStoreOp::eDontCare : vk::AttachmentStoreOp::eStore;
 					attachments[i].initialLayout = vk::ImageLayout::eUndefined;
-					//attachments[i].finalLayout = colorFinalLayout;
-					attachments[i].finalLayout = vk::ImageLayout::eColorAttachmentOptimal;
+					attachments[i].finalLayout = colorFinalLayout;
 
-					vk::AttachmentReference &attachmentReference = colorAttachmentReferences[i];
+					vk::AttachmentReference& attachmentReference = colorAttachmentReferences[i];
 					attachmentReference.attachment = i;
 					attachmentReference.layout = vk::ImageLayout::eColorAttachmentOptimal;
 
@@ -367,7 +648,7 @@ namespace vkx {
 				renderPassInfo.pSubpasses = &subpass;
 				renderPassInfo.dependencyCount = subpassDependencies.size();
 				renderPassInfo.pDependencies = subpassDependencies.data();
-				
+
 				deferredFramebuffer.renderPass = context.device.createRenderPass(renderPassInfo);
 			}
 
@@ -424,18 +705,20 @@ namespace vkx {
 				}
 
 				std::vector<vk::ImageView> attachments;
-				attachments.resize(3);
-				for (size_t i = 0; i < 3; ++i) {
+				attachments.resize(deferredFramebuffer.colors.size());
+				for (size_t i = 0; i < deferredFramebuffer.colors.size(); ++i) {
 					attachments[i] = deferredFramebuffer.colors[i].view;
 				}
-				attachments.push_back(deferredFramebuffer.depthAttachment.view);
+				if (useDepth) {
+					attachments.push_back(deferredFramebuffer.depthAttachment.view);
+				}
 
 				vk::FramebufferCreateInfo fbufCreateInfo;
 				fbufCreateInfo.renderPass = deferredFramebuffer.renderPass;
-				fbufCreateInfo.pAttachments = attachments.data();
 				fbufCreateInfo.attachmentCount = (uint32_t)attachments.size();
-				fbufCreateInfo.width = this->size.x;
-				fbufCreateInfo.height = this->size.y;
+				fbufCreateInfo.pAttachments = attachments.data();
+				fbufCreateInfo.width = size.x;
+				fbufCreateInfo.height = size.y;
 				fbufCreateInfo.layers = 1;
 				deferredFramebuffer.framebuffer = context.device.createFramebuffer(fbufCreateInfo);
 
@@ -490,30 +773,16 @@ namespace vkx {
 
 			}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+			deferredFramebuffer.attachments.resize(3);
+			deferredFramebuffer.attachments[0] = deferredFramebuffer.colors[0];
+			deferredFramebuffer.attachments[1] = deferredFramebuffer.colors[1];
+			deferredFramebuffer.attachments[2] = deferredFramebuffer.colors[2];
 
 
 			framebuffers.push_back(deferredFramebuffer);
 		}
+
+
 
 
 

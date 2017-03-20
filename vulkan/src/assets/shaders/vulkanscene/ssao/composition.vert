@@ -14,8 +14,7 @@ layout (set = 3, binding = 0) uniform UBO
 
 layout (location = 0) out vec2 outUV;
 
-void main() 
-{
+void main() {
 	outUV = inUV;
 	gl_Position = ubo.projection * ubo.model * vec4(inPos.xyz, 1.0);
 }

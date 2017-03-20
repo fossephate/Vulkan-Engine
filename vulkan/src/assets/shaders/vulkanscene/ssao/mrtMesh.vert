@@ -33,8 +33,8 @@ layout (set = 1, binding = 0) uniform matrixBuffer
 } instance;
 
 
-void main() 
-{
+void main() {
+	
 	gl_Position = scene.projection * scene.view * instance.model * inPos;
 	
 	outUV = inUV;

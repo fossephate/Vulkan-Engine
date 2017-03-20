@@ -12,27 +12,12 @@ layout (location = 0) in vec3 inUV;
 
 layout (location = 0) out vec4 outFragColor;
 
-// void main() 
-// {
-// 	vec3 components[3];
-// 	components[0] = texture(samplerPosition, inUV.st).rgb;  
-// 	components[1] = texture(samplerNormal, inUV.st).rgb;  
-// 	components[2] = texture(samplerAlbedo, inUV.st).rgb;  
-// 	// Uncomment to display specular component
-// 	//components[2] = vec3(texture(samplerAlbedo, inUV.st).a);  
-
-// 	vec4 ssao = texture(samplerSSAO, inUV.st);
-// 	components[2] = vec3(ssao.r);
-	
-// 	// Select component depending on z coordinate of quad
-// 	highp int index = int(inUV.z);
-// 	outFragColor.rgb = components[index];
-// }
-
 void main() 
 {
 	vec3 components[3];
-	components[0] = texture(samplerPosition, inUV.st).rgb;  
+	components[0] = texture(samplerPosition, inUV.st).rgb;
+	//components[0] = vec3(texture(samplerPosition, inUV.st).a);
+
 	components[1] = texture(samplerNormal, inUV.st).rgb;  
 	ivec2 texDim = textureSize(samplerAlbedo, 0);
 	uvec4 albedo = texelFetch(samplerAlbedo, ivec2(inUV.st * texDim ), 0);
