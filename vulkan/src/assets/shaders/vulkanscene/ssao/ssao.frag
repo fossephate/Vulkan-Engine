@@ -47,15 +47,15 @@ void main() {
 	float occlusion = 0.0f;
 	for(int i = 0; i < SSAO_KERNEL_SIZE; i++) {
 		vec3 samplePos = TBN * uboSSAOKernel.samples[i].xyz; 
-		samplePos = fragPos + samplePos * SSAO_RADIUS; 
+		samplePos = fragPos + samplePos * SSAO_RADIUS;
 		
 		// project
 		vec4 offset = vec4(samplePos, 1.0f);
 		offset = ubo.projection * offset; 
 		offset.xyz /= offset.w; 
-		offset.xyz = offset.xyz * 0.5f + 0.5f; 
+		offset.xyz = offset.xyz * 0.5f + 0.5f;
 		
-		float sampleDepth = -texture(samplerPositionDepth, offset.xy).w; 
+		float sampleDepth = -texture(samplerPositionDepth, offset.xy).w;
 
 #define RANGE_CHECK 1
 #ifdef RANGE_CHECK

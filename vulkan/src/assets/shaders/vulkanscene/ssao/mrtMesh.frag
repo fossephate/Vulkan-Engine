@@ -42,7 +42,7 @@ void main() {
 	if (ENABLE_DISCARD == 0) {
 		vec3 N = normalize(inNormal);
 		
-		//N = vec3(N.x, -N.y, N.z);
+		N = vec3(N.x, -N.y, N.z);
 
 		vec3 T = normalize(inTangent);
 		vec3 B = cross(N, T);

@@ -397,10 +397,11 @@ class VulkanExample : public vkx::vulkanApp {
 		rscs.descriptorSets = new vkx::DescriptorSetList(device);
 
 
-
-		camera.setTranslation({ -0.0f, -16.0f, 3.0f });
+		//camera.setTranslation({ -0.0f, -16.0f, 3.0f });
+		camera.setTranslation(glm::vec3(-20.0f, 0.0f, 7.0f));
 		glm::quat initialOrientation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		camera.setRotation(initialOrientation);
+		camera.setRotation(initialOrientation);
+		camera.rotateWorldZ(-PI / 2.0);
 
 		// todo: pick better numbers
 		// or pick based on screen size
@@ -2054,11 +2055,12 @@ class VulkanExample : public vkx::vulkanApp {
 
 				float x = (i * sw) - xOffset;
 				float y = (j * sh) - yOffset;
-				float z = (10.0f) + (sin((0.5*globalP) + n)*2.0f);
+				//float z = (10.0f) + (sin((0.5*globalP) + n)*2.0f);
+				float z = (10.0f) + 10*(sin((2.5*globalP) + n)*2.0f);
 
 				uboFSLights.lights[n].position = glm::vec4(x, y, z, 0.0f);
 				uboFSLights.lights[n].color = glm::vec4((i * 2) - 3.0f, i, j, 0.0f) * glm::vec4(2.5f);
-				uboFSLights.lights[n].radius = 15.0f;
+				uboFSLights.lights[n].radius = 2.0f;
 				uboFSLights.lights[n].linearFalloff = 0.3f;
 				uboFSLights.lights[n].quadraticFalloff = 0.4f;
 
@@ -2187,7 +2189,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// deferred
 
-		if (false) {
+		if (!false) {
 			auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			sponzaModel->load(getAssetPath() + "models/sponza.dae");
 			sponzaModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);

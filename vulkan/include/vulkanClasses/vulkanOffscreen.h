@@ -604,7 +604,8 @@ namespace vkx {
 					depthAttachment.finalLayout = depthFinalLayout;
 					attachments.push_back(depthAttachment);
 					depthAttachmentReference.attachment = attachments.size() - 1;
-					depthAttachmentReference.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+					//depthAttachmentReference.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+					depthAttachmentReference.layout = vk::ImageLayout::eDepthStencilReadOnlyOptimal;// added 3/22/17
 					subpass.pDepthStencilAttachment = &depthAttachmentReference;
 				}
 

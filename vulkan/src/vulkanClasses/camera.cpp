@@ -9,7 +9,7 @@ namespace vkx {
 	Camera::Camera() {
 		// todo: remove this
 		glm::vec2 defaultSize = glm::vec2(1280, 720);
-		this->setProjection(80.0f, (float)defaultSize.x / (float)defaultSize.y, 0.0001f, 256.0f);
+		this->setProjection(80.0f, (float)defaultSize.x / (float)defaultSize.y, 1.0f, 512.0f);
 	}
 
 
