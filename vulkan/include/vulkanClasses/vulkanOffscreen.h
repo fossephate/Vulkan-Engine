@@ -62,8 +62,8 @@ namespace vkx {
 
 			//prepareRenderPasses();
 			
-			addDeferredFramebuffer();
-			//addDeferredFramebuffer2();
+			//addDeferredFramebuffer();
+			addDeferredFramebuffer2();
 			addSSAOGenerateFramebuffer();
 			addSSAOBlurFramebuffer();
 

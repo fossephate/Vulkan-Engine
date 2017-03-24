@@ -33,6 +33,7 @@ void main()
 
 	vec4 ssao = texture(samplerSSAO, inUV.st);
 	components[2] = vec3(ssao.r);
+	//components[2] = vec3(ssao);
 
 	//components[2] = texture(samplerAlbedo, inUV.st).rgb;
 

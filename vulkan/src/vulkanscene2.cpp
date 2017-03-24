@@ -400,7 +400,8 @@ class VulkanExample : public vkx::vulkanApp {
 		//camera.setTranslation({ -0.0f, -16.0f, 3.0f });
 		camera.setTranslation(glm::vec3(-20.0f, 0.0f, 7.0f));
 		glm::quat initialOrientation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		camera.setRotation(initialOrientation);
+		camera.setRotation(initialOrientation);
+
 		camera.rotateWorldZ(-PI / 2.0);
 
 		// todo: pick better numbers
@@ -1516,7 +1517,7 @@ class VulkanExample : public vkx::vulkanApp {
 		rscs.descriptorSets->add("offscreen.ssao.blur", descriptorSetAllocateInfo10);
 
 		vk::DescriptorImageInfo texDescriptorSSAOBlur =
-			vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[1].attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
+			vkx::descriptorImageInfo(offscreen.framebuffers[0].attachments[0].sampler, offscreen.framebuffers[1].attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 
 
@@ -2088,13 +2089,13 @@ class VulkanExample : public vkx::vulkanApp {
 		uniformDataDeferred.ssaoParams.copy(uboSSAOParams);
 	}
 
-	inline float lerp(float a, float b, float f)
-	{
+	inline float lerp(float a, float b, float f) {
 		return a + f * (b - a);
 	}
 
 	void updateUniformBufferSSAOKernel() {
 
+		// https://learnopengl.com/#!Advanced-Lighting/SSAO
 
 		std::uniform_real_distribution<float> rndDist(0.0f, 1.0f);
 		std::random_device rndDev;
@@ -2102,13 +2103,24 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// Sample kernel
 		std::vector<glm::vec4> ssaoKernel(SSAO_KERNEL_SIZE);
+		//std::vector<glm::vec4> ssaoKernel;
+
 		for (uint32_t i = 0; i < SSAO_KERNEL_SIZE; ++i) {
-			glm::vec3 sample(rndDist(rndGen) * 2.0 - 1.0, rndDist(rndGen) * 2.0 - 1.0, rndDist(rndGen));
+
+			glm::vec3 sample(
+				rndDist(rndGen) * 2.0 - 1.0,// -1.0 - 1.0// X
+				rndDist(rndGen) * 2.0 - 1.0,// -1.0 - 1.0// Y
+				rndDist(rndGen)//				0.0 - 1.0// Z
+			);
+
 			sample = glm::normalize(sample);
+
 			sample *= rndDist(rndGen);
 			float scale = float(i) / float(SSAO_KERNEL_SIZE);
 			scale = lerp(0.1f, 1.0f, scale * scale);// todo: fix
+			
 			ssaoKernel[i] = glm::vec4(sample * scale, 0.0f);
+			//ssaoKernel.push_back(glm::vec4(sample * scale, 0.0f));
 		}
 
 		uniformDataDeferred.ssaoKernel.copy(uboSSAOKernel);
@@ -2118,8 +2130,15 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// Random noise
 		std::vector<glm::vec4> ssaoNoise(SSAO_NOISE_DIM * SSAO_NOISE_DIM);
+
 		for (uint32_t i = 0; i < static_cast<uint32_t>(ssaoNoise.size()); i++) {
-			ssaoNoise[i] = glm::vec4(rndDist(rndGen) * 2.0f - 1.0f, rndDist(rndGen) * 2.0f - 1.0f, 0.0f, 0.0f);
+
+			ssaoNoise[i] = glm::vec4(
+				rndDist(rndGen) * 2.0f - 1.0f,// -1.0 - 1.0// X
+				rndDist(rndGen) * 2.0f - 1.0f,// -1.0 - 1.0// Y
+				0.0f,
+				0.0f);
+
 		}
 		
 		// Upload as texture
@@ -2135,6 +2154,8 @@ class VulkanExample : public vkx::vulkanApp {
 	}
 
 	void start() {
+
+		toggleDebugDisplay();
 
 		// add plane model
 		auto planeModel = std::make_shared<vkx::Model>(&context, &assetManager);
@@ -2189,12 +2210,20 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// deferred
 
-		if (!false) {
+		if (false) {
 			auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			sponzaModel->load(getAssetPath() + "models/sponza.dae");
 			sponzaModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 			sponzaModel->rotateWorldX(PI / 2.0);
 			modelsDeferred.push_back(sponzaModel);
+		}
+
+		if (!false) {
+			auto sibModel = std::make_shared<vkx::Model>(&context, &assetManager);
+			sibModel->load(getAssetPath() + "models/sibenik/sibenik.dae");
+			sibModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+			sibModel->rotateWorldX(PI / 2.0);
+			modelsDeferred.push_back(sibModel);
 		}
 
 
@@ -2825,6 +2854,10 @@ class VulkanExample : public vkx::vulkanApp {
 		updateSceneBufferDeferred();
 		updateMatrixBufferDeferred();
 		updateUniformBufferDeferredLights();
+
+
+		// change to whenever camera moves
+		//viewChanged();
 
 
 		if (models.size() != lastSizes.models) {
@@ -3469,12 +3502,17 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-
+	void windowResized() {
+		camera.updateViewMatrix();
+		updateUniformBufferSSAOParams();
+	}
 
 
 
 	void viewChanged() override {
+		camera.updateViewMatrix();
 		updateSceneBufferDeferred();
+		updateUniformBufferSSAOParams();
 	}
 
 

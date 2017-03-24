@@ -312,7 +312,8 @@ void vulkanApp::setupDepthStencil() {
 			depthStencil.image,
 			aspect,
 			vk::ImageLayout::eUndefined,
-			vk::ImageLayout::eDepthStencilAttachmentOptimal);
+			//vk::ImageLayout::eDepthStencilAttachmentOptimal);
+			vk::ImageLayout::eDepthStencilReadOnlyOptimal);// added 3/22/17
 	});
 
 

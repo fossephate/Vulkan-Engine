@@ -35,6 +35,7 @@ float linearDepth(float depth) {
 
 void main() {
 	outPosition = vec4(inWorldPos, linearDepth(gl_FragCoord.z));
+	//outPosition.xyz = vec3(outPosition.x, -outPosition.y, outPosition.z);// added 3/22/17
 
 	vec4 color = texture(samplerColor, inUV);
 
@@ -42,7 +43,7 @@ void main() {
 	if (ENABLE_DISCARD == 0) {
 		vec3 N = normalize(inNormal);
 		
-		N = vec3(N.x, -N.y, N.z);
+		//N = vec3(N.x, -N.y, N.z);
 
 		vec3 T = normalize(inTangent);
 		vec3 B = cross(N, T);
