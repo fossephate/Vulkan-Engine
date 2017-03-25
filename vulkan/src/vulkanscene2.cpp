@@ -2210,7 +2210,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// deferred
 
-		if (false) {
+		if (!false) {
 			auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			sponzaModel->load(getAssetPath() + "models/sponza.dae");
 			sponzaModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
@@ -2218,7 +2218,7 @@ class VulkanExample : public vkx::vulkanApp {
 			modelsDeferred.push_back(sponzaModel);
 		}
 
-		if (!false) {
+		if (false) {
 			auto sibModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			sibModel->load(getAssetPath() + "models/sibenik/sibenik.dae");
 			sibModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
@@ -2507,6 +2507,28 @@ class VulkanExample : public vkx::vulkanApp {
 
 			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			testModel->load(getAssetPath() + "models/myCube.dae");
+			testModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+			modelsDeferred.push_back(testModel);
+
+
+
+			auto physicsBall = std::make_shared<vkx::PhysicsObject>(&physicsManager, testModel);
+			btConvexHullShape *convexHullShape = createConvexHullFromMesh(testModel->meshLoader);
+			physicsBall->createRigidBody(convexHullShape, 1.0f);
+			physicsBall->rigidBody->activate();
+			physicsBall->rigidBody->translate(btVector3(0., 0., 10.));
+			physicsObjects.push_back(physicsBall);
+
+
+
+
+			updateOffscreen = true;
+		}
+
+		if (keyStates.f) {
+
+			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
+			testModel->load(getAssetPath() + "models/sphere.dae");
 			testModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 			modelsDeferred.push_back(testModel);
 

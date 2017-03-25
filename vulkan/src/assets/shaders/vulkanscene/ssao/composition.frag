@@ -92,7 +92,7 @@ void main() {
 
         if (SSAO_ENABLED == 1) {
             float ao = texture(samplerSSAO, inUV).r;
-            //fragcolor *= ao.rrr;
+            fragcolor *= ao.rrr;
         }
     }
    

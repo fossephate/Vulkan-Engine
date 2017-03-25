@@ -65,6 +65,9 @@ void main()
 	boneTransform     += boneData.bones[inBoneIDs[2]+offset] * inBoneWeights[2];
 	boneTransform     += boneData.bones[inBoneIDs[3]+offset] * inBoneWeights[3];
 
+
+	mat4 newModelMatrix = instance.model * boneTransform;
+
 	gl_Position = scene.projection * scene.view * instance.model * boneTransform * inPos;
 	
 	outUV = inUV;
@@ -74,18 +77,18 @@ void main()
 	//outWorldPos = vec3(instance.model * inPos);
 
 	// Vertex position in world space
-	outWorldPos = vec3(scene.view * instance.model * inPos);
+	outWorldPos = vec3(scene.view * newModelMatrix * inPos);
 	
 	// GL to Vulkan coord space
 	//outWorldPos.y = -outWorldPos.y;
 	
 	// Normal in world space
 	// todo: do the inverse transpose on cpu
-	mat3 mNormal = transpose(inverse(mat3(instance.model)));
+	mat3 mNormal = transpose(inverse(mat3(newModelMatrix)));
     outNormal = mNormal * normalize(inNormal);
 
 	// Normal in view space
-	mat3 normalMatrix = transpose(inverse(mat3(scene.view * instance.model)));
+	mat3 normalMatrix = transpose(inverse(mat3(scene.view * newModelMatrix)));
 	outNormal = normalMatrix * inNormal;
 
 
