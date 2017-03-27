@@ -77,18 +77,18 @@ void main()
 	//outWorldPos = vec3(instance.model * inPos);
 
 	// Vertex position in world space
-	outWorldPos = vec3(scene.view * newModelMatrix * inPos);
+	outWorldPos = vec3(scene.view * instance.model * boneTransform * inPos);
 	
 	// GL to Vulkan coord space
 	//outWorldPos.y = -outWorldPos.y;
 	
 	// Normal in world space
 	// todo: do the inverse transpose on cpu
-	mat3 mNormal = transpose(inverse(mat3(newModelMatrix)));
+	mat3 mNormal = transpose(inverse(mat3(instance.model * boneTransform)));
     outNormal = mNormal * normalize(inNormal);
 
 	// Normal in view space
-	mat3 normalMatrix = transpose(inverse(mat3(scene.view * newModelMatrix)));
+	mat3 normalMatrix = transpose(inverse(mat3(scene.view * instance.model * boneTransform)));
 	outNormal = normalMatrix * inNormal;
 
 

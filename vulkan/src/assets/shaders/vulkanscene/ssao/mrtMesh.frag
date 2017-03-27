@@ -31,7 +31,7 @@ float linearDepth(float depth) {
 	float z = depth * 2.0f - 1.0f;
 	return (2.0f * NEAR_PLANE * FAR_PLANE) / (FAR_PLANE + NEAR_PLANE - z * (FAR_PLANE - NEAR_PLANE));
 
-	
+
 }
 
 
@@ -57,7 +57,8 @@ void main() {
 
 
 	} else {
-		outNormal = vec4(normalize(inNormal) * 0.5 + 0.5, 0.0);
+		//outNormal = vec4(normalize(inNormal) * 0.5 + 0.5, 0.0);
+		outNormal = vec4(normalize(inNormal) * 0.5 + 0.5, 1.0);
 		if (color.a < 0.5) {
 			discard;
 		}
@@ -79,7 +80,7 @@ void main() {
 	// N = vec3(N.y, N.z, N.x);
 	// outNormal = vec4(N, 1.0);
 
-	outNormal = vec4(normalize(inNormal) * 0.5 + 0.5, 1.0);
+	//outNormal = vec4(normalize(inNormal) * 0.5 + 0.5, 1.0);
 
 	// outPosition = vec4(inWorldPos, 1.0);
 	// outNormal = vec4(inNormal, 1.0);

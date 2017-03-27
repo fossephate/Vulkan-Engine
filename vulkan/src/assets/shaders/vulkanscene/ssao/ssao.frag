@@ -7,9 +7,14 @@ layout (set = 0, binding = 0) uniform sampler2D samplerPositionDepth;
 layout (set = 0, binding = 1) uniform sampler2D samplerNormal;
 layout (set = 0, binding = 2) uniform sampler2D ssaoNoise;
 
-/*layout (constant_id = 0) */const int SSAO_KERNEL_SIZE = 32;// changed from 32
-/*layout (constant_id = 1) */const float SSAO_RADIUS = 2.0;//2.0
-/*layout (constant_id = 2) */const float SSAO_POWER = 1.5;//1.5;
+/*layout (constant_id = 0) */const int SSAO_KERNEL_SIZE = 16;// changed from 32
+/*layout (constant_id = 1) */const float SSAO_RADIUS = 0.5;//2.0
+/*layout (constant_id = 2) */const float SSAO_POWER = 1.0;//1.5;
+
+// This constant removes artifacts caused by neighbour fragments with minimal depth difference.
+#define CAP_MIN_DISTANCE 0.0001
+// This constant avoids the influence of fragments, which are too far away.
+#define CAP_MAX_DISTANCE 0.005
 
 
 layout (set = 0, binding = 3) uniform UBOSSAOKernel
@@ -41,9 +46,43 @@ float rand(vec2 co){
 
 
 
+
+vec4 getViewPos(vec2 texCoord) {
+	// Calculate out of the fragment in screen space the view space position.
+
+	float x = texCoord.s * 2.0 - 1.0;
+	float y = texCoord.t * 2.0 - 1.0;
+
+	// (don't) assume we have a normal depth range between 0.0 and 1.0
+	//float z = (texture(samplerPositionDepth, inUV).a/512.0) * 2.0 - 1.0;
+	float z = (texture(samplerPositionDepth, inUV).a);
+
+	vec4 posProj = vec4(x, y, z, 1.0);
+
+	vec4 posView = inverse(ubo.projection) * posProj;
+
+	posView /= posView.w;
+
+	return posView;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void main() {
 
-
+	// Calculate out of the current fragment in screen space the view space position.
+	vec4 posView = getViewPos(inUV);
 
 	// Get G-Buffer values
 	vec3 fragPos = texture(samplerPositionDepth, inUV).rgb;
@@ -66,71 +105,100 @@ void main() {
 
 	const vec2 noiseScale = vec2(float(texDim.x)/float(noiseDim.x), float(texDim.y)/(noiseDim.y));
 	//const vec2 noiseScale = vec2(1280.0/4.0, 720.0/4.0);
-	vec3 randomVec = texture(ssaoNoise, inUV * noiseScale).xyz * 2.0 - 1.0;
-	
-
-	// float a = sin(rand(vec2(inUV.s, inUV.t)));
-	// float b = sin(rand(vec2(inUV.s+1, inUV.t+99)));
-	// float c = sin(rand(vec2(inUV.s+25, inUV.t+12))) * 0.5 + 0.5;
-
-	// randomVec = normalize(vec3(a,b,c));
-
-	if (dot(randomVec.xyz, normal) < 0.0) randomVec.xyz = -randomVec.xyz;
 
 
-	//randomVec = vec3(0.0, 0.0, 0.0);
+
+	//vec3 randomVec = texture(ssaoNoise, inUV * noiseScale).xyz * 2.0 - 1.0;
+	vec3 randomVec = normalize(texture(ssaoNoise, inUV * noiseScale).xyz * 2.0 - 1.0);
+
+	//randomVec = vec3(0.0, 0.0, 1.0);
 	
 	// Create TBN matrix
 	vec3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
-	vec3 bitangent = cross(tangent, normal);
-	//vec3 bitangent = cross(normal, tangent);
+	//vec3 bitangent = cross(tangent, normal);
+	vec3 bitangent = cross(normal, tangent);
+
 	mat3 TBN = mat3(tangent, bitangent, normal);
-	//mat3 TBN = mat3(bitangent, normal, tangent);
 
 	// Calculate occlusion value
 	float occlusion = 0.0f;
 	for(int i = 0; i < SSAO_KERNEL_SIZE; i++) {
 
+		// Reorient sample vector in view space ...
+		vec3 sampleDir = TBN * uboSSAOKernel.samples[i].xyz;
+		//vec3 sampleDir = /*TBN **/ uboSSAOKernel.samples[i].xyz;
+		//sampleDir = vec3(0.0, 0.0, 1.0);
 
+		// ... and calculate sample point.
 
-		//vec3 sampleDir = TBN * uboSSAOKernel.samples[i].xyz;
-		vec3 sampleDir = vec3(0.0, 0.0, 1.0);
 		vec3 samplePos = fragPos + (sampleDir * SSAO_RADIUS);
+		//vec4 samplePos = posView + (vec4(sampleDir, 0.0) * SSAO_RADIUS);
 
 		
 		// project
-		vec4 offset = vec4(samplePos, 1.0);
-		offset = ubo.projection * offset;// project on the near clipping plane
-		// offset.xyz /= offset.w; 
-		// offset.xyz = offset.xyz * 0.5f + vec2(0.5);
-		offset.xy /= offset.w;// perform perspective divide
-		offset.xy = offset.xy * 0.5 + vec2(0.5); // transform to (0,1) range
+
+
+		
+		//vec4 samplePointNDC = ubo.projection * samplePos;// project on the near clipping plane
+		vec4 samplePointNDC = ubo.projection * vec4(samplePos.xyz, 1.0);
+
+		samplePointNDC /= samplePointNDC.w;// perform perspective divide
+
+		// Create texture coordinate out of it.
+		vec2 samplePointTexCoord = samplePointNDC.xy * 0.5 + vec2(0.5);
+
+		//vec2 offset = samplePointTexCoord;
+
+
+		//float zSceneNDC = texture(samplerPositionDepth, samplePointTexCoord).a/** 2.0 - 1.0*/;
+
+		
+
 
 		
 		//float sampleDepth = -texture(samplerPositionDepth, offset.xy).w;
 		//float sampleDepth = -texture(samplerPositionDepth, offset.xy).r;
-		float sampleDepth = -texture(samplerPositionDepth, offset.xy).a;
-
-		// range check & accumulate:
-		float rangeCheck = abs(fragPos.z - sampleDepth) < SSAO_RADIUS ? 1.0 : 0.0;
-		//float rangeCheck = 1.0;
-		occlusion += (sampleDepth <= samplePos.z ? 1.0 : 0.0) * rangeCheck;
+		//float sampleDepth = -texture(samplerPositionDepth, samplePointTexCoord.xy).a;
+		float sampleDepth = -texture(samplerPositionDepth, samplePointTexCoord.xy).a;
 
 
 
-// #define RANGE_CHECK 0
-// #ifdef RANGE_CHECK
-// 		// Range check
-// 		float rangeCheck = smoothstep(0.0f, 1.0f, SSAO_RADIUS / abs(fragPos.z - sampleDepth));
-// 		occlusion += (sampleDepth >= samplePos.z ? 1.0f : 0.0f) * rangeCheck;           
-// #else
-// 		occlusion += (sampleDepth >= samplePos.z ? 1.0f : 0.0f); 
-// #endif
+
+		// float delta = samplePointNDC.z - zSceneNDC;
+		
+		// // If scene fragment is before (smaller in z) sample point, increase occlusion.
+		// if (delta > CAP_MIN_DISTANCE && delta < CAP_MAX_DISTANCE) {
+		// 	occlusion += 1.0;
+		// }
+
+
+		// // range check & accumulate:
+		// float rangeCheck = abs(fragPos.z - sampleDepth) < SSAO_RADIUS ? 1.0 : 0.0;
+		// //float rangeCheck = abs(posView.z - sampleDepth) < SSAO_RADIUS ? 1.0 : 0.0;
+		// rangeCheck = 1.0;
+		// occlusion += (sampleDepth >= samplePos.z ? 1.0 : 0.0) * rangeCheck;
+
+
+
+
+
+
+
+
+
+#define RANGE_CHECK 0
+#ifdef RANGE_CHECK
+		// Range check
+		float rangeCheck = smoothstep(0.0f, 1.0f, SSAO_RADIUS / abs(fragPos.z - sampleDepth));
+		occlusion += (sampleDepth >= samplePos.z ? 1.0f : 0.0f) * rangeCheck;
+#else
+		occlusion += (sampleDepth >= samplePos.z ? 1.0f : 0.0f);
+#endif
 	}
 	occlusion = 1.0 - (occlusion / float(SSAO_KERNEL_SIZE));
 	occlusion = pow(occlusion, SSAO_POWER);
 
-	occlusion = 1 - occlusion;
+	//occlusion = 1 - occlusion;
 
 	outFragColor = occlusion;
 

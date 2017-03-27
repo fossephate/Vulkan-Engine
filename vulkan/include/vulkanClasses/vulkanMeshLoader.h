@@ -153,6 +153,7 @@ namespace vkx {
 	class MeshLoader {
 		private:
 
+			
 
 			struct Vertex {
 				glm::vec3 m_pos;
@@ -202,6 +203,7 @@ namespace vkx {
 
 
 		public:
+
 			#if defined(__ANDROID__)
 			AAssetManager* assetManager = nullptr;
 			#endif

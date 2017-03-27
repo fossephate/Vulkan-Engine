@@ -2122,6 +2122,10 @@ class VulkanExample : public vkx::vulkanApp {
 			ssaoKernel[i] = glm::vec4(sample * scale, 0.0f);
 			//ssaoKernel.push_back(glm::vec4(sample * scale, 0.0f));
 		}
+		
+		for (uint32_t i = 0; i < SSAO_KERNEL_SIZE; ++i) {
+			uboSSAOKernel.samples[i] = ssaoKernel[i];
+		}
 
 		uniformDataDeferred.ssaoKernel.copy(uboSSAOKernel);
 
@@ -3285,6 +3289,13 @@ class VulkanExample : public vkx::vulkanApp {
 			// model = group of meshes
 			// todo: add skinned / animated model support
 			for (auto &model : modelsDeferred) {
+
+				// todo: fix
+				//model->checkIfReady();
+				//if (!model->buffersReady) {
+				//	continue;
+				//}
+
 				// for each of the model's meshes
 				for (auto &mesh : model->meshes) {
 

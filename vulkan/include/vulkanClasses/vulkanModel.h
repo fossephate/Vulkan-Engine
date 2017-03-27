@@ -4,6 +4,12 @@
 
 #include <vulkan/vulkan.hpp>
 
+
+
+#include <future>
+#include <thread>
+#include <chrono>
+
 #include <assimp/Importer.hpp> 
 #include <assimp/scene.h>     
 #include <assimp/postprocess.h>
@@ -41,6 +47,10 @@ namespace vkx {
 			// pointer to meshLoader
 			vkx::MeshLoader *meshLoader = nullptr;
 
+			// for async loading:
+			bool buffersReady = false;
+			std::future<void> myFuture;
+
 			
 
 
@@ -60,7 +70,11 @@ namespace vkx {
 			// load model with custom flags
 			void load(const std::string &filename, int flags);
 
+			void asyncCreateMeshes(const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
+
 			void createMeshes(const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
+
+			void checkIfReady();
 
 			void destroy();
 	};
