@@ -3291,10 +3291,10 @@ class VulkanExample : public vkx::vulkanApp {
 			for (auto &model : modelsDeferred) {
 
 				// todo: fix
-				//model->checkIfReady();
-				//if (!model->buffersReady) {
-				//	continue;
-				//}
+				model->checkIfReady();
+				if (!model->buffersReady) {
+					continue;
+				}
 
 				// for each of the model's meshes
 				for (auto &mesh : model->meshes) {

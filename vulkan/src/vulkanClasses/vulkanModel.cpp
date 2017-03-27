@@ -5,7 +5,7 @@
 namespace vkx {
 
 
-	void asyncCreateMeshes(Model model, const std::vector<VertexLayout> &layout, float scale, uint32_t binding) {
+	void asyncCreateMeshes2(Model model, const std::vector<VertexLayout> &layout, float scale, uint32_t binding) {
 		model.meshLoader->createMeshBuffers(layout, scale);
 
 		std::vector<MeshBuffer> meshBuffers = model.meshLoader->meshBuffers;
@@ -19,9 +19,6 @@ namespace vkx {
 		//for (int i = 0; i < this->meshLoader->meshBuffers.size(); ++i) {
 		//	// destroy here
 		//}
-
-		//this->materials = this->meshLoader->materials;
-		//this->attributeDescriptions = this->meshLoader->attributeDescriptions;
 
 		model.vertexBufferBinding = binding;// important
 	}
@@ -59,9 +56,6 @@ namespace vkx {
 		//	// destroy here
 		//}
 
-		//this->materials = this->meshLoader->materials;
-		//this->attributeDescriptions = this->meshLoader->attributeDescriptions;
-
 		this->vertexBufferBinding = binding;// important
 	}
 
@@ -91,28 +85,23 @@ namespace vkx {
 		//this->myFuture = std::async(asyncCreateMeshes, *this, layout, scale, binding);
 		//this->myFuture = std::async(&Model::asyncCreateMeshes, *this, layout, scale, binding);
 
+		this->myFuture = std::async(asyncCreateMeshes2, this, layout, scale, binding);
 
-		this->meshLoader->createMeshBuffers(layout, scale);
+		//this->meshLoader->createMeshBuffers(layout, scale);
 
-		std::vector<MeshBuffer> meshBuffers = this->meshLoader->meshBuffers;
+		//std::vector<MeshBuffer> meshBuffers = this->meshLoader->meshBuffers;
 
-		for (int i = 0; i < meshBuffers.size(); ++i) {
-			vkx::Mesh m(meshBuffers[i]);
-			this->meshes.push_back(m);
-		}
-		
-		// todo: destroy this->meshLoader->meshBuffers here:
-		//for (int i = 0; i < this->meshLoader->meshBuffers.size(); ++i) {
-		//	// destroy here
+		//for (int i = 0; i < meshBuffers.size(); ++i) {
+		//	vkx::Mesh m(meshBuffers[i]);
+		//	this->meshes.push_back(m);
 		//}
+		//
+		//// todo: destroy this->meshLoader->meshBuffers here:
+		////for (int i = 0; i < this->meshLoader->meshBuffers.size(); ++i) {
+		////	// destroy here
+		////}
 
-		//this->materials = this->meshLoader->materials;
-		//this->attributeDescriptions = this->meshLoader->attributeDescriptions;
-
-		this->vertexBufferBinding = binding;// important
-		//this->setupVertexInputState(layout);// doesn't seem to be necessary/used
-		//this->bindingDescription = this->meshLoader->bindingDescriptions[0];// ?
-		//this->pipeline = this->meshLoader->pipeline;// not needed?
+		//this->vertexBufferBinding = binding;// important
 
 
 
@@ -121,16 +110,17 @@ namespace vkx {
 
 
 	void Model::checkIfReady() {
-		//// Use wait_for() with zero milliseconds to check thread status.
-		//auto status = this->myFuture.wait_for(std::chrono::milliseconds(0));
 
-		//// Print status.
-		//if (status == std::future_status::ready) {
-		//	this->buffersReady = true;
-		//	//std::cout << "Thread finished" << std::endl;
-		//} else {
-		//	//std::cout << "Thread still running" << std::endl;
-		//}
+		// Use wait_for() with zero milliseconds to check thread status.
+		auto status = this->myFuture.wait_for(std::chrono::milliseconds(0));
+
+		// Print status.
+		if (status == std::future_status::ready) {
+			this->buffersReady = true;
+			//std::cout << "Thread finished" << std::endl;
+		} else {
+			//std::cout << "Thread still running" << std::endl;
+		}
 	}
 
 	void Model::destroy() {
