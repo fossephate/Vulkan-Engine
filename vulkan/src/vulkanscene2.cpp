@@ -2257,7 +2257,7 @@ class VulkanExample : public vkx::vulkanApp {
 		//modelsDeferred.push_back(planeModel2);
 
 
-		for (int i = 0; i < 6; ++i) {
+		for (int i = 0; i < 0; ++i) {
 			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			testModel->load(getAssetPath() + "models/monkey.fbx");
 			testModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
@@ -2266,7 +2266,7 @@ class VulkanExample : public vkx::vulkanApp {
 		}
 
 
-		for (int i = 0; i < 1; ++i) {
+		for (int i = 0; i < 0; ++i) {
 
 			auto testSkinnedMesh = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
 			testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");
@@ -2274,7 +2274,7 @@ class VulkanExample : public vkx::vulkanApp {
 			// todo: figure out why there must be atleast one deferred skinned mesh here
 			// inorder to not cause problems
 			// fixed?
-			//skinnedMeshesDeferred.push_back(testSkinnedMesh);
+			skinnedMeshesDeferred.push_back(testSkinnedMesh);
 		}
 
 
