@@ -7,9 +7,9 @@ layout (set = 0, binding = 0) uniform sampler2D samplerPositionDepth;
 layout (set = 0, binding = 1) uniform sampler2D samplerNormal;
 layout (set = 0, binding = 2) uniform sampler2D ssaoNoise;
 
-/*layout (constant_id = 0) */const int SSAO_KERNEL_SIZE = 16;// changed from 32
-/*layout (constant_id = 1) */const float SSAO_RADIUS = 0.5;//2.0
-/*layout (constant_id = 2) */const float SSAO_POWER = 1.0;//1.5;
+/*layout (constant_id = 0) */const int SSAO_KERNEL_SIZE = 32;// changed from 32
+/*layout (constant_id = 1) */const float SSAO_RADIUS = 2.0;//2.0
+/*layout (constant_id = 2) */const float SSAO_POWER = 1.5;//1.5;
 
 // This constant removes artifacts caused by neighbour fragments with minimal depth difference.
 #define CAP_MIN_DISTANCE 0.0001

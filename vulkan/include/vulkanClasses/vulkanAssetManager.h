@@ -104,6 +104,11 @@ namespace vkx {
 		};
 	};
 
+	//struct SceneHolder {
+	//	aiScene* pScene;
+	//	std::vector<MeshEntry> m_Entries;
+	//};
+
 
 
 
@@ -299,6 +304,25 @@ namespace vkx {
 
 
 
+	//class SceneList : public ResourceList<SceneHolder> {
+
+	//	public:
+
+	//		//DescriptorPoolList(vk::Device &dev) : VulResourceList(dev) {};
+
+	//		~SceneList() {
+	//			//for (auto &descriptorPool : resources) {
+	//			//	//device.destroyPipelineLayout(pipelineLayout.second, nullptr);
+	//			//}
+	//		}
+
+	//		void add(std::string name, SceneHolder sceneHolder) {
+	//			resources[name] = sceneHolder;
+	//		}
+	//};
+
+
+
 	class TextureList : public ResourceList<vkx::Texture> {
 
 		public:
@@ -379,31 +403,11 @@ namespace vkx {
 				}
 			} materials;
 
-
-
-			//struct {
-			//	std::unordered_map<std::string, vkx::Texture> loadedTextures;
-
-			//	const vkx::Texture get(std::string name) {
-			//		return loadedTextures[name];
-			//	}
-
-			//	void add(std::string name, vkx::Texture texture) {
-			//		loadedTextures[name] = texture;
-			//	}
-
-			//	vkx::Texture* getPtr(std::string name) {
-			//		return &loadedTextures[name];
-			//	}
-
-			//	bool doExist(std::string name) {
-			//		return loadedTextures.find(name) != loadedTextures.end();
-			//	}
-			//} textures;
-
 			TextureList textures;
 
 			MeshList meshes;
+
+			//SceneList scenes;
 
 
 

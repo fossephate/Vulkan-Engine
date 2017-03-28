@@ -26,6 +26,7 @@ namespace vkx {
 			// Mesh buffer
 			vkx::MeshBuffer meshBuffer;
 
+			Mesh();
 			Mesh(vkx::MeshBuffer meshBuffer);
 
 			void destroy();

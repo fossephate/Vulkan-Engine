@@ -113,6 +113,77 @@ namespace vkx {
 
 
 
+
+
+	struct Vertex {
+		glm::vec3 m_pos;
+		glm::vec2 m_tex;
+		glm::vec3 m_normal;
+		glm::vec3 m_color;
+		glm::vec3 m_tangent;
+		glm::vec3 m_binormal;
+
+		Vertex() {}
+
+		Vertex(const glm::vec3 &pos, const glm::vec2 &tex, const glm::vec3 &normal, const glm::vec3 &tangent, const glm::vec3 &bitangent, const glm::vec3 &color) {
+			m_pos = pos;
+			m_tex = tex;
+			m_normal = normal;
+			m_color = color;
+			m_tangent = tangent;
+			m_binormal = bitangent;
+		}
+	};
+
+	struct skinnedMeshVertex {
+		glm::vec3 pos;
+		glm::vec2 uv;
+		glm::vec3 color;
+		glm::vec3 normal;
+		glm::vec3 tangent;// added 3/1/17
+						  // Max. four bones per vertex
+		float boneWeights[4];
+		uint32_t boneIDs[4];
+	};
+
+	struct MeshEntry {
+		uint32_t numIndices;
+		uint32_t vertexBase;// offset (for indexed draw)? p sure
+
+		uint32_t materialIndex;
+		std::string materialName;
+
+		std::vector<Vertex> Vertices;
+		std::vector<uint32_t> Indices;
+	};
+
+
+	//struct SceneHolder {
+	//	aiScene* pScene;
+	//	std::vector<vkx::MeshEntry> m_Entries;
+	//};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	// Get vertex size from vertex layout
 	static uint32_t vertexSize(const std::vector<VertexLayout> &layout) {
 		uint32_t vSize = 0;
@@ -152,53 +223,6 @@ namespace vkx {
 	// Simple mesh class for getting all the necessary stuff from models loaded via ASSIMP
 	class MeshLoader {
 		private:
-
-			
-
-			struct Vertex {
-				glm::vec3 m_pos;
-				glm::vec2 m_tex;
-				glm::vec3 m_normal;
-				glm::vec3 m_color;
-				glm::vec3 m_tangent;
-				glm::vec3 m_binormal;
-
-				Vertex() {}
-
-				Vertex(const glm::vec3& pos, const glm::vec2& tex, const glm::vec3& normal, const glm::vec3& tangent, const glm::vec3& bitangent, const glm::vec3& color) {
-					m_pos = pos;
-					m_tex = tex;
-					m_normal = normal;
-					m_color = color;
-					m_tangent = tangent;
-					m_binormal = bitangent;
-				}
-			};
-
-			struct skinnedMeshVertex {
-				glm::vec3 pos;
-				glm::vec2 uv;
-				glm::vec3 color;
-				glm::vec3 normal;
-				glm::vec3 tangent;// added 3/1/17
-				// Max. four bones per vertex
-				float boneWeights[4];
-				uint32_t boneIDs[4];
-			};
-
-			struct MeshEntry {
-				uint32_t numIndices;
-				uint32_t vertexBase;// offset (for indexed draw)? p sure
-
-				uint32_t materialIndex;
-				std::string materialName;
-
-				std::vector<Vertex> Vertices;
-				std::vector<uint32_t> Indices;
-			};
-
-
-
 
 
 
@@ -252,6 +276,7 @@ namespace vkx {
 			// fitted to vertex layout && usable to draw
 			MeshBuffer combinedBuffer;
 			std::vector<MeshBuffer> meshBuffers;
+			//std::vector<Mesh> meshes;
 
 			// temporary materials vector
 			std::vector<Material> tempMaterials;

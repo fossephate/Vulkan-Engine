@@ -57,24 +57,8 @@ namespace vkx {
 
 
 
-#endif
 
-		//pScene->mRootNode->mTransformation = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(1.0f, 0.0f, 0.0f)) * pScene->mRootNode->mTransformation;
-		//pScene->mRootNode->mTransformation
-		//aiMatrix4x4 &r = pScene->mRootNode->mTransformation;
-		//aiMatrix4x4 rot;
-		//rot.FromEulerAnglesXYZ(aiVector3D(-90.0f, 90.0f, 10.0f));
-		//pScene->mRootNode->mTransformation = rot * pScene->mRootNode->mTransformation;// change collada model back to z up// important
-		
-		////pScene->mRootNode->mTransformation = pScene->mRootNode->mTransformation * rot;
-		//glm::mat4 r2 = glm::mat4(\
-		//	r.a1, r.a2, r.a3, r.a4,
-		//	r.b1, r.b2, r.b3, r.b4,
-		//	r.c1, r.c2, r.c3, r.c4, 
-		//	r.d1, r.d2, r.d3, r.d4);
-		//r2 = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(1.0f, 0.0f, 0.0f)) * r2;
-		//glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
-		//RootNodeMatrix = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(1.0f, 0.0f, 0.0f)) * RootNodeMatrix;
+#endif
 
 		if (!pScene) {
 			throw std::runtime_error("Unable to parse " + filename);
@@ -601,6 +585,12 @@ namespace vkx {
 
 			meshBuffers.push_back(meshBuffer);
 		}
+
+		//this->meshes.resize(this->meshBuffers.size());
+
+		//for (int i = 0; i < meshBuffers.size(); ++i) {
+		//	vkx::Mesh m(meshBuffers[i])
+		//}
 
 
 

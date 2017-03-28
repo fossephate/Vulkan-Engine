@@ -2487,10 +2487,11 @@ class VulkanExample : public vkx::vulkanApp {
 			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			testModel->load(getAssetPath() + "models/monkey.fbx");
 			testModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+			//testModel->loadAndCreateMeshes(getAssetPath() + "models/monkey.fbx", SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 			modelsDeferred.push_back(testModel);
 
 
-
+			
 			auto physicsBall = std::make_shared<vkx::PhysicsObject>(&physicsManager, testModel);
 			btConvexHullShape *convexHullShape = createConvexHullFromMesh(testModel->meshLoader);
 			physicsBall->createRigidBody(convexHullShape, 1.0f);
@@ -2512,6 +2513,9 @@ class VulkanExample : public vkx::vulkanApp {
 			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			testModel->load(getAssetPath() + "models/myCube.dae");
 			testModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+			
+			//testModel->loadAndCreateMeshes(getAssetPath() + "models/myCube.dae", SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+
 			modelsDeferred.push_back(testModel);
 
 
@@ -3291,7 +3295,7 @@ class VulkanExample : public vkx::vulkanApp {
 			for (auto &model : modelsDeferred) {
 
 				// todo: fix
-				model->checkIfReady();
+				//model->checkIfReady();
 				if (!model->buffersReady) {
 					continue;
 				}

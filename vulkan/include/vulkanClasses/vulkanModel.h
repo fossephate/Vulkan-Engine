@@ -9,6 +9,7 @@
 #include <future>
 #include <thread>
 #include <chrono>
+#include <atomic>
 
 #include <assimp/Importer.hpp> 
 #include <assimp/scene.h>     
@@ -48,8 +49,9 @@ namespace vkx {
 			vkx::MeshLoader *meshLoader = nullptr;
 
 			// for async loading:
-			bool buffersReady = false;
 			std::future<void> myFuture;
+
+			std::atomic<bool> buffersReady = false;
 
 			
 
@@ -74,7 +76,11 @@ namespace vkx {
 
 			void createMeshes(const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
 
-			void checkIfReady();
+			//void asyncLoadAndCreateMeshes(const std::string &filename, const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
+
+			//void loadAndCreateMeshes(const std::string &filename, const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
+
+			//void checkIfReady();
 
 			void destroy();
 	};
