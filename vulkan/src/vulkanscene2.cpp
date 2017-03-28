@@ -2273,7 +2273,8 @@ class VulkanExample : public vkx::vulkanApp {
 			testSkinnedMesh->createSkinnedMeshBuffer(SSAOVertexLayout, 0.0005f);
 			// todo: figure out why there must be atleast one deferred skinned mesh here
 			// inorder to not cause problems
-			skinnedMeshesDeferred.push_back(testSkinnedMesh);
+			// fixed?
+			//skinnedMeshesDeferred.push_back(testSkinnedMesh);
 		}
 
 

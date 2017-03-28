@@ -99,23 +99,15 @@ void main() {
 	ivec2 texDim = textureSize(samplerPositionDepth, 0);
 	ivec2 noiseDim = textureSize(ssaoNoise, 0);
 
-	//const vec2 noiseUV = vec2(float(texDim.x)/float(noiseDim.x), float(texDim.y)/(noiseDim.y)) * inUV;
-	//vec3 randomVec = texture(ssaoNoise, noiseUV).xyz * 2.0 - 1.0;
-
 
 	const vec2 noiseScale = vec2(float(texDim.x)/float(noiseDim.x), float(texDim.y)/(noiseDim.y));
-	//const vec2 noiseScale = vec2(1280.0/4.0, 720.0/4.0);
 
-
-
-	//vec3 randomVec = texture(ssaoNoise, inUV * noiseScale).xyz * 2.0 - 1.0;
 	vec3 randomVec = normalize(texture(ssaoNoise, inUV * noiseScale).xyz * 2.0 - 1.0);
 
 	//randomVec = vec3(0.0, 0.0, 1.0);
 	
 	// Create TBN matrix
 	vec3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
-	//vec3 bitangent = cross(tangent, normal);
 	vec3 bitangent = cross(normal, tangent);
 
 	mat3 TBN = mat3(tangent, bitangent, normal);
@@ -124,38 +116,24 @@ void main() {
 	float occlusion = 0.0f;
 	for(int i = 0; i < SSAO_KERNEL_SIZE; i++) {
 
-		// Reorient sample vector in view space ...
+		// reorient sample vector in view space
 		vec3 sampleDir = TBN * uboSSAOKernel.samples[i].xyz;
 		//vec3 sampleDir = /*TBN **/ uboSSAOKernel.samples[i].xyz;
 		//sampleDir = vec3(0.0, 0.0, 1.0);
 
-		// ... and calculate sample point.
-
+		// calculate sample point.
 		vec3 samplePos = fragPos + (sampleDir * SSAO_RADIUS);
 		//vec4 samplePos = posView + (vec4(sampleDir, 0.0) * SSAO_RADIUS);
 
 		
 		// project
-
-
-		
 		//vec4 samplePointNDC = ubo.projection * samplePos;// project on the near clipping plane
 		vec4 samplePointNDC = ubo.projection * vec4(samplePos.xyz, 1.0);
-
 		samplePointNDC /= samplePointNDC.w;// perform perspective divide
 
 		// Create texture coordinate out of it.
 		vec2 samplePointTexCoord = samplePointNDC.xy * 0.5 + vec2(0.5);
 
-		//vec2 offset = samplePointTexCoord;
-
-
-		//float zSceneNDC = texture(samplerPositionDepth, samplePointTexCoord).a/** 2.0 - 1.0*/;
-
-		
-
-
-		
 		//float sampleDepth = -texture(samplerPositionDepth, offset.xy).w;
 		//float sampleDepth = -texture(samplerPositionDepth, offset.xy).r;
 		//float sampleDepth = -texture(samplerPositionDepth, samplePointTexCoord.xy).a;
@@ -178,22 +156,14 @@ void main() {
 		// rangeCheck = 1.0;
 		// occlusion += (sampleDepth >= samplePos.z ? 1.0 : 0.0) * rangeCheck;
 
-
-
-
-
-
-
-
-
-#define RANGE_CHECK 0
-#ifdef RANGE_CHECK
-		// Range check
-		float rangeCheck = smoothstep(0.0f, 1.0f, SSAO_RADIUS / abs(fragPos.z - sampleDepth));
-		occlusion += (sampleDepth >= samplePos.z ? 1.0f : 0.0f) * rangeCheck;
-#else
-		occlusion += (sampleDepth >= samplePos.z ? 1.0f : 0.0f);
-#endif
+		#define RANGE_CHECK 1
+		#ifdef RANGE_CHECK
+			// Range check
+			float rangeCheck = smoothstep(0.0f, 1.0f, SSAO_RADIUS / abs(fragPos.z - sampleDepth));
+			occlusion += (sampleDepth >= samplePos.z ? 1.0f : 0.0f) * rangeCheck;
+		#else
+			occlusion += (sampleDepth >= samplePos.z ? 1.0f : 0.0f);
+		#endif
 	}
 	occlusion = 1.0 - (occlusion / float(SSAO_KERNEL_SIZE));
 	occlusion = pow(occlusion, SSAO_POWER);
