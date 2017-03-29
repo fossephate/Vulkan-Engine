@@ -19,6 +19,24 @@ namespace vkx {
 
 		static std::set<std::string> getAvailableLayers();
 
+
+
+
+		std::set<std::string> requiredExtensions;
+
+		template<typename Container>
+		void requireExtensions(const Container& requestedExtensions) {
+			requiredExtensions.insert(requestedExtensions.begin(), requestedExtensions.end());
+
+		}
+
+		void requireExtension(const std::string& requestedExtension) {
+			requiredExtensions.insert(requestedExtension);
+		}
+
+
+
+
 		void createContext(bool enableValidation = false);
 
 		void destroyContext();

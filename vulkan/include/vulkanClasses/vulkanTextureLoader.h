@@ -37,6 +37,7 @@ namespace vkx {
 			device = created.device;
 			image = created.image;
 			memory = created.memory;
+			extent = created.extent;
 			return *this;
 		}
 

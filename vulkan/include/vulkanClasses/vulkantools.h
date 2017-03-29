@@ -184,6 +184,7 @@ namespace vkx {
 	private:
 		using Parent = AllocatedResult;
 	public:
+		vk::Extent3D extent;// added
 		vk::Image image;
 		vk::ImageView view;
 		vk::Sampler sampler;

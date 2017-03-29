@@ -19,9 +19,16 @@ std::set<std::string> vkx::Context::getAvailableLayers() {
 	return result;
 }
 
+
+
 void vkx::Context::createContext(bool enableValidation) {
 
 	this->enableValidation = enableValidation;
+
+	if (enableValidation) {
+		requireExtension(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+	}
+
 	{
 		// Vulkan instance
 		vk::ApplicationInfo appInfo;
@@ -30,6 +37,11 @@ void vkx::Context::createContext(bool enableValidation) {
 		appInfo.apiVersion = VK_API_VERSION_1_0;
 
 		std::vector<const char*> enabledExtensions = { VK_KHR_SURFACE_EXTENSION_NAME };
+
+		for (const auto& extension : requiredExtensions) {
+			enabledExtensions.push_back(extension.c_str());
+		}
+
 		// Enable surface extensions depending on os
 		#if defined(_WIN32)
 		enabledExtensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
@@ -41,11 +53,13 @@ void vkx::Context::createContext(bool enableValidation) {
 		vk::InstanceCreateInfo instanceCreateInfo;
 		instanceCreateInfo.pApplicationInfo = &appInfo;
 		if (enabledExtensions.size() > 0) {
-			if (enableValidation) {
-				enabledExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
-			}
+			//if (enableValidation) {
+			//	enabledExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+			//}
 			instanceCreateInfo.enabledExtensionCount = (uint32_t)enabledExtensions.size();
 			instanceCreateInfo.ppEnabledExtensionNames = enabledExtensions.data();
+			instanceCreateInfo.enabledLayerCount = (uint32_t)debug::validationLayerNames.size();
+			instanceCreateInfo.ppEnabledLayerNames = debug::validationLayerNames.data();
 		}
 		instance = vk::createInstance(instanceCreateInfo);
 	}

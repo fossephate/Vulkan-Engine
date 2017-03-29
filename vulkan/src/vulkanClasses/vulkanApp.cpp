@@ -1018,7 +1018,7 @@ void vulkanApp::buildCommandBuffers() {
 		primaryCmdBuffers = device.allocateCommandBuffers(cmdBufAllocateInfo);
 	}
 
-	vk::CommandBufferBeginInfo cmdBufInfo;
+	vk::CommandBufferBeginInfo cmdBufInfo{vk::CommandBufferUsageFlagBits::eSimultaneousUse};
 	for (size_t i = 0; i < swapChain.imageCount; ++i) {
 		const auto& cmdBuffer = primaryCmdBuffers[i];
 		cmdBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);

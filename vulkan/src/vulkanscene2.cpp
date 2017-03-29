@@ -2905,6 +2905,8 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
+
+
 	void updateDrawCommandBuffer(const vk::CommandBuffer &cmdBuffer) {
 
 
@@ -3164,8 +3166,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// todo: create semaphore here?:
 
-		vk::CommandBufferBeginInfo cmdBufInfo;
-		cmdBufInfo.flags = vk::CommandBufferUsageFlagBits::eSimultaneousUse;
+		vk::CommandBufferBeginInfo cmdBufInfo{vk::CommandBufferUsageFlagBits::eSimultaneousUse};
 
 
 		// begin offscreen command buffer
@@ -3220,7 +3221,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 			// bind mesh pipeline
 			// don't have to do this for every mesh
-			// todo: create pipelinesDefferd.mesh
+			// todo: create pipelinesDeferred.mesh
 			if (settings.SSAO) {
 				offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("offscreen.meshes.ssao"));
 			} else {
