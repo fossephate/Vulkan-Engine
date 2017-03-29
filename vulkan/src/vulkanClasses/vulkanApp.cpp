@@ -851,7 +851,7 @@ void vulkanApp::renderLoop() {
 		// poll keyboard / mouse
 		updateInputInfo();
 		// update world, // use input
-		updateWorld();
+		updateWorld();// needs optimization
 
 		// update physics / interpolate meshes
 		updatePhysics();

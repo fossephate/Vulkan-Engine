@@ -112,35 +112,40 @@ float rand0t1() {
 // todo: move this somewhere else
 btConvexHullShape* createConvexHullFromMesh(vkx::MeshLoader *meshLoader) {
 	btConvexHullShape *convexHullShape = new btConvexHullShape();
-	for (int i = 0; i < meshLoader->m_Entries[0].Indices.size(); ++i) {
-		uint32_t index = meshLoader->m_Entries[0].Indices[i];
-		glm::vec3 point = meshLoader->m_Entries[0].Vertices[index].m_pos;
-		btVector3 p = btVector3(point.x, point.y, point.z);
-		convexHullShape->addPoint(p);
+	for (int i = 0; i < meshLoader->m_Entries.size(); ++i) {
+		for (int j = 0; j < meshLoader->m_Entries[i].Indices.size(); ++j) {
+			uint32_t index = meshLoader->m_Entries[i].Indices[j];
+			glm::vec3 point = meshLoader->m_Entries[i].Vertices[index].m_pos;
+			btVector3 p = btVector3(point.x, point.y, point.z);
+			convexHullShape->addPoint(p);
+		}
 	}
+
 	convexHullShape->optimizeConvexHull();
 	convexHullShape->initializePolyhedralFeatures();
 
 	return convexHullShape;
 };
 
-int completeHack = 0;
 
-
-// todo: move this somewhere else
-btConvexHullShape* createConvexHullFromMeshEntry(vkx::MeshLoader *meshLoader, int index) {
-	btConvexHullShape *convexHullShape = new btConvexHullShape();
-	for (int i = 0; i < meshLoader->m_Entries[completeHack].Indices.size(); ++i) {
-		uint32_t index = meshLoader->m_Entries[completeHack].Indices[i];
-		glm::vec3 point = meshLoader->m_Entries[completeHack].Vertices[index].m_pos;
-		btVector3 p = btVector3(point.x, point.y, point.z);
-		convexHullShape->addPoint(p);
-	}
-	convexHullShape->optimizeConvexHull();
-	convexHullShape->initializePolyhedralFeatures();
-
-	return convexHullShape;
-};
+//// todo: move this somewhere else
+//btConvexHullShape* createConvexHullFromMeshEntry(vkx::MeshLoader *meshLoader) {
+//	btConvexHullShape *convexHullShape = new btConvexHullShape();
+//
+//	for (int i = 0; i < meshLoader->m_Entries.size(); ++i) {
+//		for (int j = 0; j < meshLoader->m_Entries[i].Indices.size(); ++j) {
+//			uint32_t index = meshLoader->m_Entries[i].Indices[j];
+//			glm::vec3 point = meshLoader->m_Entries[i].Vertices[index].m_pos;
+//			btVector3 p = btVector3(point.x, point.y, point.z);
+//			convexHullShape->addPoint(p);
+//		}
+//	}
+//
+//	convexHullShape->optimizeConvexHull();
+//	convexHullShape->initializePolyhedralFeatures();
+//
+//	return convexHullShape;
+//};
 
 
 
@@ -217,7 +222,8 @@ class VulkanExample : public vkx::vulkanApp {
 	// todo: fix this
 	struct MatrixNode {
 		glm::mat4 model;
-		glm::mat4 boneIndex;
+		uint32_t boneIndex;
+		glm::vec3 padding;
 		glm::mat4 g1;
 		glm::mat4 g2;
 	};
@@ -2157,6 +2163,10 @@ class VulkanExample : public vkx::vulkanApp {
 		updateUniformBuffersScreen();
 	}
 
+
+
+
+
 	void start() {
 
 		toggleDebugDisplay();
@@ -2178,23 +2188,23 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-		for (int i = 0; i < 10; ++i) {
-			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
-			testModel->load(getAssetPath() + "models/cube.fbx");
-			testModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
+		//for (int i = 0; i < 2; ++i) {
+		//	auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
+		//	testModel->load(getAssetPath() + "models/cube.fbx");
+		//	testModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
 
-			models.push_back(testModel);
-		}
+		//	models.push_back(testModel);
+		//}
 
 
-		for (int i = 0; i < 1; ++i) {
+		//for (int i = 0; i < 1; ++i) {
 
-			auto testSkinnedMesh = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
-			testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");
-			testSkinnedMesh->createSkinnedMeshBuffer(SSAOVertexLayout, 0.0005f);
+		//	auto testSkinnedMesh = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
+		//	testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");
+		//	testSkinnedMesh->createSkinnedMeshBuffer(SSAOVertexLayout, 0.0005f);
 
-			skinnedMeshes.push_back(testSkinnedMesh);
-		}
+		//	skinnedMeshes.push_back(testSkinnedMesh);
+		//}
 
 
 
@@ -2257,7 +2267,7 @@ class VulkanExample : public vkx::vulkanApp {
 		//modelsDeferred.push_back(planeModel2);
 
 
-		for (int i = 0; i < 0; ++i) {
+		for (int i = 0; i < 2; ++i) {
 			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			testModel->load(getAssetPath() + "models/monkey.fbx");
 			testModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
@@ -2331,45 +2341,24 @@ class VulkanExample : public vkx::vulkanApp {
 		}
 
 		// z-up translations
-		//if (!keyStates.shift) {
-			if (keyStates.w) {
-				camera.translateLocal(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
-			}
-			if (keyStates.s) {
-				camera.translateLocal(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
-			}
-			if (keyStates.a) {
-				camera.translateLocal(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
-			}
-			if (keyStates.d) {
-				camera.translateLocal(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
-			}
-			if (keyStates.q) {
-				camera.translateLocal(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
-			}
-			if (keyStates.e) {
-				camera.translateLocal(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
-			}
-		//} else {
-		//	if (keyStates.w) {
-		//		camera.translateWorld(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
-		//	}
-		//	if (keyStates.s) {
-		//		camera.translateWorld(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
-		//	}
-		//	if (keyStates.a) {
-		//		camera.translateWorld(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
-		//	}
-		//	if (keyStates.d) {
-		//		camera.translateWorld(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
-		//	}
-		//	if (keyStates.q) {
-		//		camera.translateWorld(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
-		//	}
-		//	if (keyStates.e) {
-		//		camera.translateWorld(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
-		//	}
-		//}
+		if (keyStates.w) {
+			camera.translateLocal(glm::vec3(0.0f, 0.0f, -camera.movementSpeed));
+		}
+		if (keyStates.s) {
+			camera.translateLocal(glm::vec3(0.0f, 0.0f, camera.movementSpeed));
+		}
+		if (keyStates.a) {
+			camera.translateLocal(glm::vec3(-camera.movementSpeed, 0.0f, 0.0f));
+		}
+		if (keyStates.d) {
+			camera.translateLocal(glm::vec3(camera.movementSpeed, 0.0f, 0.0f));
+		}
+		if (keyStates.q) {
+			camera.translateLocal(glm::vec3(0.0f, -camera.movementSpeed, 0.0f));
+		}
+		if (keyStates.e) {
+			camera.translateLocal(glm::vec3(0.0f, camera.movementSpeed, 0.0f));
+		}
 
 
 
@@ -2423,24 +2412,20 @@ class VulkanExample : public vkx::vulkanApp {
 			//}
 		}
 
-		//if (keyStates.onKeyDown(&keyStates.t)) {
 		if (keyStates.onKeyDown(&keyStates.t)) {
 			camera.isFirstPerson = !camera.isFirstPerson;
 		}
 
 		if (keyStates.onKeyDown(&keyStates.r)) {
-			//if (keyStates.r) {
 			toggleDebugDisplay();
 		}
 
-		//if (keyStates.onKeyDown(&keyStates.p)) {
 		if (keyStates.p) {
 			updateDraw = true;
 			updateOffscreen = true;
 		}
 
 		if (keyStates.onKeyDown(&keyStates.y)) {
-			//if (keyStates.y) {
 			fullDeferred = !fullDeferred;
 			updateDraw = true;
 			updateOffscreen = true;
@@ -2452,46 +2437,11 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 		if (keyStates.space) {
-			//physicsObjects[1]->rigidBody->activate();
-			//physicsObjects[1]->rigidBody->setLinearVelocity(btVector3(0.0f, 0.0f, 12.0f));
-			//physicsObjects[1]->rigidBody->applyCentralForce(btVector3(0.0f, sin(globalP)*0.1f, 0.05f));
-
-
-			//auto testModel0 = std::make_shared<vkx::Model>(&context, &assetManager);
-			//testModel0->load(getAssetPath() + "models/myCube.dae");
-			//testModel0->createMeshes(skinnedMeshVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
-			//modelsDeferred.push_back(testModel0);
-
-			//auto physicsBall0 = std::make_shared<vkx::PhysicsObject>(&physicsManager, testModel0);
-			//btCollisionShape* sphereShape0 = new btSphereShape(btScalar(1.));
-			//btCollisionShape* boxShape0 = new btBoxShape(btVector3(btScalar(1.), btScalar(1.), btScalar(1.)));
-
-			//physicsBall0->createRigidBody(boxShape0, 1.0f);
-			//btTransform t0;
-			//t0.setOrigin(btVector3(0., 0., 10.));
-			////physicsBall0->rigidBody->setWorldTransform(t0);
-			//physicsBall0->rigidBody->getMotionState()->setWorldTransform(t0);
-			//physicsObjects.push_back(physicsBall0);
-
-
-
-
-
-
-
-
-
-
-
-
-
 			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			testModel->load(getAssetPath() + "models/monkey.fbx");
 			testModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 			//testModel->loadAndCreateMeshes(getAssetPath() + "models/monkey.fbx", SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 			modelsDeferred.push_back(testModel);
-
-
 			
 			auto physicsBall = std::make_shared<vkx::PhysicsObject>(&physicsManager, testModel);
 			btConvexHullShape *convexHullShape = createConvexHullFromMesh(testModel->meshLoader);
@@ -2500,12 +2450,7 @@ class VulkanExample : public vkx::vulkanApp {
 			physicsBall->rigidBody->translate(btVector3(0., 0., 10.));
 			physicsObjects.push_back(physicsBall);
 
-
-
 			updateOffscreen = true;
-
-
-
 		}
 
 
@@ -2520,15 +2465,12 @@ class VulkanExample : public vkx::vulkanApp {
 			modelsDeferred.push_back(testModel);
 
 
-
 			auto physicsBall = std::make_shared<vkx::PhysicsObject>(&physicsManager, testModel);
 			btConvexHullShape *convexHullShape = createConvexHullFromMesh(testModel->meshLoader);
 			physicsBall->createRigidBody(convexHullShape, 1.0f);
 			physicsBall->rigidBody->activate();
 			physicsBall->rigidBody->translate(btVector3(0., 0., 10.));
 			physicsObjects.push_back(physicsBall);
-
-
 
 
 			updateOffscreen = true;
@@ -2560,7 +2502,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 		if (keyStates.m) {
-			if (modelsDeferred.size() > 4) {
+			if (modelsDeferred.size() > 2) {
 				modelsDeferred[modelsDeferred.size() - 1]->destroy();
 				modelsDeferred.pop_back();
 				//updateDraw = true;
@@ -2569,11 +2511,17 @@ class VulkanExample : public vkx::vulkanApp {
 		}
 
 		if (keyStates.n) {
-			if (physicsObjects.size() > 4) {
+			if (physicsObjects.size() > 2) {
 				physicsObjects[physicsObjects.size() - 1]->destroy();
 				physicsObjects.pop_back();
 				updateOffscreen = true;
 			}
+		}
+
+		if (keyStates.onKeyDown(&keyStates.l)) {
+			settings.SSAO = !settings.SSAO;
+			updateOffscreen = true;
+			updateDraw = true;
 		}
 
 
@@ -2582,22 +2530,22 @@ class VulkanExample : public vkx::vulkanApp {
 		}
 
 
-		if (keyStates.i) {
-			physicsObjects[1]->rigidBody->activate();
-			physicsObjects[1]->rigidBody->applyCentralForce(btVector3(0.0f, 0.1f, 0.0f));
-		}
-		if (keyStates.k) {
-			physicsObjects[1]->rigidBody->activate();
-			physicsObjects[1]->rigidBody->applyCentralForce(btVector3(0.0f, -0.1f, 0.0f));
-		}
-		if (keyStates.j) {
-			physicsObjects[1]->rigidBody->activate();
-			physicsObjects[1]->rigidBody->applyCentralForce(btVector3(-0.1f, 0.0f, 0.0f));
-		}
-		if (keyStates.l) {
-			physicsObjects[1]->rigidBody->activate();
-			physicsObjects[1]->rigidBody->applyCentralForce(btVector3(0.1f, 0.0f, 0.0f));
-		}
+		//if (keyStates.i) {
+		//	physicsObjects[1]->rigidBody->activate();
+		//	physicsObjects[1]->rigidBody->applyCentralForce(btVector3(0.0f, 0.1f, 0.0f));
+		//}
+		//if (keyStates.k) {
+		//	physicsObjects[1]->rigidBody->activate();
+		//	physicsObjects[1]->rigidBody->applyCentralForce(btVector3(0.0f, -0.1f, 0.0f));
+		//}
+		//if (keyStates.j) {
+		//	physicsObjects[1]->rigidBody->activate();
+		//	physicsObjects[1]->rigidBody->applyCentralForce(btVector3(-0.1f, 0.0f, 0.0f));
+		//}
+		//if (keyStates.l) {
+		//	physicsObjects[1]->rigidBody->activate();
+		//	physicsObjects[1]->rigidBody->applyCentralForce(btVector3(0.1f, 0.0f, 0.0f));
+		//}
 
 
 
@@ -2610,7 +2558,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-		if (keyStates.onKeyDown(&keyStates.u)) {
+		if (keyStates.onKeyDown(&mouse.rightMouseButton.state)) {
 
 			glm::vec3 ray_end = generateRay();
 			btVector3 rayFromWorld = btVector3(camera.transform.translation.x, camera.transform.translation.y, camera.transform.translation.z);
@@ -2649,7 +2597,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-		if (/*keyStates.o && */(rayPicking == true)) {
+		if (rayPicking == true) {
 
 			glm::vec3 ray_end = generateRay();
 			btVector3 rayFromWorld = btVector3(camera.transform.translation.x, camera.transform.translation.y, camera.transform.translation.z);
@@ -2669,7 +2617,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		}
 
-		if (keyStates.onKeyUp(&keyStates.u)) {
+		if (keyStates.onKeyUp(&mouse.rightMouseButton.state)) {
 			rayPicking = false;
 
 			if (m_pickedConstraint) {
@@ -2686,7 +2634,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-		camera.updateViewMatrix();
+		
 
 
 
@@ -2731,16 +2679,6 @@ class VulkanExample : public vkx::vulkanApp {
 		}
 
 
-		//if (modelsDeferred.size() > 3) {
-		//	for (int i = 0; i < modelsDeferred.size(); ++i) {
-		//		modelsDeferred[i]->setTranslation(glm::vec3(2 * i, 0.0f, sin(4*globalP*i)));
-		//	}
-		//}
-
-		//for (int i = 0; i < modelsDeferred.size(); ++i) {
-		//	modelsDeferred[i]->setTranslation(glm::vec3((2.0f*i) - (modelsDeferred.size()), 0.0f, sin(globalP*i) + 2.0f));
-		//}
-
 		if (skinnedMeshesDeferred.size() > 0) {
 			skinnedMeshesDeferred[0]->animationSpeed = 1.0f;
 			glm::vec3 point = skinnedMeshesDeferred[0]->transform.translation;
@@ -2758,7 +2696,7 @@ class VulkanExample : public vkx::vulkanApp {
 		}
 
 
-		//uboScene.lightPos = glm::vec4(cos(globalP), 4.0f, cos(globalP) + 3.0f, 1.0f);
+		camera.updateViewMatrix();
 
 
 
@@ -2781,14 +2719,14 @@ class VulkanExample : public vkx::vulkanApp {
 
 			// uses matrix indices directly after skinnedMeshes' indices
 			for (int i = 0; i < modelsDeferred.size(); ++i) {
-				// added a buffer of 10 so that there is time to update command buffers
-				modelsDeferred[i]->matrixIndex = models.size() + skinnedMeshes.size() + i + 10;// todo: figure this out
+				// added a buffer of 5 so that there is time to update command buffers
+				modelsDeferred[i]->matrixIndex = models.size() + skinnedMeshes.size() + i + 5;// todo: figure this out
 			}
 
 			// uses matrix indices directly after modelsDeferred' indices
 			for (int i = 0; i < skinnedMeshesDeferred.size(); ++i) {
-				// added a buffer of 10 so that there is time to update command buffers
-				skinnedMeshesDeferred[i]->matrixIndex = models.size() + skinnedMeshes.size() + modelsDeferred.size() + i + 10;// todo: figure this out
+				// added a buffer of 5 so that there is time to update command buffers
+				skinnedMeshesDeferred[i]->matrixIndex = models.size() + skinnedMeshes.size() + modelsDeferred.size() + i + 5;// todo: figure this out
 			}
 
 			// set bone indices
@@ -2834,7 +2772,7 @@ class VulkanExample : public vkx::vulkanApp {
 		for (auto &skinnedMesh : skinnedMeshes) {
 
 			matrixNodes[skinnedMesh->matrixIndex].model = skinnedMesh->transfMatrix;
-			matrixNodes[skinnedMesh->matrixIndex].boneIndex[0][0] = skinnedMesh->boneIndex;
+			matrixNodes[skinnedMesh->matrixIndex].boneIndex = skinnedMesh->boneIndex;
 
 			// performance optimization needed here:
 			skinnedMesh->update(globalP*skinnedMesh->animationSpeed);// update animation / interpolated
@@ -2860,7 +2798,7 @@ class VulkanExample : public vkx::vulkanApp {
 		for (auto &skinnedMesh : skinnedMeshesDeferred) {
 
 			matrixNodes[skinnedMesh->matrixIndex].model = skinnedMesh->transfMatrix;
-			matrixNodes[skinnedMesh->matrixIndex].boneIndex[0][0] = skinnedMesh->boneIndex;
+			matrixNodes[skinnedMesh->matrixIndex].boneIndex = skinnedMesh->boneIndex;
 
 			// performance optimization needed here:
 			skinnedMesh->update(globalP*skinnedMesh->animationSpeed);// update animation / interpolated
@@ -3172,10 +3110,10 @@ class VulkanExample : public vkx::vulkanApp {
 			uint32_t setNum = 3;// important!
 			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred"), setNum, rscs.descriptorSets->get("deferred.deferred"), nullptr);
 			if (debugDisplay) {
-				if (!SSAO_ON) {
-					cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.debug"));
-				} else {
+				if (settings.SSAO) {
 					cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.debug.ssao"));
+				} else {
+					cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.debug"));
 				}
 				cmdBuffer.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, meshBuffers.quad.vertices.buffer, { 0 });
 				cmdBuffer.bindIndexBuffer(meshBuffers.quad.indices.buffer, 0, vk::IndexType::eUint32);
@@ -3194,10 +3132,10 @@ class VulkanExample : public vkx::vulkanApp {
 
 			cmdBuffer.setViewport(0, viewport);
 			// Final composition as full screen quad
-			if (!SSAO_ON) {
-				cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.composition"));
-			} else {
+			if (settings.SSAO) {
 				cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.composition.ssao"));
+			} else {
+				cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.composition"));
 			}
 			cmdBuffer.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, meshBuffers.quad.vertices.buffer, { 0 });
 			cmdBuffer.bindIndexBuffer(meshBuffers.quad.indices.buffer, 0, vk::IndexType::eUint32);
@@ -3283,10 +3221,10 @@ class VulkanExample : public vkx::vulkanApp {
 			// bind mesh pipeline
 			// don't have to do this for every mesh
 			// todo: create pipelinesDefferd.mesh
-			if (!SSAO_ON) {
-				offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("offscreen.meshes"));
-			} else {
+			if (settings.SSAO) {
 				offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("offscreen.meshes.ssao"));
+			} else {
+				offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("offscreen.meshes"));
 			}
 
 
@@ -3370,10 +3308,10 @@ class VulkanExample : public vkx::vulkanApp {
 			// SKINNED MESHES:
 
 			// bind skinned mesh pipeline
-			if (!SSAO_ON) {
-				offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("offscreen.skinnedMeshes"));
-			} else {
+			if (settings.SSAO) {
 				offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("offscreen.skinnedMeshes.ssao"));
+			} else {
+				offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("offscreen.skinnedMeshes"));
 			}
 			for (auto &skinnedMesh : skinnedMeshesDeferred) {
 				// bind vertex & index buffers
@@ -3430,7 +3368,10 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-
+		//if (!settings.SSAO) {
+		//	offscreenCmdBuffer.end();
+		//	return;
+		//}
 
 
 

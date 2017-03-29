@@ -216,7 +216,25 @@ namespace vkx
 				bool vsync = false;
 				/** @brief fps cap value */
 				float fpsCap = 60.0f;
+
+
+				// Size of the window
+				glm::vec2 windowSize{ 1280, 720 };// todo: actually use
+
+				// whether to use Screen Space Ambient Occlusion
+				bool SSAO = true;
+
+
+
 			} settings;
+
+			//struct Options {
+			//	// Size of the window
+			//	glm::vec2 windowSize{ 1280, 720 };// todo: actually use
+			//	
+			//	// whether to use Screen Space Ambient Occlusion
+			//	bool SSAO = false;
+			//} options;
 			
 
 			bool prepared = false;

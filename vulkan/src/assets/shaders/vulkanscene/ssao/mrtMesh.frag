@@ -37,7 +37,6 @@ float linearDepth(float depth) {
 
 void main() {
 	outPosition = vec4(inPos, linearDepth(gl_FragCoord.z));
-	//outPosition.xyz = vec3(outPosition.x, -outPosition.y, outPosition.z);// added 3/22/17
 
 	vec4 color = texture(samplerColor, inUV);
 
@@ -53,11 +52,8 @@ void main() {
 		vec3 nm = texture(samplerNormal, inUV).xyz * 2.0 - vec3(1.0);
 		nm = TBN * normalize(nm);
 		outNormal = vec4(nm * 0.5 + 0.5, 0.0);
-
-
-
+		
 	} else {
-		//outNormal = vec4(normalize(inNormal) * 0.5 + 0.5, 0.0);
 		outNormal = vec4(normalize(inNormal) * 0.5 + 0.5, 1.0);
 		if (color.a < 0.5) {
 			discard;
@@ -82,7 +78,7 @@ void main() {
 
 	//outNormal = vec4(normalize(inNormal) * 0.5 + 0.5, 1.0);
 
-	// outPosition = vec4(inWorldPos, 1.0);
+	// outPosition = vec4(inPos, 1.0);
 	// outNormal = vec4(inNormal, 1.0);
 
 	//outNormal = vec4(normalize(inNormal) * 0.5 + 0.5, 1.0);

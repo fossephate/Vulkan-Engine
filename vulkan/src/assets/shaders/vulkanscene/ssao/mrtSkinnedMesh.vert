@@ -15,11 +15,8 @@ layout (location = 6) in ivec4 inBoneIDs;
 layout (location = 0) out vec3 outNormal;
 layout (location = 1) out vec2 outUV;
 layout (location = 2) out vec3 outColor;
-layout (location = 3) out vec3 outWorldPos;
+layout (location = 3) out vec3 outPos;
 layout (location = 4) out vec3 outTangent;
-
-
-//layout (location = 4) in vec3 inTangent;
 
 #define MAX_BONES 64
 
@@ -46,19 +43,18 @@ layout (set = 0, binding = 1) uniform boneBuffer
 layout (set = 1, binding = 0) uniform matrixBuffer
 {
 	mat4 model;
-	mat4 boneIndex;
+	int boneIndex;
+	vec3 padding;
+	//mat4 boneIndex;
 	mat4 g1;
 	mat4 g2;
 } instance;
 
 
 
-void main() 
-{
+void main() {
 
-	int index = int(instance.boneIndex[0][0]);
-
-	int offset = index*MAX_BONES;
+	int offset = instance.boneIndex*MAX_BONES;
 
 	mat4 boneTransform = boneData.bones[inBoneIDs[0]+offset] * inBoneWeights[0];
 	boneTransform     += boneData.bones[inBoneIDs[1]+offset] * inBoneWeights[1];
@@ -74,21 +70,19 @@ void main()
 	outUV.t = 1.0 - outUV.t;
 
 	// // Vertex position in world space
-	//outWorldPos = vec3(instance.model * inPos);
+	//outWorldPos = vec3(newModelMatrix * inPos);
 
-	// Vertex position in world space
-	outWorldPos = vec3(scene.view * instance.model * boneTransform * inPos);
-	
-	// GL to Vulkan coord space
-	//outWorldPos.y = -outWorldPos.y;
+	// Vertex position in view space
+	outPos = vec3(scene.view * newModelMatrix * inPos);
+
 	
 	// Normal in world space
 	// todo: do the inverse transpose on cpu
-	mat3 mNormal = transpose(inverse(mat3(instance.model * boneTransform)));
-    outNormal = mNormal * normalize(inNormal);
+	mat3 mNormal = transpose(inverse(mat3(newModelMatrix)));
+    //outNormal = mNormal * normalize(inNormal);
 
 	// Normal in view space
-	mat3 normalMatrix = transpose(inverse(mat3(scene.view * instance.model * boneTransform)));
+	mat3 normalMatrix = transpose(inverse(mat3(scene.view * newModelMatrix)));
 	outNormal = normalMatrix * inNormal;
 
 

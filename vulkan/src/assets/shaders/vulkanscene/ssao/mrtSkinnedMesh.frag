@@ -6,7 +6,7 @@
 layout (location = 0) in vec3 inNormal;
 layout (location = 1) in vec2 inUV;
 layout (location = 2) in vec3 inColor;
-layout (location = 3) in vec3 inWorldPos;
+layout (location = 3) in vec3 inPos;
 layout (location = 4) in vec3 inTangent;
 
 
@@ -34,7 +34,7 @@ float linearDepth(float depth) {
 
 
 void main() {
-	outPosition = vec4(inWorldPos, linearDepth(gl_FragCoord.z));
+	outPosition = vec4(inPos, linearDepth(gl_FragCoord.z));
 
 	vec4 color = texture(samplerColor, inUV);
 
@@ -66,7 +66,7 @@ void main() {
 
 
 // test:
-	// outPosition = vec4(inWorldPos, 1.0);
+	// outPosition = vec4(inPos, 1.0);
 	// outNormal = vec4(inNormal, 1.0);
 	// outAlbedo = texture(samplerColor, inUV);
 	

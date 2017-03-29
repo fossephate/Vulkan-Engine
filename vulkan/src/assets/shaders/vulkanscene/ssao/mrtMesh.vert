@@ -27,7 +27,9 @@ layout (set = 0, binding = 0) uniform sceneBuffer
 layout (set = 1, binding = 0) uniform matrixBuffer
 {
 	mat4 model;
-	mat4 boneIndex;
+	int boneIndex;
+	vec3 padding;
+	//mat4 boneIndex;
 	mat4 g1;
 	mat4 g2;
 } instance;
@@ -41,7 +43,7 @@ void main() {
 	//outUV.t = 1.0 - outUV.t;// changed
 
 	// Vertex position in world space
-	//outWorldPos = vec3(instance.model * inPos);
+	//outPos = vec3(instance.model * inPos);
 
 
 
@@ -52,20 +54,14 @@ void main() {
 	
 	// Normal in world space
 	mat3 mNormal = transpose(inverse(mat3(instance.model)));
-	// test:
-	//mat3 mNormal = transpose(inverse(mat3(instance.model)));
-
     //outNormal = mNormal * normalize(inNormal);
 
 	// Normal in view space
 	mat3 normalMatrix = transpose(inverse(mat3(scene.view * instance.model)));
-	//mat3 normalMatrix = transpose(inverse(mat3(scene.projection * scene.view * instance.model)));
 	outNormal = normalMatrix * inNormal;
 
-	//outNormal = inNormal;
+	outTangent = mNormal * inTangent;
 
-
-    //outTangent = mNormal * normalize(inTangent);
 	
 	// Currently just vertex color
 	outColor = inColor;
