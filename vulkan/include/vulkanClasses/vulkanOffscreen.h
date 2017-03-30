@@ -9,7 +9,7 @@ namespace vkx {
 		const vkx::Context &context;
 		bool active{ true };
 
-		vk::RenderPass renderPass;
+		//vk::RenderPass renderPass;
 
 		vk::CommandBuffer cmdBuffer;
 		vk::Semaphore renderComplete;
@@ -62,8 +62,8 @@ namespace vkx {
 
 			//prepareRenderPasses();
 			
-			addDeferredFramebuffer();
-			//addDeferredFramebuffer2();
+			//addDeferredFramebuffer();
+			addDeferredFramebuffer2();
 			addSSAOGenerateFramebuffer();
 			addSSAOBlurFramebuffer();
 
@@ -85,7 +85,7 @@ namespace vkx {
 		}
 
 		void destroy() {
-			for (auto& framebuffer : framebuffers) {
+			for (auto &framebuffer : framebuffers) {
 				framebuffer.destroy();
 			}
 			framebuffers.clear();
@@ -160,7 +160,10 @@ namespace vkx {
 
 			vk::ImageViewCreateInfo imageViewInfo;
 			imageViewInfo.viewType = vk::ImageViewType::e2D;
-			imageViewInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+
+			//imageViewInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+			imageViewInfo.subresourceRange.aspectMask = aspectMask;// added 3/29/17
+
 			imageViewInfo.subresourceRange.levelCount = 1;
 			imageViewInfo.subresourceRange.layerCount = 1;
 
@@ -830,6 +833,7 @@ namespace vkx {
 					attachmentDescs[i].storeOp = vk::AttachmentStoreOp::eStore;
 					attachmentDescs[i].stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
 					attachmentDescs[i].stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+					// all but 3rd are eShaderReadOnlyOptimal, 3rd is eDepthStencilAttachmentOptimal 
 					attachmentDescs[i].finalLayout = (i == 3) ? vk::ImageLayout::eDepthStencilAttachmentOptimal : vk::ImageLayout::eShaderReadOnlyOptimal;
 				}
 
@@ -860,9 +864,9 @@ namespace vkx {
 				subpass.pColorAttachments = colorReferences.data();
 				subpass.colorAttachmentCount = static_cast<uint32_t>(colorReferences.size());
 				subpass.pDepthStencilAttachment = &depthReference;
+				
 
 				// Use subpass dependencies for attachment layout transitions
-				//std::array<vk::SubpassDependency, 2> dependencies;
 				std::vector<vk::SubpassDependency> dependencies;
 				dependencies.resize(2);
 

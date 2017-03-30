@@ -386,6 +386,8 @@ class VulkanExample : public vkx::vulkanApp {
 
 	vkx::Offscreen offscreen;
 
+	vk::Fence renderFence;
+
 
 
 
@@ -429,12 +431,16 @@ class VulkanExample : public vkx::vulkanApp {
 		alignedMatrixSize = (unsigned int)(alignedSize(alignment, sizeof(MatrixNode)));
 		alignedMaterialSize = (unsigned int)(alignedSize(alignment, sizeof(vkx::MaterialProperties)));
 
-		//camera.matrixNodes.projection = glm::perspectiveRH(glm::radians(60.0f), (float)size.width / (float)size.height, 0.0001f, 256.0f);
 
 		title = "Vulkan test";
+
+		renderFence = device.createFence(vk::FenceCreateInfo(), nullptr);// temporary
+
+
 	}
 
 	~VulkanExample() {
+
 		// Clean up used Vulkan resources 
 		// Note : Inherited destructor cleans up resources stored in base class
 
@@ -461,6 +467,8 @@ class VulkanExample : public vkx::vulkanApp {
 		// destroy offscreen command buffer
 		device.freeCommandBuffers(cmdPool, offscreenCmdBuffer);
 
+		device.destroyFence(renderFence, nullptr);// temp
+
 
 
 		for (auto &mesh : meshes) {
@@ -471,10 +479,25 @@ class VulkanExample : public vkx::vulkanApp {
 			model->destroy();
 		}
 
-
 		for (auto &skinnedMesh : skinnedMeshes) {
 			skinnedMesh->destroy();
 		}
+
+		for (auto &mesh : meshesDeferred) {
+			mesh->destroy();
+		}
+
+		for (auto &model : modelsDeferred) {
+			model->destroy();
+		}
+		
+		for (auto &skinnedMesh : skinnedMeshesDeferred) {
+			skinnedMesh->destroy();
+		}
+
+
+
+
 
 		for (auto &physicsObject : physicsObjects) {
 			physicsObject->destroy();
@@ -486,7 +509,31 @@ class VulkanExample : public vkx::vulkanApp {
 		uniformDataDeferred.vsFullScreen.destroy();
 		uniformDataDeferred.fsLights.destroy();
 
-		//// Destroy and free mesh resources 
+		// Destroy and free mesh resources
+
+
+		assetManager.destroy();
+
+
+		rscs.pipelines->destroy();
+
+		rscs.pipelineLayouts->destroy();
+		
+		rscs.descriptorPools->destroy();
+
+		// todo: destroy desriptorsetlist's descriptor sets, needs command pool
+		rscs.descriptorSets->destroy();// does nothing, fix
+
+		rscs.descriptorSetLayouts->destroy();
+
+		//device.allocateMemory
+		//device.freeMemory
+		
+
+		
+
+		
+
 		//skinnedMesh->meshBuffer.destroy();
 		//delete(skinnedMesh->meshLoader);
 		//delete(skinnedMesh);
@@ -1959,8 +2006,8 @@ class VulkanExample : public vkx::vulkanApp {
 
 	void updateMaterialBuffer() {
 
-		if (materialNodes.size() != this->assetManager.materials.loadedMaterials.size()) {
-			if (this->assetManager.materials.loadedMaterials.size() == 0) {
+		if (materialNodes.size() != this->assetManager.materials.resources.size()) {
+			if (this->assetManager.materials.resources.size() == 0) {
 				vkx::MaterialProperties p;
 				p.ambient = glm::vec4();
 				p.diffuse = glm::vec4();
@@ -1968,13 +2015,13 @@ class VulkanExample : public vkx::vulkanApp {
 				p.opacity = 1.0f;
 				materialNodes[0] = p;
 			} else {
-				materialNodes.resize(this->assetManager.materials.loadedMaterials.size());
+				materialNodes.resize(this->assetManager.materials.resources.size());
 			}
 		}
 
 
 
-		for (auto &iterator : this->assetManager.materials.loadedMaterials) {
+		for (auto &iterator : this->assetManager.materials.resources) {
 			uint32_t index = iterator.second.index;
 			materialNodes[index] = iterator.second.properties;
 		}
@@ -2224,7 +2271,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// deferred
 
-		if (!false) {
+		if (false) {
 			auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			sponzaModel->load(getAssetPath() + "models/sponza.dae");
 			sponzaModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
@@ -3169,6 +3216,8 @@ class VulkanExample : public vkx::vulkanApp {
 		vk::CommandBufferBeginInfo cmdBufInfo{vk::CommandBufferUsageFlagBits::eSimultaneousUse};
 
 
+		
+
 		// begin offscreen command buffer
 		offscreenCmdBuffer.begin(cmdBufInfo);
 
@@ -3369,10 +3418,10 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-		//if (!settings.SSAO) {
-		//	offscreenCmdBuffer.end();
-		//	return;
-		//}
+		if (!settings.SSAO) {
+			offscreenCmdBuffer.end();
+			return;
+		}
 
 
 
@@ -3389,7 +3438,7 @@ class VulkanExample : public vkx::vulkanApp {
 			renderPassBeginInfo2.framebuffer = offscreen.framebuffers[1].framebuffer;
 			renderPassBeginInfo2.renderArea.extent.width = offscreen.size.x;
 			renderPassBeginInfo2.renderArea.extent.height = offscreen.size.y;
-			renderPassBeginInfo2.clearValueCount = 2;//clearValues.size();//2
+			renderPassBeginInfo2.clearValueCount = 1;//2;//clearValues.size();//2
 			renderPassBeginInfo2.pClearValues = clearValues.data();
 
 			// begin SSAO render pass
@@ -3424,7 +3473,7 @@ class VulkanExample : public vkx::vulkanApp {
 			renderPassBeginInfo3.framebuffer = offscreen.framebuffers[2].framebuffer;
 			renderPassBeginInfo3.renderArea.extent.width = offscreen.size.x;
 			renderPassBeginInfo3.renderArea.extent.height = offscreen.size.y;
-			renderPassBeginInfo3.clearValueCount = 2;//clearValues.size();//2
+			renderPassBeginInfo3.clearValueCount = 1;//2;//clearValues.size();//2
 			renderPassBeginInfo3.pClearValues = clearValues.data();
 
 			//renderPassBeginInfo.framebuffer = frameBuffers.ssaoBlur.frameBuffer;
@@ -3624,6 +3673,8 @@ class VulkanExample : public vkx::vulkanApp {
 
 	void draw() override {
 		prepareFrame();
+
+		// draw current command buffers
 		{
 			// render to offscreen, then onscreen, use signal and wait semaphores to
 			// ensure they happen in order
@@ -3646,7 +3697,8 @@ class VulkanExample : public vkx::vulkanApp {
 			submitInfo.pCommandBuffers = &offscreenCmdBuffer;
 
 			// Submit
-			queue.submit(submitInfo, VK_NULL_HANDLE);
+			//queue.submit(submitInfo, VK_NULL_HANDLE);
+			queue.submit(submitInfo, renderFence);// temporary
 
 
 
@@ -3654,6 +3706,8 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 			//// Scene rendering
+
+			//vk::Fence deferredFence = swapChain.getSubmitFence();
 
 			//// Wait for offscreen render complete
 			//submitInfo.waitSemaphoreCount = 1;
@@ -3668,15 +3722,34 @@ class VulkanExample : public vkx::vulkanApp {
 			//submitInfo.pCommandBuffers = &primaryCmdBuffers[currentBuffer];
 
 			//// Submit
-			//queue.submit(submitInfo, VK_NULL_HANDLE);
+			//queue.submit(submitInfo, deferredFence);
 		}
+
+
 		// draw scene
 		drawCurrentCommandBuffer(offscreen.renderComplete);
 
 
 
+
+		// todo: fix / better solution
+		// Wait for fence to signal that all command buffers are ready
+		vk::Result fenceRes;
+		do {
+			fenceRes = device.waitForFences(renderFence, VK_TRUE, 100000000);
+		} while (fenceRes == vk::Result::eTimeout);
+		
+		// reset fence for next submit
+		device.resetFences(renderFence);
+
+
+
+
 		submitFrame();
 	}
+
+
+
 
 	virtual void render() {
 		if (!prepared) {

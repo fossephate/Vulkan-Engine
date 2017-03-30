@@ -40,7 +40,7 @@ void main() {
 	gl_Position = scene.projection * scene.view * instance.model * inPos;
 	
 	outUV = inUV;
-	//outUV.t = 1.0 - outUV.t;// changed
+	outUV.t = 1.0 - outUV.t;// bc vulkan
 
 	// Vertex position in world space
 	//outPos = vec3(instance.model * inPos);

@@ -1,16 +1,28 @@
 #include "vulkanFrameBuffer.h"
 
 void vkx::Framebuffer::destroy() {
-	for (auto& color : colors) {
+	
+	// destroy color attachments
+	// todo: remove color attachments vector from class
+	for (auto &color : colors) {
 		color.destroy();
 	}
+	// destroy attachments
+	for (auto &attachment : attachments) {
+		attachment.destroy();
+	}
+	// destroy depth attachment if it exists
 	if (depthAttachment.format != vk::Format::eUndefined) {
 		depthAttachment.destroy();
 	}
+
+	// destroy framebuffer
 	if (framebuffer) {
 		device.destroyFramebuffer(framebuffer);
 		framebuffer = vk::Framebuffer();
 	}
+
+	// destroy renderpass
 	if (renderPass) {
 		device.destroyRenderPass(renderPass);
 	}

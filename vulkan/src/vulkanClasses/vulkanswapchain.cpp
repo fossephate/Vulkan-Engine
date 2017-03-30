@@ -304,7 +304,7 @@ namespace vkx {
 	}
 
 	vk::Fence vkx::VulkanSwapChain::getSubmitFence(bool destroy) {
-		auto& image = scimages[currentImage];
+		auto &image = scimages[currentImage];
 		while (image.fence) {
 			vk::Result fenceRes = context.device.waitForFences(image.fence, VK_TRUE, DEFAULT_FENCE_TIMEOUT);
 			if (fenceRes == vk::Result::eSuccess) {

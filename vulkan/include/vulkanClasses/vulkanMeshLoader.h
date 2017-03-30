@@ -80,8 +80,8 @@ namespace vkx {
 		VERTEX_LAYOUT_BITANGENT = 0x5,
 		VERTEX_LAYOUT_DUMMY_FLOAT = 0x6,
 		VERTEX_LAYOUT_DUMMY_VEC4 = 0x7,
-		VERTEX_LAYOUT_BONE_ID = 0x8,// added 1/20/17
-		VERTEX_LAYOUT_BONE_WEIGHT = 0x9,// added 1/20/17
+		//VERTEX_LAYOUT_BONE_ID = 0x8,// added 1/20/17
+		//VERTEX_LAYOUT_BONE_WEIGHT = 0x9,// added 1/20/17
 	} VertexLayout;
 
 
@@ -196,11 +196,14 @@ namespace vkx {
 				case VERTEX_LAYOUT_DUMMY_VEC4:
 					vSize += 4 * sizeof(float);
 					break;
-				case VERTEX_LAYOUT_BONE_ID:
-					vSize += 4 * sizeof(float);
-					break;
-				case VERTEX_LAYOUT_BONE_WEIGHT:
-					vSize += 4 * sizeof(float);
+				//case VERTEX_LAYOUT_BONE_ID:
+				//	vSize += 4 * sizeof(float);
+				//	break;
+				//case VERTEX_LAYOUT_BONE_WEIGHT:
+				//	vSize += 4 * sizeof(float);
+				//	break;
+				case VERTEX_LAYOUT_DUMMY_FLOAT:
+					vSize += 1 * sizeof(float);
 					break;
 				default:
 					vSize += 3 * sizeof(float);
@@ -279,7 +282,7 @@ namespace vkx {
 			//std::vector<Mesh> meshes;
 
 			// temporary materials vector
-			std::vector<Material> tempMaterials;
+			//std::vector<Material> tempMaterials;
 
 			struct Dimension {
 				glm::vec3 min = glm::vec3(FLT_MAX);
@@ -345,6 +348,8 @@ namespace vkx {
 			void createMeshBuffer(const std::vector<VertexLayout> &layout, float scale);
 			// for groups of meshes (models) with multiple buffers and materials
 			void createMeshBuffers(const std::vector<VertexLayout> &layout, float scale);
+
+			void destroy();
 
 			/* Skinned Meshes */
 			// for skinned meshes (with bones)

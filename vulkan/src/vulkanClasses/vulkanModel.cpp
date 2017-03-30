@@ -48,7 +48,13 @@ namespace vkx {
 		makes sure that the task is run asynchronously on a new thread. */
 		//this->myFuture = std::async(std::launch::async, [] {
 		//});
-		this->myFuture = std::async(std::launch::async, &Model::asyncCreateMeshes, this, layout, scale, binding);
+		bool useAsync = false;
+		if (useAsync) {
+			this->myFuture = std::async(std::launch::async, &Model::asyncCreateMeshes, this, layout, scale, binding);
+		} else {
+			asyncCreateMeshes(layout, scale, binding);
+		}
+
 	}
 
 
@@ -84,10 +90,11 @@ namespace vkx {
 
 	void Model::destroy() {
 		for (auto &mesh : this->meshes) {
-			mesh.meshBuffer.destroy();
+			mesh.destroy();
 		}
 		// todo:
 		// more to delete:
+		this->meshLoader->destroy();// todo: implement
 		delete this->meshLoader;
 	}
 

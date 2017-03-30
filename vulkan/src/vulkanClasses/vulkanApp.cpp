@@ -44,8 +44,12 @@ vulkanApp::vulkanApp(bool enableValidation) : swapChain(this->context) {
 
 
 vulkanApp::~vulkanApp() {
+
+	//device.waitIdle();// added
+
 	// Clean up Vulkan resources
 	swapChain.cleanup();
+
 	if (descriptorPool) {
 		device.destroyDescriptorPool(descriptorPool);
 	}
@@ -66,7 +70,7 @@ vulkanApp::~vulkanApp() {
 		device.destroyFramebuffer(framebuffers[i]);
 	}
 
-	for (auto& shaderModule : shaderModules) {
+	for (auto &shaderModule : shaderModules) {
 		device.destroyShaderModule(shaderModule);
 	}
 	depthStencil.destroy();
@@ -512,7 +516,7 @@ void vulkanApp::drawCurrentCommandBuffer(const vk::Semaphore& semaphore) {
 	context.recycle();
 }
 
-
+// todo: fix // important
 void vulkanApp::executePendingTransfers(vk::Semaphore transferPending) {
 	if (!pendingUpdates.empty()) {
 		vk::Fence transferFence = device.createFence(vk::FenceCreateInfo());
@@ -536,7 +540,7 @@ void vulkanApp::executePendingTransfers(vk::Semaphore transferPending) {
 			vk::CommandBufferBeginInfo cmdBufferBeginInfo;
 			cmdBufferBeginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 			transferCmdBuffer.begin(cmdBufferBeginInfo);
-			for (const auto& update : pendingUpdates) {
+			for (const auto &update : pendingUpdates) {
 				transferCmdBuffer.updateBuffer(update.buffer, update.offset, update.size, update.data);
 			}
 			transferCmdBuffer.end();

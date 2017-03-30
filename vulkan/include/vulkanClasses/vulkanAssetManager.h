@@ -72,6 +72,12 @@ namespace vkx {
 		// this is inefficient, but works on all vulkan capable hardware
 		
 		vk::DescriptorSet descriptorSet;
+
+		void destroy() {
+			diffuse.destroy();
+			specular.destroy();
+			bump.destroy();
+		}
 	};
 
 
@@ -126,9 +132,50 @@ namespace vkx {
 			bool present(std::string name) {
 				return resources.find(name) != resources.end();
 			}
+			// todo: remove
+			bool doExist(std::string name) {
+				return resources.find(name) != resources.end();
+			}
+	};
+
+	template <typename T>
+	class OrderedResourceList {
+		public:
+			std::map<std::string, T> resources;
+			const T get(std::string name) {
+				return resources[name];
+			}
+			T *getPtr(std::string name) {
+				return &resources[name];
+			}
+			bool present(std::string name) {
+				return resources.find(name) != resources.end();
+			}
 	};
 
 
+	template <typename T>
+	class OrderedVulkanResourceList {
+		public:
+			vk::Device &device;
+			std::map<std::string, T> resources;
+			OrderedVulkanResourceList(vk::Device &dev) : device(dev) {};
+			const T get(std::string name) {
+				if (!present(name)) {
+					throw;
+				}
+				return resources[name];
+			}
+			T *getPtr(std::string name) {
+				if (!present(name)) {
+					throw;
+				}
+				return &resources[name];
+			}
+			bool present(std::string name) {
+				return resources.find(name) != resources.end();
+			}
+	};
 
 
 
@@ -165,6 +212,12 @@ namespace vkx {
 			PipelineLayoutList(vk::Device &dev) : VulkanResourceList(dev) {};
 
 			~PipelineLayoutList() {
+				//for (auto &pipelineLayout : resources) {
+				//	device.destroyPipelineLayout(pipelineLayout.second, nullptr);
+				//}
+			}
+
+			void destroy() {
 				for (auto &pipelineLayout : resources) {
 					device.destroyPipelineLayout(pipelineLayout.second, nullptr);
 				}
@@ -186,11 +239,17 @@ namespace vkx {
 
 			PipelineList(vk::Device &dev) : VulkanResourceList(dev) {};
 
-			//~PipelineList() {
-			//	for (auto &pipeline : resources) {
-			//		device.destroyPipeline(pipeline.second, nullptr);
-			//	}
-			//}
+			~PipelineList() {
+				//for (auto &pipeline : resources) {
+				//	device.destroyPipeline(pipeline.second, nullptr);
+				//}
+			}
+
+			void destroy() {
+				for (auto &pipeline : resources) {
+					device.destroyPipeline(pipeline.second, nullptr);
+				}
+			}
 
 			//vk::Pipeline addGraphicsPipeline(std::string name, vk::PipelineCache &pipelineCache, vk::GraphicsPipelineCreateInfo &pipelineCreateInfo) {
 			//	vk::Pipeline pipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
@@ -216,6 +275,12 @@ namespace vkx {
 			DescriptorSetLayoutList(vk::Device &dev) : VulkanResourceList(dev) {};
 
 			~DescriptorSetLayoutList() {
+				//for (auto &descriptorSetLayout : resources) {
+				//	device.destroyDescriptorSetLayout(descriptorSetLayout.second, nullptr);
+				//}
+			}
+
+			void destroy() {
 				for (auto &descriptorSetLayout : resources) {
 					device.destroyDescriptorSetLayout(descriptorSetLayout.second, nullptr);
 				}
@@ -227,9 +292,9 @@ namespace vkx {
 				return descriptorSetLayout;
 			}
 
-			//void add(std::string name, vk::DescriptorSetLayout descriptorSetLayout) {
-			//	resources[name] = descriptorSetLayout;
-			//}
+			void add(std::string name, vk::DescriptorSetLayout descriptorSetLayout) {
+				resources[name] = descriptorSetLayout;
+			}
 
 	};
 
@@ -250,6 +315,17 @@ namespace vkx {
 				//	vkFreeDescriptorSets(device, descriptorPool, 1, &descriptorSet.second);
 				//	device.freeDescriptorSets(descriptorPool, 1, &descriptorSet.second);
 				//}
+				// todo:
+				//for (auto it = resources.begin(); it != resources.end(); ++it) {
+				//	//device.destroyDescriptorPool(descriptorPool, nullptr);
+				//	//device.freeDescriptorSets()
+				//}
+			}
+
+			void destroy() {
+				//for (auto &descriptorSet : resources) {
+				//	device.freeDescriptorSets(descriptorPool, 1, &descriptorSet.second);
+				//}
 			}
 
 			vk::DescriptorSet add(std::string name, vk::DescriptorSetAllocateInfo allocInfo) {
@@ -258,9 +334,9 @@ namespace vkx {
 				return descriptorSet;
 			}
 
-			//void add(std::string name, vk::DescriptorSet descriptorSet) {
-			//	resources[name] = descriptorSet;
-			//}
+			void add(std::string name, vk::DescriptorSet descriptorSet) {
+				resources[name] = descriptorSet;
+			}
 
 	};
 
@@ -272,8 +348,14 @@ namespace vkx {
 			DescriptorPoolList(vk::Device &dev) : VulkanResourceList(dev) {};
 
 			~DescriptorPoolList() {
+				//for (auto &descriptorPool : resources) {
+				//	device.destroyDescriptorPool(descriptorPool.second, nullptr);
+				//}
+			}
+
+			void destroy() {
 				for (auto &descriptorPool : resources) {
-					//device.destroyPipelineLayout(pipelineLayout.second, nullptr);
+					device.destroyDescriptorPool(descriptorPool.second, nullptr);
 				}
 			}
 
@@ -285,16 +367,14 @@ namespace vkx {
 	};
 
 
-	class MeshList : public ResourceList</*const */aiScene*> {
+	class SceneList : public ResourceList</*const */aiScene*> {
 
 		public:
 
 			//DescriptorPoolList(vk::Device &dev) : VulResourceList(dev) {};
 
-			~MeshList() {
-				//for (auto &descriptorPool : resources) {
-				//	//device.destroyPipelineLayout(pipelineLayout.second, nullptr);
-				//}
+			~SceneList() {
+
 			}
 
 			void add(std::string name, /*const */aiScene* scene) {
@@ -304,49 +384,70 @@ namespace vkx {
 
 
 
-	//class SceneList : public ResourceList<SceneHolder> {
+	class TextureList : public ResourceList<vkx::Texture> {
+
+		public:
+
+			~TextureList() {
+				//for (auto &texture : resources) {
+				//	texture.second.destroy();
+				//}
+			}
+
+			void destroy() {
+				for (auto &texture : resources) {
+					texture.second.destroy();
+				}
+			}
+
+			const vkx::Texture get(std::string name) {
+				return resources[name];
+			}
+
+			void add(std::string name, vkx::Texture texture) {
+				resources[name] = texture;
+			}
+	};
+
+
+	//class MaterialList : public OrderedVulkanResourceList<Material> {
 
 	//	public:
-
-	//		//DescriptorPoolList(vk::Device &dev) : VulResourceList(dev) {};
-
-	//		~SceneList() {
-	//			//for (auto &descriptorPool : resources) {
-	//			//	//device.destroyPipelineLayout(pipelineLayout.second, nullptr);
+	//		~MaterialList() {
+	//			//for (auto &texture : resources) {
+	//			//	texture.second.destroy();
 	//			//}
 	//		}
 
-	//		void add(std::string name, SceneHolder sceneHolder) {
-	//			resources[name] = sceneHolder;
+	//		void destroy() {
+	//			for (auto &material : resources) {
+	//				material.second.destroy();
+	//			}
+	//		}
+
+	//		const Material get(std::string name) {
+	//			return resources[name];
+	//		}
+
+	//		void add(std::string name, Material material) {
+	//			resources[name] = material;
+	//			this->sync();
+	//		}
+
+	//		void sync() {
+
+	//			uint32_t counter = 0;
+	//			for (auto &iterator : resources) {
+	//				iterator.second.index = counter;
+	//				counter++;
+	//			}
 	//		}
 	//};
 
 
 
-	class TextureList : public ResourceList<vkx::Texture> {
 
-		public:
 
-		//DescriptorPoolList(vk::Device &dev) : VulResourceList(dev) {};
-
-		~TextureList() {
-			//for (auto &descriptorPool : resources) {
-			//	//device.destroyPipelineLayout(pipelineLayout.second, nullptr);
-			//}
-		}
-
-		const vkx::Texture get(std::string name) {
-			return resources[name];
-		}
-
-		void add(std::string name, vkx::Texture texture) {
-			resources[name] = texture;
-		}
-
-		bool doExist(std::string name) {
-			return resources.find(name) != resources.end();
-		}
-	};
 
 
 
@@ -371,45 +472,62 @@ namespace vkx {
 			vk::DescriptorPool* materialDescriptorPoolDeferred{ nullptr };
 
 
-			struct {
-				//std::unordered_map<std::string, Material> loadedMaterials;
 
-				// need order
-				std::map<std::string, Material> loadedMaterials;
+
+
+
+			struct MaterialList {
+
+				std::map<std::string, Material> resources;
+
+				void destroy() {
+					for (auto &material : resources) {
+						material.second.destroy();
+					}
+				}
 
 				const Material get(std::string name) {
-					return loadedMaterials[name];
+					return resources[name];
 				}
 
 				void add(std::string name, Material material) {
-					loadedMaterials[name] = material;
+					resources[name] = material;
 					this->sync();
 				}
 
-				Material* getPtr(std::string name) {
-					return &loadedMaterials[name];
-				}
-
-				bool doExist(std::string name) {
-					return loadedMaterials.find(name) != loadedMaterials.end();
+				bool present(std::string name) {
+					return resources.find(name) != resources.end();
 				}
 
 				void sync() {
 					uint32_t counter = 0;
-					for (auto &iterator : loadedMaterials) {
+					for (auto &iterator : resources) {
 						iterator.second.index = counter;
 						counter++;
 					}
 				}
-			} materials;
+
+
+
+			};
+
+
+
+
+
+
+
+			MaterialList materials;
 
 			TextureList textures;
 
-			MeshList meshes;
+			SceneList scenes;
 
-			//SceneList scenes;
-
-
+			void destroy() {
+				//textures.destroy();
+				materials.destroy();
+				//scenes.~SceneList();
+			}
 
 
 	};

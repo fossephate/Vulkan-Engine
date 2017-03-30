@@ -136,7 +136,7 @@ void vkx::Context::createContext(bool enableValidation) {
 void vkx::Context::destroyContext() {
 	queue.waitIdle();
 	device.waitIdle();
-	for (const auto& trash : dumpster) {
+	for (const auto &trash : dumpster) {
 		trash();
 	}
 
@@ -147,9 +147,11 @@ void vkx::Context::destroyContext() {
 	destroyCommandPool();
 	device.destroyPipelineCache(pipelineCache);
 	device.destroy();
+
 	if (enableValidation) {
 		debug::freeDebugCallback(instance);
 	}
+
 	instance.destroy();
 }
 

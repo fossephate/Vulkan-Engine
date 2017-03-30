@@ -46,13 +46,13 @@ namespace vkx {
 
 
 		// todo: use asset manager here
-		if (this->assetManager->meshes.present(filename)) {
-			pScene = this->assetManager->meshes.get(filename);
+		if (this->assetManager->scenes.present(filename)) {
+			pScene = this->assetManager->scenes.get(filename);
 		} else {
 			//pScene = Importer.ReadFile(filename.c_str(), flags);
 			Importer.ReadFile(filename.c_str(), flags);
 			pScene = Importer.GetOrphanedScene();
-			this->assetManager->meshes.add(filename, pScene);
+			this->assetManager->scenes.add(filename, pScene);
 		}
 
 
@@ -86,7 +86,7 @@ namespace vkx {
 			pScene->mMaterials[i]->Get(AI_MATKEY_NAME, name);
 
 			// if a material with the same name has already been loaded, continue
-			if (this->assetManager->materials.doExist(material.name)) {
+			if (this->assetManager->materials.present(material.name)) {
 				// skip this material
 				continue;
 			}
@@ -599,6 +599,14 @@ namespace vkx {
 
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(tEnd - tStart).count();
 		printf("Load Time: %d\n", duration);
+
+	}
+
+	void MeshLoader::destroy() {
+
+		//for (int i = 0; i < m_Entries.size(); ++i) {
+		//	
+		//}
 
 	}
 
