@@ -164,6 +164,8 @@ call generate-spirv.bat
 cd $(ProjectDir)\src\assets\shaders\vulkanscene\deferred
 call generate-spirv.bat
 cd $(ProjectDir)\src\assets\shaders\vulkanscene\ssao
+call generate-spirv.bat
+cd $(ProjectDir)\src\assets\shaders\vulkanscene\imgui
 call generate-spirv.bat</Command>
       <Outputs>notreal</Outputs>
     </CustomBuildStep>
@@ -192,6 +194,8 @@ call generate-spirv.bat
 cd $(ProjectDir)\src\assets\shaders\vulkanscene\deferred
 call generate-spirv.bat
 cd $(ProjectDir)\src\assets\shaders\vulkanscene\ssao
+call generate-spirv.bat
+cd $(ProjectDir)\src\assets\shaders\vulkanscene\imgui
 call generate-spirv.bat</Command>
       <Outputs>notreal</Outputs>
     </CustomBuildStep>
@@ -222,6 +226,8 @@ call generate-spirv.bat
 cd $(ProjectDir)\src\assets\shaders\vulkanscene\deferred
 call generate-spirv.bat
 cd $(ProjectDir)\src\assets\shaders\vulkanscene\ssao
+call generate-spirv.bat
+cd $(ProjectDir)\src\assets\shaders\vulkanscene\imgui
 call generate-spirv.bat</Command>
       <Outputs>notreal</Outputs>
     </CustomBuildStep>
@@ -250,6 +256,8 @@ call generate-spirv.bat
 cd $(ProjectDir)\src\assets\shaders\vulkanscene\deferred
 call generate-spirv.bat
 cd $(ProjectDir)\src\assets\shaders\vulkanscene\ssao
+call generate-spirv.bat
+cd $(ProjectDir)\src\assets\shaders\vulkanscene\imgui
 call generate-spirv.bat</Command>
       <Outputs>notreal</Outputs>
     </CustomBuildStep>

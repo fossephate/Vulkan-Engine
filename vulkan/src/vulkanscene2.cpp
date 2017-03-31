@@ -24,7 +24,7 @@
 // Maximum number of skinned meshes (by 65k uniform limit)
 #define MAX_SKINNED_MESHES 10
 // Texture properties
-#define TEX_DIM 256
+#define TEX_DIM 1024
 
 #define PI 3.14159265359
 
@@ -2520,6 +2520,8 @@ class VulkanExample : public vkx::vulkanApp {
 			physicsBall->rigidBody->activate();
 			physicsBall->rigidBody->translate(btVector3(0., 0., 10.));
 			physicsObjects.push_back(physicsBall);
+
+			//updateMaterialBuffer();
 
 
 			updateOffscreen = true;

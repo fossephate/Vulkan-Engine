@@ -55,10 +55,10 @@ namespace vkx {
 			}
 
 			std::cout << message << std::endl;
-			#ifdef _MSC_VER 
+#ifdef _MSC_VER 
 			OutputDebugStringA(message.c_str());
 			OutputDebugStringA("\n");
-			#endif
+#endif
 			return false;
 		}
 
@@ -141,7 +141,8 @@ namespace vkx {
 				}
 			}
 
-			void insert(VkCommandBuffer cmdbuffer, std::string markerName, glm::vec4 color) {
+			//void insert(VkCommandBuffer cmdbuffer, std::string markerName, glm::vec4 color) {
+			void insert(VkCommandBuffer cmdbuffer, const std::string &markerName, const glm::vec4 &color) {
 				// Check for valid function pointer (may not be present if not running in a debugging application)
 				if (pfnCmdDebugMarkerInsert) {
 					VkDebugMarkerMarkerInfoEXT markerInfo = {};

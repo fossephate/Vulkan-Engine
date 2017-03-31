@@ -53,7 +53,7 @@ namespace vkx {
 			void beginRegion(VkCommandBuffer cmdbuffer, const std::string& pMarkerName, const glm::vec4& color);
 
 			// Insert a new debug marker into the command buffer
-			void insert(VkCommandBuffer cmdbuffer, const std::string& markerName, const glm::vec4& color);
+			void insert(VkCommandBuffer cmdbuffer, const std::string &markerName, const glm::vec4 &color);
 
 			// End the current debug marker region
 			void endRegion(VkCommandBuffer cmdBuffer);
