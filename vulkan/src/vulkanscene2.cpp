@@ -24,7 +24,7 @@
 // Maximum number of skinned meshes (by 65k uniform limit)
 #define MAX_SKINNED_MESHES 10
 // Texture properties
-#define TEX_DIM 1024
+#define TEX_DIM 256
 
 #define PI 3.14159265359
 
@@ -469,6 +469,8 @@ class VulkanExample : public vkx::vulkanApp {
 
 		device.destroyFence(renderFence, nullptr);// temp
 
+		//textures.colorMap.destroy();
+		//textures.ssaoNoise.destroy();
 
 
 		for (auto &mesh : meshes) {

@@ -63,6 +63,7 @@ namespace vkx {
 		vkx::Texture specular;
 		vkx::Texture bump;
 
+		bool hasDiffuse = true;// forced
 		bool hasAlpha = false;
 		bool hasBump = false;
 		bool hasSpecular = false;
@@ -130,10 +131,6 @@ namespace vkx {
 				return &resources[name];
 			}
 			bool present(std::string name) {
-				return resources.find(name) != resources.end();
-			}
-			// todo: remove
-			bool doExist(std::string name) {
 				return resources.find(name) != resources.end();
 			}
 	};

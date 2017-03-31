@@ -340,7 +340,7 @@ namespace vkx {
 			void loadMaterials(const aiScene *pScene);
 			void loadMeshes(const aiScene *pScene);
 
-			bool parse(const aiScene *pScene, const std::string &Filename);
+			bool parse(const aiScene *pScene, const std::string &filename);
 
 			// Create vertex and index buffer with given layout
 

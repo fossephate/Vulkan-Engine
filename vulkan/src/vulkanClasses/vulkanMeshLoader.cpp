@@ -45,7 +45,7 @@ namespace vkx {
 #else
 
 
-		// todo: use asset manager here
+		// use asset manager
 		if (this->assetManager->scenes.present(filename)) {
 			pScene = this->assetManager->scenes.get(filename);
 		} else {
@@ -82,8 +82,11 @@ namespace vkx {
 
 			Material material;
 
+			// get name
 			aiString name;
 			pScene->mMaterials[i]->Get(AI_MATKEY_NAME, name);
+			// set name
+			material.name = name.C_Str();
 
 			// if a material with the same name has already been loaded, continue
 			if (this->assetManager->materials.present(material.name)) {
@@ -123,6 +126,7 @@ namespace vkx {
 			pScene->mMaterials[i]->GetTexture(aiTextureType_DIFFUSE, 0, &texturefile);
 			if (pScene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
 
+				material.hasDiffuse = true;
 				
 				std::string fileName = std::string(texturefile.C_Str());
 				std::replace(fileName.begin(), fileName.end(), '\\', '/');
@@ -133,7 +137,7 @@ namespace vkx {
 
 				// if the texture has already been loaded previously
 				// use it instead of loading it again
-				if (this->assetManager->textures.doExist(fileName)) {
+				if (this->assetManager->textures.present(fileName)) {
 					// get from memory
 					material.diffuse = assetManager->textures.get(fileName);
 				} else {
@@ -167,7 +171,7 @@ namespace vkx {
 
 				// if the texture has already been loaded previously
 				// use it instead of loading it again
-				if (this->assetManager->textures.doExist(fileName)) {
+				if (this->assetManager->textures.present(fileName)) {
 					// get from memory
 					material.specular = assetManager->textures.get(fileName);
 				} else {
@@ -201,7 +205,7 @@ namespace vkx {
 
 				// if the texture has already been loaded previously
 				// use it instead of loading it again
-				if (this->assetManager->textures.doExist(fileName)) {
+				if (this->assetManager->textures.present(fileName)) {
 					// get from memory
 					material.bump = assetManager->textures.get(fileName);
 				} else {
@@ -264,7 +268,6 @@ namespace vkx {
 					2,
 					&material.bump.descriptor)
 			};
-			// need to update shaders to reflect new bindings
 
 
 
@@ -273,8 +276,6 @@ namespace vkx {
 			context->device.updateDescriptorSets(writeDescriptorSets, {});
 
 			this->assetManager->materials.add(material.name, material);
-
-			//this->assetManager->loadedMaterials.push_back(tempMaterials[i]);
 
 		}
 
@@ -378,7 +379,7 @@ namespace vkx {
 
 
 
-	bool vkx::MeshLoader::parse(const aiScene *pScene, const std::string &Filename) {
+	bool vkx::MeshLoader::parse(const aiScene *pScene, const std::string &filename) {
 
 		// Counters
 		for (unsigned int i = 0; i < pScene->mNumMeshes; ++i) {
@@ -604,8 +605,8 @@ namespace vkx {
 
 	void MeshLoader::destroy() {
 
-		//for (int i = 0; i < m_Entries.size(); ++i) {
-		//	
+		//for (int i = 0; i < meshBuffers.size(); ++i) {
+		//	meshBuffers[i].destroy();
 		//}
 
 	}
