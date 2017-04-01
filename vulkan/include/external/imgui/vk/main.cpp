@@ -25,10 +25,11 @@ static vk::RenderPass             g_RenderPass = nullptr;
 static uint32_t                 g_QueueFamily = 0;
 static vk::Queue                  g_Queue = nullptr;
 
-static vk::Format                 g_ImageFormat = VK_FORMAT_B8G8R8A8_UNORM;
-static vk::Format                 g_ViewFormat = VK_FORMAT_B8G8R8A8_UNORM;
-static vk::ColorSpaceKHR          g_ColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
-static vk::ImageSubresourceRange  g_ImageRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
+static vk::Format                 g_ImageFormat = vk::Format::eB8G8R8A8Unorm;
+static vk::Format                 g_ViewFormat = vk::Format::eB8G8R8A8Unorm;
+static vk::ColorSpaceKHR          g_ColorSpace = vk::ColorSpaceKHR::eSrgbNonlinear;
+
+static vk::ImageSubresourceRange  g_ImageRange = { vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1};
 
 static vk::PipelineCache          g_PipelineCache = VK_NULL_HANDLE;
 static vk::DescriptorPool         g_DescriptorPool = VK_NULL_HANDLE;
@@ -50,10 +51,13 @@ static vk::ClearValue             g_ClearValue = {};
 
 static void check_vk_result(vk::Result err)
 {
-    if (err == 0) return;
+	if (err == 0) {
+		return;
+	}
     printf("vk::Result %d\n", err);
-    if (err < 0)
-        abort();
+	if (err < 0) {
+		abort();
+	}
 }
 
 static void resize_vulkan(GLFWwindow* /*window*/, int w, int h)
@@ -65,27 +69,32 @@ static void resize_vulkan(GLFWwindow* /*window*/, int w, int h)
 
     // Destroy old Framebuffer:
     for (uint32_t i = 0; i < g_BackBufferCount; i++)
-        if (g_BackBufferView[i])
-            vkDestroyImageView(g_Device, g_BackBufferView[i], g_Allocator);
+		if (g_BackBufferView[i]) {
+			//vkDestroyImageView(g_Device, g_BackBufferView[i], g_Allocator);
+			g_Device.destroyImageView(g_BackBufferView[i], g_Allocator);
+		}
     for (uint32_t i = 0; i < g_BackBufferCount; i++)
-        if (g_Framebuffer[i])
-            vkDestroyFramebuffer(g_Device, g_Framebuffer[i], g_Allocator);
-    if (g_RenderPass)
-        vkDestroyRenderPass(g_Device, g_RenderPass, g_Allocator);
+		if (g_Framebuffer[i]) {
+			//vkDestroyFramebuffer(g_Device, g_Framebuffer[i], g_Allocator);
+			g_Device.destroyFramebuffer(g_Framebuffer[i], g_Allocator);
+		}
+	if (g_RenderPass) {
+		//vkDestroyRenderPass(g_Device, g_RenderPass, g_Allocator);
+		g_Device.destroyRenderPass(g_RenderPass, g_Allocator);
+	}
 
     // Create Swapchain:
     {
         vk::SwapchainCreateInfoKHR info = {};
-        info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         info.surface = g_Surface;
         info.imageFormat = g_ImageFormat;
         info.imageColorSpace = g_ColorSpace;
         info.imageArrayLayers = 1;
-        info.imageUsage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-        info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        info.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
-        info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-        info.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+        info.imageUsage |= vk::ImageUsageFlagBits::eColorAttachment;
+        info.imageSharingMode = vk::SharingMode::eExclusive;
+        info.preTransform = vk::SurfaceTransformFlagBitsKHR::eIdentity;
+        info.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
+        info.presentMode = vk::PresentModeKHR::eFifo;
         info.clipped = VK_TRUE;
         info.oldSwapchain = old_swapchain;
         vk::SurfaceCapabilitiesKHR cap;
@@ -123,46 +132,48 @@ static void resize_vulkan(GLFWwindow* /*window*/, int w, int h)
     {
         vk::AttachmentDescription attachment = {};
         attachment.format = g_ViewFormat;
-        attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-        attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        vk::AttachmentReference color_attachment = {};
+        attachment.samples = vk::SampleCountFlagBits::e1;
+        attachment.loadOp = vk::AttachmentLoadOp::eClear;
+        attachment.storeOp = vk::AttachmentStoreOp::eStore;
+        attachment.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+        attachment.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+        attachment.initialLayout = vk::ImageLayout::eUndefined;
+        attachment.finalLayout = vk::ImageLayout::eColorAttachmentOptimal;
+
+        vk::AttachmentReference color_attachment;
         color_attachment.attachment = 0;
-        color_attachment.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        vk::SubpassDescription subpass = {};
-        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        color_attachment.layout = vk::ImageLayout::eColorAttachmentOptimal;
+
+        vk::SubpassDescription subpass;
+        subpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
         subpass.colorAttachmentCount = 1;
         subpass.pColorAttachments = &color_attachment;
         vk::RenderPassCreateInfo info = {};
-        info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
         info.attachmentCount = 1;
         info.pAttachments = &attachment;
         info.subpassCount = 1;
         info.pSubpasses = &subpass;
-        err = vkCreateRenderPass(g_Device, &info, g_Allocator, &g_RenderPass);
-        check_vk_result(err);
+        //err = vkCreateRenderPass(g_Device, &info, g_Allocator, &g_RenderPass);
+		g_RenderPass = g_Device.createRenderPass(info, g_Allocator);
+		//check_vk_result(err);
     }
 
     // Create The Image Views
     {
-        vk::ImageViewCreateInfo info = {};
-        info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        vk::ImageViewCreateInfo info;
+        info.viewType = vk::ImageViewType::e2D;
         info.format = g_ViewFormat;
-        info.components.r = VK_COMPONENT_SWIZZLE_R;
-        info.components.g = VK_COMPONENT_SWIZZLE_G;
-        info.components.b = VK_COMPONENT_SWIZZLE_B;
-        info.components.a = VK_COMPONENT_SWIZZLE_A;
+        info.components.r = vk::ComponentSwizzle::eR;
+        info.components.g = vk::ComponentSwizzle::eG;
+        info.components.b = vk::ComponentSwizzle::eB;
+        info.components.a = vk::ComponentSwizzle::eA;
         info.subresourceRange = g_ImageRange;
         for (uint32_t i = 0; i < g_BackBufferCount; i++)
         {
             info.image = g_BackBuffer[i];
-            err = vkCreateImageView(g_Device, &info, g_Allocator, &g_BackBufferView[i]);
-            check_vk_result(err);
+            //err = vkCreateImageView(g_Device, &info, g_Allocator, &g_BackBufferView[i]);
+			g_BackBufferView[i] = g_Device.createImageView(info, g_Allocator);
+            //check_vk_result(err);
         }
     }
 
@@ -170,7 +181,6 @@ static void resize_vulkan(GLFWwindow* /*window*/, int w, int h)
     {
         vk::ImageView attachment[1];
         vk::FramebufferCreateInfo info = {};
-        info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         info.renderPass = g_RenderPass;
         info.attachmentCount = 1;
         info.pAttachments = attachment;
@@ -180,7 +190,8 @@ static void resize_vulkan(GLFWwindow* /*window*/, int w, int h)
         for (uint32_t i = 0; i < g_BackBufferCount; i++)
         {
             attachment[0] = g_BackBufferView[i];
-            err = vkCreateFramebuffer(g_Device, &info, g_Allocator, &g_Framebuffer[i]);
+            //err = vkCreateFramebuffer(g_Device, &info, g_Allocator, &g_Framebuffer[i]);
+			g_Framebuffer[i] = g_Device.createFramebuffer(info, g_Allocator);
             check_vk_result(err);
         }
     }
@@ -195,7 +206,6 @@ static void setup_vulkan(GLFWwindow* window)
         uint32_t glfw_extensions_count;
         const char** glfw_extensions = glfwGetRequiredInstanceExtensions(&glfw_extensions_count);
         vk::InstanceCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         create_info.enabledExtensionCount = glfw_extensions_count;
         create_info.ppEnabledExtensionNames = glfw_extensions;
         err = vkCreateInstance(&create_info, g_Allocator, &g_Instance);
@@ -273,12 +283,11 @@ static void setup_vulkan(GLFWwindow* window)
         const uint32_t queue_count = 1;
         const float queue_priority[] = {1.0f};
         vk::DeviceQueueCreateInfo queue_info[1] = {};
-        queue_info[0].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         queue_info[0].queueFamilyIndex = g_QueueFamily;
         queue_info[0].queueCount = queue_count;
         queue_info[0].pQueuePriorities = queue_priority;
+
         vk::DeviceCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         create_info.queueCreateInfoCount = sizeof(queue_info)/sizeof(queue_info[0]);
         create_info.pQueueCreateInfos = queue_info;
         create_info.enabledExtensionCount = device_extension_count;
@@ -301,7 +310,6 @@ static void setup_vulkan(GLFWwindow* window)
     {
         {
             vk::CommandPoolCreateInfo info = {};
-            info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
             info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
             info.queueFamilyIndex = g_QueueFamily;
             err = vkCreateCommandPool(g_Device, &info, g_Allocator, &g_CommandPool[i]);
@@ -324,8 +332,7 @@ static void setup_vulkan(GLFWwindow* window)
             check_vk_result(err);
         }
         {
-            vk::SemaphoreCreateInfo info = {};
-            info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+			vk::SemaphoreCreateInfo info;
             err = vkCreateSemaphore(g_Device, &info, g_Allocator, &g_Semaphore[i]);
             check_vk_result(err);
         }
@@ -335,59 +342,75 @@ static void setup_vulkan(GLFWwindow* window)
     {
         vk::DescriptorPoolSize pool_size[11] =
         {
-            { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
-            { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
-            { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
-            { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
-            { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
-            { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
-            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
-            { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
-            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
-            { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
-            { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
+            { vk::DescriptorType::eSampler, 1000 },
+            { vk::DescriptorType::eCombinedImageSampler, 1000 },
+            { vk::DescriptorType::eSampledImage, 1000 },
+            { vk::DescriptorType::eStorageImage, 1000 },
+            { vk::DescriptorType::eUniformTexelBuffer, 1000 },
+            { vk::DescriptorType::eStorageTexelBuffer, 1000 },
+            { vk::DescriptorType::eUniformBuffer, 1000 },
+            { vk::DescriptorType::eStorageBuffer, 1000 },
+            { vk::DescriptorType::eUniformBufferDynamic, 1000 },
+            { vk::DescriptorType::eStorageBufferDynamic, 1000 },
+            { vk::DescriptorType::eInputAttachment, 1000 }
         };
-        vk::DescriptorPoolCreateInfo pool_info = {};
-        pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+		vk::DescriptorPoolCreateInfo pool_info;
+        pool_info.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
         pool_info.maxSets = 1000 * 11;
         pool_info.poolSizeCount = 11;
         pool_info.pPoolSizes = pool_size;
-        err = vkCreateDescriptorPool(g_Device, &pool_info, g_Allocator, &g_DescriptorPool);
-        check_vk_result(err);
+        //err = vkCreateDescriptorPool(g_Device, &pool_info, g_Allocator, &g_DescriptorPool);
+		g_DescriptorPool = g_Device.createDescriptorPool(pool_info, g_Allocator);
+        //check_vk_result(err);
     }
 }
 
-static void cleanup_vulkan()
-{
-    vkDestroyDescriptorPool(g_Device, g_DescriptorPool, g_Allocator);
-    for (int i = 0; i < IMGUI_VK_QUEUED_FRAMES; i++)
-    {
-        vkDestroyFence(g_Device, g_Fence[i], g_Allocator);
-        vkFreeCommandBuffers(g_Device, g_CommandPool[i], 1, &g_CommandBuffer[i]);
-        vkDestroyCommandPool(g_Device, g_CommandPool[i], g_Allocator);
-        vkDestroySemaphore(g_Device, g_Semaphore[i], g_Allocator);
+static void cleanup_vulkan() {
+    //vkDestroyDescriptorPool(g_Device, g_DescriptorPool, g_Allocator);
+	g_Device.destroyDescriptorPool(g_DescriptorPool, g_Allocator);
+
+    for (int i = 0; i < IMGUI_VK_QUEUED_FRAMES; i++) {
+        //vkDestroyFence(g_Device, g_Fence[i], g_Allocator);
+		g_Device.destroyFence(g_Fence[i], g_Allocator);
+        //vkFreeCommandBuffers(g_Device, g_CommandPool[i], 1, &g_CommandBuffer[i]);
+		g_Device.freeCommandBuffers(g_CommandPool[i], 1, &g_CommandBuffer[i]);
+        //vkDestroyCommandPool(g_Device, g_CommandPool[i], g_Allocator);
+		g_Device.destroyCommandPool(g_CommandPool[i], g_Allocator);
+        //vkDestroySemaphore(g_Device, g_Semaphore[i], g_Allocator);
+		g_Device.destroySemaphore(g_Semaphore[i], g_Allocator);
     }
     for (uint32_t i = 0; i < g_BackBufferCount; i++)
     {
-        vkDestroyImageView(g_Device, g_BackBufferView[i], g_Allocator);
-        vkDestroyFramebuffer(g_Device, g_Framebuffer[i], g_Allocator);
+        //vkDestroyImageView(g_Device, g_BackBufferView[i], g_Allocator);
+		g_Device.destroyImageView(g_BackBufferView[i], g_Allocator);
+        //vkDestroyFramebuffer(g_Device, g_Framebuffer[i], g_Allocator);
+		g_Device.destroyFramebuffer(g_Framebuffer[i], g_Allocator);
     }
-    vkDestroyRenderPass(g_Device, g_RenderPass, g_Allocator);
-    vkDestroySwapchainKHR(g_Device, g_Swapchain, g_Allocator);
-    vkDestroySurfaceKHR(g_Instance, g_Surface, g_Allocator);
-    vkDestroyDevice(g_Device, g_Allocator);
-    vkDestroyInstance(g_Instance, g_Allocator);
+    //vkDestroyRenderPass(g_Device, g_RenderPass, g_Allocator);
+	g_Device.destroyRenderPass(g_RenderPass, g_Allocator);
+    //vkDestroySwapchainKHR(g_Device, g_Swapchain, g_Allocator);
+	g_Device.destroySwapchainKHR(g_Swapchain, g_Allocator);
+    //vkDestroySurfaceKHR(g_Instance, g_Surface, g_Allocator);
+	g_Instance.destroySurfaceKHR(g_Surface, g_Allocator);
+    //vkDestroyDevice(g_Device, g_Allocator);
+	g_Device.destroy(g_Allocator);
+    //vkDestroyInstance(g_Instance, g_Allocator);
+	g_Instance.destroy(g_Allocator);
 }
 
 static void frame_begin()
 {
     vk::Result err;
-    while (true)
-    {
-        err = vkWaitForFences(g_Device, 1, &g_Fence[g_FrameIndex], VK_TRUE, 100);
-        if (err == VK_SUCCESS) break;
-        if (err == VK_TIMEOUT) continue;
+    while (true) {
+        //err = vkWaitForFences(g_Device, 1, &g_Fence[g_FrameIndex], VK_TRUE, 100);
+		g_Device.waitForFences(1, &g_Fence[g_FrameIndex], VK_TRUE, 100);
+
+		if (err == VK_SUCCESS) {
+			break;
+		}
+		if (err == VK_TIMEOUT) {
+			continue;
+		}
         check_vk_result(err);
     }
     {
@@ -395,24 +418,26 @@ static void frame_begin()
         check_vk_result(err);
     }
     {
-        err = vkResetCommandPool(g_Device, g_CommandPool[g_FrameIndex], 0);
-        check_vk_result(err);
-        vk::CommandBufferBeginInfo info = {};
-        info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        err = vkBeginCommandBuffer(g_CommandBuffer[g_FrameIndex], &info);
-        check_vk_result(err);
+        //err = vkResetCommandPool(g_Device, g_CommandPool[g_FrameIndex], 0);
+		g_Device.resetCommandPool(g_CommandPool[g_FrameIndex], {});
+        //check_vk_result(err);
+
+		vk::CommandBufferBeginInfo info;
+        info.flags |= vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+        //err = vkBeginCommandBuffer(g_CommandBuffer[g_FrameIndex], &info);
+		g_CommandBuffer[g_FrameIndex].begin(info);
+        //check_vk_result(err);
     }
     {
-        vk::RenderPassBeginInfo info = {};
-        info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		vk::RenderPassBeginInfo info;
         info.renderPass = g_RenderPass;
         info.framebuffer = g_Framebuffer[g_BackBufferIndex];
         info.renderArea.extent.width = fb_width;
         info.renderArea.extent.height = fb_height;
         info.clearValueCount = 1;
         info.pClearValues = &g_ClearValue;
-        vkCmdBeginRenderPass(g_CommandBuffer[g_FrameIndex], &info, VK_SUBPASS_CONTENTS_INLINE);
+        //vkCmdBeginRenderPass(g_CommandBuffer[g_FrameIndex], &info, VK_SUBPASS_CONTENTS_INLINE);
+		g_CommandBuffer[g_FrameIndex].beginRenderPass(info, vk::SubpassContents::eInline);
     }
 }
 
@@ -421,8 +446,7 @@ static void frame_end()
     vk::Result err;
     vkCmdEndRenderPass(g_CommandBuffer[g_FrameIndex]);
     {
-        vk::ImageMemoryBarrier barrier = {};
-        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        vk::ImageMemoryBarrier barrier;
         barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
         barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
         barrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -454,8 +478,7 @@ static void frame_end()
         vk::Result res;
         vk::SwapchainKHR swapchains[1] = {g_Swapchain};
         uint32_t indices[1] = {g_BackBufferIndex};
-        vk::PresentInfoKHR info = {};
-        info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+		vk::PresentInfoKHR info;
         info.swapchainCount = 1;
         info.pSwapchains = swapchains;
         info.pImageIndices = indices;
@@ -475,20 +498,20 @@ static void error_callback(int error, const char* description)
 int main(int, char**)
 {
     // Setup window
-    glfwSetErrorCallback(error_callback);
-    if (!glfwInit())
-        return 1;
+    //glfwSetErrorCallback(error_callback);
+	//if (!glfwInit()) {
+	//	return 1;
+	//}
 
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "ImGui Vulkan example", NULL, NULL);
+    //glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    //GLFWwindow* window = glfwCreateWindow(1280, 720, "ImGui Vulkan example", NULL, NULL);
 
     // Setup Vulkan
-    if (!glfwVulkanSupported())
-    {
-        printf("GLFW: Vulkan Not Supported\n");
-        return 1;
-    }
-    setup_vulkan(window);
+    //if (!glfwVulkanSupported()) {
+    //    printf("GLFW: Vulkan Not Supported\n");
+    //    return 1;
+    //}
+    //setup_vulkan(window);
 
     // Setup ImGui binding
     ImGui_ImplGlfwVulkan_Init_Data init_data = {};
@@ -514,27 +537,30 @@ int main(int, char**)
     // Upload Fonts
     {
         vk::Result err;
-        err = vkResetCommandPool(g_Device, g_CommandPool[g_FrameIndex], 0);
-        check_vk_result(err);
-        vk::CommandBufferBeginInfo begin_info = {};
-        begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        begin_info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        err = vkBeginCommandBuffer(g_CommandBuffer[g_FrameIndex], &begin_info);
-        check_vk_result(err);
+        //err = vkResetCommandPool(g_Device, g_CommandPool[g_FrameIndex], 0);
+		g_Device.resetCommandPool(g_CommandPool[g_FrameIndex], {});
+        //check_vk_result(err);
+        vk::CommandBufferBeginInfo begin_info;
+        begin_info.flags |= vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+        //err = vkBeginCommandBuffer(g_CommandBuffer[g_FrameIndex], &begin_info);
+		g_CommandBuffer[g_FrameIndex].begin(begin_info);
+        //check_vk_result(err);
 
         ImGui_ImplGlfwVulkan_CreateFontsTexture(g_CommandBuffer[g_FrameIndex]);
 
-        vk::SubmitInfo end_info = {};
-        end_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        vk::SubmitInfo end_info;
         end_info.commandBufferCount = 1;
         end_info.pCommandBuffers = &g_CommandBuffer[g_FrameIndex];
-        err = vkEndCommandBuffer(g_CommandBuffer[g_FrameIndex]);
-        check_vk_result(err);
-        err = vkQueueSubmit(g_Queue, 1, &end_info, VK_NULL_HANDLE);
-        check_vk_result(err);
+        //err = vkEndCommandBuffer(g_CommandBuffer[g_FrameIndex]);
+		g_CommandBuffer[g_FrameIndex].end();
+        //check_vk_result(err);
+        //err = vkQueueSubmit(g_Queue, 1, &end_info, VK_NULL_HANDLE);
+		g_Queue.submit(1, &end_info, VK_NULL_HANDLE);
+        //check_vk_result(err);
 
-        err = vkDeviceWaitIdle(g_Device);
-        check_vk_result(err);
+        //err = vkDeviceWaitIdle(g_Device);
+		g_Device.waitIdle();
+        //check_vk_result(err);
         ImGui_ImplGlfwVulkan_InvalidateFontUploadObjects();
     }
 
@@ -543,9 +569,9 @@ int main(int, char**)
     ImVec4 clear_color = ImColor(114, 144, 154);
 
     // Main loop
-    while (!glfwWindowShouldClose(window))
-    {
-        glfwPollEvents();
+    //while (!glfwWindowShouldClose(window)) {
+	while(true) {
+        //glfwPollEvents();
         ImGui_ImplGlfwVulkan_NewFrame();
 
         // 1. Show a simple window
@@ -561,8 +587,7 @@ int main(int, char**)
         }
 
         // 2. Show another simple window, this time using an explicit Begin/End pair
-        if (show_another_window)
-        {
+        if (show_another_window) {
             ImGui::SetNextWindowSize(ImVec2(200,100), ImGuiSetCond_FirstUseEver);
             ImGui::Begin("Another Window", &show_another_window);
             ImGui::Text("Hello");
@@ -570,8 +595,7 @@ int main(int, char**)
         }
 
         // 3. Show the ImGui test window. Most of the sample code is in ImGui::ShowTestWindow()
-        if (show_test_window)
-        {
+        if (show_test_window) {
             ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
             ImGui::ShowTestWindow(&show_test_window);
         }
@@ -587,11 +611,13 @@ int main(int, char**)
     }
 
     // Cleanup
-    vk::Result err = vkDeviceWaitIdle(g_Device);
-    check_vk_result(err);
+    //vk::Result err = vkDeviceWaitIdle(g_Device);
+	g_Device.waitIdle();
+    //check_vk_result(err);
     ImGui_ImplGlfwVulkan_Shutdown();
     cleanup_vulkan();
-    glfwTerminate();
+    
+	//glfwTerminate();
 
     return 0;
 }

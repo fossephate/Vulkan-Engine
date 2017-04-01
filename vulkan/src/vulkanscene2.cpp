@@ -824,6 +824,37 @@ class VulkanExample : public vkx::vulkanApp {
 		//	vkx::descriptorPoolCreateInfo(descriptorPoolSizesDeferred2.size(), descriptorPoolSizesDeferred2.data(), /*2*//*max descriptor sets:*/4);
 		//rscs.descriptorPools->add("deferred.deferred2", descriptorPoolCreateInfoDeferred2);
 
+
+
+		//{
+		//	/* IMGUI */
+		//	/* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ */
+
+		//	std::vector<vk::DescriptorPoolSize> descriptorPoolSizesImGUI =
+		//	{
+		//		vkx::descriptorPoolSize(vk::DescriptorType::eSampler, 1000),
+		//		vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 1000),
+		//		vkx::descriptorPoolSize(vk::DescriptorType::eSampledImage, 1000),
+		//		vkx::descriptorPoolSize(vk::DescriptorType::eStorageImage, 1000),
+		//		vkx::descriptorPoolSize(vk::DescriptorType::eUniformTexelBuffer, 1000),
+		//		vkx::descriptorPoolSize(vk::DescriptorType::eStorageTexelBuffer, 1000),
+		//		vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 1000),
+		//		vkx::descriptorPoolSize(vk::DescriptorType::eStorageBuffer, 1000),
+		//		vkx::descriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1000),
+		//		vkx::descriptorPoolSize(vk::DescriptorType::eStorageBufferDynamic, 1000),
+		//		vkx::descriptorPoolSize(vk::DescriptorType::eInputAttachment, 1000),
+		//	};
+
+		//	// create DescriptorPoolCreateInfo manually:
+		//	vk::DescriptorPoolCreateInfo descriptorPoolCreateInfoImGUI;
+		//	descriptorPoolCreateInfoImGUI.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
+		//	descriptorPoolCreateInfoImGUI.maxSets = 1000 * 11;
+		//	descriptorPoolCreateInfoImGUI.poolSizeCount = 11;
+		//	descriptorPoolCreateInfoImGUI.pPoolSizes = descriptorPoolSizesImGUI.data();
+
+		//	rscs.descriptorPools->add("imgui", descriptorPoolCreateInfoImGUI);
+		//}
+
 	}
 
 
@@ -1369,15 +1400,6 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-		//// Textured quad descriptor set
-		//vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo7 =
-		//	vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred.deferred"), &rscs.descriptorSetLayouts->get("deferred.deferred"), 1);
-
-		//// deferred descriptor set = 0, binding = 0
-		//rscs.descriptorSets->add("deferred.basic", descriptorSetAllocateInfo7);
-
-
-
 
 
 
@@ -1554,16 +1576,6 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// ------------------------------------------------------------------------------------------
 		// SSAO Blur
-
-
-		//// descriptor set 
-		//vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo10 =
-		//	vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred.deferred"), &rscs.descriptorSetLayouts->get("offscreen.ssao.blur"), 1);
-		//rscs.descriptorSets->add("offscreen.ssao.blur", descriptorSetAllocateInfo10);
-
-		//vk::DescriptorImageInfo texDescriptorSSAOBlur =
-		//	vkx::descriptorImageInfo(offscreen.framebuffers[0].attachments[0].sampler, offscreen.framebuffers[1].attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
-		////vkx::descriptorImageInfo(offscreen.framebuffers[0].colors[0].sampler, offscreen.framebuffers[1].attachments[0].view, vk::ImageLayout::eGeneral);
 
 
 		// descriptor set 
