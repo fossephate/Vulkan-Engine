@@ -2337,7 +2337,7 @@ class VulkanExample : public vkx::vulkanApp {
 		}
 
 
-		for (int i = 0; i < 0; ++i) {
+		for (int i = 0; i < 2; ++i) {
 
 			auto testSkinnedMesh = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
 			testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");
