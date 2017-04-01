@@ -224,6 +224,7 @@ class VulkanExample : public vkx::vulkanApp {
 		glm::mat4 model;
 		uint32_t boneIndex;
 		glm::vec3 padding;
+		glm::vec4 padding2[3];
 		glm::mat4 g1;
 		glm::mat4 g2;
 	};
