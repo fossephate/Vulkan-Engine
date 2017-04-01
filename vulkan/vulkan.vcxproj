@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="include\external\imgui\vk\imgui_impl_glfw_vulkan.cpp" />
     <ClCompile Include="src\bulletClasses\PhysicsManager.cpp" />
     <ClCompile Include="src\bulletClasses\PhysicsObject.cpp" />
     <ClCompile Include="src\vulkanClasses\camera.cpp" />
@@ -42,6 +43,7 @@
     <ClInclude Include="include\base\Object3D.h" />
     <ClInclude Include="include\bulletClasses\PhysicsManager.h" />
     <ClInclude Include="include\bulletClasses\PhysicsObject.h" />
+    <ClInclude Include="include\external\imgui\vk\imgui_impl_glfw_vulkan.h" />
     <ClInclude Include="include\vulkanClasses\camera.h" />
     <ClInclude Include="include\vulkanClasses\common.h" />
     <ClInclude Include="include\vulkanClasses\easings.h" />
@@ -146,7 +148,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;VK_USE_PLATFORM_WIN32_KHR;_USE_MATH_DEFINES;NOMINMAX;_CRT_SECURE_NO_WARNINGS;_DEBUG</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\include\vulkanClasses;$(SolutionDir)\$(ProjectName)\include\external\openvr;$(SolutionDir)\$(ProjectName)\include\external\bullet</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\include\vulkanClasses;$(SolutionDir)\$(ProjectName)\include\external\openvr;$(SolutionDir)\$(ProjectName)\include\external\bullet;$(SolutionDir)\$(ProjectName)\include\external\imgui</AdditionalIncludeDirectories>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
@@ -176,7 +178,7 @@ call generate-spirv.bat</Command>
       <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
       <OpenMPSupport>true</OpenMPSupport>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\include\vulkanClasses;$(SolutionDir)\$(ProjectName)\include\external\openvr;$(SolutionDir)\$(ProjectName)\include\external\bullet</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\include\vulkanClasses;$(SolutionDir)\$(ProjectName)\include\external\openvr;$(SolutionDir)\$(ProjectName)\include\external\bullet;$(SolutionDir)\$(ProjectName)\include\external\imgui</AdditionalIncludeDirectories>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
@@ -207,7 +209,7 @@ call generate-spirv.bat</Command>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;VK_USE_PLATFORM_WIN32_KHR;_USE_MATH_DEFINES;NOMINMAX;_CRT_SECURE_NO_WARNINGS;NDEBUG</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\include\vulkanClasses;$(SolutionDir)\$(ProjectName)\include\external\openvr;$(SolutionDir)\$(ProjectName)\include\external\bullet</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\include\vulkanClasses;$(SolutionDir)\$(ProjectName)\include\external\openvr;$(SolutionDir)\$(ProjectName)\include\external\bullet;$(SolutionDir)\$(ProjectName)\include\external\imgui</AdditionalIncludeDirectories>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <Link>
@@ -237,7 +239,7 @@ call generate-spirv.bat</Command>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PreprocessorDefinitions>WIN32;_WINDOWS;VK_USE_PLATFORM_WIN32_KHR;_USE_MATH_DEFINES;NOMINMAX;_CRT_SECURE_NO_WARNINGS;NDEBUG</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\include\vulkanClasses;$(SolutionDir)\$(ProjectName)\include\external\openvr;$(SolutionDir)\$(ProjectName)\include\external\bullet</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\$(ProjectName)\include\vulkanClasses;$(SolutionDir)\$(ProjectName)\include\external\openvr;$(SolutionDir)\$(ProjectName)\include\external\bullet;$(SolutionDir)\$(ProjectName)\include\external\imgui</AdditionalIncludeDirectories>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <Link>
