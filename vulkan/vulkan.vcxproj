@@ -19,6 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="include\external\imgui\imgui.cpp" />
+    <ClCompile Include="include\external\imgui\imgui_demo.cpp" />
+    <ClCompile Include="include\external\imgui\imgui_draw.cpp" />
     <ClCompile Include="include\external\imgui\vk\imgui_impl_glfw_vulkan.cpp" />
     <ClCompile Include="include\external\imgui\vk\main.cpp" />
     <ClCompile Include="src\bulletClasses\PhysicsManager.cpp" />
@@ -38,12 +41,17 @@
     <ClCompile Include="src\vulkanClasses\vulkanTextOverlay.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTextureLoader.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTools.cpp" />
-    <ClCompile Include="src\vulkanscene2.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\base\Object3D.h" />
     <ClInclude Include="include\bulletClasses\PhysicsManager.h" />
     <ClInclude Include="include\bulletClasses\PhysicsObject.h" />
+    <ClInclude Include="include\external\imgui\imconfig.h" />
+    <ClInclude Include="include\external\imgui\imgui.h" />
+    <ClInclude Include="include\external\imgui\imgui_internal.h" />
+    <ClInclude Include="include\external\imgui\stb_rect_pack.h" />
+    <ClInclude Include="include\external\imgui\stb_textedit.h" />
+    <ClInclude Include="include\external\imgui\stb_truetype.h" />
     <ClInclude Include="include\external\imgui\vk\imgui_impl_glfw_vulkan.h" />
     <ClInclude Include="include\vulkanClasses\camera.h" />
     <ClInclude Include="include\vulkanClasses\common.h" />

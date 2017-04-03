@@ -15,6 +15,9 @@ struct GLFWwindow;
 //#include <vulkan/vulkan.hpp>
 #include "../../vulkan/vulkan.hpp"
 
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_syswm.h>
+
 
 
 #define IMGUI_VK_QUEUED_FRAMES 2
@@ -30,7 +33,8 @@ struct ImGui_ImplGlfwVulkan_Init_Data
     void (*check_vk_result)(vk::Result err);
 };
 
-IMGUI_API bool        ImGui_ImplGlfwVulkan_Init(GLFWwindow* window, bool install_callbacks, ImGui_ImplGlfwVulkan_Init_Data *init_data);
+//IMGUI_API bool        ImGui_ImplGlfwVulkan_Init(GLFWwindow* window, bool install_callbacks, ImGui_ImplGlfwVulkan_Init_Data *init_data);
+IMGUI_API bool        ImGui_ImplGlfwVulkan_Init(SDL_Window* window, bool install_callbacks, ImGui_ImplGlfwVulkan_Init_Data *init_data);
 IMGUI_API void        ImGui_ImplGlfwVulkan_Shutdown();
 IMGUI_API void        ImGui_ImplGlfwVulkan_NewFrame();
 IMGUI_API void        ImGui_ImplGlfwVulkan_Render(vk::CommandBuffer command_buffer);

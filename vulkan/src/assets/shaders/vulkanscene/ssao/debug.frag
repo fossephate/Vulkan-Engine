@@ -6,7 +6,7 @@
 layout (set = 3, binding = 1) uniform sampler2D samplerPosition;
 layout (set = 3, binding = 2) uniform sampler2D samplerNormal;
 layout (set = 3, binding = 3) uniform usampler2D samplerAlbedo;
-layout (set = 3, binding = 5) uniform sampler2D samplerSSAO;
+layout (set = 3, binding = 4) uniform sampler2D samplerSSAO;
 
 layout (location = 0) in vec3 inUV;// vec3
 

@@ -19,6 +19,9 @@
 //#include <GLFW/glfw3native.h>
 #endif
 
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_syswm.h>
+
 
 //#include <imgui/imgui.h>
 #include "../imgui.h"
@@ -29,8 +32,11 @@
 
 #include "imgui_impl_glfw_vulkan.h"
 
-// GLFW Data
-static GLFWwindow*  g_Window = NULL;
+// SDL2 Data
+//static GLFWwindow*  g_Window = NULL;
+static SDL_Window*  g_Window = nullptr;
+static SDL_SysWMinfo* g_WindowInfo = nullptr;
+
 static double       g_Time = 0.0f;
 static bool         g_MousePressed[3] = { false, false, false };
 static float        g_MouseWheel = 0.0f;
@@ -360,12 +366,12 @@ void ImGui_ImplGlfwVulkan_RenderDrawLists(ImDrawData* draw_data)
     }
 }
 
-static const char* ImGui_ImplGlfwVulkan_GetClipboardText(void* user_data) {
-    //return glfwGetClipboardString((GLFWwindow*)user_data);
+static const char* ImGui_ImplGlfwVulkan_GetClipboardText(void*) {
+	return SDL_GetClipboardText();
 }
 
-static void ImGui_ImplGlfwVulkan_SetClipboardText(void* user_data, const char* text) {
-    //glfwSetClipboardString((GLFWwindow*)user_data, text);
+static void ImGui_ImplGlfwVulkan_SetClipboardText(void*, const char* text) {
+	SDL_SetClipboardText(text);
 }
 
 void ImGui_ImplGlfwVulkan_MouseButtonCallback(GLFWwindow*, int button, int action, int /*mods*/) {
@@ -395,10 +401,10 @@ void ImGui_ImplGlfwVulkan_KeyCallback(GLFWwindow*, int key, int, int action, int
 }
 
 void ImGui_ImplGlfwVulkan_CharCallback(GLFWwindow*, unsigned int c) {
- //   ImGuiIO& io = ImGui::GetIO();
-	//if (c > 0 && c < 0x10000) {
-	//	io.AddInputCharacter((unsigned short)c);
-	//}
+	ImGuiIO& io = ImGui::GetIO();
+	if (c > 0 && c < 0x10000) {
+		io.AddInputCharacter((unsigned short)c);
+	}
 }
 
 bool ImGui_ImplGlfwVulkan_CreateFontsTexture(vk::CommandBuffer command_buffer) {
@@ -508,100 +514,107 @@ bool ImGui_ImplGlfwVulkan_CreateFontsTexture(vk::CommandBuffer command_buffer) {
     // Upload to Buffer:
     {
         char* map = NULL;
-        err = vkMapMemory(g_Device, g_UploadBufferMemory, 0, upload_size, 0, (void**)(&map));
-        ImGui_ImplGlfwVulkan_VkResult(err);
-        memcpy(map, pixels, upload_size);
-        vk::MappedMemoryRange range[1] = {};
+        //err = vkMapMemory(g_Device, g_UploadBufferMemory, 0, upload_size, 0, (void**)(&map));
+		map = (char*)g_Device.mapMemory(g_UploadBufferMemory, 0, upload_size, {});
+		//ImGui_ImplGlfwVulkan_VkResult(err);
+        
+		memcpy(map, pixels, upload_size);
+        vk::MappedMemoryRange range[1];
         range[0].memory = g_UploadBufferMemory;
         range[0].size = upload_size;
-        err = vkFlushMappedMemoryRanges(g_Device, 1, range);
-        ImGui_ImplGlfwVulkan_VkResult(err);
+        //err = vkFlushMappedMemoryRanges(g_Device, 1, range);
+		g_Device.flushMappedMemoryRanges(1, range);
+		//ImGui_ImplGlfwVulkan_VkResult(err);
+
         vkUnmapMemory(g_Device, g_UploadBufferMemory);
     }
     // Copy to Image:
     {
-        VkImageMemoryBarrier copy_barrier[1] = {};
-        copy_barrier[0].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        copy_barrier[0].dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        copy_barrier[0].oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        copy_barrier[0].newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        vk::ImageMemoryBarrier copy_barrier[1];
+        copy_barrier[0].dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+        copy_barrier[0].oldLayout = vk::ImageLayout::eUndefined;
+        copy_barrier[0].newLayout = vk::ImageLayout::eTransferDstOptimal;
         copy_barrier[0].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         copy_barrier[0].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         copy_barrier[0].image = g_FontImage;
-        copy_barrier[0].subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        copy_barrier[0].subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
         copy_barrier[0].subresourceRange.levelCount = 1;
         copy_barrier[0].subresourceRange.layerCount = 1;
-        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1, copy_barrier);
+        //vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1, copy_barrier);
+		command_buffer.pipelineBarrier(vk::PipelineStageFlagBits::eHost, vk::PipelineStageFlagBits::eTransfer, {}, 0, nullptr, 0, nullptr, 1, copy_barrier);
 
-        VkBufferImageCopy region = {};
-        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        vk::BufferImageCopy region;
+        region.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
         region.imageSubresource.layerCount = 1;
         region.imageExtent.width = width;
         region.imageExtent.height = height;
-        vkCmdCopyBufferToImage(command_buffer, g_UploadBuffer, g_FontImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+        //vkCmdCopyBufferToImage(command_buffer, g_UploadBuffer, g_FontImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+		command_buffer.copyBufferToImage(g_UploadBuffer, g_FontImage, vk::ImageLayout::eTransferDstOptimal, 1, &region);
 
-        VkImageMemoryBarrier use_barrier[1] = {};
-        use_barrier[0].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        use_barrier[0].srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        use_barrier[0].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-        use_barrier[0].oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        use_barrier[0].newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        vk::ImageMemoryBarrier use_barrier[1];
+        use_barrier[0].srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+        use_barrier[0].dstAccessMask = vk::AccessFlagBits::eShaderRead;
+        use_barrier[0].oldLayout = vk::ImageLayout::eTransferDstOptimal;
+        use_barrier[0].newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
         use_barrier[0].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         use_barrier[0].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         use_barrier[0].image = g_FontImage;
-        use_barrier[0].subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        use_barrier[0].subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
         use_barrier[0].subresourceRange.levelCount = 1;
         use_barrier[0].subresourceRange.layerCount = 1;
-        vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, NULL, 0, NULL, 1, use_barrier);
+        //vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, NULL, 0, NULL, 1, use_barrier);
+		command_buffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, {}, 0, nullptr, 0, nullptr, 1, use_barrier);
     }
 
     // Store our identifier
-    io.Fonts->TexID = (void *)(intptr_t)g_FontImage;
+    //io.Fonts->TexID = (void *)(intptr_t)g_FontImage;
+	io.Fonts->TexID = (void *)(intptr_t)(VkImage)g_FontImage;// this might not work
 
     return true;
 }
 
 bool ImGui_ImplGlfwVulkan_CreateDeviceObjects() {
-    VkResult err;
-    VkShaderModule vert_module;
-    VkShaderModule frag_module;
+    vk::Result err;
+    vk::ShaderModule vert_module;
+    vk::ShaderModule frag_module;
 
     // Create The Shader Modules:
     {
-        VkShaderModuleCreateInfo vert_info = {};
-        vert_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        vk::ShaderModuleCreateInfo vert_info;
         vert_info.codeSize = sizeof(__glsl_shader_vert_spv);
         vert_info.pCode = (uint32_t*)__glsl_shader_vert_spv;
-        err = vkCreateShaderModule(g_Device, &vert_info, g_Allocator, &vert_module);
-        ImGui_ImplGlfwVulkan_VkResult(err);
-        VkShaderModuleCreateInfo frag_info = {};
-        frag_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        //err = vkCreateShaderModule(g_Device, &vert_info, g_Allocator, &vert_module);
+		vert_module = g_Device.createShaderModule(vert_info, g_Allocator);
+        //ImGui_ImplGlfwVulkan_VkResult(err);
+
+        vk::ShaderModuleCreateInfo frag_info;
         frag_info.codeSize = sizeof(__glsl_shader_frag_spv);
         frag_info.pCode = (uint32_t*)__glsl_shader_frag_spv;
-        err = vkCreateShaderModule(g_Device, &frag_info, g_Allocator, &frag_module);
-        ImGui_ImplGlfwVulkan_VkResult(err);
+        //err = vkCreateShaderModule(g_Device, &frag_info, g_Allocator, &frag_module);
+		frag_module = g_Device.createShaderModule(frag_info, g_Allocator);
+        //ImGui_ImplGlfwVulkan_VkResult(err);
     }
 
     if (!g_FontSampler)
     {
-        VkSamplerCreateInfo info = {};
-        info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        info.magFilter = VK_FILTER_LINEAR;
-        info.minFilter = VK_FILTER_LINEAR;
-        info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-        info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        vk::SamplerCreateInfo info;
+        info.magFilter = vk::Filter::eLinear;
+        info.minFilter = vk::Filter::eLinear;
+        info.mipmapMode = vk::SamplerMipmapMode::eLinear;
+        info.addressModeU = vk::SamplerAddressMode::eRepeat;
+        info.addressModeV = vk::SamplerAddressMode::eRepeat;
+        info.addressModeW = vk::SamplerAddressMode::eRepeat;
         info.minLod = -1000;
         info.maxLod = 1000;
-        err = vkCreateSampler(g_Device, &info, g_Allocator, &g_FontSampler);
-        ImGui_ImplGlfwVulkan_VkResult(err);
+        //err = vkCreateSampler(g_Device, &info, g_Allocator, &g_FontSampler);
+		g_FontSampler = g_Device.createSampler(info, g_Allocator);
+        //ImGui_ImplGlfwVulkan_VkResult(err);
     }
 
     if (!g_DescriptorSetLayout)
     {
         vk::Sampler sampler[1] = {g_FontSampler};
-        vk::DescriptorSetLayoutBinding binding[1] = {};
+        vk::DescriptorSetLayoutBinding binding[1];
         binding[0].descriptorType = vk::DescriptorType::eCombinedImageSampler;
         binding[0].descriptorCount = 1;
         binding[0].stageFlags = vk::ShaderStageFlagBits::eFragment;
@@ -609,8 +622,9 @@ bool ImGui_ImplGlfwVulkan_CreateDeviceObjects() {
         vk::DescriptorSetLayoutCreateInfo info = {};
         info.bindingCount = 1;
         info.pBindings = binding;
-        err = vkCreateDescriptorSetLayout(g_Device, &info, g_Allocator, &g_DescriptorSetLayout);
-        ImGui_ImplGlfwVulkan_VkResult(err);
+        //err = vkCreateDescriptorSetLayout(g_Device, &info, g_Allocator, &g_DescriptorSetLayout);
+		g_DescriptorSetLayout = g_Device.createDescriptorSetLayout(info, g_Allocator);
+        //ImGui_ImplGlfwVulkan_VkResult(err);
     }
 
     // Create Descriptor Set:
@@ -619,8 +633,9 @@ bool ImGui_ImplGlfwVulkan_CreateDeviceObjects() {
         alloc_info.descriptorPool = g_DescriptorPool;
         alloc_info.descriptorSetCount = 1;
         alloc_info.pSetLayouts = &g_DescriptorSetLayout;
-        err = vkAllocateDescriptorSets(g_Device, &alloc_info, &g_DescriptorSet);
-        ImGui_ImplGlfwVulkan_VkResult(err);
+        //err = vkAllocateDescriptorSets(g_Device, &alloc_info, &g_DescriptorSet);
+		g_Device.allocateDescriptorSets(&alloc_info, &g_DescriptorSet);
+        //ImGui_ImplGlfwVulkan_VkResult(err);
     }
 
     if (!g_PipelineLayout)
@@ -640,7 +655,7 @@ bool ImGui_ImplGlfwVulkan_CreateDeviceObjects() {
         //ImGui_ImplGlfwVulkan_VkResult(err);
     }
 
-    vk::PipelineShaderStageCreateInfo stage[2] = {};
+    vk::PipelineShaderStageCreateInfo stage[2];
     stage[0].stage = vk::ShaderStageFlagBits::eVertex;
     stage[0].module = vert_module;
     stage[0].pName = "main";
@@ -688,32 +703,28 @@ bool ImGui_ImplGlfwVulkan_CreateDeviceObjects() {
     vk::PipelineMultisampleStateCreateInfo ms_info;
     ms_info.rasterizationSamples = vk::SampleCountFlagBits::e1;
 
-    VkPipelineColorBlendAttachmentState color_attachment[1] = {};
+    vk::PipelineColorBlendAttachmentState color_attachment[1];
     color_attachment[0].blendEnable = VK_TRUE;
-    color_attachment[0].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-    color_attachment[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-    color_attachment[0].colorBlendOp = VK_BLEND_OP_ADD;
-    color_attachment[0].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-    color_attachment[0].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-    color_attachment[0].alphaBlendOp = VK_BLEND_OP_ADD;
-    color_attachment[0].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+    color_attachment[0].srcColorBlendFactor = vk::BlendFactor::eSrcAlpha;
+    color_attachment[0].dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha;
+    color_attachment[0].colorBlendOp = vk::BlendOp::eAdd;
+    color_attachment[0].srcAlphaBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha;
+    color_attachment[0].dstAlphaBlendFactor = vk::BlendFactor::eZero;
+    color_attachment[0].alphaBlendOp = vk::BlendOp::eAdd;
+    color_attachment[0].colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
 
-    VkPipelineDepthStencilStateCreateInfo depth_info = {};
-    depth_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    vk::PipelineDepthStencilStateCreateInfo depth_info;
 
-    VkPipelineColorBlendStateCreateInfo blend_info = {};
-    blend_info.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    vk::PipelineColorBlendStateCreateInfo blend_info;
     blend_info.attachmentCount = 1;
     blend_info.pAttachments = color_attachment;
 
-    VkDynamicState dynamic_states[2] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
-    VkPipelineDynamicStateCreateInfo dynamic_state = {};
-    dynamic_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    vk::DynamicState dynamic_states[2] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+    vk::PipelineDynamicStateCreateInfo dynamic_state;
     dynamic_state.dynamicStateCount = 2;
     dynamic_state.pDynamicStates = dynamic_states;
 
-    VkGraphicsPipelineCreateInfo info = {};
-    info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    vk::GraphicsPipelineCreateInfo info;
     info.flags = g_PipelineCreateFlags;
     info.stageCount = 2;
     info.pStages = stage;
@@ -727,8 +738,9 @@ bool ImGui_ImplGlfwVulkan_CreateDeviceObjects() {
     info.pDynamicState = &dynamic_state;
     info.layout = g_PipelineLayout;
     info.renderPass = g_RenderPass;
-    err = vkCreateGraphicsPipelines(g_Device, g_PipelineCache, 1, &info, g_Allocator, &g_Pipeline);
-    ImGui_ImplGlfwVulkan_VkResult(err);
+    //err = vkCreateGraphicsPipelines(g_Device, g_PipelineCache, 1, &info, g_Allocator, &g_Pipeline);
+	g_Pipeline = g_Device.createGraphicsPipeline(g_PipelineCache, info, g_Allocator);
+    //ImGui_ImplGlfwVulkan_VkResult(err);
 
     //vkDestroyShaderModule(g_Device, vert_module, g_Allocator);
 	g_Device.destroyShaderModule(vert_module, g_Allocator);
@@ -751,134 +763,183 @@ void    ImGui_ImplGlfwVulkan_InvalidateFontUploadObjects() {
     }
 }
 
-void    ImGui_ImplGlfwVulkan_InvalidateDeviceObjects()
-{
+void ImGui_ImplGlfwVulkan_InvalidateDeviceObjects() {
     ImGui_ImplGlfwVulkan_InvalidateFontUploadObjects();
 
     for (int i = 0; i < IMGUI_VK_QUEUED_FRAMES; i++) {
-        if (g_VertexBuffer[i])          { vkDestroyBuffer(g_Device, g_VertexBuffer[i], g_Allocator); g_VertexBuffer[i] = VK_NULL_HANDLE; }
-        if (g_VertexBufferMemory[i])    { vkFreeMemory(g_Device, g_VertexBufferMemory[i], g_Allocator); g_VertexBufferMemory[i] = VK_NULL_HANDLE; }
-        if (g_IndexBuffer[i])           { vkDestroyBuffer(g_Device, g_IndexBuffer[i], g_Allocator); g_IndexBuffer[i] = VK_NULL_HANDLE; }
-        if (g_IndexBufferMemory[i])     { vkFreeMemory(g_Device, g_IndexBufferMemory[i], g_Allocator); g_IndexBufferMemory[i] = VK_NULL_HANDLE; }
+        if (g_VertexBuffer[i])          {
+			//vkDestroyBuffer(g_Device, g_VertexBuffer[i], g_Allocator);
+			g_Device.destroyBuffer(g_VertexBuffer[i], g_Allocator);
+			g_VertexBuffer[i] = VK_NULL_HANDLE;
+		}
+        if (g_VertexBufferMemory[i])    {
+			//vkFreeMemory(g_Device, g_VertexBufferMemory[i], g_Allocator);
+			g_Device.freeMemory(g_VertexBufferMemory[i], g_Allocator);
+			g_VertexBufferMemory[i] = VK_NULL_HANDLE;
+		}
+        if (g_IndexBuffer[i])           {
+			//vkDestroyBuffer(g_Device, g_IndexBuffer[i], g_Allocator);
+			g_Device.destroyBuffer(g_IndexBuffer[i], g_Allocator);
+			g_IndexBuffer[i] = VK_NULL_HANDLE;
+		}
+        if (g_IndexBufferMemory[i]) {
+			//vkFreeMemory(g_Device, g_IndexBufferMemory[i], g_Allocator);
+			g_Device.freeMemory(g_IndexBufferMemory[i], g_Allocator);
+			g_IndexBufferMemory[i] = VK_NULL_HANDLE;
+		}
     }
 
-    if (g_FontView)             { vkDestroyImageView(g_Device, g_FontView, g_Allocator); g_FontView = VK_NULL_HANDLE; }
-    if (g_FontImage)            { vkDestroyImage(g_Device, g_FontImage, g_Allocator); g_FontImage = VK_NULL_HANDLE; }
-    if (g_FontMemory)           { vkFreeMemory(g_Device, g_FontMemory, g_Allocator); g_FontMemory = VK_NULL_HANDLE; }
-    if (g_FontSampler)          { vkDestroySampler(g_Device, g_FontSampler, g_Allocator); g_FontSampler = VK_NULL_HANDLE; }
-    if (g_DescriptorSetLayout)  { vkDestroyDescriptorSetLayout(g_Device, g_DescriptorSetLayout, g_Allocator); g_DescriptorSetLayout = VK_NULL_HANDLE; }
-    if (g_PipelineLayout)       { vkDestroyPipelineLayout(g_Device, g_PipelineLayout, g_Allocator); g_PipelineLayout = VK_NULL_HANDLE; }
-    if (g_Pipeline)             { vkDestroyPipeline(g_Device, g_Pipeline, g_Allocator); g_Pipeline = VK_NULL_HANDLE; }
+    if (g_FontView) {
+		//vkDestroyImageView(g_Device, g_FontView, g_Allocator);
+		g_Device.destroyImageView(g_FontView, g_Allocator);
+		g_FontView = VK_NULL_HANDLE;
+	}
+    if (g_FontImage) {
+		//vkDestroyImage(g_Device, g_FontImage, g_Allocator);
+		g_Device.destroyImage(g_FontImage, g_Allocator);
+		g_FontImage = VK_NULL_HANDLE;
+	}
+    if (g_FontMemory) {
+		//vkFreeMemory(g_Device, g_FontMemory, g_Allocator);
+		g_Device.freeMemory(g_FontMemory, g_Allocator);
+		g_FontMemory = VK_NULL_HANDLE;
+	}
+    if (g_FontSampler) {
+		//vkDestroySampler(g_Device, g_FontSampler, g_Allocator);
+		g_Device.destroySampler(g_FontSampler, g_Allocator);
+		g_FontSampler = VK_NULL_HANDLE;
+	}
+    if (g_DescriptorSetLayout) {
+		//vkDestroyDescriptorSetLayout(g_Device, g_DescriptorSetLayout, g_Allocator);
+		g_Device.destroyDescriptorSetLayout(g_DescriptorSetLayout, g_Allocator);
+		g_DescriptorSetLayout = VK_NULL_HANDLE;
+	}
+    if (g_PipelineLayout) {
+		//vkDestroyPipelineLayout(g_Device, g_PipelineLayout, g_Allocator);
+		g_Device.destroyPipelineLayout(g_PipelineLayout, g_Allocator);
+		g_PipelineLayout = VK_NULL_HANDLE;
+	}
+    if (g_Pipeline) {
+		//vkDestroyPipeline(g_Device, g_Pipeline, g_Allocator);
+		g_Device.destroyPipeline(g_Pipeline, g_Allocator);
+		g_Pipeline = VK_NULL_HANDLE;
+	}
 }
 
-bool    ImGui_ImplGlfwVulkan_Init(GLFWwindow* window, bool install_callbacks, ImGui_ImplGlfwVulkan_Init_Data *init_data)
-{
-    g_Allocator = init_data->allocator;
-    g_Gpu = init_data->gpu;
-    g_Device = init_data->device;
-    g_RenderPass = init_data->render_pass;
-    g_PipelineCache = init_data->pipeline_cache;
-    g_DescriptorPool = init_data->descriptor_pool;
-    g_CheckVkResult = init_data->check_vk_result;
 
-    g_Window = window;
 
-    ImGuiIO& io = ImGui::GetIO();
-    io.KeyMap[ImGuiKey_Tab] = GLFW_KEY_TAB;                         // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
-    io.KeyMap[ImGuiKey_LeftArrow] = GLFW_KEY_LEFT;
-    io.KeyMap[ImGuiKey_RightArrow] = GLFW_KEY_RIGHT;
-    io.KeyMap[ImGuiKey_UpArrow] = GLFW_KEY_UP;
-    io.KeyMap[ImGuiKey_DownArrow] = GLFW_KEY_DOWN;
-    io.KeyMap[ImGuiKey_PageUp] = GLFW_KEY_PAGE_UP;
-    io.KeyMap[ImGuiKey_PageDown] = GLFW_KEY_PAGE_DOWN;
-    io.KeyMap[ImGuiKey_Home] = GLFW_KEY_HOME;
-    io.KeyMap[ImGuiKey_End] = GLFW_KEY_END;
-    io.KeyMap[ImGuiKey_Delete] = GLFW_KEY_DELETE;
-    io.KeyMap[ImGuiKey_Backspace] = GLFW_KEY_BACKSPACE;
-    io.KeyMap[ImGuiKey_Enter] = GLFW_KEY_ENTER;
-    io.KeyMap[ImGuiKey_Escape] = GLFW_KEY_ESCAPE;
-    io.KeyMap[ImGuiKey_A] = GLFW_KEY_A;
-    io.KeyMap[ImGuiKey_C] = GLFW_KEY_C;
-    io.KeyMap[ImGuiKey_V] = GLFW_KEY_V;
-    io.KeyMap[ImGuiKey_X] = GLFW_KEY_X;
-    io.KeyMap[ImGuiKey_Y] = GLFW_KEY_Y;
-    io.KeyMap[ImGuiKey_Z] = GLFW_KEY_Z;
 
-    io.RenderDrawListsFn = ImGui_ImplGlfwVulkan_RenderDrawLists;       // Alternatively you can set this to NULL and call ImGui::GetDrawData() after ImGui::Render() to get the same ImDrawData pointer.
-    io.SetClipboardTextFn = ImGui_ImplGlfwVulkan_SetClipboardText;
-    io.GetClipboardTextFn = ImGui_ImplGlfwVulkan_GetClipboardText;
-    io.ClipboardUserData = g_Window;
+bool ImGui_ImplGlfwVulkan_Init(SDL_Window* window, bool install_callbacks, ImGui_ImplGlfwVulkan_Init_Data *init_data) {
+	g_Allocator = init_data->allocator;
+	g_Gpu = init_data->gpu;
+	g_Device = init_data->device;
+	g_RenderPass = init_data->render_pass;
+	g_PipelineCache = init_data->pipeline_cache;
+	g_DescriptorPool = init_data->descriptor_pool;
+	g_CheckVkResult = init_data->check_vk_result;
+
+	g_Window = window;
+
+	ImGuiIO& io = ImGui::GetIO();
+	io.KeyMap[ImGuiKey_Tab] = SDLK_TAB;                     // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
+	io.KeyMap[ImGuiKey_LeftArrow] = SDL_SCANCODE_LEFT;
+	io.KeyMap[ImGuiKey_RightArrow] = SDL_SCANCODE_RIGHT;
+	io.KeyMap[ImGuiKey_UpArrow] = SDL_SCANCODE_UP;
+	io.KeyMap[ImGuiKey_DownArrow] = SDL_SCANCODE_DOWN;
+	io.KeyMap[ImGuiKey_PageUp] = SDL_SCANCODE_PAGEUP;
+	io.KeyMap[ImGuiKey_PageDown] = SDL_SCANCODE_PAGEDOWN;
+	io.KeyMap[ImGuiKey_Home] = SDL_SCANCODE_HOME;
+	io.KeyMap[ImGuiKey_End] = SDL_SCANCODE_END;
+	io.KeyMap[ImGuiKey_Delete] = SDLK_DELETE;
+	io.KeyMap[ImGuiKey_Backspace] = SDLK_BACKSPACE;
+	io.KeyMap[ImGuiKey_Enter] = SDLK_RETURN;
+	io.KeyMap[ImGuiKey_Escape] = SDLK_ESCAPE;
+	io.KeyMap[ImGuiKey_A] = SDLK_a;
+	io.KeyMap[ImGuiKey_C] = SDLK_c;
+	io.KeyMap[ImGuiKey_V] = SDLK_v;
+	io.KeyMap[ImGuiKey_X] = SDLK_x;
+	io.KeyMap[ImGuiKey_Y] = SDLK_y;
+	io.KeyMap[ImGuiKey_Z] = SDLK_z;
+
+	io.RenderDrawListsFn = ImGui_ImplGlfwVulkan_RenderDrawLists;       // Alternatively you can set this to NULL and call ImGui::GetDrawData() after ImGui::Render() to get the same ImDrawData pointer.
+	io.SetClipboardTextFn = ImGui_ImplGlfwVulkan_SetClipboardText;
+	io.GetClipboardTextFn = ImGui_ImplGlfwVulkan_GetClipboardText;
+	io.ClipboardUserData = g_Window;
 #ifdef _WIN32
-    io.ImeWindowHandle = glfwGetWin32Window(g_Window);
+	//io.ImeWindowHandle = glfwGetWin32Window(g_Window);
+	SDL_SysWMinfo wmInfo;
+	SDL_VERSION(&wmInfo.version);
+	SDL_GetWindowWMInfo(window, &wmInfo);
+	io.ImeWindowHandle = wmInfo.info.win.window;
 #endif
 
-    if (install_callbacks)
-    {
-        glfwSetMouseButtonCallback(window, ImGui_ImplGlfwVulkan_MouseButtonCallback);
-        glfwSetScrollCallback(window, ImGui_ImplGlfwVulkan_ScrollCallback);
-        glfwSetKeyCallback(window, ImGui_ImplGlfwVulkan_KeyCallback);
-        glfwSetCharCallback(window, ImGui_ImplGlfwVulkan_CharCallback);
-    }
+	if (install_callbacks) {
+		//glfwSetMouseButtonCallback(window, ImGui_ImplGlfwVulkan_MouseButtonCallback);
+		//glfwSetScrollCallback(window, ImGui_ImplGlfwVulkan_ScrollCallback);
+		//glfwSetKeyCallback(window, ImGui_ImplGlfwVulkan_KeyCallback);
+		//glfwSetCharCallback(window, ImGui_ImplGlfwVulkan_CharCallback);
+	}
 
-    ImGui_ImplGlfwVulkan_CreateDeviceObjects();
+	ImGui_ImplGlfwVulkan_CreateDeviceObjects();
 
-    return true;
+	return true;
 }
 
-void ImGui_ImplGlfwVulkan_Shutdown()
-{
+
+
+
+
+
+void ImGui_ImplGlfwVulkan_Shutdown() {
     ImGui_ImplGlfwVulkan_InvalidateDeviceObjects();
     ImGui::Shutdown();
 }
 
-void ImGui_ImplGlfwVulkan_NewFrame()
-{
+void ImGui_ImplGlfwVulkan_NewFrame(/*SDL_Window* window*/) {
     ImGuiIO& io = ImGui::GetIO();
 
     // Setup display size (every frame to accommodate for window resizing)
     int w, h;
     int display_w, display_h;
-    glfwGetWindowSize(g_Window, &w, &h);
-    glfwGetFramebufferSize(g_Window, &display_w, &display_h);
+    //glfwGetWindowSize(g_Window, &w, &h);
+    //glfwGetFramebufferSize(g_Window, &display_w, &display_h);
+	SDL_GetWindowSize(/*window*/g_Window, &w, &h);
+	SDL_GL_GetDrawableSize(/*window*/g_Window, &display_w, &display_h);
     io.DisplaySize = ImVec2((float)w, (float)h);
     io.DisplayFramebufferScale = ImVec2(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0);
 
-    // Setup time step
-    double current_time =  glfwGetTime();
-    io.DeltaTime = g_Time > 0.0 ? (float)(current_time - g_Time) : (float)(1.0f/60.0f);
-    g_Time = current_time;
+	// Setup time step
+	Uint32	time = SDL_GetTicks();
+	double current_time = time / 1000.0;
+	io.DeltaTime = g_Time > 0.0 ? (float)(current_time - g_Time) : (float)(1.0f / 60.0f);
+	g_Time = current_time;
 
     // Setup inputs
     // (we already got mouse wheel, keyboard keys & characters from glfw callbacks polled in glfwPollEvents())
-    if (glfwGetWindowAttrib(g_Window, GLFW_FOCUSED))
-    {
-        double mouse_x, mouse_y;
-        glfwGetCursorPos(g_Window, &mouse_x, &mouse_y);
-        io.MousePos = ImVec2((float)mouse_x, (float)mouse_y);   // Mouse position in screen coordinates (set to -1,-1 if no mouse / on another screen, etc.)
-    }
-    else
-    {
-        io.MousePos = ImVec2(-1,-1);
-    }
+	int mx, my;
+	Uint32 mouseMask = SDL_GetMouseState(&mx, &my);
+	if (SDL_GetWindowFlags(/*window*/g_Window) & SDL_WINDOW_MOUSE_FOCUS) {
+		io.MousePos = ImVec2((float)mx, (float)my);   // Mouse position, in pixels (set to -1,-1 if no mouse / on another screen, etc.)
+	} else {
+		io.MousePos = ImVec2(-1, -1);
+	}
 
-    for (int i = 0; i < 3; i++)
-    {
-        io.MouseDown[i] = g_MousePressed[i] || glfwGetMouseButton(g_Window, i) != 0;    // If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events that are shorter than 1 frame.
-        g_MousePressed[i] = false;
-    }
+	io.MouseDown[0] = g_MousePressed[0] || (mouseMask & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0;		// If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events that are shorter than 1 frame.
+	io.MouseDown[1] = g_MousePressed[1] || (mouseMask & SDL_BUTTON(SDL_BUTTON_RIGHT)) != 0;
+	io.MouseDown[2] = g_MousePressed[2] || (mouseMask & SDL_BUTTON(SDL_BUTTON_MIDDLE)) != 0;
+	g_MousePressed[0] = g_MousePressed[1] = g_MousePressed[2] = false;
 
-    io.MouseWheel = g_MouseWheel;
-    g_MouseWheel = 0.0f;
+	io.MouseWheel = g_MouseWheel;
+	g_MouseWheel = 0.0f;
 
-    // Hide OS mouse cursor if ImGui is drawing it
-    glfwSetInputMode(g_Window, GLFW_CURSOR, io.MouseDrawCursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
+	// Hide OS mouse cursor if ImGui is drawing it
+	SDL_ShowCursor(io.MouseDrawCursor ? 0 : 1);
 
-    // Start the frame
-    ImGui::NewFrame();
+	// Start the frame
+	ImGui::NewFrame();
 }
 
-void ImGui_ImplGlfwVulkan_Render(VkCommandBuffer command_buffer)
-{
+void ImGui_ImplGlfwVulkan_Render(vk::CommandBuffer command_buffer) {
     g_CommandBuffer = command_buffer;
     ImGui::Render();
     g_CommandBuffer = VK_NULL_HANDLE;

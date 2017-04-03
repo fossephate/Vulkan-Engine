@@ -6,7 +6,7 @@
 layout (set = 3, binding = 1) uniform sampler2D samplerPosition;
 layout (set = 3, binding = 2) uniform sampler2D samplerNormal;
 layout (set = 3, binding = 3) uniform usampler2D samplerAlbedo;// this is a usampler(on ssao)
-//layout (set = 3, binding = 5) uniform sampler2D samplerSSAO;
+//layout (set = 3, binding = 4) uniform sampler2D samplerSSAO;
 
 
 struct Light {
@@ -21,7 +21,7 @@ struct Light {
 #define NUM_LIGHTS 100
 
 // todo: make this another set(1) rather than binding = 4
-layout (set = 3, binding = 4) uniform UBO 
+layout (set = 3, binding = 5) uniform UBO 
 {
     Light lights[NUM_LIGHTS];
     vec4 viewPos;

@@ -9,9 +9,15 @@
 //#define GLFW_INCLUDE_VULKAN
 //#include <GLFW/glfw3.h>
 
+
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_syswm.h>
+
 #include "vulkan/vulkan.hpp"
 
 #include "imgui_impl_glfw_vulkan.h"
+
+#include <iostream>
 
 #define IMGUI_MAX_POSSIBLE_BACK_BUFFERS 16
 
@@ -49,35 +55,36 @@ static vk::Semaphore              g_Semaphore[IMGUI_VK_QUEUED_FRAMES];
 
 static vk::ClearValue             g_ClearValue = {};
 
-static void check_vk_result(vk::Result err)
-{
-	if (err == 0) {
-		return;
-	}
-    printf("vk::Result %d\n", err);
-	if (err < 0) {
-		abort();
-	}
+static void check_vk_result(vk::Result err) {
+	//if (err == 0) {
+	//	return;
+	//}
+ //   printf("vk::Result %d\n", err);
+	//if (err < 0) {
+	//	abort();
+	//}
 }
 
-static void resize_vulkan(GLFWwindow* /*window*/, int w, int h)
-{
+static void resize_vulkan(/*GLFWwindow**/SDL_Window* window, int w, int h) {
     vk::Result err;
     vk::SwapchainKHR old_swapchain = g_Swapchain;
-    err = vkDeviceWaitIdle(g_Device);
-    check_vk_result(err);
+    //err = vkDeviceWaitIdle(g_Device);
+	g_Device.waitIdle();
+    //check_vk_result(err);
 
     // Destroy old Framebuffer:
-    for (uint32_t i = 0; i < g_BackBufferCount; i++)
+	for (uint32_t i = 0; i < g_BackBufferCount; i++) {
 		if (g_BackBufferView[i]) {
 			//vkDestroyImageView(g_Device, g_BackBufferView[i], g_Allocator);
 			g_Device.destroyImageView(g_BackBufferView[i], g_Allocator);
 		}
-    for (uint32_t i = 0; i < g_BackBufferCount; i++)
+	}
+	for (uint32_t i = 0; i < g_BackBufferCount; i++) {
 		if (g_Framebuffer[i]) {
 			//vkDestroyFramebuffer(g_Device, g_Framebuffer[i], g_Allocator);
 			g_Device.destroyFramebuffer(g_Framebuffer[i], g_Allocator);
 		}
+	}
 	if (g_RenderPass) {
 		//vkDestroyRenderPass(g_Device, g_RenderPass, g_Allocator);
 		g_Device.destroyRenderPass(g_RenderPass, g_Allocator);
@@ -98,35 +105,38 @@ static void resize_vulkan(GLFWwindow* /*window*/, int w, int h)
         info.clipped = VK_TRUE;
         info.oldSwapchain = old_swapchain;
         vk::SurfaceCapabilitiesKHR cap;
-        err = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(g_Gpu, g_Surface, &cap);
-        check_vk_result(err);
-        if (cap.maxImageCount > 0)
-            info.minImageCount = (cap.minImageCount + 2 < cap.maxImageCount) ? (cap.minImageCount + 2) : cap.maxImageCount;
-        else
-            info.minImageCount = cap.minImageCount + 2;
-        if (cap.currentExtent.width == 0xffffffff)
-        {
+        //err = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(g_Gpu, g_Surface, &cap);
+        //check_vk_result(err);
+		if (cap.maxImageCount > 0) {
+			info.minImageCount = (cap.minImageCount + 2 < cap.maxImageCount) ? (cap.minImageCount + 2) : cap.maxImageCount;
+		} else {
+			info.minImageCount = cap.minImageCount + 2;
+		}
+        if (cap.currentExtent.width == 0xffffffff) {
             fb_width = w;
             fb_height = h;
             info.imageExtent.width = fb_width;
             info.imageExtent.height = fb_height;
-        }
-        else
-        {
+        } else {
             fb_width = cap.currentExtent.width;
             fb_height = cap.currentExtent.height;
             info.imageExtent.width = fb_width;
             info.imageExtent.height = fb_height;
         }
-        err = vkCreateSwapchainKHR(g_Device, &info, g_Allocator, &g_Swapchain);
-        check_vk_result(err);
-        err = vkGetSwapchainImagesKHR(g_Device, g_Swapchain, &g_BackBufferCount, NULL);
-        check_vk_result(err);
-        err = vkGetSwapchainImagesKHR(g_Device, g_Swapchain, &g_BackBufferCount, g_BackBuffer);
-        check_vk_result(err);
+        //err = vkCreateSwapchainKHR(g_Device, &info, g_Allocator, &g_Swapchain);
+		g_Swapchain = g_Device.createSwapchainKHR(info, g_Allocator);
+        //check_vk_result(err);
+        //err = vkGetSwapchainImagesKHR(g_Device, g_Swapchain, &g_BackBufferCount, NULL);
+		g_Device.getSwapchainImagesKHR(g_Swapchain, &g_BackBufferCount, nullptr);
+		//check_vk_result(err);
+        //err = vkGetSwapchainImagesKHR(g_Device, g_Swapchain, &g_BackBufferCount, g_BackBuffer);
+		g_Device.getSwapchainImagesKHR(g_Swapchain, &g_BackBufferCount, g_BackBuffer);
+		//check_vk_result(err);
     }
-    if (old_swapchain)
-        vkDestroySwapchainKHR(g_Device, old_swapchain, g_Allocator);
+	if (old_swapchain) {
+		//vkDestroySwapchainKHR(g_Device, old_swapchain, g_Allocator);
+		g_Device.destroySwapchainKHR(old_swapchain, g_Allocator);
+	}
 
     // Create the Render Pass:
     {
@@ -197,44 +207,71 @@ static void resize_vulkan(GLFWwindow* /*window*/, int w, int h)
     }
 }
 
-static void setup_vulkan(GLFWwindow* window)
-{
+static void setup_vulkan(/*GLFWwindow**/SDL_Window* window, SDL_SysWMinfo windowInfo) {
+
     vk::Result err;
 
     // Create Vulkan Instance
     {
         uint32_t glfw_extensions_count;
-        const char** glfw_extensions = glfwGetRequiredInstanceExtensions(&glfw_extensions_count);
-        vk::InstanceCreateInfo create_info = {};
-        create_info.enabledExtensionCount = glfw_extensions_count;
-        create_info.ppEnabledExtensionNames = glfw_extensions;
-        err = vkCreateInstance(&create_info, g_Allocator, &g_Instance);
-        check_vk_result(err);
+        //const char** glfw_extensions = glfwGetRequiredInstanceExtensions(&glfw_extensions_count);
+
+		std::vector<const char*> enabledExtensions = { VK_KHR_SURFACE_EXTENSION_NAME };
+
+		//for (const auto& extension : requiredExtensions) {
+		//	enabledExtensions.push_back(extension.c_str());
+		//}
+
+		enabledExtensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+
+        vk::InstanceCreateInfo create_info;
+        //create_info.enabledExtensionCount = glfw_extensions_count;
+        //create_info.ppEnabledExtensionNames = glfw_extensions;
+		create_info.enabledExtensionCount = (uint32_t)enabledExtensions.size();
+		create_info.ppEnabledExtensionNames = enabledExtensions.data();
+        //err = vkCreateInstance(&create_info, g_Allocator, &g_Instance);
+		g_Instance = vk::createInstance(create_info, g_Allocator);
+        //check_vk_result(err);
     }
 
     // Create Window Surface
     {
-        err = glfwCreateWindowSurface(g_Instance, window, g_Allocator, &g_Surface);
-        check_vk_result(err);
+
+		HINSTANCE SDLhinstance = GetModuleHandle(NULL);// not sure how this works? (gets current window?) might limit number of windows later
+		HWND SDLhandle = windowInfo.info.win.window;
+
+		vk::Win32SurfaceCreateInfoKHR surfaceCreateInfo;
+		surfaceCreateInfo.hinstance = (HINSTANCE)SDLhinstance;
+		surfaceCreateInfo.hwnd = (HWND)SDLhandle;
+
+		g_Surface = g_Instance.createWin32SurfaceKHR(surfaceCreateInfo);
+
+
+        //err = glfwCreateWindowSurface(g_Instance, window, g_Allocator, &g_Surface);
+        //check_vk_result(err);
     }
 
     // Get GPU (WARNING here we assume the first gpu is one we can use)
     {
         uint32_t count = 1;
-        err = vkEnumeratePhysicalDevices(g_Instance, &count, &g_Gpu);
-        check_vk_result(err);
+        //err = vkEnumeratePhysicalDevices(g_Instance, &count, &g_Gpu);
+		g_Instance.enumeratePhysicalDevices(&count, &g_Gpu);
+        //check_vk_result(err);
     }
 
     // Get queue
     {
         uint32_t count;
-        vkGetPhysicalDeviceQueueFamilyProperties(g_Gpu, &count, NULL);
-        vk::QueueFamilyProperties* queues = (vk::QueueFamilyProperties*)malloc(sizeof(vk::QueueFamilyProperties) * count);
-        vkGetPhysicalDeviceQueueFamilyProperties(g_Gpu, &count, queues);
-        for (uint32_t i = 0; i < count; i++)
-        {
-            if (queues[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
-            {
+        //vkGetPhysicalDeviceQueueFamilyProperties(g_Gpu, &count, NULL);
+		g_Gpu.getQueueFamilyProperties(&count, nullptr);
+        
+		vk::QueueFamilyProperties* queues = (vk::QueueFamilyProperties*)malloc(sizeof(vk::QueueFamilyProperties) * count);
+        //vkGetPhysicalDeviceQueueFamilyProperties(g_Gpu, &count, queues);
+		g_Gpu.getQueueFamilyProperties(&count, queues);
+		
+        for (uint32_t i = 0; i < count; i++) {
+            //if (queues[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+			if (queues[i].queueFlags & vk::QueueFlagBits::eGraphics) {
                 g_QueueFamily = i;
                 break;
             }
@@ -245,9 +282,9 @@ static void setup_vulkan(GLFWwindow* window)
     // Check for WSI support
     {
         vk::Bool32 res;
-        vkGetPhysicalDeviceSurfaceSupportKHR(g_Gpu, g_QueueFamily, g_Surface, &res);
-        if (res != VK_TRUE)
-        {
+        //vkGetPhysicalDeviceSurfaceSupportKHR(g_Gpu, g_QueueFamily, g_Surface, &res);
+		g_Gpu.getSurfaceSupportKHR(g_QueueFamily, g_Surface, &res);
+        if (res != VK_TRUE) {
             fprintf(stderr, "Error no WSI support on physical device 0\n");
             exit(-1);
         }
@@ -255,17 +292,17 @@ static void setup_vulkan(GLFWwindow* window)
 
     // Get Surface Format
     {
-        vk::Format image_view_format[][2] = {{VK_FORMAT_B8G8R8A8_UNORM, VK_FORMAT_B8G8R8A8_UNORM}, {VK_FORMAT_B8G8R8A8_SRGB, VK_FORMAT_B8G8R8A8_UNORM}};
+        //vk::Format image_view_format[][2] = {{VK_FORMAT_B8G8R8A8_UNORM, VK_FORMAT_B8G8R8A8_UNORM}, {VK_FORMAT_B8G8R8A8_SRGB, VK_FORMAT_B8G8R8A8_UNORM}};
+		vk::Format image_view_format[][2] = { { vk::Format::eB8G8R8A8Unorm, vk::Format::eB8G8R8A8Unorm },{ vk::Format::eB8G8R8A8Srgb, vk::Format::eB8G8R8A8Unorm } };
         uint32_t count;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(g_Gpu, g_Surface, &count, NULL);
+        //vkGetPhysicalDeviceSurfaceFormatsKHR(g_Gpu, g_Surface, &count, NULL);
+		g_Gpu.getSurfaceFormatsKHR(g_Surface, &count, nullptr);
         vk::SurfaceFormatKHR *formats = (vk::SurfaceFormatKHR*)malloc(sizeof(vk::SurfaceFormatKHR) * count);
-        vkGetPhysicalDeviceSurfaceFormatsKHR(g_Gpu, g_Surface, &count, formats);
-        for (size_t i = 0; i < sizeof(image_view_format) / sizeof(image_view_format[0]); i++)
-        {
-            for (uint32_t j = 0; j < count; j++)
-            {
-                if (formats[j].format == image_view_format[i][0])
-                {
+        //vkGetPhysicalDeviceSurfaceFormatsKHR(g_Gpu, g_Surface, &count, formats);
+		g_Gpu.getSurfaceFormatsKHR(g_Surface, &count, formats);
+        for (size_t i = 0; i < sizeof(image_view_format) / sizeof(image_view_format[0]); i++) {
+            for (uint32_t j = 0; j < count; j++) {
+                if (formats[j].format == image_view_format[i][0]) {
                     g_ImageFormat = image_view_format[i][0];
                     g_ViewFormat = image_view_format[i][1];
                     g_ColorSpace = formats[j].colorSpace;
@@ -292,49 +329,54 @@ static void setup_vulkan(GLFWwindow* window)
         create_info.pQueueCreateInfos = queue_info;
         create_info.enabledExtensionCount = device_extension_count;
         create_info.ppEnabledExtensionNames = device_extensions;
-        err = vkCreateDevice(g_Gpu, &create_info, g_Allocator, &g_Device);
-        check_vk_result(err);
-        vkGetDeviceQueue(g_Device, g_QueueFamily, queue_index, &g_Queue);
+        //err = vkCreateDevice(g_Gpu, &create_info, g_Allocator, &g_Device);
+		g_Device = g_Gpu.createDevice(create_info, g_Allocator);
+        //check_vk_result(err);
+        //vkGetDeviceQueue(g_Device, g_QueueFamily, queue_index, &g_Queue);
+		g_Queue = g_Device.getQueue(g_QueueFamily, queue_index);
     }
 
     // Create Framebuffers
     {
         int w, h;
-        glfwGetFramebufferSize(window, &w, &h);
+        //glfwGetFramebufferSize(window, &w, &h);
+		SDL_GetWindowSize(window, &w, &h);
         resize_vulkan(window, w, h);
-        glfwSetFramebufferSizeCallback(window, resize_vulkan);
+        //glfwSetFramebufferSizeCallback(window, resize_vulkan);
     }
 
     // Create Command Buffers
-    for (int i = 0; i < IMGUI_VK_QUEUED_FRAMES; i++)
-    {
-        {
-            vk::CommandPoolCreateInfo info = {};
-            info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    for (int i = 0; i < IMGUI_VK_QUEUED_FRAMES; i++) {
+
+		{
+            vk::CommandPoolCreateInfo info;
+            info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
             info.queueFamilyIndex = g_QueueFamily;
-            err = vkCreateCommandPool(g_Device, &info, g_Allocator, &g_CommandPool[i]);
-            check_vk_result(err);
+            //err = vkCreateCommandPool(g_Device, &info, g_Allocator, &g_CommandPool[i]);
+			g_CommandPool[i] = g_Device.createCommandPool(info, g_Allocator);
+            //check_vk_result(err);
         }
         {
-            vk::CommandBufferAllocateInfo info = {};
-            info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+            vk::CommandBufferAllocateInfo info;
             info.commandPool = g_CommandPool[i];
-            info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+            info.level = vk::CommandBufferLevel::ePrimary;
             info.commandBufferCount = 1;
-            err = vkAllocateCommandBuffers(g_Device, &info, &g_CommandBuffer[i]);
-            check_vk_result(err);
+            //err = vkAllocateCommandBuffers(g_Device, &info, &g_CommandBuffer[i]);
+			g_Device.allocateCommandBuffers(&info, &g_CommandBuffer[i]);
+            //check_vk_result(err);
         }
         {
-            vk::FenceCreateInfo info = {};
-            info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-            info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-            err = vkCreateFence(g_Device, &info, g_Allocator, &g_Fence[i]);
-            check_vk_result(err);
+            vk::FenceCreateInfo info;
+            info.flags = vk::FenceCreateFlagBits::eSignaled;
+            //err = vkCreateFence(g_Device, &info, g_Allocator, &g_Fence[i]);
+			g_Fence[i] = g_Device.createFence(info, g_Allocator);
+            //check_vk_result(err);
         }
         {
 			vk::SemaphoreCreateInfo info;
-            err = vkCreateSemaphore(g_Device, &info, g_Allocator, &g_Semaphore[i]);
-            check_vk_result(err);
+            //err = vkCreateSemaphore(g_Device, &info, g_Allocator, &g_Semaphore[i]);
+			g_Semaphore[i] = g_Device.createSemaphore(info, g_Allocator);
+            //check_vk_result(err);
         }
     }
 
@@ -405,17 +447,18 @@ static void frame_begin()
         //err = vkWaitForFences(g_Device, 1, &g_Fence[g_FrameIndex], VK_TRUE, 100);
 		g_Device.waitForFences(1, &g_Fence[g_FrameIndex], VK_TRUE, 100);
 
-		if (err == VK_SUCCESS) {
+		if (err == vk::Result::eSuccess) {
 			break;
 		}
-		if (err == VK_TIMEOUT) {
+		if (err == vk::Result::eTimeout) {
 			continue;
 		}
         check_vk_result(err);
     }
     {
-        err = vkAcquireNextImageKHR(g_Device, g_Swapchain, UINT64_MAX, g_Semaphore[g_FrameIndex], VK_NULL_HANDLE, &g_BackBufferIndex);
-        check_vk_result(err);
+        //err = vkAcquireNextImageKHR(g_Device, g_Swapchain, UINT64_MAX, g_Semaphore[g_FrameIndex], VK_NULL_HANDLE, &g_BackBufferIndex);
+		g_Device.acquireNextImageKHR(g_Swapchain, UINT64_MAX, g_Semaphore[g_FrameIndex], VK_NULL_HANDLE, &g_BackBufferIndex);
+        //check_vk_result(err);
     }
     {
         //err = vkResetCommandPool(g_Device, g_CommandPool[g_FrameIndex], 0);
@@ -447,32 +490,36 @@ static void frame_end()
     vkCmdEndRenderPass(g_CommandBuffer[g_FrameIndex]);
     {
         vk::ImageMemoryBarrier barrier;
-        barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-        barrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        barrier.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+        barrier.dstAccessMask = vk::AccessFlagBits::eMemoryRead;
+        barrier.oldLayout = vk::ImageLayout::eColorAttachmentOptimal;
+        barrier.newLayout = vk::ImageLayout::ePresentSrcKHR;
         barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         barrier.image = g_BackBuffer[g_BackBufferIndex];
         barrier.subresourceRange = g_ImageRange;
-        vkCmdPipelineBarrier(g_CommandBuffer[g_FrameIndex], VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, NULL, 0, NULL, 1, &barrier);
-    }
+        //vkCmdPipelineBarrier(g_CommandBuffer[g_FrameIndex], VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, NULL, 0, NULL, 1, &barrier);
+		g_CommandBuffer[g_FrameIndex].pipelineBarrier(vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eBottomOfPipe, {}, 0, nullptr, 0, nullptr, 1, &barrier);
+		
+	}
     {
-        vk::PipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        vk::SubmitInfo info = {};
-        info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        vk::PipelineStageFlags wait_stage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+        vk::SubmitInfo info;
         info.waitSemaphoreCount = 1;
         info.pWaitSemaphores = &g_Semaphore[g_FrameIndex];
         info.pWaitDstStageMask = &wait_stage;
         info.commandBufferCount = 1;
         info.pCommandBuffers = &g_CommandBuffer[g_FrameIndex];
 
-        err = vkEndCommandBuffer(g_CommandBuffer[g_FrameIndex]);
-        check_vk_result(err);
-        err = vkResetFences(g_Device, 1, &g_Fence[g_FrameIndex]);
-        check_vk_result(err);
-        err = vkQueueSubmit(g_Queue, 1, &info, g_Fence[g_FrameIndex]);
-        check_vk_result(err);
+        //err = vkEndCommandBuffer(g_CommandBuffer[g_FrameIndex]);
+		g_CommandBuffer[g_FrameIndex].end();
+        //check_vk_result(err);
+        //err = vkResetFences(g_Device, 1, &g_Fence[g_FrameIndex]);
+		g_Device.resetFences(1, &g_Fence[g_FrameIndex]);
+        //check_vk_result(err);
+        //err = vkQueueSubmit(g_Queue, 1, &info, g_Fence[g_FrameIndex]);
+		g_Queue.submit(1, &info, g_Fence[g_FrameIndex]);
+        //check_vk_result(err);
     }
     {
         vk::Result res;
@@ -483,8 +530,9 @@ static void frame_end()
         info.pSwapchains = swapchains;
         info.pImageIndices = indices;
         info.pResults = &res;
-        err = vkQueuePresentKHR(g_Queue, &info);
-        check_vk_result(err);
+        //err = vkQueuePresentKHR(g_Queue, &info);
+		g_Queue.presentKHR(info);
+        //check_vk_result(err);
         check_vk_result(res);
     }
     g_FrameIndex = (g_FrameIndex) % IMGUI_VK_QUEUED_FRAMES;
@@ -495,8 +543,8 @@ static void error_callback(int error, const char* description)
     fprintf(stderr, "Error %d: %s\n", error, description);
 }
 
-int main(int, char**)
-{
+//int main(int, char**) {
+int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow) {
     // Setup window
     //glfwSetErrorCallback(error_callback);
 	//if (!glfwInit()) {
@@ -511,7 +559,35 @@ int main(int, char**)
     //    printf("GLFW: Vulkan Not Supported\n");
     //    return 1;
     //}
-    //setup_vulkan(window);
+
+
+	SDL_Window *window;
+	SDL_SysWMinfo windowInfo;
+
+	std::string windowTitle = "test";
+
+	SDL_Init(SDL_INIT_EVERYTHING);
+
+	window = SDL_CreateWindow(
+		windowTitle.c_str(),
+		SDL_WINDOWPOS_UNDEFINED,
+		SDL_WINDOWPOS_UNDEFINED,
+		1280,//size.width,// width
+		720,//size.height,// height
+		SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE
+	);
+
+	SDL_VERSION(&windowInfo.version); // initialize info structure with SDL version info
+
+	if (SDL_GetWindowWMInfo(window, &windowInfo)) {
+		std::cout << "SDL window initialization success." << std::endl;
+	} else {
+		std::cout << "ERROR!: SDL window init: Couldn't get window information: " << SDL_GetError() << std::endl;
+	}
+	
+
+
+    setup_vulkan(window, windowInfo);
 
     // Setup ImGui binding
     ImGui_ImplGlfwVulkan_Init_Data init_data = {};
@@ -526,13 +602,13 @@ int main(int, char**)
 
     // Load Fonts
     // (there is a default font, this is only if you want to change it. see extra_fonts/README.txt for more details)
-    //ImGuiIO& io = ImGui::GetIO();
-    //io.Fonts->AddFontDefault();
-    //io.Fonts->AddFontFromFileTTF("../../extra_fonts/Cousine-Regular.ttf", 15.0f);
-    //io.Fonts->AddFontFromFileTTF("../../extra_fonts/DroidSans.ttf", 16.0f);
-    //io.Fonts->AddFontFromFileTTF("../../extra_fonts/ProggyClean.ttf", 13.0f);
-    //io.Fonts->AddFontFromFileTTF("../../extra_fonts/ProggyTiny.ttf", 10.0f);
-    //io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
+    ImGuiIO& io = ImGui::GetIO();
+    io.Fonts->AddFontDefault();
+    io.Fonts->AddFontFromFileTTF("../../extra_fonts/Cousine-Regular.ttf", 15.0f);
+    io.Fonts->AddFontFromFileTTF("../../extra_fonts/DroidSans.ttf", 16.0f);
+    io.Fonts->AddFontFromFileTTF("../../extra_fonts/ProggyClean.ttf", 13.0f);
+    io.Fonts->AddFontFromFileTTF("../../extra_fonts/ProggyTiny.ttf", 10.0f);
+    io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
 
     // Upload Fonts
     {
@@ -608,6 +684,8 @@ int main(int, char**)
         frame_begin();
         ImGui_ImplGlfwVulkan_Render(g_CommandBuffer[g_FrameIndex]);
         frame_end();
+
+
     }
 
     // Cleanup
