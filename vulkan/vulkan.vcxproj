@@ -19,11 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="include\external\imgui\vk\imgui_impl_glfw_vulkan.cpp" />
+    <ClCompile Include="include\external\imgui\vk\main.cpp" />
     <ClCompile Include="src\bulletClasses\PhysicsManager.cpp" />
     <ClCompile Include="src\bulletClasses\PhysicsObject.cpp" />
     <ClCompile Include="src\vulkanClasses\camera.cpp" />
     <ClCompile Include="src\vulkanClasses\shapes.cpp" />
-    <ClCompile Include="src\vulkanClasses\vulkanAndroid.cpp" />
+    <ClCompile Include="src\old\vulkanAndroid.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanApp.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanContext.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanDebug.cpp" />
@@ -42,6 +44,7 @@
     <ClInclude Include="include\base\Object3D.h" />
     <ClInclude Include="include\bulletClasses\PhysicsManager.h" />
     <ClInclude Include="include\bulletClasses\PhysicsObject.h" />
+    <ClInclude Include="include\external\imgui\vk\imgui_impl_glfw_vulkan.h" />
     <ClInclude Include="include\vulkanClasses\camera.h" />
     <ClInclude Include="include\vulkanClasses\common.h" />
     <ClInclude Include="include\vulkanClasses\easings.h" />

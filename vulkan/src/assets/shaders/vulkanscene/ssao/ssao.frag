@@ -39,50 +39,25 @@ float rand(vec2 co){
 
 
 
-
-
-
-
-
-
-
-
-vec4 getViewPos(vec2 texCoord) {
-	// Calculate out of the fragment in screen space the view space position.
-
-	float x = texCoord.s * 2.0 - 1.0;
-	float y = texCoord.t * 2.0 - 1.0;
-
-	// (don't) assume we have a normal depth range between 0.0 and 1.0
-	//float z = (texture(samplerPositionDepth, inUV).a/512.0) * 2.0 - 1.0;
-	float z = (texture(samplerPositionDepth, inUV).a);
-
-	vec4 posProj = vec4(x, y, z, 1.0);
-
-	vec4 posView = inverse(ubo.projection) * posProj;
-
-	posView /= posView.w;
-
-	return posView;
-}
-
-
-
-
-
-
-
-
-
-
-
+// vec4 getViewPos(vec2 texCoord) {
+// 	// Calculate out of the fragment in screen space the view space position.
+// 	float x = texCoord.s * 2.0 - 1.0;
+// 	float y = texCoord.t * 2.0 - 1.0;
+// 	// (don't) assume we have a normal depth range between 0.0 and 1.0
+// 	//float z = (texture(samplerPositionDepth, inUV).a/512.0) * 2.0 - 1.0;
+// 	float z = (texture(samplerPositionDepth, inUV).a);
+// 	vec4 posProj = vec4(x, y, z, 1.0);
+// 	vec4 posView = inverse(ubo.projection) * posProj;
+// 	posView /= posView.w;
+// 	return posView;
+// }
 
 
 
 void main() {
 
 	// Calculate out of the current fragment in screen space the view space position.
-	vec4 posView = getViewPos(inUV);
+	//vec4 posView = getViewPos(inUV);
 
 	// Get G-Buffer values
 	vec3 fragPos = texture(samplerPositionDepth, inUV).rgb;
@@ -123,7 +98,6 @@ void main() {
 
 		// calculate sample point.
 		vec3 samplePos = fragPos + (sampleDir * SSAO_RADIUS);
-		//vec4 samplePos = posView + (vec4(sampleDir, 0.0) * SSAO_RADIUS);
 
 		
 		// project
@@ -135,15 +109,9 @@ void main() {
 		vec2 samplePointTexCoord = samplePointNDC.xy * 0.5 + vec2(0.5);
 
 		//float sampleDepth = -texture(samplerPositionDepth, offset.xy).w;
-		//float sampleDepth = -texture(samplerPositionDepth, offset.xy).r;
-		//float sampleDepth = -texture(samplerPositionDepth, samplePointTexCoord.xy).a;
 		float sampleDepth = -texture(samplerPositionDepth, samplePointTexCoord.xy).a;
 
-
-
-
 		// float delta = samplePointNDC.z - zSceneNDC;
-		
 		// // If scene fragment is before (smaller in z) sample point, increase occlusion.
 		// if (delta > CAP_MIN_DISTANCE && delta < CAP_MAX_DISTANCE) {
 		// 	occlusion += 1.0;
@@ -169,17 +137,11 @@ void main() {
 	occlusion = pow(occlusion, SSAO_POWER);
 
 	//occlusion = 1 - occlusion;
-
 	outFragColor = occlusion;
-
 	//outFragColor = originalDepth;
-
 	//outFragColor = gl_FragCoord.x/1280;
-
 	//outFragColor = randomVec.x;
-
 	//outFragColor = normal.x;
-
 	//outFragColor = fragPos.x;
 }
 

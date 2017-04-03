@@ -801,10 +801,16 @@ void vulkanApp::updateInputInfo() {
 //should not be here
 void vulkanApp::renderLoop() {
 
+
+	auto tApplicationStart = std::chrono::high_resolution_clock::now();
+
 	// when the frame started
 	auto tFrameStart = std::chrono::high_resolution_clock::now();
 	// the current time
 	auto tNow = std::chrono::high_resolution_clock::now();
+	// duration of the frame
+	auto tFrameDuration = std::chrono::duration_cast<std::chrono::microseconds>(tNow - tFrameStart);
+
 	// the time it took for the frame to render, i.e. tCurrent - tFrameStart
 	//auto tFrameTime = std::chrono::high_resolution_clock::now();
 	auto tStart = std::chrono::high_resolution_clock::now();
@@ -812,44 +818,121 @@ void vulkanApp::renderLoop() {
 	auto tStart2 = std::chrono::high_resolution_clock::now();
 	auto tEnd2 = std::chrono::high_resolution_clock::now();
 
+	auto tLastUpdate = std::chrono::high_resolution_clock::now();
+	//double tLastUpdate = 0;
+
+	//std::vector<uint32_t> frameTimes;
+	//frameTimes.resize(100);
+	//std::fill(frameTimes.begin(), frameTimes.end(), 1000);
+
+	//int currentFrameNumber = 0;
+
 
 	while (!quit) {
+
+		//if (currentFrameNumber > frameTimes.size()) {
+		//	currentFrameNumber = -1;
+		//}
+		//currentFrameNumber++;
 
 
 		// get current time
 		tNow = std::chrono::high_resolution_clock::now();
 		// number of frames that have been rendered
 		frameCounter++;
-		// the time it took originally to render the frame
-		auto tOriginalFrameTime = std::chrono::duration<double, std::milli>(tNow - tFrameStart);
-		//auto tFrameTime = std::chrono::duration_cast<std::chrono::milliseconds>(tNow - tFrameStart);
-		// set FPS
-		//double FPS = 6000.0;
-		std::chrono::duration<double, std::milli> minWorkTime(1000.0 / settings.fpsCap);
-		//std::chrono::duration<std::chrono::milliseconds> minWorkTime(1000.0 / settings.fpsCap);
 
-		//if (tFrameTime < minWorkTime) {
-			std::this_thread::sleep_for(minWorkTime - tOriginalFrameTime);
+		//// the time it took originally to render the frame
+		//auto tOriginalFrameTime = std::chrono::duration<double, std::milli>(tNow - tFrameStart);
+		////auto tFrameTime = std::chrono::duration_cast<std::chrono::milliseconds>(tNow - tFrameStart);
+		//// set FPS
+		////double FPS = 6000.0;
+		//std::chrono::duration<double, std::milli> minWorkTime(1000.0 / settings.fpsCap);
+		////std::chrono::duration<std::chrono::milliseconds> minWorkTime(1000.0 / settings.fpsCap);
+
+		////if (tFrameTime < minWorkTime) {
+		//	std::this_thread::sleep_for(minWorkTime - tOriginalFrameTime);
+		////}
+		//// calculate new frame time after sleeping
+		//tNow = std::chrono::high_resolution_clock::now();
+		////auto tFrameDuration = std::chrono::duration<double, std::milli>(tNow - tFrameStart);
+		//auto tFrameDuration = std::chrono::duration_cast<std::chrono::milliseconds>(tNow - tFrameStart);
+		//frameTimer = tFrameDuration.count() / 1000.0;
+		//lastFPS = 1.0 / frameTimer;
+
+
+		//fpsTimer += (float)tFrameDuration.count();
+		//if (fpsTimer > 1000.0f) {
+		//	//lastFPS = frameCounter;
+		//	updateTextOverlay();
+		//	fpsTimer = 0.0f;
+		//	frameCounter = 0;
 		//}
-		// calculate new frame time after sleeping
-		tNow = std::chrono::high_resolution_clock::now();
-		auto tFrameTime = std::chrono::duration<double, std::milli>(tNow - tFrameStart);
-		//auto tFrameTime = std::chrono::duration_cast<std::chrono::milliseconds>(tNow - tFrameStart);
-		frameTimer = tFrameTime.count() / 1000.0;
-		lastFPS = 1.0 / frameTimer;
 
 
-		fpsTimer += (float)tFrameTime.count();
-		if (fpsTimer > 1000.0f) {
-			//lastFPS = frameCounter;
-			updateTextOverlay();
-			fpsTimer = 0.0f;
+
+
+		// get the application's runtime duration in ms
+		runningTime = std::chrono::duration_cast<std::chrono::milliseconds>(tNow - tApplicationStart).count();
+
+
+		
+		tFrameDuration = std::chrono::duration_cast<std::chrono::microseconds>(tNow - tFrameStart);
+		double tFrameDurationMS = tFrameDuration.count() / 1000.0;
+		
+		
+
+		
+
+		//float lowerThres = 0.2;
+
+		float sleepThreshold = 1.8;//1.4
+
+
+		// run cpu in circles
+		while (tFrameDurationMS < settings.frameTimeCapMS) {
+			// allow cpu to sleep if there is lots of time to kill
+			if (tFrameDurationMS < settings.frameTimeCapMS - sleepThreshold) {
+				std::this_thread::sleep_for(std::chrono::microseconds(100));
+			}
+			tNow = std::chrono::high_resolution_clock::now();
+			tFrameDuration = std::chrono::duration_cast<std::chrono::microseconds>(tNow - tFrameStart);
+			tFrameDurationMS = tFrameDuration.count() / 1000.0;
+		}
+
+
+
+		// time since the last update
+		auto tSinceUpdate = std::chrono::duration_cast<std::chrono::microseconds>(tNow - tLastUpdate);
+
+		deltaTime = tFrameDuration.count() / 1000000.0;
+
+		// once more than a certain amount of time has passed(in ms):
+		if (tSinceUpdate.count()/1000.0 > 100.0) {
+			tLastUpdate = std::chrono::high_resolution_clock::now();
+
+			frameTimer = tFrameDurationMS;
+
+			lastFPS = frameCounter / (tSinceUpdate.count() / 1000000.0);
 			frameCounter = 0;
 		}
+		
+
+		//tLastUpdate += tFrameTime.count();
+		
+
+		//lastFPS = tFrameTime.count();
+
+		//printf("%lld \n", tFrameTime.count());
+		//if(tFrameStart - tNow)
+
+
+
+
+
+
 
 		// start of frame
 		tFrameStart = std::chrono::high_resolution_clock::now();
-
 
 
 		// poll keyboard / mouse
@@ -867,6 +950,9 @@ void vulkanApp::renderLoop() {
 		//updateDrawCommandBuffers();
 
 		//buildOffscreenCommandBuffer();
+
+		// todo: remove this:
+		updateTextOverlay();
 
 		// render
 		render();

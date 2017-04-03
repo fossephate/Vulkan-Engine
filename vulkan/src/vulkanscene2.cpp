@@ -2396,7 +2396,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		camera.movementSpeed = 0.005f;
 
-		camera.movementSpeed = camera.movementSpeed*frameTimer*1000.0;
+		camera.movementSpeed = camera.movementSpeed*deltaTime*1000.0;
 
 		if (keyStates.shift) {
 			camera.movementSpeed *= 2;
@@ -2448,7 +2448,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 		camera.rotationSpeed = -0.002f;
-		camera.rotationSpeed = camera.rotationSpeed*frameTimer*1000.0;
+		camera.rotationSpeed = camera.rotationSpeed*deltaTime*1000.0;
 
 
 		if (keyStates.up_arrow) {
@@ -2615,8 +2615,10 @@ class VulkanExample : public vkx::vulkanApp {
 
 		if (keyStates.minus) {
 			settings.fpsCap -= 0.2f;
+			settings.frameTimeCapMS += 0.02f;
 		} else if (keyStates.equals) {
 			settings.fpsCap += 0.2f;
+			settings.frameTimeCapMS -= 0.02f;
 		}
 
 
@@ -2930,11 +2932,18 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// get current time
 		auto tNow = std::chrono::high_resolution_clock::now();
-		// the time since the last tick
-		auto tDuration = std::chrono::duration<double, std::milli>(tNow - this->physicsManager.tLastTimeStep);
+		// the time since the last tick in seconds
+		//auto tDuration = std::chrono::duration<double, std::milli>(tNow - this->physicsManager.tLastTimeStep);
+		auto tSinceUpdate = std::chrono::duration_cast<std::chrono::microseconds>(tNow - this->physicsManager.tLastTimeStep).count()/1000000.0;
+
+
+		this->physicsManager.dynamicsWorld->stepSimulation(tSinceUpdate*2, 4/*,1/50.*/);
+
+		this->physicsManager.tLastTimeStep = std::chrono::high_resolution_clock::now();
 
 		// todo: fix
-		this->physicsManager.dynamicsWorld->stepSimulation(tDuration.count() / 1000.0, 4);
+		//this->physicsManager.dynamicsWorld->stepSimulation(tDuration.count() / 1000.0, 4);
+		//this->physicsManager.dynamicsWorld->stepSimulation(deltaTime, 4);
 
 
 
@@ -3785,30 +3794,28 @@ class VulkanExample : public vkx::vulkanApp {
 		//ss << std::fixed << std::setprecision(2) << (frameTimer * 1000.0f) << "ms (" << lastFPS << " fps)";
 		ss << lastFPS << " FPS";
 		textOverlay->addText(ss.str(), 5.0f, 25.0f, vkx::TextOverlay::alignLeft);
+		ss.str("");ss.clear();
 
-		ss.str("");
-		ss.clear();
-
-		ss << std::fixed << std::setprecision(2) << (frameTimer * 1000.0f) << "ms";
+		ss << std::fixed << std::setprecision(2) << (frameTimer) << "ms";
 		textOverlay->addText(ss.str(), 5.0f, 45.0f, vkx::TextOverlay::alignLeft);
-
-
-		//ss.str("");
-		//ss.clear();
-
-		//ss << "Frame #: " << frameCounter;
-		//textOverlay->addText(ss.str(), 5.0f, 65.0f, vkx::TextOverlay::alignLeft);
-
-		ss.str("");
-		ss.clear();
-
-		ss << "GPU: ";
-		ss << deviceProperties.deviceName;
+		ss.str("");ss.clear();
+		
+		
+		ss << std::setprecision(5) << "debug #1: " << debugValue1;
 		textOverlay->addText(ss.str(), 5.0f, 65.0f, vkx::TextOverlay::alignLeft);
+		ss.str("");ss.clear();
 
+		ss << std::setprecision(5) << "debug #2: " << debugValue2;
+		textOverlay->addText(ss.str(), 5.0f, 85.0f, vkx::TextOverlay::alignLeft);
+		ss.str("");ss.clear();
+
+		//ss << "GPU: ";
+		//ss << deviceProperties.deviceName;
+		//textOverlay->addText(ss.str(), 5.0f, 65.0f, vkx::TextOverlay::alignLeft);
+		//ss.str(""); ss.clear();
 
 		// vertical offset
-		float vOffset = 120.0f;
+		float vOffset = 160.0f;
 		float spacing = 20.0f;
 
 		textOverlay->addText("pos x: " + std::to_string(camera.transform.translation.x), 5.0f, vOffset + 100.0f, vkx::TextOverlay::alignLeft);

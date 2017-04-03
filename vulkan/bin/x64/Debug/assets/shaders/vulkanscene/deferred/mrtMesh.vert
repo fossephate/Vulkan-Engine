@@ -12,7 +12,7 @@ layout (location = 4) in vec3 inTangent;
 layout (location = 0) out vec3 outNormal;
 layout (location = 1) out vec2 outUV;
 layout (location = 2) out vec3 outColor;
-layout (location = 3) out vec3 outWorldPos;
+layout (location = 3) out vec3 outPos;
 layout (location = 4) out vec3 outTangent;
 
 // scene
@@ -21,40 +21,47 @@ layout (set = 0, binding = 0) uniform sceneBuffer
 	mat4 model;
 	mat4 view;
 	mat4 projection;
-
-	mat4 test;
 } scene;
 
 // matrix data
 layout (set = 1, binding = 0) uniform matrixBuffer
 {
 	mat4 model;
-	mat4 boneIndex;
+	int boneIndex;
+	vec3 padding;
+	//mat4 boneIndex;
 	mat4 g1;
 	mat4 g2;
 } instance;
 
 
-
-void main() 
-{
+void main() {
+	
 	gl_Position = scene.projection * scene.view * instance.model * inPos;
 	
 	outUV = inUV;
-	outUV.t = 1.0 - outUV.t;
+	outUV.t = 1.0 - outUV.t;// bc vulkan
 
 	// Vertex position in world space
-	vec4 tmpPos = inPos;
-	outWorldPos = vec3(instance.model * tmpPos);
-	
-	// GL to Vulkan coord space
-	//outWorldPos.y = -outWorldPos.y;
+	//outPos = vec3(instance.model * inPos);
+
+
+
+	// Vertex position in view space
+	outPos = vec3(scene.view * instance.model * inPos);
+
+
 	
 	// Normal in world space
-	// todo: do the inverse transpose on cpu
 	mat3 mNormal = transpose(inverse(mat3(instance.model)));
-    outNormal = mNormal * normalize(inNormal);
-    outTangent = mNormal * normalize(inTangent);
+    //outNormal = mNormal * normalize(inNormal);
+
+	// Normal in view space
+	mat3 normalMatrix = transpose(inverse(mat3(scene.view * instance.model)));
+	outNormal = normalMatrix * inNormal;
+
+	outTangent = mNormal * inTangent;
+
 	
 	// Currently just vertex color
 	outColor = inColor;
