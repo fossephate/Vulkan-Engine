@@ -27,7 +27,7 @@ namespace vkx {
 		this->meshLoader->load(filename, flags);
 	}
 
-	void SkinnedMesh::createSkinnedMeshBuffer(const std::vector<VertexLayout> &layout, float scale) {
+	void SkinnedMesh::createSkinnedMeshBuffer(const std::vector<VertexComponent> &layout, float scale) {
 		this->meshLoader->createSkinnedMeshBuffer(layout, scale);
 		this->meshBuffer = this->meshLoader->combinedBuffer;
 	}

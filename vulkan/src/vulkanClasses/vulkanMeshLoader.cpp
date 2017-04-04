@@ -399,7 +399,7 @@ namespace vkx {
 	}
 
 
-	void vkx::MeshLoader::createMeshBuffer(const std::vector<VertexLayout> &layout, float scale) {
+	void vkx::MeshLoader::createMeshBuffer(const std::vector<VertexComponent> &layout, float scale) {
 
 		// combined mesh buffer
 
@@ -409,45 +409,45 @@ namespace vkx {
 				// Push vertex data depending on layout
 				for (auto& layoutDetail : layout) {
 					// Position
-					if (layoutDetail == VERTEX_LAYOUT_POSITION) {
+					if (layoutDetail == VERTEX_COMPONENT_POSITION) {
 						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.x * scale);
 						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.y * scale);
 						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.z * scale);
 					}
 					// Normal
-					if (layoutDetail == VERTEX_LAYOUT_NORMAL) {
+					if (layoutDetail == VERTEX_COMPONENT_NORMAL) {
 						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.x);
 						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.y);
 						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.z);
 					}
 					// Texture coordinates
-					if (layoutDetail == VERTEX_LAYOUT_UV) {
+					if (layoutDetail == VERTEX_COMPONENT_UV) {
 						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tex.s);
 						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tex.t);
 					}
 					// Color
-					if (layoutDetail == VERTEX_LAYOUT_COLOR) {
+					if (layoutDetail == VERTEX_COMPONENT_COLOR) {
 						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.r);
 						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.g);
 						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.b);
 					}
 					// Tangent
-					if (layoutDetail == VERTEX_LAYOUT_TANGENT) {
+					if (layoutDetail == VERTEX_COMPONENT_TANGENT) {
 						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.x);
 						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.y);
 						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.z);
 					}
 					// Bitangent
-					if (layoutDetail == VERTEX_LAYOUT_BITANGENT) {
+					if (layoutDetail == VERTEX_COMPONENT_BITANGENT) {
 						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.x);
 						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.y);
 						vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.z);
 					}
 					// Dummy layout components for padding
-					if (layoutDetail == VERTEX_LAYOUT_DUMMY_FLOAT) {
+					if (layoutDetail == VERTEX_COMPONENT_DUMMY_FLOAT) {
 						vertexBuffer.push_back(0.0f);
 					}
-					if (layoutDetail == VERTEX_LAYOUT_DUMMY_VEC4) {
+					if (layoutDetail == VERTEX_COMPONENT_DUMMY_VEC4) {
 						vertexBuffer.push_back(0.0f);
 						vertexBuffer.push_back(0.0f);
 						vertexBuffer.push_back(0.0f);
@@ -485,7 +485,7 @@ namespace vkx {
 
 
 
-	void vkx::MeshLoader::createMeshBuffers(const std::vector<VertexLayout> &layout, float scale) {
+	void vkx::MeshLoader::createMeshBuffers(const std::vector<VertexComponent> &layout, float scale) {
 
 
 		//for (int i = 0; i < 10000; i++) {
@@ -510,45 +510,45 @@ namespace vkx {
 				for (auto &layoutDetail : layout) {
 					switch (layoutDetail) {
 						// Position
-						case VERTEX_LAYOUT_POSITION:
+						case VERTEX_COMPONENT_POSITION:
 							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.x * scale);
 							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.y * scale);
 							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.z * scale);
 							break;
 						// Normal
-						case VERTEX_LAYOUT_NORMAL:
+						case VERTEX_COMPONENT_NORMAL:
 							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.x);
 							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.y);// y was negative// important
 							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.z);
 							break;
 						// Texture Coordinates
-						case VERTEX_LAYOUT_UV:
+						case VERTEX_COMPONENT_UV:
 							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tex.s);
 							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tex.t);
 							break;
 						// Color
-						case VERTEX_LAYOUT_COLOR:
+						case VERTEX_COMPONENT_COLOR:
 							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.r);
 							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.g);
 							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.b);
 							break;
 						// Tangent
-						case VERTEX_LAYOUT_TANGENT:
+						case VERTEX_COMPONENT_TANGENT:
 							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.x);
 							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.y);
 							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.z);
 							break;
 						// Bitangent
-						case VERTEX_LAYOUT_BITANGENT:
+						case VERTEX_COMPONENT_BITANGENT:
 							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.x);
 							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.y);
 							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.z);
 							break;
 						// Dummy layout components for padding
-						case VERTEX_LAYOUT_DUMMY_FLOAT:
+						case VERTEX_COMPONENT_DUMMY_FLOAT:
 							vertexBuffer.push_back(0.0f);
 							break;
-						case VERTEX_LAYOUT_DUMMY_VEC4:
+						case VERTEX_COMPONENT_DUMMY_VEC4:
 							vertexBuffer.push_back(0.0f);
 							vertexBuffer.push_back(0.0f);
 							vertexBuffer.push_back(0.0f);
@@ -654,7 +654,7 @@ namespace vkx {
 
 
 
-	void vkx::MeshLoader::createSkinnedMeshBuffer(const std::vector<VertexLayout> &layout, float scale) {
+	void vkx::MeshLoader::createSkinnedMeshBuffer(const std::vector<VertexComponent> &layout, float scale) {
 
 
 		this->setAnimation(0);

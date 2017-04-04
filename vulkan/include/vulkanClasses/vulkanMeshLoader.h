@@ -71,18 +71,62 @@ namespace vkx {
 	class AssetManager;
 
 	// vertex layout enums
-	typedef enum VertexLayout {
-		VERTEX_LAYOUT_POSITION = 0x0,
-		VERTEX_LAYOUT_NORMAL = 0x1,
-		VERTEX_LAYOUT_COLOR = 0x2,
-		VERTEX_LAYOUT_UV = 0x3,
-		VERTEX_LAYOUT_TANGENT = 0x4,
-		VERTEX_LAYOUT_BITANGENT = 0x5,
-		VERTEX_LAYOUT_DUMMY_FLOAT = 0x6,
-		VERTEX_LAYOUT_DUMMY_VEC4 = 0x7,
-		//VERTEX_LAYOUT_BONE_ID = 0x8,// added 1/20/17
-		//VERTEX_LAYOUT_BONE_WEIGHT = 0x9,// added 1/20/17
-	} VertexLayout;
+	typedef enum VertexComponent {
+		VERTEX_COMPONENT_POSITION = 0x0,
+		VERTEX_COMPONENT_NORMAL = 0x1,
+		VERTEX_COMPONENT_COLOR = 0x2,
+		VERTEX_COMPONENT_UV = 0x3,
+		VERTEX_COMPONENT_TANGENT = 0x4,
+		VERTEX_COMPONENT_BITANGENT = 0x5,
+		VERTEX_COMPONENT_DUMMY_FLOAT = 0x6,
+		VERTEX_COMPONENT_DUMMY_VEC4 = 0x7,
+		//VERTEX_COMPONENT_BONE_ID = 0x8,// added 1/20/17
+		//VERTEX_COMPONENT_BONE_WEIGHT = 0x9,// added 1/20/17
+	} VertexComponent;
+
+	///** @brief Vertex layout components */
+	//typedef enum Component {
+	//	VERTEX_COMPONENT_POSITION = 0x0,
+	//	VERTEX_COMPONENT_NORMAL = 0x1,
+	//	VERTEX_COMPONENT_COLOR = 0x2,
+	//	VERTEX_COMPONENT_UV = 0x3,
+	//	VERTEX_COMPONENT_TANGENT = 0x4,
+	//	VERTEX_COMPONENT_BITANGENT = 0x5,
+	//	VERTEX_COMPONENT_DUMMY_FLOAT = 0x6,
+	//	VERTEX_COMPONENT_DUMMY_VEC4 = 0x7
+	//} Component;
+
+	///** @brief Stores vertex layout components for model loading and Vulkan vertex input and atribute bindings  */
+	//struct VertexLayout {
+	//	public:
+	//	/** @brief Components used to generate vertices from */
+	//	std::vector<Component> components;
+
+	//	VertexLayout(std::vector<Component> components) {
+	//		this->components = std::move(components);
+	//	}
+
+	//	uint32_t stride() {
+	//		uint32_t res = 0;
+	//		for (auto &component : components) {
+	//			switch (component) {
+	//				case VERTEX_COMPONENT_UV:
+	//					res += 2 * sizeof(float);
+	//					break;
+	//				case VERTEX_COMPONENT_DUMMY_FLOAT:
+	//					res += sizeof(float);
+	//					break;
+	//				case VERTEX_COMPONENT_DUMMY_VEC4:
+	//					res += 4 * sizeof(float);
+	//					break;
+	//				default:
+	//					// All components except the ones listed above are made up of 3 floats
+	//					res += 3 * sizeof(float);
+	//			}
+	//		}
+	//		return res;
+	//	}
+	//};
 
 
 	struct MaterialProperties;
@@ -185,24 +229,24 @@ namespace vkx {
 
 
 	// Get vertex size from vertex layout
-	static uint32_t vertexSize(const std::vector<VertexLayout> &layout) {
+	static uint32_t vertexSize(const std::vector<VertexComponent> &layout) {
 		uint32_t vSize = 0;
 		for (auto& layoutDetail : layout) {
 			switch (layoutDetail) {
 				// UV only has two components
-				case VERTEX_LAYOUT_UV:
+				case VERTEX_COMPONENT_UV:
 					vSize += 2 * sizeof(float);
 					break;
-				case VERTEX_LAYOUT_DUMMY_VEC4:
+				case VERTEX_COMPONENT_DUMMY_VEC4:
 					vSize += 4 * sizeof(float);
 					break;
-				//case VERTEX_LAYOUT_BONE_ID:
+				//case VERTEX_COMPONENT_BONE_ID:
 				//	vSize += 4 * sizeof(float);
 				//	break;
-				//case VERTEX_LAYOUT_BONE_WEIGHT:
+				//case VERTEX_COMPONENT_BONE_WEIGHT:
 				//	vSize += 4 * sizeof(float);
 				//	break;
-				case VERTEX_LAYOUT_DUMMY_FLOAT:
+				case VERTEX_COMPONENT_DUMMY_FLOAT:
 					vSize += 1 * sizeof(float);
 					break;
 				default:
@@ -345,15 +389,15 @@ namespace vkx {
 			// Create vertex and index buffer with given layout
 
 			// for single meshes (multiple meshes are combined into a single buffer with only one material)
-			void createMeshBuffer(const std::vector<VertexLayout> &layout, float scale);
+			void createMeshBuffer(const std::vector<VertexComponent> &layout, float scale);
 			// for groups of meshes (models) with multiple buffers and materials
-			void createMeshBuffers(const std::vector<VertexLayout> &layout, float scale);
+			void createMeshBuffers(const std::vector<VertexComponent> &layout, float scale);
 
 			void destroy();
 
 			/* Skinned Meshes */
 			// for skinned meshes (with bones)
-			void createSkinnedMeshBuffer(const std::vector<VertexLayout> &layout, float scale);
+			void createSkinnedMeshBuffer(const std::vector<VertexComponent> &layout, float scale);
 
 			void setAnimation(uint32_t animationIndex);
 			void loadBones(uint32_t meshIndex, const aiMesh *pMesh, std::vector<VertexBoneData>& Bones);

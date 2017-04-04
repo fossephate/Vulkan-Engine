@@ -603,7 +603,7 @@ void vulkanApp::prepare() {
 }
 
 // todo: remove this
-MeshBuffer vulkanApp::loadMesh(const std::string& filename, const std::vector<VertexLayout>& vertexLayout, float scale) {
+MeshBuffer vulkanApp::loadMesh(const std::string& filename, const std::vector<VertexComponent>& vertexLayout, float scale) {
 	MeshLoader loader(&this->context, &this->assetManager);
 	#if defined(__ANDROID__)
 	loader.assetManager = androidApp->activity->assetManager;

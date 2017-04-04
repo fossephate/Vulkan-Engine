@@ -75,10 +75,10 @@
     <ClCompile Include="include\external\imgui\imgui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="include\external\imgui\vk\main.cpp">
+    <ClCompile Include="include\external\imgui\vk\imgui_impl_glfw_vulkan.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="include\external\imgui\vk\imgui_impl_glfw_vulkan.cpp">
+    <ClCompile Include="src\vulkanscene2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

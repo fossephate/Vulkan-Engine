@@ -9,7 +9,7 @@ layout (set = 3, binding = 3) uniform usampler2D samplerAlbedo;// this is a usam
 //layout (set = 3, binding = 4) uniform sampler2D samplerSSAO;
 
 
-struct Light {
+struct PointLight {
     vec4 position;
     vec4 color;
     float radius;
@@ -18,12 +18,23 @@ struct Light {
     float _pad;
 };
 
+struct DirectionalLight {
+    vec4 position;
+    vec4 color;
+    vec4 direction;
+    vec4 _pad;
+    //float radius;
+};
+
+
+
 #define NUM_LIGHTS 100
+#define NUM_DIR_LIGHTS 10
 
 // todo: make this another set(1) rather than binding = 4
 layout (set = 3, binding = 5) uniform UBO 
 {
-    Light lights[NUM_LIGHTS];
+    PointLight lights[NUM_LIGHTS];
     vec4 viewPos;
     mat4 model;// added
     mat4 view;// added
@@ -59,7 +70,7 @@ void main() {
     
     if (length(fragPos) == 0.0) {
         fragcolor = color.rgb;
-    } else {    
+    } else {
         for(int i = 0; i < NUM_LIGHTS; ++i) {
             // Light to fragment
             vec3 lightPos = vec3(ubo.view * ubo.model * vec4(ubo.lights[i].position.xyz, 1.0));

@@ -93,6 +93,25 @@ namespace vkx {
 	vk::Format getSupportedDepthFormat(vk::PhysicalDevice physicalDevice);
 	vk::AccessFlags accessFlagsForLayout(vk::ImageLayout layout);
 
+	//// Put an image memory barrier for setting an image layout on the sub resource into the given command buffer
+	//void setImageLayout(
+	//	vk::CommandBuffer cmdbuffer,
+	//	vk::Image image,
+	//	vk::ImageAspectFlags aspectMask,
+	//	vk::ImageLayout oldImageLayout,
+	//	vk::ImageLayout newImageLayout,
+	//	vk::ImageSubresourceRange subresourceRange);
+	//// Uses a fixed sub resource layout with first mip level and layer
+	//void setImageLayout(
+	//	vk::CommandBuffer cmdbuffer,
+	//	vk::Image image,
+	//	vk::ImageAspectFlags aspectMask,
+	//	vk::ImageLayout oldImageLayout,
+	//	vk::ImageLayout newImageLayout);
+
+
+
+
 	// Put an image memory barrier for setting an image layout on the sub resource into the given command buffer
 	void setImageLayout(
 		vk::CommandBuffer cmdbuffer,
@@ -100,14 +119,33 @@ namespace vkx {
 		vk::ImageAspectFlags aspectMask,
 		vk::ImageLayout oldImageLayout,
 		vk::ImageLayout newImageLayout,
-		vk::ImageSubresourceRange subresourceRange);
+		vk::ImageSubresourceRange subresourceRange,
+		vk::PipelineStageFlags srcStageMask = vk::PipelineStageFlagBits::eAllCommands,
+		vk::PipelineStageFlags dstStageMask = vk::PipelineStageFlagBits::eAllCommands);
+
 	// Uses a fixed sub resource layout with first mip level and layer
 	void setImageLayout(
 		vk::CommandBuffer cmdbuffer,
 		vk::Image image,
 		vk::ImageAspectFlags aspectMask,
 		vk::ImageLayout oldImageLayout,
-		vk::ImageLayout newImageLayout);
+		vk::ImageLayout newImageLayout,
+		vk::PipelineStageFlags srcStageMask = vk::PipelineStageFlagBits::eAllCommands,
+		vk::PipelineStageFlags dstStageMask = vk::PipelineStageFlagBits::eAllCommands);
+
+
+
+	/** @brief Inser an image memory barrier into the command buffer */
+	void insertImageMemoryBarrier(
+		vk::CommandBuffer cmdbuffer,
+		vk::Image image,
+		vk::AccessFlags srcAccessMask,
+		vk::AccessFlags dstAccessMask,
+		vk::ImageLayout oldImageLayout,
+		vk::ImageLayout newImageLayout,
+		vk::PipelineStageFlags srcStageMask,
+		vk::PipelineStageFlags dstStageMask,
+		vk::ImageSubresourceRange subresourceRange);
 
 	// Load a text file (e.g. GLGL shader) into a std::string
 	std::string readTextFile(const std::string& filename);
@@ -218,6 +256,25 @@ namespace vkx {
 		vk::Buffer buffer;
 		vk::DescriptorBufferInfo descriptor;
 
+		// create flush function here:
+		/**
+		* Flush a memory range of the buffer to make it visible to the device
+		*
+		* @note Only required for non-coherent memory
+		*
+		* @param size (Optional) Size of the memory range to flush. Pass VK_WHOLE_SIZE to flush the complete buffer range.
+		* @param offset (Optional) Byte offset from beginning
+		*
+		* @return VkResult of the flush call
+		*/
+		vk::Result flush(vk::DeviceSize size = VK_WHOLE_SIZE, vk::DeviceSize offset = 0) {
+			vk::MappedMemoryRange mappedRange;
+			mappedRange.memory = memory;
+			mappedRange.offset = offset;
+			mappedRange.size = size;
+			return device.flushMappedMemoryRanges(1, &mappedRange);
+		}
+
 		void destroy() override {
 			if (mapped) {
 				unmap();
@@ -289,6 +346,10 @@ namespace vkx {
 		vk::DescriptorPoolSize* pPoolSizes,
 		uint32_t maxSets);
 
+	vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo(
+		const std::vector<vk::DescriptorPoolSize>& poolSizes,
+		uint32_t maxSets);
+
 	vk::DescriptorPoolSize descriptorPoolSize(
 		vk::DescriptorType type,
 		uint32_t descriptorCount);
@@ -301,6 +362,9 @@ namespace vkx {
 	vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo(
 		const vk::DescriptorSetLayoutBinding* pBindings,
 		uint32_t bindingCount);
+
+	vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo(
+		const std::vector<vk::DescriptorSetLayoutBinding> &bindings);
 
 	vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo(
 		const vk::DescriptorSetLayout* pSetLayouts,
@@ -377,6 +441,10 @@ namespace vkx {
 	vk::PipelineDynamicStateCreateInfo pipelineDynamicStateCreateInfo(
 		const vk::DynamicState *pDynamicStates,
 		uint32_t dynamicStateCount,
+		vk::PipelineDynamicStateCreateFlags flags = vk::PipelineDynamicStateCreateFlags());
+
+	vk::PipelineDynamicStateCreateInfo pipelineDynamicStateCreateInfo(
+		const std::vector<vk::DynamicState> &pDynamicStates,
 		vk::PipelineDynamicStateCreateFlags flags = vk::PipelineDynamicStateCreateFlags());
 
 	vk::PipelineTessellationStateCreateInfo pipelineTessellationStateCreateInfo(

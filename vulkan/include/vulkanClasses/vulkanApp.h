@@ -216,7 +216,7 @@ namespace vkx
 			/** @brief Example settings that can be changed e.g. by command line arguments */
 			struct Settings {
 				/** @brief Activates validation layers (and message output) when set to true */
-				bool validation = true;
+				bool validation = false;
 				/** @brief Set to true when the debug marker extension is detected */
 				bool debugMarkers = false;
 				/** @brief Set to true if fullscreen mode has been requested via command line */
@@ -476,7 +476,7 @@ namespace vkx
 			// todo: remove this
 			vkx::MeshBuffer loadMesh(
 				const std::string &filename,
-				const std::vector<VertexLayout> &vertexLayout,
+				const std::vector<VertexComponent> &vertexLayout,
 				float scale = 1.0f);
 
 			void updateInputInfo();

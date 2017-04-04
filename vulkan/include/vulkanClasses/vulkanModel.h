@@ -72,9 +72,9 @@ namespace vkx {
 			// load model with custom flags
 			void load(const std::string &filename, int flags);
 
-			void asyncCreateMeshes(const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
+			void asyncCreateMeshes(const std::vector<VertexComponent> &layout, float scale, uint32_t binding);
 
-			void createMeshes(const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
+			void createMeshes(const std::vector<VertexComponent> &layout, float scale, uint32_t binding);
 
 			//void asyncLoadAndCreateMeshes(const std::string &filename, const std::vector<VertexLayout> &layout, float scale, uint32_t binding);
 

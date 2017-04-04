@@ -158,7 +158,7 @@ namespace vkx {
 			// load model with custom flags
 			void load(const std::string &filename, int flags);
 
-			void createSkinnedMeshBuffer(const std::vector<VertexLayout> &layout, float scale);
+			void createSkinnedMeshBuffer(const std::vector<VertexComponent> &layout, float scale);
 
 			//void setup(const std::vector<VertexLayout> &layout, float scale);
 			//void setup(float scale);

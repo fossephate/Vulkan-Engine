@@ -78,9 +78,59 @@ namespace vkx {
 		}
 	}
 
+	//// Create an image memory barrier for changing the layout of
+	//// an image and put it into an active command buffer
+	//// See chapter 11.4 "vk::Image Layout" for details
+
+	//void setImageLayout(
+	//	vk::CommandBuffer cmdbuffer,
+	//	vk::Image image,
+	//	vk::ImageAspectFlags aspectMask,
+	//	vk::ImageLayout oldImageLayout,
+	//	vk::ImageLayout newImageLayout,
+	//	vk::ImageSubresourceRange subresourceRange) {
+
+	//	// Create an image barrier object
+	//	vk::ImageMemoryBarrier imageMemoryBarrier;
+	//	imageMemoryBarrier.oldLayout = oldImageLayout;
+	//	imageMemoryBarrier.newLayout = newImageLayout;
+	//	imageMemoryBarrier.image = image;
+	//	imageMemoryBarrier.subresourceRange = subresourceRange;
+	//	imageMemoryBarrier.srcAccessMask = accessFlagsForLayout(oldImageLayout);
+	//	imageMemoryBarrier.dstAccessMask = accessFlagsForLayout(newImageLayout);
+
+	//	// Put barrier on top
+	//	// Put barrier inside setup command buffer
+	//	cmdbuffer.pipelineBarrier(
+	//		vk::PipelineStageFlagBits::eTopOfPipe,
+	//		vk::PipelineStageFlagBits::eTopOfPipe,
+	//		vk::DependencyFlags(),
+	//		nullptr, nullptr, imageMemoryBarrier);
+	//}
+
+	//// Fixed sub resource on first mip level and layer
+	//void setImageLayout(
+	//	vk::CommandBuffer cmdbuffer,
+	//	vk::Image image,
+	//	vk::ImageAspectFlags aspectMask,
+	//	vk::ImageLayout oldImageLayout,
+	//	vk::ImageLayout newImageLayout) {
+	//	vk::ImageSubresourceRange subresourceRange;
+	//	subresourceRange.aspectMask = aspectMask;
+	//	subresourceRange.levelCount = 1;
+	//	subresourceRange.layerCount = 1;
+	//	setImageLayout(cmdbuffer, image, aspectMask, oldImageLayout, newImageLayout, subresourceRange);
+	//}
+
+
+
+
+
+
+
 	// Create an image memory barrier for changing the layout of
 	// an image and put it into an active command buffer
-	// See chapter 11.4 "vk::Image Layout" for details
+	// See chapter 11.4 "Image Layout" for details
 
 	void setImageLayout(
 		vk::CommandBuffer cmdbuffer,
@@ -88,24 +138,125 @@ namespace vkx {
 		vk::ImageAspectFlags aspectMask,
 		vk::ImageLayout oldImageLayout,
 		vk::ImageLayout newImageLayout,
-		vk::ImageSubresourceRange subresourceRange) {
-
+		vk::ImageSubresourceRange subresourceRange,
+		vk::PipelineStageFlags srcStageMask,
+		vk::PipelineStageFlags dstStageMask)
+	{
 		// Create an image barrier object
-		vk::ImageMemoryBarrier imageMemoryBarrier;
+		vk::ImageMemoryBarrier imageMemoryBarrier;// = vks::initializers::imageMemoryBarrier();
 		imageMemoryBarrier.oldLayout = oldImageLayout;
 		imageMemoryBarrier.newLayout = newImageLayout;
 		imageMemoryBarrier.image = image;
 		imageMemoryBarrier.subresourceRange = subresourceRange;
-		imageMemoryBarrier.srcAccessMask = accessFlagsForLayout(oldImageLayout);
-		imageMemoryBarrier.dstAccessMask = accessFlagsForLayout(newImageLayout);
 
-		// Put barrier on top
-		// Put barrier inside setup command buffer
+		// Source layouts (old)
+		// Source access mask controls actions that have to be finished on the old layout
+		// before it will be transitioned to the new layout
+		switch (oldImageLayout) {
+
+			case vk::ImageLayout::eUndefined:
+				// Image layout is undefined (or does not matter)
+				// Only valid as initial layout
+				// No flags required, listed only for completeness
+				//imageMemoryBarrier.srcAccessMask = 0;
+				break;
+
+			case vk::ImageLayout::ePreinitialized:
+				// Image is preinitialized
+				// Only valid as initial layout for linear images, preserves memory contents
+				// Make sure host writes have been finished
+				imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eHostWrite;
+				break;
+
+			case vk::ImageLayout::eColorAttachmentOptimal:
+				// Image is a color attachment
+				// Make sure any writes to the color buffer have been finished
+				imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+				break;
+
+			case vk::ImageLayout::eDepthStencilAttachmentOptimal:
+				// Image is a depth/stencil attachment
+				// Make sure any writes to the depth/stencil buffer have been finished
+				imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+				break;
+
+			case vk::ImageLayout::eTransferSrcOptimal:
+				// Image is a transfer source 
+				// Make sure any reads from the image have been finished
+				imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eTransferRead;
+				break;
+
+			case vk::ImageLayout::eTransferDstOptimal:
+				// Image is a transfer destination
+				// Make sure any writes to the image have been finished
+				imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+				break;
+
+			case vk::ImageLayout::eShaderReadOnlyOptimal:
+				// Image is read by a shader
+				// Make sure any shader reads from the image have been finished
+				imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eShaderRead;
+				break;
+		}
+
+		// Target layouts (new)
+		// Destination access mask controls the dependency for the new image layout
+		switch (newImageLayout)
+		{
+			case vk::ImageLayout::eTransferDstOptimal:
+				// Image will be used as a transfer destination
+				// Make sure any writes to the image have been finished
+				imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+				break;
+
+			case vk::ImageLayout::eTransferSrcOptimal:
+				// Image will be used as a transfer source
+				// Make sure any reads from and writes to the image have been finished
+				imageMemoryBarrier.srcAccessMask = imageMemoryBarrier.srcAccessMask | vk::AccessFlagBits::eTransferRead;
+				imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
+				break;
+
+			case vk::ImageLayout::eColorAttachmentOptimal:
+				// Image will be used as a color attachment
+				// Make sure any writes to the color buffer have been finished
+				imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eTransferRead;
+				imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+				break;
+
+			case vk::ImageLayout::eDepthStencilAttachmentOptimal:
+				// Image layout will be used as a depth/stencil attachment
+				// Make sure any writes to depth/stencil buffer have been finished
+				imageMemoryBarrier.dstAccessMask = imageMemoryBarrier.dstAccessMask | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+				break;
+
+			case vk::ImageLayout::eShaderReadOnlyOptimal:
+				// Image will be read in a shader (sampler, input attachment)
+				// Make sure any writes to the image have been finished
+				if ((VkAccessFlags)imageMemoryBarrier.srcAccessMask == 0) {
+					imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eHostWrite | vk::AccessFlagBits::eTransferWrite;
+				}
+				imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+				break;
+		}
+
+		//// Put barrier inside setup command buffer
+		//vkCmdPipelineBarrier(
+		//	cmdbuffer,
+		//	srcStageMask,
+		//	dstStageMask,
+		//	0,
+		//	0, nullptr,
+		//	0, nullptr,
+		//	1, &imageMemoryBarrier);
+		
 		cmdbuffer.pipelineBarrier(
-			vk::PipelineStageFlagBits::eTopOfPipe,
-			vk::PipelineStageFlagBits::eTopOfPipe,
-			vk::DependencyFlags(),
-			nullptr, nullptr, imageMemoryBarrier);
+			srcStageMask,
+			dstStageMask,
+			{},
+			0, nullptr,
+			0, nullptr,
+			1, &imageMemoryBarrier);
+
 	}
 
 	// Fixed sub resource on first mip level and layer
@@ -114,13 +265,61 @@ namespace vkx {
 		vk::Image image,
 		vk::ImageAspectFlags aspectMask,
 		vk::ImageLayout oldImageLayout,
-		vk::ImageLayout newImageLayout) {
-		vk::ImageSubresourceRange subresourceRange;
+		vk::ImageLayout newImageLayout,
+		vk::PipelineStageFlags srcStageMask,
+		vk::PipelineStageFlags dstStageMask)
+	{
+		vk::ImageSubresourceRange subresourceRange = {};
 		subresourceRange.aspectMask = aspectMask;
+		subresourceRange.baseMipLevel = 0;
 		subresourceRange.levelCount = 1;
 		subresourceRange.layerCount = 1;
 		setImageLayout(cmdbuffer, image, aspectMask, oldImageLayout, newImageLayout, subresourceRange);
 	}
+
+	void insertImageMemoryBarrier(
+		vk::CommandBuffer cmdbuffer,
+		vk::Image image,
+		vk::AccessFlags srcAccessMask,
+		vk::AccessFlags dstAccessMask,
+		vk::ImageLayout oldImageLayout,
+		vk::ImageLayout newImageLayout,
+		vk::PipelineStageFlags srcStageMask,
+		vk::PipelineStageFlags dstStageMask,
+		vk::ImageSubresourceRange subresourceRange)
+	{
+		vk::ImageMemoryBarrier imageMemoryBarrier;// = vks::initializers::imageMemoryBarrier();
+		imageMemoryBarrier.srcAccessMask = srcAccessMask;
+		imageMemoryBarrier.dstAccessMask = dstAccessMask;
+		imageMemoryBarrier.oldLayout = oldImageLayout;
+		imageMemoryBarrier.newLayout = newImageLayout;
+		imageMemoryBarrier.image = image;
+		imageMemoryBarrier.subresourceRange = subresourceRange;
+
+		//vkCmdPipelineBarrier(
+		//	cmdbuffer,
+		//	srcStageMask,
+		//	dstStageMask,
+		//	0,
+		//	0, nullptr,
+		//	0, nullptr,
+		//	1, &imageMemoryBarrier);
+		cmdbuffer.pipelineBarrier(
+			srcStageMask,
+			dstStageMask,
+			{},
+			0, nullptr,
+			0, nullptr,
+			1, &imageMemoryBarrier);
+	}
+
+
+
+
+
+
+
+
 
 	void exitFatal(std::string message, std::string caption) {
 		#ifdef _WIN32
@@ -314,6 +513,17 @@ namespace vkx {
 		return descriptorPoolInfo;
 	}
 
+	vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo(
+		const std::vector<vk::DescriptorPoolSize> &poolSizes,
+		uint32_t maxSets) {
+
+		vk::DescriptorPoolCreateInfo descriptorPoolInfo;
+		descriptorPoolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+		descriptorPoolInfo.pPoolSizes = poolSizes.data();
+		descriptorPoolInfo.maxSets = maxSets;
+		return descriptorPoolInfo;
+	}
+
 	vk::DescriptorPoolSize descriptorPoolSize(
 		vk::DescriptorType type,
 		uint32_t descriptorCount) {
@@ -345,6 +555,16 @@ namespace vkx {
 		descriptorSetLayoutCreateInfo.bindingCount = bindingCount;
 		return descriptorSetLayoutCreateInfo;
 	}
+
+	vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo(
+		const std::vector<vk::DescriptorSetLayoutBinding> &bindings)
+	{
+		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo;
+		descriptorSetLayoutCreateInfo.pBindings = bindings.data();
+		descriptorSetLayoutCreateInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+		return descriptorSetLayoutCreateInfo;
+	}
+
 
 	vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo(
 		const vk::DescriptorSetLayout* pSetLayouts,
@@ -517,6 +737,17 @@ namespace vkx {
 		vk::PipelineDynamicStateCreateInfo pipelineDynamicStateCreateInfo;
 		pipelineDynamicStateCreateInfo.pDynamicStates = pDynamicStates;
 		pipelineDynamicStateCreateInfo.dynamicStateCount = dynamicStateCount;
+		return pipelineDynamicStateCreateInfo;
+	}
+
+	vk::PipelineDynamicStateCreateInfo pipelineDynamicStateCreateInfo(
+		const std::vector<vk::DynamicState> &pDynamicStates,
+		vk::PipelineDynamicStateCreateFlags flags)
+	{
+		vk::PipelineDynamicStateCreateInfo pipelineDynamicStateCreateInfo;
+		pipelineDynamicStateCreateInfo.pDynamicStates = pDynamicStates.data();
+		pipelineDynamicStateCreateInfo.dynamicStateCount = static_cast<uint32_t>(pDynamicStates.size());
+		pipelineDynamicStateCreateInfo.flags = flags;
 		return pipelineDynamicStateCreateInfo;
 	}
 

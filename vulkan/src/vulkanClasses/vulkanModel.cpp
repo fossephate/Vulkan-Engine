@@ -22,7 +22,7 @@ namespace vkx {
 	}
 
 
-	void Model::asyncCreateMeshes(const std::vector<VertexLayout> &layout, float scale, uint32_t binding) {
+	void Model::asyncCreateMeshes(const std::vector<VertexComponent> &layout, float scale, uint32_t binding) {
 		this->meshLoader->createMeshBuffers(layout, scale);
 
 		std::vector<MeshBuffer> meshBuffers = this->meshLoader->meshBuffers;
@@ -43,12 +43,12 @@ namespace vkx {
 
 
 
-	void Model::createMeshes(const std::vector<VertexLayout> &layout, float scale, uint32_t binding) {
+	void Model::createMeshes(const std::vector<VertexComponent> &layout, float scale, uint32_t binding) {
 		/* Run some task on new thread. The launch policy std::launch::async
 		makes sure that the task is run asynchronously on a new thread. */
 		//this->myFuture = std::async(std::launch::async, [] {
 		//});
-		bool useAsync = false;
+		bool useAsync = true;
 		if (useAsync) {
 			this->myFuture = std::async(std::launch::async, &Model::asyncCreateMeshes, this, layout, scale, binding);
 		} else {

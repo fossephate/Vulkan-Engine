@@ -38,47 +38,47 @@
 
 
 
-std::vector<vkx::VertexLayout> meshVertexLayout =
+std::vector<vkx::VertexComponent> meshVertexLayout =
 {
-	vkx::VertexLayout::VERTEX_LAYOUT_POSITION,
-	vkx::VertexLayout::VERTEX_LAYOUT_UV,
-	vkx::VertexLayout::VERTEX_LAYOUT_COLOR,
-	vkx::VertexLayout::VERTEX_LAYOUT_NORMAL,
-	vkx::VertexLayout::VERTEX_LAYOUT_DUMMY_VEC4,
-	vkx::VertexLayout::VERTEX_LAYOUT_DUMMY_VEC4
+	vkx::VertexComponent::VERTEX_COMPONENT_POSITION,
+	vkx::VertexComponent::VERTEX_COMPONENT_UV,
+	vkx::VertexComponent::VERTEX_COMPONENT_COLOR,
+	vkx::VertexComponent::VERTEX_COMPONENT_NORMAL,
+	vkx::VertexComponent::VERTEX_COMPONENT_DUMMY_VEC4,
+	vkx::VertexComponent::VERTEX_COMPONENT_DUMMY_VEC4
 };
 
 
-std::vector<vkx::VertexLayout> skinnedMeshVertexLayout =
+std::vector<vkx::VertexComponent> skinnedMeshVertexLayout =
 {
-	vkx::VertexLayout::VERTEX_LAYOUT_POSITION,
-	vkx::VertexLayout::VERTEX_LAYOUT_UV,
-	vkx::VertexLayout::VERTEX_LAYOUT_COLOR,
-	vkx::VertexLayout::VERTEX_LAYOUT_NORMAL,
-	vkx::VertexLayout::VERTEX_LAYOUT_DUMMY_VEC4,
-	vkx::VertexLayout::VERTEX_LAYOUT_DUMMY_VEC4
+	vkx::VertexComponent::VERTEX_COMPONENT_POSITION,
+	vkx::VertexComponent::VERTEX_COMPONENT_UV,
+	vkx::VertexComponent::VERTEX_COMPONENT_COLOR,
+	vkx::VertexComponent::VERTEX_COMPONENT_NORMAL,
+	vkx::VertexComponent::VERTEX_COMPONENT_DUMMY_VEC4,
+	vkx::VertexComponent::VERTEX_COMPONENT_DUMMY_VEC4
 };
 
 
-std::vector<vkx::VertexLayout> deferredVertexLayout =
+std::vector<vkx::VertexComponent> deferredVertexLayout =
 {
-	vkx::VertexLayout::VERTEX_LAYOUT_POSITION,
-	vkx::VertexLayout::VERTEX_LAYOUT_UV,
-	vkx::VertexLayout::VERTEX_LAYOUT_COLOR,
-	vkx::VertexLayout::VERTEX_LAYOUT_NORMAL
+	vkx::VertexComponent::VERTEX_COMPONENT_POSITION,
+	vkx::VertexComponent::VERTEX_COMPONENT_UV,
+	vkx::VertexComponent::VERTEX_COMPONENT_COLOR,
+	vkx::VertexComponent::VERTEX_COMPONENT_NORMAL
 };
 
 
 
-std::vector<vkx::VertexLayout> SSAOVertexLayout =
+std::vector<vkx::VertexComponent> SSAOVertexLayout =
 {
-	vkx::VertexLayout::VERTEX_LAYOUT_POSITION,
-	vkx::VertexLayout::VERTEX_LAYOUT_UV,
-	vkx::VertexLayout::VERTEX_LAYOUT_COLOR,
-	vkx::VertexLayout::VERTEX_LAYOUT_NORMAL,
-	vkx::VertexLayout::VERTEX_LAYOUT_TANGENT,
-	vkx::VertexLayout::VERTEX_LAYOUT_DUMMY_VEC4,
-	vkx::VertexLayout::VERTEX_LAYOUT_DUMMY_VEC4
+	vkx::VertexComponent::VERTEX_COMPONENT_POSITION,
+	vkx::VertexComponent::VERTEX_COMPONENT_UV,
+	vkx::VertexComponent::VERTEX_COMPONENT_COLOR,
+	vkx::VertexComponent::VERTEX_COMPONENT_NORMAL,
+	vkx::VertexComponent::VERTEX_COMPONENT_TANGENT,
+	vkx::VertexComponent::VERTEX_COMPONENT_DUMMY_VEC4,
+	vkx::VertexComponent::VERTEX_COMPONENT_DUMMY_VEC4
 };
 
 
@@ -300,7 +300,7 @@ class VulkanExample : public vkx::vulkanApp {
 		//glm::mat4 test;
 	} uboOffscreenVS;
 
-	struct Light {
+	struct PointLight {
 		glm::vec4 position;
 		glm::vec4 color;
 		float radius;
@@ -309,8 +309,16 @@ class VulkanExample : public vkx::vulkanApp {
 		float _pad;
 	};
 
+	struct DirectionalLight {
+		glm::vec4 position;
+		glm::vec4 color;
+		glm::vec4 direction;
+		glm::vec4 _pad;
+	};
+
 	struct {
-		Light lights[100];
+		PointLight lights[100];
+		DirectionalLight directionalLights[10];
 		glm::vec4 viewPos;
 		glm::mat4 model;// added
 		glm::mat4 view;// added
@@ -1114,7 +1122,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-		/* deferred ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+		/* deferred ----------------------------*/
 
 		// descriptor set layout for full screen quad // deferred pass
 
@@ -2025,6 +2033,10 @@ class VulkanExample : public vkx::vulkanApp {
 		}
 
 
+		//uboFSLights.directionalLights[0].color = glm::vec4(1.0, 0.0, 0.0, 0.0);
+
+
+
 
 		// Current view position
 		uboFSLights.viewPos = glm::vec4(camera.transform.translation, 0.0f) * glm::vec4(-1.0f);
@@ -2171,7 +2183,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// deferred
 
-		if (false) {
+		if (!false) {
 			auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			sponzaModel->load(getAssetPath() + "models/sponza.dae");
 			sponzaModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
@@ -2856,6 +2868,10 @@ class VulkanExample : public vkx::vulkanApp {
 		if (updateOffscreen) {
 			buildOffscreenCommandBuffer();
 		}
+
+	}
+
+	void buildCommandBuffers() {
 
 	}
 
