@@ -421,12 +421,9 @@ class VulkanExample : public vkx::vulkanApp {
 
 		camera.rotateWorldZ(-PI / 2.0);
 
-		// todo: pick better numbers
-		// or pick based on screen size
-		size.width = 1280;
-		size.height = 720;
 
-		camera.setProjection(80.0f, (float)size.width / (float)size.height, 1.0f, 512.0f);
+
+		camera.setProjection(80.0f, (float)settings.windowSize.width / (float)settings.windowSize.height, 1.0f, 512.0f);
 
 
 
@@ -557,8 +554,8 @@ class VulkanExample : public vkx::vulkanApp {
 
 		float mouseX = mouse.current.x;
 		float mouseY = mouse.current.y;
-		float screenWidth = size.width;
-		float screenHeight = size.height;
+		float screenWidth = settings.windowSize.width;
+		float screenHeight = settings.windowSize.height;
 
 		// The ray Start and End positions, in Normalized Device Coordinates (Have you read Tutorial 4 ?)
 		glm::vec4 lRayStart_NDC(
@@ -2183,7 +2180,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// deferred
 
-		if (!false) {
+		if (false) {
 			auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			sponzaModel->load(getAssetPath() + "models/sponza.dae");
 			sponzaModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
@@ -2863,15 +2860,12 @@ class VulkanExample : public vkx::vulkanApp {
 		if (updateDraw) {
 			// record / update draw command buffers
 			updateDrawCommandBuffers();
+			//buildCommandBuffers();
 		}
 
 		if (updateOffscreen) {
 			buildOffscreenCommandBuffer();
 		}
-
-	}
-
-	void buildCommandBuffers() {
 
 	}
 
@@ -2882,204 +2876,178 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 	void updateDrawCommandBuffer(const vk::CommandBuffer &cmdBuffer) {
-
-
-
-
-
-
-
-		cmdBuffer.setViewport(0, vkx::viewport(size));
-		cmdBuffer.setScissor(0, vkx::rect2D(size));
-
-
-
-
-
-
-
-
+		//cmdBuffer.setViewport(0, vkx::viewport(size));
+		//cmdBuffer.setScissor(0, vkx::rect2D(size));
 
 		//updateTextOverlay();
 
-		//uniformData.bonesVS.copy(uboBoneData);
+		////uniformData.bonesVS.copy(uboBoneData);
+
+		////// for each of the model's meshes
+		////for (auto &mesh : meshes) {
+
+		////	// bind vertex & index buffers
+		////	cmdBuffer.bindVertexBuffers(mesh->vertexBufferBinding, mesh->meshBuffer.vertices.buffer, vk::DeviceSize());
+		////	cmdBuffer.bindIndexBuffer(mesh->meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
+
+		////	uint32_t setNum;
+
+		////	// bind scene descriptor set
+		////	setNum = 0;
+		////	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, descriptorSets[setNum], nullptr);
+
+
+		////	//uint32_t offset1 = mesh.matrixIndex * alignedMatrixSize;
+		////	uint32_t offset1 = mesh->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
+		////	//https://www.khronos.org/registry/vulkan/specs/1.0/apispec.html#vkCmdBindDescriptorSets
+		////	// the third param is the set number!
+		////	setNum = 1;
+		////	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset1);
+
+
+		////	if (lastMaterialIndex != mesh->meshBuffer.materialIndex) {
+		////		lastMaterialIndex = mesh->meshBuffer.materialIndex;
+		////		uint32_t offset2 = mesh->meshBuffer.materialIndex * static_cast<uint32_t>(alignedMaterialSize);
+		////		// the third param is the set number!
+		////		setNum = 2;
+		////		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset2);
+
+		////		// must make pipeline layout compatible
+		////		setNum = 3;
+		////		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, m.descriptorSet, nullptr);
+		////	}
+
+		////	// draw:
+		////	cmdBuffer.drawIndexed(mesh->meshBuffer.indexCount, 1, 0, 0, 0);
+		////}
 
 
 
+		////https://github.com/SaschaWillems/Vulkan/tree/master/dynamicuniformbuffer
+
+
+		//// forward rendered:
+		//{
+		////	// MODELS:
+
+		////	// bind mesh pipeline
+		////	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("forward.meshes"));
+
+		////	// for each model
+		////	// model = group of meshes
+		////	for (auto &model : models) {
+		////		// for each of the model's meshes
+		////		for (auto &mesh : model->meshes) {
+
+
+		////			// bind vertex & index buffers
+		////			cmdBuffer.bindVertexBuffers(mesh.vertexBufferBinding, mesh.meshBuffer.vertices.buffer, vk::DeviceSize());
+		////			cmdBuffer.bindIndexBuffer(mesh.meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
+
+		////			// descriptor set #
+		////			uint32_t setNum;
+
+		////			// bind scene descriptor set
+		////			setNum = 0;
+		////			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, rscs.descriptorSets->get("forward.scene"), nullptr);
+
+		////			//uint32_t offset1 = model->matrixIndex * alignedMatrixSize;
+		////			uint32_t offset1 = model->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
+		////			setNum = 1;
+		////			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.matrix"), 1, &offset1);
+
+
+		////			if (lastMaterialName != mesh.meshBuffer.materialName) {
+
+		////				lastMaterialName = mesh.meshBuffer.materialName;
+		////				vkx::Material m = this->assetManager.materials.get(mesh.meshBuffer.materialName);
+
+		////				// Set 2: Binding: 0
+		////				//uint32_t offset2 = m.index * alignedMaterialSize;
+		////				uint32_t offset2 = m.index * static_cast<uint32_t>(alignedMaterialSize);
+		////				setNum = 2;
+		////				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.material"), 1, &offset2);
+
+		////				// bind texture: // todo: implement a better way to bind textures
+		////				// Set: 3 Binding: 0
+		////				setNum = 3;
+		////				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, m.descriptorSet, nullptr);
+		////			}
+
+		////			// draw:
+		////			cmdBuffer.drawIndexed(mesh.meshBuffer.indexCount, 1, 0, 0, 0);
+		////		}
+
+		////	}
 
 
 
-		//// for each of the model's meshes
-		//for (auto &mesh : meshes) {
+		////	// SKINNED MESHES:
 
-		//	// bind vertex & index buffers
-		//	cmdBuffer.bindVertexBuffers(mesh->vertexBufferBinding, mesh->meshBuffer.vertices.buffer, vk::DeviceSize());
-		//	cmdBuffer.bindIndexBuffer(mesh->meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
+		////	// bind skinned mesh pipeline
+		////	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("forward.skinnedMeshes"));
+		////	for (auto &skinnedMesh : skinnedMeshes) {
+		////		// bind vertex & index buffers
+		////		cmdBuffer.bindVertexBuffers(skinnedMesh->vertexBufferBinding, skinnedMesh->meshBuffer.vertices.buffer, vk::DeviceSize());
+		////		cmdBuffer.bindIndexBuffer(skinnedMesh->meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
 
-		//	uint32_t setNum;
+		////		// descriptor set #
+		////		uint32_t setNum;
 
-		//	// bind scene descriptor set
-		//	setNum = 0;
-		//	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, descriptorSets[setNum], nullptr);
+		////		// bind scene descriptor set
+		////		// Set 0: Binding 0:
+		////		setNum = 0;
+		////		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, rscs.descriptorSets->get("forward.scene"), nullptr);
 
-
-		//	//uint32_t offset1 = mesh.matrixIndex * alignedMatrixSize;
-		//	uint32_t offset1 = mesh->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
-		//	//https://www.khronos.org/registry/vulkan/specs/1.0/apispec.html#vkCmdBindDescriptorSets
-		//	// the third param is the set number!
-		//	setNum = 1;
-		//	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset1);
+		////		// there is a bone uniform, set: 0, binding: 1
 
 
-		//	if (lastMaterialIndex != mesh->meshBuffer.materialIndex) {
-		//		lastMaterialIndex = mesh->meshBuffer.materialIndex;
-		//		uint32_t offset2 = mesh->meshBuffer.materialIndex * static_cast<uint32_t>(alignedMaterialSize);
-		//		// the third param is the set number!
-		//		setNum = 2;
-		//		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, 1, &descriptorSets[setNum], 1, &offset2);
+		////		// Set 1: Binding 0:
+		////		//uint32_t offset1 = skinnedMesh->matrixIndex * alignedMatrixSize;
+		////		uint32_t offset1 = skinnedMesh->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
+		////		setNum = 1;
+		////		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.matrix"), 1, &offset1);
 
-		//		// must make pipeline layout compatible
-		//		setNum = 3;
-		//		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.basic, setNum, m.descriptorSet, nullptr);
-		//	}
+		////		if (lastMaterialName != skinnedMesh->meshBuffer.materialName) {
+		////			lastMaterialName = skinnedMesh->meshBuffer.materialName;
+		////			vkx::Material m = this->assetManager.materials.get(skinnedMesh->meshBuffer.materialName);
 
-		//	// draw:
-		//	cmdBuffer.drawIndexed(mesh->meshBuffer.indexCount, 1, 0, 0, 0);
+		////			// Set 2: Binding: 0
+		////			//uint32_t offset2 = m.index * alignedMaterialSize;
+		////			uint32_t offset2 = m.index * static_cast<uint32_t>(alignedMaterialSize);
+		////			setNum = 2;
+		////			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.material"), 1, &offset2);
+
+		////			// bind texture:
+		////			// Set 3: Binding 0:
+		////			setNum = 3;
+		////			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, m.descriptorSet, nullptr);
+		////		}
+
+		////		// bind bone descriptor set
+		////		//setNum = 0;
+		////		// Set 0: Binding 1:
+		////		//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, rscs.descriptorSets->get("forward.bones"), nullptr);
+
+
+		////		// draw:
+		////		cmdBuffer.drawIndexed(skinnedMesh->meshBuffer.indexCount, 1, 0, 0, 0);
+		////	}
+
 		//}
 
-
-
-		//https://github.com/SaschaWillems/Vulkan/tree/master/dynamicuniformbuffer
-
-
-		// forward rendered:
-		{
-		//	// MODELS:
-
-		//	// bind mesh pipeline
-		//	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("forward.meshes"));
-
-		//	// for each model
-		//	// model = group of meshes
-		//	for (auto &model : models) {
-		//		// for each of the model's meshes
-		//		for (auto &mesh : model->meshes) {
-
-
-		//			// bind vertex & index buffers
-		//			cmdBuffer.bindVertexBuffers(mesh.vertexBufferBinding, mesh.meshBuffer.vertices.buffer, vk::DeviceSize());
-		//			cmdBuffer.bindIndexBuffer(mesh.meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
-
-		//			// descriptor set #
-		//			uint32_t setNum;
-
-		//			// bind scene descriptor set
-		//			setNum = 0;
-		//			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, rscs.descriptorSets->get("forward.scene"), nullptr);
-
-		//			//uint32_t offset1 = model->matrixIndex * alignedMatrixSize;
-		//			uint32_t offset1 = model->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
-		//			setNum = 1;
-		//			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.matrix"), 1, &offset1);
-
-
-		//			if (lastMaterialName != mesh.meshBuffer.materialName) {
-
-		//				lastMaterialName = mesh.meshBuffer.materialName;
-		//				vkx::Material m = this->assetManager.materials.get(mesh.meshBuffer.materialName);
-
-		//				// Set 2: Binding: 0
-		//				//uint32_t offset2 = m.index * alignedMaterialSize;
-		//				uint32_t offset2 = m.index * static_cast<uint32_t>(alignedMaterialSize);
-		//				setNum = 2;
-		//				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.material"), 1, &offset2);
-
-		//				// bind texture: // todo: implement a better way to bind textures
-		//				// Set: 3 Binding: 0
-		//				setNum = 3;
-		//				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, m.descriptorSet, nullptr);
-		//			}
-
-		//			// draw:
-		//			cmdBuffer.drawIndexed(mesh.meshBuffer.indexCount, 1, 0, 0, 0);
-		//		}
-
-		//	}
-
-
-
-
-
-
-
-
-
-
-
-		//	// SKINNED MESHES:
-
-		//	// bind skinned mesh pipeline
-		//	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("forward.skinnedMeshes"));
-		//	for (auto &skinnedMesh : skinnedMeshes) {
-		//		// bind vertex & index buffers
-		//		cmdBuffer.bindVertexBuffers(skinnedMesh->vertexBufferBinding, skinnedMesh->meshBuffer.vertices.buffer, vk::DeviceSize());
-		//		cmdBuffer.bindIndexBuffer(skinnedMesh->meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
-
-		//		// descriptor set #
-		//		uint32_t setNum;
-
-		//		// bind scene descriptor set
-		//		// Set 0: Binding 0:
-		//		setNum = 0;
-		//		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, rscs.descriptorSets->get("forward.scene"), nullptr);
-
-		//		// there is a bone uniform, set: 0, binding: 1
-
-
-		//		// Set 1: Binding 0:
-		//		//uint32_t offset1 = skinnedMesh->matrixIndex * alignedMatrixSize;
-		//		uint32_t offset1 = skinnedMesh->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
-		//		setNum = 1;
-		//		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.matrix"), 1, &offset1);
-
-		//		if (lastMaterialName != skinnedMesh->meshBuffer.materialName) {
-		//			lastMaterialName = skinnedMesh->meshBuffer.materialName;
-		//			vkx::Material m = this->assetManager.materials.get(skinnedMesh->meshBuffer.materialName);
-
-		//			// Set 2: Binding: 0
-		//			//uint32_t offset2 = m.index * alignedMaterialSize;
-		//			uint32_t offset2 = m.index * static_cast<uint32_t>(alignedMaterialSize);
-		//			setNum = 2;
-		//			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, 1, &rscs.descriptorSets->get("forward.material"), 1, &offset2);
-
-		//			// bind texture:
-		//			// Set 3: Binding 0:
-		//			setNum = 3;
-		//			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, m.descriptorSet, nullptr);
-		//		}
-
-		//		// bind bone descriptor set
-		//		//setNum = 0;
-		//		// Set 0: Binding 1:
-		//		//cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("forward.basic"), setNum, rscs.descriptorSets->get("forward.bones"), nullptr);
-
-
-		//		// draw:
-		//		cmdBuffer.drawIndexed(skinnedMesh->meshBuffer.indexCount, 1, 0, 0, 0);
-		//	}
-
-		}
-
-
+		updateUniformBufferDeferredLights();
 
 		{
 			/* DEFERRED QUAD */
 
-			updateUniformBufferDeferredLights();
+			
 
-			vk::Viewport viewport = vkx::viewport(size);
+			vk::Viewport viewport = vkx::viewport(settings.windowSize);
 			cmdBuffer.setViewport(0, viewport);
-			cmdBuffer.setScissor(0, vkx::rect2D(size));
+
+			vk::Rect2D scissor = vkx::rect2D(settings.windowSize);
+			cmdBuffer.setScissor(0, scissor);
 
 
 			// renders quad
@@ -3140,13 +3108,13 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// todo: create semaphore here?:
 
-		vk::CommandBufferBeginInfo cmdBufInfo{vk::CommandBufferUsageFlagBits::eSimultaneousUse};
+		vk::CommandBufferBeginInfo commandBufferBeginInfo{vk::CommandBufferUsageFlagBits::eSimultaneousUse};
 
 
 		
 
 		// begin offscreen command buffer
-		offscreenCmdBuffer.begin(cmdBufInfo);
+		offscreenCmdBuffer.begin(commandBufferBeginInfo);
 
 
 
@@ -3179,11 +3147,6 @@ class VulkanExample : public vkx::vulkanApp {
 			offscreenCmdBuffer.setViewport(0, viewport);
 			vk::Rect2D scissor = vkx::rect2D(offscreen.size);
 			offscreenCmdBuffer.setScissor(0, scissor);
-			vk::DeviceSize offsets = { 0 };
-
-
-
-			float t = 0;
 
 
 
@@ -3346,6 +3309,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 		if (!settings.SSAO) {
+			// end early because we're not doing the SSAO passes
 			offscreenCmdBuffer.end();
 			return;
 		}
@@ -3410,16 +3374,10 @@ class VulkanExample : public vkx::vulkanApp {
 
 			offscreenCmdBuffer.beginRenderPass(renderPassBeginInfo3, vk::SubpassContents::eInline);
 
-			//viewport = vkTools::initializers::viewport((float)frameBuffers.ssaoBlur.width, (float)frameBuffers.ssaoBlur.height, 0.0f, 1.0f);
-			//vkCmdSetViewport(offScreenCmdBuffer, 0, 1, &viewport);
-			//scissor = vkTools::initializers::rect2D(frameBuffers.ssaoBlur.width, frameBuffers.ssaoBlur.height, 0, 0);
-			//vkCmdSetScissor(offScreenCmdBuffer, 0, 1, &scissor);
-
 			vk::Viewport viewport = vkx::viewport(offscreen.size);
 			offscreenCmdBuffer.setViewport(0, viewport);
 			vk::Rect2D scissor = vkx::rect2D(offscreen.size);
 			offscreenCmdBuffer.setScissor(0, scissor);
-			vk::DeviceSize offsets = { 0 };
 
 
 
@@ -3624,7 +3582,7 @@ class VulkanExample : public vkx::vulkanApp {
 			submitInfo.pCommandBuffers = &offscreenCmdBuffer;
 
 			// Submit
-			//queue.submit(submitInfo, VK_NULL_HANDLE);
+			//queue.submit(submitInfo, nullptr);
 			queue.submit(submitInfo, renderFence);// temporary
 
 
@@ -3646,10 +3604,12 @@ class VulkanExample : public vkx::vulkanApp {
 
 			//// Submit work
 			//submitInfo.commandBufferCount = 1;
-			//submitInfo.pCommandBuffers = &primaryCmdBuffers[currentBuffer];
+			////submitInfo.pCommandBuffers = &primaryCmdBuffers[currentBuffer];
+			//submitInfo.pCommandBuffers = &drawCmdBuffers[currentBuffer];
 
 			//// Submit
-			//queue.submit(submitInfo, deferredFence);
+			////queue.submit(submitInfo, deferredFence);
+			//queue.submit(submitInfo, nullptr);
 		}
 
 
@@ -3659,13 +3619,16 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-		// todo: fix / better solution
+		//// todo: fix / better solution
 		// Wait for fence to signal that all command buffers are ready
-		vk::Result fenceRes;
-		do {
-			fenceRes = device.waitForFences(renderFence, VK_TRUE, 100000000);
-		} while (fenceRes == vk::Result::eTimeout);
-		
+		//vk::Result fenceRes;
+		//do {
+		//	fenceRes = device.waitForFences(renderFence, VK_TRUE, 100000000);
+		//} while (fenceRes == vk::Result::eTimeout);
+		//
+
+		device.waitForFences(renderFence, VK_TRUE, 100000000);
+
 		// reset fence for next submit
 		device.resetFences(renderFence);
 

@@ -23,10 +23,38 @@
 #include <imgui.h>
 #include "vk/imgui_impl_glfw_vulkan.h"
 
+//#include "testBuffer.hpp"
+
 #include "vulkanApp.h"
 #include "vulkanOffscreenExampleBase.hpp"
 
 #define ENABLE_VALIDATION false
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Options and values to display/toggle from the UI
 struct UISettings {
@@ -49,8 +77,11 @@ class ImGUI {
 	vk::Sampler sampler;
 	//vks::Buffer vertexBuffer;
 	//vks::Buffer indexBuffer;
-	vkx::CreateBufferResult vertexBuffer;
-	vkx::CreateBufferResult indexBuffer;
+	//vkx::CreateBufferResult vertexBuffer;
+	//vkx::CreateBufferResult indexBuffer;
+	vkx::TestBuffer vertexBuffer;
+	vkx::TestBuffer indexBuffer;
+
 	int32_t vertexCount = 0;
 	int32_t indexCount = 0;
 	vk::DeviceMemory fontMemory;// = VK_NULL_HANDLE;
@@ -171,6 +202,7 @@ class ImGUI {
 		// Staging buffers for font data upload
 		//vks::Buffer stagingBuffer;
 		vkx::CreateBufferResult stagingBuffer;
+		//vkx::TestBuffer stagingBuffer;
 
 
 
@@ -453,12 +485,13 @@ class ImGUI {
 
 		// Update buffers only if vertex or index count has been changed compared to current buffer size
 
-		// Vertex buffer
+		// Vertex buffer		
 		if (((VkBuffer)vertexBuffer.buffer == VK_NULL_HANDLE) || (vertexCount != imDrawData->TotalVtxCount)) {
 			vertexBuffer.unmap();
 			vertexBuffer.destroy();
 			//VK_CHECK_RESULT(device->createBuffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, &vertexBuffer, vertexBufferSize));// last 2 parameters are reversed
-			context->createBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vk::MemoryPropertyFlagBits::eHostVisible, vertexBufferSize, &vertexBuffer);
+			context->createBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vk::MemoryPropertyFlagBits::eHostVisible, &vertexBuffer, vertexBufferSize);
+			//context->createBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vk::MemoryPropertyFlagBits::eHostVisible, &vertexBuffer, vertexBufferSize);
 			
 			vertexCount = imDrawData->TotalVtxCount;
 			vertexBuffer.unmap();
@@ -471,7 +504,7 @@ class ImGUI {
 			indexBuffer.unmap();
 			indexBuffer.destroy();
 			//VK_CHECK_RESULT(device->createBuffer(VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, &indexBuffer, indexBufferSize));
-			context->createBuffer(vk::BufferUsageFlagBits::eIndexBuffer, vk::MemoryPropertyFlagBits::eHostVisible, indexBufferSize, &indexBuffer);
+			context->createBuffer(vk::BufferUsageFlagBits::eIndexBuffer, vk::MemoryPropertyFlagBits::eHostVisible, &indexBuffer, indexBufferSize);
 			
 			indexCount = imDrawData->TotalIdxCount;
 			indexBuffer.map();
@@ -846,10 +879,13 @@ class VulkanExample : public vkx::vulkanApp {
 	void draw() {
 		vulkanApp::prepareFrame();
 		buildCommandBuffers();
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &drawCmdBuffers[currentBuffer];
+		//submitInfo.commandBufferCount = 1;
+		//submitInfo.pCommandBuffers = &drawCmdBuffers[currentBuffer];
 		//VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE));
 		queue.submit(1, &submitInfo, nullptr);
+
+		drawCurrentCommandBuffer();
+
 		vulkanApp::submitFrame();
 	}
 

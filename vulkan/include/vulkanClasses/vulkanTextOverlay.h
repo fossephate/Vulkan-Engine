@@ -42,8 +42,8 @@ namespace vkx {
 		private:
 			Context context;
 
-			uint32_t& framebufferWidth;
-			uint32_t& framebufferHeight;
+			uint32_t &framebufferWidth;
+			uint32_t &framebufferHeight;
 
 			CreateImageResult texture;
 			CreateBufferResult vertexBuffer;

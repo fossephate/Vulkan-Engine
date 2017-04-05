@@ -187,8 +187,8 @@ void vulkanApp::setupWindow() {
 		windowTitle.c_str(),
 		SDL_WINDOWPOS_UNDEFINED,
 		SDL_WINDOWPOS_UNDEFINED,
-		size.width,// width
-		size.height,// height
+		/*size.width*/settings.windowSize.width,// width
+		/*size.height*/settings.windowSize.height,// height
 		SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE
 	);
 
@@ -262,16 +262,25 @@ void vulkanApp::windowResized(const glm::uvec2 &newSize) {
 
 
 	// Recreate swap chain
-	this->size.width = newSize.x;
-	this->size.height = newSize.y;
-	swapChain.create(this->size, this->settings.vsync);
+	//this->size.width = newSize.x;
+	//this->size.height = newSize.y;
+	settings.windowSize.width = newSize.x;
+	settings.windowSize.height = newSize.y;
 
-	camera.setAspectRatio((float)this->size.width / (float)this->size.height);
+	vk::Extent2D extent = vk::Extent2D(settings.windowSize.width, settings.windowSize.height);
+
+	swapChain.create(extent, this->settings.vsync);
+
+	camera.setAspectRatio((float)settings.windowSize.width / (float)settings.windowSize.height);
 
 	// Recreate the frame buffers
 	setupDepthStencil();
 
 	setupFrameBuffer();
+
+
+
+	device.waitIdle();// 4/5/17
 
 	if (enableTextOverlay) {
 		updateTextOverlay();
@@ -285,6 +294,9 @@ void vulkanApp::windowResized(const glm::uvec2 &newSize) {
 	// Command buffers need to be recreated as they may store
 	// references to the recreated frame buffer
 	buildCommandBuffers();
+	//destroyCommandBuffers();// new
+	//createCommandBuffers();// new
+	//buildCommandBuffers();// new
 
 	// Notify derived class
 	// todo: remove?
@@ -303,7 +315,7 @@ void vulkanApp::setupDepthStencil() {
 	vk::ImageAspectFlags aspect = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
 	vk::ImageCreateInfo image;
 	image.imageType = vk::ImageType::e2D;
-	image.extent = vk::Extent3D{ size.width, size.height, 1 };
+	image.extent = vk::Extent3D{ /*size.width*/settings.windowSize.width, /*size.height*/settings.windowSize.height, 1 };
 	image.format = depthFormat;
 	image.mipLevels = 1;
 	image.arrayLayers = 1;
@@ -349,8 +361,8 @@ void vulkanApp::setupFrameBuffer() {
 	framebufferCreateInfo.renderPass = renderPass;
 	framebufferCreateInfo.attachmentCount = 2;
 	framebufferCreateInfo.pAttachments = attachments;
-	framebufferCreateInfo.width = size.width;
-	framebufferCreateInfo.height = size.height;
+	framebufferCreateInfo.width = /*size.width*/settings.windowSize.width;
+	framebufferCreateInfo.height = /*size.height*/settings.windowSize.height;
 	framebufferCreateInfo.layers = 1;
 
 	// Create frame buffers for every swap chain image
@@ -443,7 +455,7 @@ void vulkanApp::populateSubCommandBuffers(std::vector<vk::CommandBuffer>& cmdBuf
 	for (size_t i = 0; i < swapChain.imageCount; ++i) {
 		currentBuffer = i;
 		inheritance.framebuffer = framebuffers[i];
-		vk::CommandBuffer& cmdBuffer = cmdBuffers[i];
+		vk::CommandBuffer &cmdBuffer = cmdBuffers[i];
 		cmdBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
 		cmdBuffer.begin(beginInfo);
 		f(cmdBuffer);
@@ -451,6 +463,33 @@ void vulkanApp::populateSubCommandBuffers(std::vector<vk::CommandBuffer>& cmdBuf
 	}
 	currentBuffer = 0;
 }
+
+
+
+//void vulkanApp::createCommandBuffers() {
+//	// Create one command buffer for each swap chain image and reuse for rendering
+//	drawCmdBuffers.resize(swapChain.imageCount);
+//
+//	vk::CommandBufferAllocateInfo cmdBufAllocateInfo;
+//	cmdBufAllocateInfo.commandPool = cmdPool;
+//	cmdBufAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
+//	cmdBufAllocateInfo.commandBufferCount = static_cast<uint32_t>(drawCmdBuffers.size());
+//
+//	//VK_CHECK_RESULT(vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, drawCmdBuffers.data()));
+//	device.allocateCommandBuffers(&cmdBufAllocateInfo, drawCmdBuffers.data());
+//}
+//
+//void vulkanApp::destroyCommandBuffers() {
+//	//vkFreeCommandBuffers(device, cmdPool, static_cast<uint32_t>(drawCmdBuffers.size()), drawCmdBuffers.data());
+//	device.freeCommandBuffers(cmdPool, static_cast<uint32_t>(drawCmdBuffers.size()), drawCmdBuffers.data());
+//}
+
+
+
+
+
+
+
 
 void vulkanApp::updatePrimaryCommandBuffer(const vk::CommandBuffer& cmdBuffer) {
 
@@ -516,7 +555,7 @@ void vulkanApp::drawCurrentCommandBuffer(const vk::Semaphore& semaphore) {
 	context.recycle();
 }
 
-// todo: fix // important
+// todo: figure this out:
 void vulkanApp::executePendingTransfers(vk::Semaphore transferPending) {
 	if (!pendingUpdates.empty()) {
 		vk::Fence transferFence = device.createFence(vk::FenceCreateInfo());
@@ -576,9 +615,14 @@ void vulkanApp::prepare() {
 	if (this->settings.debugMarkers) {
 		debug::marker::setup(device);
 	}
+	// get command pool
 	cmdPool = context.getCommandPool();
 
-	swapChain.create(this->size, this->settings.vsync);
+	vk::Extent2D extent = vk::Extent2D(settings.windowSize.width, settings.windowSize.height);
+	// create swap chain
+	swapChain.create(/*this->size*/extent, this->settings.vsync);
+
+	//createCommandBuffers();// 4/5/17
 
 	setupDepthStencil();
 	setupRenderPass();
@@ -597,7 +641,7 @@ void vulkanApp::prepare() {
 	#endif
 	if (enableTextOverlay) {
 		// Load the text rendering shaders
-		textOverlay = new TextOverlay(this->context, size.width, size.height, renderPass);
+		textOverlay = new TextOverlay(this->context, settings.windowSize.width, settings.windowSize.height, renderPass);
 		updateTextOverlay();
 	}
 }
@@ -967,8 +1011,6 @@ void vulkanApp::renderLoop() {
 
 
 
-
-// NOT HERE
 std::string vulkanApp::getWindowTitle() {
 	std::string device(deviceProperties.deviceName);
 	std::string windowTitle;
@@ -979,7 +1021,6 @@ std::string vulkanApp::getWindowTitle() {
 const std::string& vulkanApp::getAssetPath() {
 	return vkx::getAssetPath();
 }
-// END
 
 
 
@@ -1032,7 +1073,10 @@ void vulkanApp::prepareFrame() {
 }
 
 void vulkanApp::submitFrame() {
-	swapChain.queuePresent(queue, semaphores.renderComplete);
+	// queue present
+	//swapChain.queuePresent(queue, semaphores.renderComplete);
+	swapChain.queuePresent(queue, currentBuffer, semaphores.renderComplete);// new
+	//queue.waitIdle();// new
 }
 
 
@@ -1079,11 +1123,12 @@ void vulkanApp::setupRenderPassBeginInfo() {
 
 	renderPassBeginInfo = vk::RenderPassBeginInfo();
 	renderPassBeginInfo.renderPass = renderPass;
-	renderPassBeginInfo.renderArea.extent = size;
+	renderPassBeginInfo.renderArea.extent = vk::Extent2D(settings.windowSize.width, settings.windowSize.height);
 	renderPassBeginInfo.clearValueCount = clearValues.size();
 	renderPassBeginInfo.pClearValues = clearValues.data();
 }
 
+// virtual
 void vulkanApp::buildCommandBuffers() {
 	if (drawCmdBuffers.empty()) {
 		throw std::runtime_error("Draw command buffers have not been populated.");
@@ -1110,15 +1155,19 @@ void vulkanApp::buildCommandBuffers() {
 
 	vk::CommandBufferBeginInfo cmdBufInfo{vk::CommandBufferUsageFlagBits::eSimultaneousUse};
 	for (size_t i = 0; i < swapChain.imageCount; ++i) {
-		const auto& cmdBuffer = primaryCmdBuffers[i];
+		const auto &cmdBuffer = primaryCmdBuffers[i];
 		cmdBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
 		cmdBuffer.begin(cmdBufInfo);
 
 		// Let child classes execute operations outside the renderpass, like buffer barriers or query pool operations
 		updatePrimaryCommandBuffer(cmdBuffer);
 
+		// set target framebuffer
 		renderPassBeginInfo.framebuffer = framebuffers[i];
+		// begin renderpass
 		cmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eSecondaryCommandBuffers);
+		
+		// execute draw and text command buffers from main command buffer?
 		if (!drawCmdBuffers.empty()) {
 			cmdBuffer.executeCommands(drawCmdBuffers[i]);
 		}

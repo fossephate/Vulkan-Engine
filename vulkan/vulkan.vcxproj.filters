@@ -78,7 +78,7 @@
     <ClCompile Include="include\external\imgui\vk\imgui_impl_glfw_vulkan.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\vulkanscene2.cpp">
+    <ClCompile Include="src\imguiExample.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -171,6 +171,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\external\imgui\vk\imgui_impl_glfw_vulkan.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vulkanClasses\testBuffer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

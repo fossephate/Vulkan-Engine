@@ -116,8 +116,8 @@ namespace vkx
 			bool enableVsync{ false };
 			// Command buffers used for rendering
 			std::vector<vk::CommandBuffer> primaryCmdBuffers;
-			std::vector<vk::CommandBuffer> textCmdBuffers;
-			std::vector<vk::CommandBuffer> drawCmdBuffers;
+			std::vector<vk::CommandBuffer> textCmdBuffers;// secondary?
+			std::vector<vk::CommandBuffer> drawCmdBuffers;// secondary?
 			bool primaryCmdBuffersDirty{ true };
 			std::vector<vk::ClearValue> clearValues;
 			vk::RenderPassBeginInfo renderPassBeginInfo;
@@ -229,7 +229,8 @@ namespace vkx
 				float frameTimeCapMS = 16.66666;
 
 				// Size of the window
-				glm::vec2 windowSize{ 1280, 720 };// todo: actually use
+				//glm::vec2 windowSize{ 1280, 720 };
+				vk::Extent2D windowSize{ 1280, 720 };
 
 				// whether to use Screen Space Ambient Occlusion
 				bool SSAO = true;
@@ -248,7 +249,7 @@ namespace vkx
 			
 
 			bool prepared = false;
-			vk::Extent2D size{ 1280, 720 };
+			//vk::Extent2D size{ 1280, 720 };
 
 			vk::ClearColorValue defaultClearColor = std::array<float, 4>{0.025f, 0.025f, 0.025f, 1.0f};
 
@@ -427,7 +428,7 @@ namespace vkx
 			// Can be overriden in derived class to recreate or rebuild resources attached to the frame buffer / swapchain
 			virtual void windowResized(const glm::uvec2 &newSize);
 			// todo: fix
-			void windowResized();
+			virtual void windowResized();
 
 			// Setup default depth and stencil views
 			void setupDepthStencil();
@@ -440,6 +441,11 @@ namespace vkx
 			virtual void setupRenderPass();
 
 			void populateSubCommandBuffers(std::vector<vk::CommandBuffer>& cmdBuffers, std::function<void(const vk::CommandBuffer& commandBuffer)> f);
+
+			void createCommandBuffers();// new
+
+			void destroyCommandBuffers();// new
+
 
 			virtual void updatePrimaryCommandBuffer(const vk::CommandBuffer& cmdBuffer);
 
