@@ -211,7 +211,7 @@ namespace vkx {
 			imageInfo.mipLevels = 1;
 			imageInfo.arrayLayers = 1;
 			imageInfo.samples = vk::SampleCountFlagBits::e1;
-			imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+			imageInfo.tiling = vk::ImageTiling::eOptimal;
 			imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 			imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 			imageInfo.initialLayout = VK_IMAGE_LAYOUT_PREINITIALIZED;
