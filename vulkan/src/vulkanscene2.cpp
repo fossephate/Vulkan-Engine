@@ -2114,7 +2114,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 	void toggleDebugDisplay() {
 		debugDisplay = !debugDisplay;
-		updateDrawCommandBuffers();
+		//updateDrawCommandBuffers();
 		buildOffscreenCommandBuffer();
 		updateUniformBuffersScreen();
 	}
@@ -2859,8 +2859,8 @@ class VulkanExample : public vkx::vulkanApp {
 
 		if (updateDraw) {
 			// record / update draw command buffers
-			updateDrawCommandBuffers();
-			//buildCommandBuffers();
+			//updateDrawCommandBuffers();
+			buildCommandBuffers();
 		}
 
 		if (updateOffscreen) {
@@ -3094,6 +3094,119 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
+
+
+	void buildCommandBuffers() {
+
+
+
+
+		updateUniformBufferDeferredLights();
+
+
+
+
+		{
+
+
+
+			vk::CommandBufferBeginInfo cmdBufInfo{ vk::CommandBufferUsageFlagBits::eSimultaneousUse };
+
+
+			//vk::RenderPassBeginInfo renderPassBeginInfo;
+			//renderPassBeginInfo.renderPass = renderPass;
+			//renderPassBeginInfo.renderArea.offset.x = 0;
+			//renderPassBeginInfo.renderArea.offset.y = 0;
+			//renderPassBeginInfo.renderArea.extent.width = settings.windowSize.width;
+			//renderPassBeginInfo.renderArea.extent.height = settings.windowSize.height;
+			//renderPassBeginInfo.clearValueCount = 2;
+			//renderPassBeginInfo.pClearValues = clearValues;
+
+			for (uint32_t i = 0; i < drawCmdBuffers.size(); ++i) {
+			//for (uint32_t i = 0; i < swapChain.imageCount; ++i) {
+
+
+				vk::CommandBuffer &cmdBuffer = drawCmdBuffers[i];
+
+				cmdBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
+
+				// begin
+				cmdBuffer.begin(cmdBufInfo);
+
+
+				// set target framebuffer
+				renderPassBeginInfo.framebuffer = framebuffers[i];
+
+				// begin renderpass
+				//cmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eSecondaryCommandBuffers);
+				cmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
+
+				
+
+
+
+
+				vk::Viewport viewport = vkx::viewport(settings.windowSize);
+				cmdBuffer.setViewport(0, viewport);
+
+				vk::Rect2D scissor = vkx::rect2D(settings.windowSize);
+				cmdBuffer.setScissor(0, scissor);
+
+
+				/* DEFERRED QUAD */
+
+				// renders quad
+				uint32_t setNum = 3;// important!
+				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred"), setNum, rscs.descriptorSets->get("deferred.deferred"), nullptr);
+				if (debugDisplay) {
+					if (settings.SSAO) {
+						cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.debug.ssao"));
+					} else {
+						cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.debug"));
+					}
+					cmdBuffer.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, meshBuffers.quad.vertices.buffer, { 0 });
+					cmdBuffer.bindIndexBuffer(meshBuffers.quad.indices.buffer, 0, vk::IndexType::eUint32);
+					cmdBuffer.drawIndexed(meshBuffers.quad.indexCount, 1, 0, 0, 1);
+					// Move viewport to display final composition in lower right corner
+					viewport.x = viewport.width * 0.5f;
+					viewport.y = viewport.height * 0.5f;
+				}
+
+				if (!fullDeferred) {
+					viewport.x = viewport.width * 0.5f;
+					viewport.y = viewport.height * 0.5f;
+				}
+
+
+
+				cmdBuffer.setViewport(0, viewport);
+				// Final composition as full screen quad
+				if (settings.SSAO) {
+					cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.composition.ssao"));
+				} else {
+					cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.composition"));
+				}
+				cmdBuffer.bindVertexBuffers(VERTEX_BUFFER_BIND_ID, meshBuffers.quad.vertices.buffer, { 0 });
+				cmdBuffer.bindIndexBuffer(meshBuffers.quad.indices.buffer, 0, vk::IndexType::eUint32);
+				cmdBuffer.drawIndexed(6, 1, 0, 0, 1);
+
+
+
+				// end render pass
+				cmdBuffer.endRenderPass();
+				// end command buffer
+				cmdBuffer.end();
+
+
+			}
+
+		}
+
+
+
+
+
+	}
 
 	// Build command buffer for rendering the scene to the offscreen frame buffer 
 	// and blitting it to the different texture targets
@@ -3548,7 +3661,8 @@ class VulkanExample : public vkx::vulkanApp {
 		start();
 
 		updateWorld();
-		updateDrawCommandBuffers();
+		//updateDrawCommandBuffers();
+		buildCommandBuffers();
 		buildOffscreenCommandBuffer();
 
 
@@ -3582,39 +3696,39 @@ class VulkanExample : public vkx::vulkanApp {
 			submitInfo.pCommandBuffers = &offscreenCmdBuffer;
 
 			// Submit
-			//queue.submit(submitInfo, nullptr);
-			queue.submit(submitInfo, renderFence);// temporary
+			queue.submit(submitInfo, nullptr);
+			//queue.submit(submitInfo, renderFence);// temporary
 
 
 
 
 
 
-			//// Scene rendering
+			// Scene rendering
 
 			//vk::Fence deferredFence = swapChain.getSubmitFence();
 
-			//// Wait for offscreen render complete
-			//submitInfo.waitSemaphoreCount = 1;
-			//submitInfo.pWaitSemaphores = &offscreen.renderComplete;
+			// Wait for offscreen render complete
+			submitInfo.waitSemaphoreCount = 1;
+			submitInfo.pWaitSemaphores = &offscreen.renderComplete;
 
-			//// Signal ready with regular render complete semaphore
-			//submitInfo.signalSemaphoreCount = 1;
-			//submitInfo.pSignalSemaphores = &semaphores.renderComplete;
+			// Signal ready with regular render complete semaphore
+			submitInfo.signalSemaphoreCount = 1;
+			submitInfo.pSignalSemaphores = &semaphores.renderComplete;
 
-			//// Submit work
-			//submitInfo.commandBufferCount = 1;
-			////submitInfo.pCommandBuffers = &primaryCmdBuffers[currentBuffer];
-			//submitInfo.pCommandBuffers = &drawCmdBuffers[currentBuffer];
+			// Submit work
+			submitInfo.commandBufferCount = 1;
+			//submitInfo.pCommandBuffers = &primaryCmdBuffers[currentBuffer];
+			submitInfo.pCommandBuffers = &drawCmdBuffers[currentBuffer];
 
-			//// Submit
-			////queue.submit(submitInfo, deferredFence);
-			//queue.submit(submitInfo, nullptr);
+			// Submit
+			//queue.submit(submitInfo, deferredFence);
+			queue.submit(submitInfo, nullptr);
 		}
 
 
 		// draw scene
-		drawCurrentCommandBuffer(offscreen.renderComplete);
+		//drawCurrentCommandBuffer(offscreen.renderComplete);
 
 
 
@@ -3627,10 +3741,10 @@ class VulkanExample : public vkx::vulkanApp {
 		//} while (fenceRes == vk::Result::eTimeout);
 		//
 
-		device.waitForFences(renderFence, VK_TRUE, 100000000);
+		//device.waitForFences(renderFence, VK_TRUE, 100000000);
 
 		// reset fence for next submit
-		device.resetFences(renderFence);
+		//device.resetFences(renderFence);
 
 
 

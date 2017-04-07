@@ -75,7 +75,7 @@
     <ClCompile Include="include\external\imgui\imgui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\imguiExample.cpp">
+    <ClCompile Include="src\vulkanscene2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -167,7 +167,7 @@
     <ClInclude Include="include\external\imgui\stb_rect_pack.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\vulkanClasses\testBuffer.hpp">
+    <ClInclude Include="include\vulkanClasses\VulkanTextOverlay2.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

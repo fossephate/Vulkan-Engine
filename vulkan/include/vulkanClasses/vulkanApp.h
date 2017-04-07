@@ -66,6 +66,8 @@
 #include "vulkanSkinnedMesh.h"
 
 #include "vulkanTextOverlay.h"
+//#include "vulkanTextOverlay2.hpp"
+
 #include "vulkanFrameBuffer.h"
 #include "vulkanOffscreen.h"
 #include "Object3D.h"
@@ -488,6 +490,8 @@ namespace vkx
 			void executePendingTransfers(vk::Semaphore transferPending);
 
 			virtual void setupRenderPassBeginInfo();
+
+			virtual void buildPrimaryCommandBuffers();
 
 			virtual void buildCommandBuffers();
 

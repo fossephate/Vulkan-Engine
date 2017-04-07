@@ -54,12 +54,10 @@ class ImGUI {
 	private:
 	// Vulkan resources for rendering the UI
 	vk::Sampler sampler;
-	//vks::Buffer vertexBuffer;
-	//vks::Buffer indexBuffer;
-	//vkx::CreateBufferResult vertexBuffer;
-	//vkx::CreateBufferResult indexBuffer;
-	vkx::TestBuffer vertexBuffer;
-	vkx::TestBuffer indexBuffer;
+	vkx::CreateBufferResult vertexBuffer;
+	vkx::CreateBufferResult indexBuffer;
+	//vkx::TestBuffer vertexBuffer;
+	//vkx::TestBuffer indexBuffer;
 
 	int32_t vertexCount = 0;
 	int32_t indexCount = 0;
@@ -91,23 +89,14 @@ class ImGUI {
 		// Release all Vulkan resources required for rendering imGui
 		vertexBuffer.destroy();
 		indexBuffer.destroy();
-		//vkDestroyImage(device->logicalDevice, fontImage, nullptr);
 		context->device.destroyImage(fontImage, nullptr);
-		//vkDestroyImageView(device->logicalDevice, fontView, nullptr);
 		context->device.destroyImageView(fontView, nullptr);
-		//vkFreeMemory(device->logicalDevice, fontMemory, nullptr);
 		context->device.freeMemory(fontMemory, nullptr);
-		//vkDestroySampler(device->logicalDevice, sampler, nullptr);
 		context->device.destroySampler(sampler, nullptr);
-		//vkDestroyPipelineCache(device->logicalDevice, pipelineCache, nullptr);
 		context->device.destroyPipelineCache(pipelineCache, nullptr);
-		//vkDestroyPipeline(device->logicalDevice, pipeline, nullptr);
 		context->device.destroyPipeline(pipeline, nullptr);
-		//vkDestroyPipelineLayout(device->logicalDevice, pipelineLayout, nullptr);
 		context->device.destroyPipelineLayout(pipelineLayout, nullptr);
-		//vkDestroyDescriptorPool(device->logicalDevice, descriptorPool, nullptr);
 		context->device.destroyDescriptorPool(descriptorPool, nullptr);
-		//vkDestroyDescriptorSetLayout(device->logicalDevice, descriptorSetLayout, nullptr);
 		context->device.destroyDescriptorSetLayout(descriptorSetLayout, nullptr);
 	}
 
@@ -179,9 +168,8 @@ class ImGUI {
 		fontView = context->device.createImageView(viewInfo, nullptr);
 
 		// Staging buffers for font data upload
-		//vks::Buffer stagingBuffer;
-		//vkx::CreateBufferResult stagingBuffer;
-		vkx::TestBuffer stagingBuffer;
+		vkx::CreateBufferResult stagingBuffer;
+		//vkx::TestBuffer stagingBuffer;
 
 
 
@@ -590,9 +578,8 @@ class VulkanExample : public vkx::vulkanApp {
 	//	vkx::Model background;
 	//} models;
 
-	//vks::Buffer uniformBufferVS;
-	//vkx::CreateBufferResult uniformBufferVS;// scene data
-	vkx::TestBuffer uniformBufferVS;// scene data
+	vkx::CreateBufferResult uniformBufferVS;// scene data
+	//vkx::TestBuffer uniformBufferVS;// scene data
 
 	struct UBOVS {
 		glm::mat4 projection;
@@ -614,11 +601,8 @@ class VulkanExample : public vkx::vulkanApp {
 	}
 
 	~VulkanExample() {
-		//vkDestroyPipeline(device, pipeline, nullptr);
 		device.destroyPipeline(pipeline, nullptr);
-		//vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
 		device.destroyPipelineLayout(pipelineLayout, nullptr);
-		//vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
 		device.destroyDescriptorSetLayout(descriptorSetLayout, nullptr);
 
 		//models.models.destroy();
@@ -631,14 +615,14 @@ class VulkanExample : public vkx::vulkanApp {
 	}
 
 	void buildCommandBuffers() {
-		vk::CommandBufferBeginInfo cmdBufInfo;// = vks::initializers::commandBufferBeginInfo();
+		vk::CommandBufferBeginInfo cmdBufInfo;
 
 		vk::ClearValue clearValues[2];
 		//clearValues[0].color = vkx::clearColor({ { 0.2f, 0.2f, 0.2f, 1.0f } });
 		clearValues[0].color = vkx::clearColor({ glm::vec4(0.2f, 0.2f, 0.2f, 1.0f) });
 		clearValues[1].depthStencil = { 1.0f, 0 };
 
-		vk::RenderPassBeginInfo renderPassBeginInfo;// = vks::initializers::renderPassBeginInfo();
+		vk::RenderPassBeginInfo renderPassBeginInfo;
 		renderPassBeginInfo.renderPass = renderPass;
 		renderPassBeginInfo.renderArea.offset.x = 0;
 		renderPassBeginInfo.renderArea.offset.y = 0;
@@ -653,28 +637,21 @@ class VulkanExample : public vkx::vulkanApp {
 
 		for (int32_t i = 0; i < drawCmdBuffers.size(); ++i) {
 			// Set target frame buffer
-			//renderPassBeginInfo.framebuffer = frameBuffers[i];
 			renderPassBeginInfo.framebuffer = framebuffers[i];
 
-			//VK_CHECK_RESULT(vkBeginCommandBuffer(drawCmdBuffers[i], &cmdBufInfo));
 			drawCmdBuffers[i].begin(&cmdBufInfo);
 
-			//vkCmdBeginRenderPass(drawCmdBuffers[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			drawCmdBuffers[i].beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
 
 			vk::Viewport viewport = vkx::viewport((float)/*width*/1280, (float)/*height*/720, 0.0f, 1.0f);
-			//vkCmdSetViewport(drawCmdBuffers[i], 0, 1, &viewport);
 			drawCmdBuffers[i].setViewport(0, 1, &viewport);
 
 			vk::Rect2D scissor = vkx::rect2D(/*width*/1280, /*height*/720, 0, 0);
-			//vkCmdSetScissor(drawCmdBuffers[i], 0, 1, &scissor);
 			drawCmdBuffers[i].setScissor(0, 1, &scissor);
 
 			// Render scene
-			//vkCmdBindDescriptorSets(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
 			drawCmdBuffers[i].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
 
-			//vkCmdBindPipeline(drawCmdBuffers[i], vk::PipelineBindPoint::eGraphics, pipeline);
 			drawCmdBuffers[i].bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
 
 			
@@ -701,10 +678,7 @@ class VulkanExample : public vkx::vulkanApp {
 			// Render imGui
 			imGui->drawFrame(drawCmdBuffers[i]);
 
-			//vkCmdEndRenderPass(drawCmdBuffers[i]);
 			drawCmdBuffers[i].endRenderPass();
-
-			//VK_CHECK_RESULT(vkEndCommandBuffer(drawCmdBuffers[i]));
 			drawCmdBuffers[i].end();
 		}
 	}

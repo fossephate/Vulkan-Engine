@@ -283,7 +283,7 @@ void vulkanApp::windowResized(const glm::uvec2 &newSize) {
 	device.waitIdle();// 4/5/17
 
 	if (enableTextOverlay) {
-		updateTextOverlay();
+		//updateTextOverlay();
 	}
 
 	setupRenderPassBeginInfo();
@@ -496,115 +496,115 @@ void vulkanApp::updatePrimaryCommandBuffer(const vk::CommandBuffer& cmdBuffer) {
 }
 
 void vulkanApp::updateDrawCommandBuffers() {
-	populateSubCommandBuffers(drawCmdBuffers, [&](const vk::CommandBuffer& cmdBuffer) {
-		updateDrawCommandBuffer(cmdBuffer);
-	});
-	primaryCmdBuffersDirty = true;
+	//populateSubCommandBuffers(drawCmdBuffers, [&](const vk::CommandBuffer& cmdBuffer) {
+	//	updateDrawCommandBuffer(cmdBuffer);
+	//});
+	//primaryCmdBuffersDirty = true;
 }
 
 void vulkanApp::drawCurrentCommandBuffer(const vk::Semaphore& semaphore) {
 
-	vk::Fence fence = swapChain.getSubmitFence();
+	//vk::Fence fence = swapChain.getSubmitFence();
 
-	{
-		uint32_t fenceIndex = currentBuffer;
-		context.dumpster.push_back([fenceIndex, this] {
-			swapChain.clearSubmitFence(fenceIndex);
-		});
-	}
+	//{
+	//	uint32_t fenceIndex = currentBuffer;
+	//	context.dumpster.push_back([fenceIndex, this] {
+	//		swapChain.clearSubmitFence(fenceIndex);
+	//	});
+	//}
 
-	// Command buffer(s) to be sumitted to the queue
-	std::vector<vk::Semaphore> waitSemaphores{ { semaphore == vk::Semaphore() ? semaphores.presentComplete : semaphore } };
-	std::vector<vk::PipelineStageFlags> waitStages{ submitPipelineStages };
-	if (semaphores.transferComplete) {
-		auto transferComplete = semaphores.transferComplete;
-		semaphores.transferComplete = vk::Semaphore();
-		waitSemaphores.push_back(transferComplete);
-		waitStages.push_back(vk::PipelineStageFlagBits::eTransfer);
-		context.dumpster.push_back([transferComplete, this] {
-			device.destroySemaphore(transferComplete);
-		});
-	}
+	//// Command buffer(s) to be sumitted to the queue
+	//std::vector<vk::Semaphore> waitSemaphores{ { semaphore == vk::Semaphore() ? semaphores.presentComplete : semaphore } };
+	//std::vector<vk::PipelineStageFlags> waitStages{ submitPipelineStages };
+	//if (semaphores.transferComplete) {
+	//	auto transferComplete = semaphores.transferComplete;
+	//	semaphores.transferComplete = vk::Semaphore();
+	//	waitSemaphores.push_back(transferComplete);
+	//	waitStages.push_back(vk::PipelineStageFlagBits::eTransfer);
+	//	context.dumpster.push_back([transferComplete, this] {
+	//		device.destroySemaphore(transferComplete);
+	//	});
+	//}
 
-	context.emptyDumpster(fence);
+	//context.emptyDumpster(fence);
 
-	vk::Semaphore transferPending;
-	std::vector<vk::Semaphore> signalSemaphores{ { semaphores.renderComplete } };
-	if (!pendingUpdates.empty()) {
-		transferPending = device.createSemaphore(vk::SemaphoreCreateInfo());
-		signalSemaphores.push_back(transferPending);
-	}
+	//vk::Semaphore transferPending;
+	//std::vector<vk::Semaphore> signalSemaphores{ { semaphores.renderComplete } };
+	//if (!pendingUpdates.empty()) {
+	//	transferPending = device.createSemaphore(vk::SemaphoreCreateInfo());
+	//	signalSemaphores.push_back(transferPending);
+	//}
 
-	{
-		vk::SubmitInfo submitInfo;
-		submitInfo.waitSemaphoreCount = (uint32_t)waitSemaphores.size();
-		submitInfo.pWaitSemaphores = waitSemaphores.data();
-		submitInfo.pWaitDstStageMask = waitStages.data();
-		submitInfo.signalSemaphoreCount = signalSemaphores.size();
-		submitInfo.pSignalSemaphores = signalSemaphores.data();
-		submitInfo.commandBufferCount = 1;
-		if (primaryCmdBuffers.size() < 1) {
-			return;
-		}
+	//{
+	//	vk::SubmitInfo submitInfo;
+	//	submitInfo.waitSemaphoreCount = (uint32_t)waitSemaphores.size();
+	//	submitInfo.pWaitSemaphores = waitSemaphores.data();
+	//	submitInfo.pWaitDstStageMask = waitStages.data();
+	//	submitInfo.signalSemaphoreCount = signalSemaphores.size();
+	//	submitInfo.pSignalSemaphores = signalSemaphores.data();
+	//	submitInfo.commandBufferCount = 1;
+	//	if (primaryCmdBuffers.size() < 1) {
+	//		return;
+	//	}
 
-		submitInfo.pCommandBuffers = &primaryCmdBuffers[currentBuffer];
-		// Submit to queue
-		queue.submit(submitInfo, fence);
-	}
+	//	submitInfo.pCommandBuffers = &primaryCmdBuffers[currentBuffer];
+	//	// Submit to queue
+	//	queue.submit(submitInfo, fence);
+	//}
 
-	executePendingTransfers(transferPending);
-	context.recycle();
+	//executePendingTransfers(transferPending);
+	//context.recycle();
 }
 
 // todo: figure this out:
 void vulkanApp::executePendingTransfers(vk::Semaphore transferPending) {
-	if (!pendingUpdates.empty()) {
-		vk::Fence transferFence = device.createFence(vk::FenceCreateInfo());
-		semaphores.transferComplete = device.createSemaphore(vk::SemaphoreCreateInfo());
-		assert(transferPending);
-		assert(semaphores.transferComplete);
-		// Command buffers store a reference to the
-		// frame buffer inside their render pass info
-		// so for static usage without having to rebuild
-		// them each frame, we use one per frame buffer
-		vk::CommandBuffer transferCmdBuffer;
-		{
-			vk::CommandBufferAllocateInfo cmdBufAllocateInfo;
-			cmdBufAllocateInfo.commandPool = cmdPool;
-			cmdBufAllocateInfo.commandBufferCount = 1;
-			transferCmdBuffer = device.allocateCommandBuffers(cmdBufAllocateInfo)[0];
-		}
+	//if (!pendingUpdates.empty()) {
+	//	vk::Fence transferFence = device.createFence(vk::FenceCreateInfo());
+	//	semaphores.transferComplete = device.createSemaphore(vk::SemaphoreCreateInfo());
+	//	assert(transferPending);
+	//	assert(semaphores.transferComplete);
+	//	// Command buffers store a reference to the
+	//	// frame buffer inside their render pass info
+	//	// so for static usage without having to rebuild
+	//	// them each frame, we use one per frame buffer
+	//	vk::CommandBuffer transferCmdBuffer;
+	//	{
+	//		vk::CommandBufferAllocateInfo cmdBufAllocateInfo;
+	//		cmdBufAllocateInfo.commandPool = cmdPool;
+	//		cmdBufAllocateInfo.commandBufferCount = 1;
+	//		transferCmdBuffer = device.allocateCommandBuffers(cmdBufAllocateInfo)[0];
+	//	}
 
 
-		{
-			vk::CommandBufferBeginInfo cmdBufferBeginInfo;
-			cmdBufferBeginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
-			transferCmdBuffer.begin(cmdBufferBeginInfo);
-			for (const auto &update : pendingUpdates) {
-				transferCmdBuffer.updateBuffer(update.buffer, update.offset, update.size, update.data);
-			}
-			transferCmdBuffer.end();
-		}
+	//	{
+	//		vk::CommandBufferBeginInfo cmdBufferBeginInfo;
+	//		cmdBufferBeginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+	//		transferCmdBuffer.begin(cmdBufferBeginInfo);
+	//		for (const auto &update : pendingUpdates) {
+	//			transferCmdBuffer.updateBuffer(update.buffer, update.offset, update.size, update.data);
+	//		}
+	//		transferCmdBuffer.end();
+	//	}
 
-		{
-			vk::PipelineStageFlags stageFlagBits = vk::PipelineStageFlagBits::eAllCommands;
-			vk::SubmitInfo transferSubmitInfo;
-			transferSubmitInfo.pWaitDstStageMask = &stageFlagBits;
-			transferSubmitInfo.pWaitSemaphores = &transferPending;
-			transferSubmitInfo.signalSemaphoreCount = 1;
-			transferSubmitInfo.pSignalSemaphores = &semaphores.transferComplete;
-			transferSubmitInfo.waitSemaphoreCount = 1;
-			transferSubmitInfo.commandBufferCount = 1;
-			transferSubmitInfo.pCommandBuffers = &transferCmdBuffer;
-			queue.submit(transferSubmitInfo, transferFence);
-		}
+	//	{
+	//		vk::PipelineStageFlags stageFlagBits = vk::PipelineStageFlagBits::eAllCommands;
+	//		vk::SubmitInfo transferSubmitInfo;
+	//		transferSubmitInfo.pWaitDstStageMask = &stageFlagBits;
+	//		transferSubmitInfo.pWaitSemaphores = &transferPending;
+	//		transferSubmitInfo.signalSemaphoreCount = 1;
+	//		transferSubmitInfo.pSignalSemaphores = &semaphores.transferComplete;
+	//		transferSubmitInfo.waitSemaphoreCount = 1;
+	//		transferSubmitInfo.commandBufferCount = 1;
+	//		transferSubmitInfo.pCommandBuffers = &transferCmdBuffer;
+	//		queue.submit(transferSubmitInfo, transferFence);
+	//	}
 
-		context.recycler.push({ transferFence, [transferPending, transferCmdBuffer, this] {
-			device.destroySemaphore(transferPending);
-			device.freeCommandBuffers(cmdPool, transferCmdBuffer);
-		} });
-		pendingUpdates.clear();
-	}
+	//	context.recycler.push({ transferFence, [transferPending, transferCmdBuffer, this] {
+	//		device.destroySemaphore(transferPending);
+	//		device.freeCommandBuffers(cmdPool, transferCmdBuffer);
+	//	} });
+	//	pendingUpdates.clear();
+	//}
 }
 
 
@@ -1041,24 +1041,24 @@ vk::SubmitInfo vulkanApp::prepareSubmitInfo(
 }
 
 void vulkanApp::updateTextOverlay() {
-	if (!enableTextOverlay) {
-		return;
-	}
+	//if (!enableTextOverlay) {
+	//	return;
+	//}
 
-	// begin
-	textOverlay->beginTextUpdate();
+	//// begin
+	//textOverlay->beginTextUpdate();
 
-	// get text
-	getOverlayText(textOverlay);
+	//// get text
+	//getOverlayText(textOverlay);
 
-	// end
-	textOverlay->endTextUpdate();
+	//// end
+	//textOverlay->endTextUpdate();
 
-	context.trashCommandBuffers(textCmdBuffers);
-	populateSubCommandBuffers(textCmdBuffers, [&](const vk::CommandBuffer& cmdBuffer) {
-		textOverlay->writeCommandBuffer(cmdBuffer);
-	});
-	primaryCmdBuffersDirty = true;
+	//context.trashCommandBuffers(textCmdBuffers);
+	//populateSubCommandBuffers(textCmdBuffers, [&](const vk::CommandBuffer& cmdBuffer) {
+	//	textOverlay->writeCommandBuffer(cmdBuffer);
+	//});
+	//primaryCmdBuffersDirty = true;
 }
 
 void vulkanApp::getOverlayText(vkx::TextOverlay *textOverlay) {
@@ -1165,54 +1165,59 @@ void vulkanApp::setupRenderPassBeginInfo() {
 	renderPassBeginInfo.pClearValues = clearValues.data();
 }
 
-// virtual
+
 void vulkanApp::buildCommandBuffers() {
-	if (drawCmdBuffers.empty()) {
-		throw std::runtime_error("Draw command buffers have not been populated.");
-	}
-	context.trashCommandBuffers(primaryCmdBuffers);
 
-	// FIXME find a better way to ensure that the draw and text buffers are no longer in use before 
-	// executing them within this command buffer.
-	queue.waitIdle();
+}
 
-	// Destroy command buffers if already present
-	if (primaryCmdBuffers.empty()) {
-		// Create one command buffer per image in the swap chain
+// virtual
+void vulkanApp::buildPrimaryCommandBuffers() {
+	//if (drawCmdBuffers.empty()) {
+	//	throw std::runtime_error("Draw command buffers have not been populated.");
+	//}
+	//context.trashCommandBuffers(primaryCmdBuffers);
 
-		// Command buffers store a reference to the
-		// frame buffer inside their render pass info
-		// so for static usage without having to rebuild
-		// them each frame, we use one per frame buffer
-		vk::CommandBufferAllocateInfo cmdBufAllocateInfo;
-		cmdBufAllocateInfo.commandPool = cmdPool;
-		cmdBufAllocateInfo.commandBufferCount = swapChain.imageCount;
-		primaryCmdBuffers = device.allocateCommandBuffers(cmdBufAllocateInfo);
-	}
+	//// FIXME find a better way to ensure that the draw and text buffers are no longer in use before 
+	//// executing them within this command buffer.
+	//queue.waitIdle();
 
-	vk::CommandBufferBeginInfo cmdBufInfo{vk::CommandBufferUsageFlagBits::eSimultaneousUse};
-	for (size_t i = 0; i < swapChain.imageCount; ++i) {
-		const auto &cmdBuffer = primaryCmdBuffers[i];
-		cmdBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
-		cmdBuffer.begin(cmdBufInfo);
+	//// Destroy command buffers if already present
+	//if (primaryCmdBuffers.empty()) {
+	//	// Create one command buffer per image in the swap chain
 
-		// Let child classes execute operations outside the renderpass, like buffer barriers or query pool operations
-		updatePrimaryCommandBuffer(cmdBuffer);
+	//	// Command buffers store a reference to the
+	//	// frame buffer inside their render pass info
+	//	// so for static usage without having to rebuild
+	//	// them each frame, we use one per frame buffer
+	//	vk::CommandBufferAllocateInfo cmdBufAllocateInfo;
+	//	cmdBufAllocateInfo.commandPool = cmdPool;
+	//	cmdBufAllocateInfo.commandBufferCount = swapChain.imageCount;
+	//	primaryCmdBuffers = device.allocateCommandBuffers(cmdBufAllocateInfo);
+	//}
 
-		// set target framebuffer
-		renderPassBeginInfo.framebuffer = framebuffers[i];
-		// begin renderpass
-		cmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eSecondaryCommandBuffers);
-		
-		// execute draw and text command buffers from main command buffer?
-		if (!drawCmdBuffers.empty()) {
-			cmdBuffer.executeCommands(drawCmdBuffers[i]);
-		}
-		if (enableTextOverlay && !textCmdBuffers.empty() && textOverlay && textOverlay->visible) {
-			cmdBuffer.executeCommands(textCmdBuffers[i]);
-		}
-		cmdBuffer.endRenderPass();
-		cmdBuffer.end();
-	}
-	primaryCmdBuffersDirty = false;
+	//vk::CommandBufferBeginInfo cmdBufInfo{vk::CommandBufferUsageFlagBits::eSimultaneousUse};
+	//for (size_t i = 0; i < swapChain.imageCount; ++i) {
+	//	const auto &cmdBuffer = primaryCmdBuffers[i];
+	//	cmdBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
+	//	cmdBuffer.begin(cmdBufInfo);
+
+	//	// Let child classes execute operations outside the renderpass, like buffer barriers or query pool operations
+	//	updatePrimaryCommandBuffer(cmdBuffer);
+
+	//	// set target framebuffer
+	//	renderPassBeginInfo.framebuffer = framebuffers[i];
+	//	// begin renderpass
+	//	cmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eSecondaryCommandBuffers);
+	//	
+	//	// execute draw and text command buffers from main command buffer?
+	//	if (!drawCmdBuffers.empty()) {
+	//		cmdBuffer.executeCommands(drawCmdBuffers[i]);
+	//	}
+	//	if (enableTextOverlay && !textCmdBuffers.empty() && textOverlay && textOverlay->visible) {
+	//		cmdBuffer.executeCommands(textCmdBuffers[i]);
+	//	}
+	//	cmdBuffer.endRenderPass();
+	//	cmdBuffer.end();
+	//}
+	//primaryCmdBuffersDirty = false;
 }
