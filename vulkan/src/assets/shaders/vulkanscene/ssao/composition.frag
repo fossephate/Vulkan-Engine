@@ -26,6 +26,15 @@ struct DirectionalLight {
     //float radius;
 };
 
+struct SpotLight {
+    vec4 position;
+    vec4 color;
+    float attenuation;
+    float ambientCoefficient;
+    float coneAngle;    // new
+    vec4 coneDirection; // new
+};
+
 
 
 #define NUM_LIGHTS 100

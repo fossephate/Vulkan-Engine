@@ -690,7 +690,6 @@ class VulkanExample : public vkx::vulkanApp {
 			vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 1)
 		};
 		vk::DescriptorPoolCreateInfo descriptorPoolInfo = vkx::descriptorPoolCreateInfo(poolSizes, 2);
-		//VK_CHECK_RESULT(vkCreateDescriptorPool(device, &descriptorPoolInfo, nullptr, &descriptorPool));
 		descriptorPool = device.createDescriptorPool(descriptorPoolInfo, nullptr);
 
 
@@ -698,25 +697,20 @@ class VulkanExample : public vkx::vulkanApp {
 		std::vector<vk::DescriptorSetLayoutBinding> setLayoutBindings = {
 			vkx::descriptorSetLayoutBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex, 0),
 		};
-		vk::DescriptorSetLayoutCreateInfo descriptorLayout =
-			vkx::descriptorSetLayoutCreateInfo(setLayoutBindings);
-		//VK_CHECK_RESULT(vkCreateDescriptorSetLayout(device, &descriptorLayout, nullptr, &descriptorSetLayout));
+		vk::DescriptorSetLayoutCreateInfo descriptorLayout = vkx::descriptorSetLayoutCreateInfo(setLayoutBindings);
 		descriptorSetLayout = device.createDescriptorSetLayout(descriptorLayout, nullptr);
 
 		// Pipeline layout
 		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfo = vkx::pipelineLayoutCreateInfo(&descriptorSetLayout, 1);
-		//VK_CHECK_RESULT(vkCreatePipelineLayout(device, &pPipelineLayoutCreateInfo, nullptr, &pipelineLayout));
 		pipelineLayout = device.createPipelineLayout(pPipelineLayoutCreateInfo, nullptr);
 
 		// Descriptor set
 		vk::DescriptorSetAllocateInfo allocInfo = vkx::descriptorSetAllocateInfo(descriptorPool, &descriptorSetLayout, 1);
-		//VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet));
 		device.allocateDescriptorSets(&allocInfo, &descriptorSet);
 		
 		std::vector<vk::WriteDescriptorSet> writeDescriptorSets = {
 			vkx::writeDescriptorSet(descriptorSet, vk::DescriptorType::eUniformBuffer, 0, &uniformBufferVS.descriptor),
 		};
-		//vkUpdateDescriptorSets(device, static_cast<uint32_t>(writeDescriptorSets.size()), writeDescriptorSets.data(), 0, nullptr);
 		device.updateDescriptorSets(static_cast<uint32_t>(writeDescriptorSets.size()), writeDescriptorSets.data(), 0, nullptr);
 	}
 
@@ -785,7 +779,6 @@ class VulkanExample : public vkx::vulkanApp {
 
 		shaderStages[0] = context.loadShader(vkx::getAssetPath() + "shaders/vulkanscene/imgui/scene.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = context.loadShader(vkx::getAssetPath() + "shaders/vulkanscene/imgui/scene.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		//VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, &pipelineCreateInfo, nullptr, &pipeline));
 		pipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo);
 	}
 

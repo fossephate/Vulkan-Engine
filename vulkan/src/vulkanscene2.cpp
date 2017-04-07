@@ -752,11 +752,11 @@ class VulkanExample : public vkx::vulkanApp {
 		// combined image sampler
 		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes4 =
 		{
-			vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 10000),
+			vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 100),
 		};
 
 		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo4 =
-			vkx::descriptorPoolCreateInfo(descriptorPoolSizes4.size(), descriptorPoolSizes4.data(), 10000);
+			vkx::descriptorPoolCreateInfo(descriptorPoolSizes4.size(), descriptorPoolSizes4.data(), 100);
 		rscs.descriptorPools->add("forward.textures", descriptorPoolCreateInfo4);
 
 		this->assetManager.materialDescriptorPool = rscs.descriptorPools->getPtr("forward.textures");
@@ -799,12 +799,12 @@ class VulkanExample : public vkx::vulkanApp {
 		// combined image sampler
 		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes7 =
 		{
-			vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 1000),
+			vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 100),
 		};
 
 		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo7 =
-			vkx::descriptorPoolCreateInfo(descriptorPoolSizes7.size(), descriptorPoolSizes7.data(), 1000);
-		rscs.descriptorPools->add("deferred.textures", descriptorPoolCreateInfo7);
+			vkx::descriptorPoolCreateInfo(descriptorPoolSizes7.size(), descriptorPoolSizes7.data(), 100);
+		rscs.descriptorPools->add("offscreen.textures", descriptorPoolCreateInfo7);
 
 
 
@@ -886,10 +886,7 @@ class VulkanExample : public vkx::vulkanApp {
 				vk::ShaderStageFlagBits::eVertex,
 				1),// binding 1
 		};
-
-		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo0 =
-			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings0.data(), descriptorSetLayoutBindings0.size());
-		rscs.descriptorSetLayouts->add("forward.scene", descriptorSetLayoutCreateInfo0);
+		rscs.descriptorSetLayouts->add("forward.scene", descriptorSetLayoutBindings0);
 
 		// descriptor set layout 1
 		// matrix data
@@ -901,10 +898,7 @@ class VulkanExample : public vkx::vulkanApp {
 				vk::ShaderStageFlagBits::eVertex,
 				0),// binding 0
 		};
-
-		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo1 =
-			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings1.data(), descriptorSetLayoutBindings1.size());
-		rscs.descriptorSetLayouts->add("forward.matrix", descriptorSetLayoutCreateInfo1);
+		rscs.descriptorSetLayouts->add("forward.matrix", descriptorSetLayoutBindings1);
 
 		// descriptor set layout 2
 		// material data
@@ -916,10 +910,7 @@ class VulkanExample : public vkx::vulkanApp {
 				vk::ShaderStageFlagBits::eVertex,
 				0),// binding 0
 		};
-
-		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo2 =
-			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings2.data(), descriptorSetLayoutBindings2.size());
-		rscs.descriptorSetLayouts->add("forward.material", descriptorSetLayoutCreateInfo2);
+		rscs.descriptorSetLayouts->add("forward.material", descriptorSetLayoutBindings2);
 
 
 
@@ -936,21 +927,18 @@ class VulkanExample : public vkx::vulkanApp {
 				vk::ShaderStageFlagBits::eFragment,
 				0),// binding 0
 
-				   // Set 3: Binding 1: Fragment shader specular
+			// Set 3: Binding 1: Fragment shader specular
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
 				1),// binding 1
-				   // Set 3: Binding 2: Fragment shader bump
+			// Set 3: Binding 2: Fragment shader bump
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
 				2),// binding 2
 		};
-
-		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo3 =
-			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings3.data(), descriptorSetLayoutBindings3.size());
-		rscs.descriptorSetLayouts->add("forward.textures", descriptorSetLayoutCreateInfo3);
+		rscs.descriptorSetLayouts->add("forward.textures", descriptorSetLayoutBindings3);
 		this->assetManager.materialDescriptorSetLayout = rscs.descriptorSetLayouts->getPtr("forward.textures");
 
 
@@ -1039,16 +1027,13 @@ class VulkanExample : public vkx::vulkanApp {
 				vk::ShaderStageFlagBits::eVertex,
 				0),// binding 0
 
-				   // Set 0: Binding 1: Vertex shader uniform buffer// bone data
+			// Set 0: Binding 1: Vertex shader uniform buffer// bone data
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBuffer,
 				vk::ShaderStageFlagBits::eVertex,
 				1),// binding 1
 		};
-
-		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo5 =
-			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings5.data(), descriptorSetLayoutBindings5.size());
-		rscs.descriptorSetLayouts->add("offscreen.scene", descriptorSetLayoutCreateInfo5);
+		rscs.descriptorSetLayouts->add("offscreen.scene", descriptorSetLayoutBindings5);
 
 
 		// descriptor set layout 1
@@ -1061,11 +1046,7 @@ class VulkanExample : public vkx::vulkanApp {
 				vk::ShaderStageFlagBits::eVertex,
 				0),// binding 0
 		};
-
-		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo6 =
-			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings6.data(), descriptorSetLayoutBindings6.size());
-
-		rscs.descriptorSetLayouts->add("offscreen.matrix", descriptorSetLayoutCreateInfo6);
+		rscs.descriptorSetLayouts->add("offscreen.matrix", descriptorSetLayoutBindings6);
 
 		//// descriptor set layout 2
 		//// material data
@@ -1095,22 +1076,18 @@ class VulkanExample : public vkx::vulkanApp {
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
 				0),// binding 0
-				   // Set 2: Binding 1: Fragment shader specular
+			// Set 2: Binding 1: Fragment shader specular
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
 				1),// binding 1
-				   // Set 2: Binding 2: Fragment shader bump
+			// Set 2: Binding 2: Fragment shader bump
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
 				2),// binding 2
 		};
-
-		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo7 =
-			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings7.data(), descriptorSetLayoutBindings7.size());
-
-		rscs.descriptorSetLayouts->add("deferred.textures", descriptorSetLayoutCreateInfo7);
+		rscs.descriptorSetLayouts->add("offscreen.textures", descriptorSetLayoutBindings7);
 
 
 
@@ -1159,11 +1136,7 @@ class VulkanExample : public vkx::vulkanApp {
 				vk::ShaderStageFlagBits::eFragment,
 				5),
 		};
-
-
-		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfoDeferred =
-			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindingsDeferred.data(), descriptorSetLayoutBindingsDeferred.size());
-		rscs.descriptorSetLayouts->add("deferred.deferred", descriptorSetLayoutCreateInfoDeferred);
+		rscs.descriptorSetLayouts->add("deferred.deferred", descriptorSetLayoutBindingsDeferred);
 
 
 
@@ -1181,7 +1154,7 @@ class VulkanExample : public vkx::vulkanApp {
 		std::vector<vk::DescriptorSetLayout> descriptorSetLayoutsDeferred{
 			rscs.descriptorSetLayouts->get("offscreen.scene"),
 			rscs.descriptorSetLayouts->get("offscreen.matrix"),
-			rscs.descriptorSetLayouts->get("deferred.textures"),
+			rscs.descriptorSetLayouts->get("offscreen.textures"),
 			rscs.descriptorSetLayouts->get("deferred.deferred"),
 		};
 
@@ -1250,10 +1223,7 @@ class VulkanExample : public vkx::vulkanApp {
 				vk::ShaderStageFlagBits::eFragment,
 				4),// binding 4
 		};
-
-		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo9 =
-			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings9.data(), descriptorSetLayoutBindings9.size());
-		rscs.descriptorSetLayouts->add("offscreen.ssao.generate", descriptorSetLayoutCreateInfo9);
+		rscs.descriptorSetLayouts->add("offscreen.ssao.generate", descriptorSetLayoutBindings9);
 
 
 		// use all descriptor set layouts
@@ -1284,10 +1254,7 @@ class VulkanExample : public vkx::vulkanApp {
 				vk::ShaderStageFlagBits::eFragment,
 				0),// binding 0
 		};
-
-		vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo10 =
-			vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings10.data(), descriptorSetLayoutBindings10.size());
-		rscs.descriptorSetLayouts->add("offscreen.ssao.blur", descriptorSetLayoutCreateInfo10);
+		rscs.descriptorSetLayouts->add("offscreen.ssao.blur", descriptorSetLayoutBindings10);
 
 
 		// use all descriptor set layouts
@@ -1392,8 +1359,8 @@ class VulkanExample : public vkx::vulkanApp {
 		// descriptor set 2
 		// textures data
 		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo7 =
-			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred.textures"), &rscs.descriptorSetLayouts->get("deferred.textures"), 1);
-		rscs.descriptorSets->add("deferred.textures", descriptorSetAllocateInfo7);
+			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("offscreen.textures"), &rscs.descriptorSetLayouts->get("offscreen.textures"), 1);
+		rscs.descriptorSets->add("offscreen.textures", descriptorSetAllocateInfo7);
 
 
 		// descriptor set 3
@@ -1510,8 +1477,9 @@ class VulkanExample : public vkx::vulkanApp {
 				&uniformData.matrixVS.descriptor),// bind to forward descriptor since it's the same
 
 			//// Set 2: Binding 0: Scene color map
+			// replaced with materials write descriptor sets
 			//vkx::writeDescriptorSet(
-			//	rscs.descriptorSets->get("deferred.textures"),
+			//	rscs.descriptorSets->get("offscreen.textures"),
 			//	vk::DescriptorType::eCombinedImageSampler,
 			//	0,
 			//	&textures.colorMap.descriptor),
@@ -2031,6 +1999,9 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 		//uboFSLights.directionalLights[0].color = glm::vec4(1.0, 0.0, 0.0, 0.0);
+		//uboFSLights.directionalLights[0].position = glm::vec4(0.0, 1.0, 2.0, 0.0);
+		//uboFSLights.directionalLights[0].direction = glm::vec4(0.0, 0.0, -1.0, 0.0);
+
 
 
 
@@ -2114,7 +2085,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 	void toggleDebugDisplay() {
 		debugDisplay = !debugDisplay;
-		//updateDrawCommandBuffers();
+		updateDrawCommandBuffers();
 		buildOffscreenCommandBuffer();
 		updateUniformBuffersScreen();
 	}
@@ -2918,56 +2889,59 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-	void buildDrawCommandBuffers() {
+	//void buildDrawCommandBuffers() {
 
-		updateUniformBufferDeferredLights();
+	//	updateUniformBufferDeferredLights();
 
-		{
-
-
-
-			vk::CommandBufferBeginInfo cmdBufInfo{ vk::CommandBufferUsageFlagBits::eSimultaneousUse };
-
-			for (uint32_t i = 0; i < drawCmdBuffers.size(); ++i) {
-			//for (uint32_t i = 0; i < swapChain.imageCount; ++i) {
-
-
-				vk::CommandBuffer &cmdBuffer = drawCmdBuffers[i];
-
-				cmdBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
-
-				// begin
-				cmdBuffer.begin(cmdBufInfo);
-
-
-				// set target framebuffer
-				renderPassBeginInfo.framebuffer = framebuffers[i];
-
-				// begin renderpass
-				//cmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eSecondaryCommandBuffers);
-				cmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
-
-				
-
-				updateDrawCommandBuffer(cmdBuffer);
+	//	{
 
 
 
-				// end render pass
-				cmdBuffer.endRenderPass();
-				// end command buffer
-				cmdBuffer.end();
+	//		vk::CommandBufferBeginInfo cmdBufInfo{ vk::CommandBufferUsageFlagBits::eSimultaneousUse };
+
+	//		for (uint32_t i = 0; i < drawCmdBuffers.size(); ++i) {
+	//		//for (uint32_t i = 0; i < swapChain.imageCount; ++i) {
 
 
-			}
+	//			vk::CommandBuffer &cmdBuffer = drawCmdBuffers[i];
 
-		}
+	//			cmdBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
+
+	//			// begin
+	//			cmdBuffer.begin(cmdBufInfo);
+
+
+	//			// set target framebuffer
+	//			renderPassBeginInfo.framebuffer = framebuffers[i];
+
+	//			// begin renderpass
+	//			//cmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eSecondaryCommandBuffers);
+	//			cmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
+
+	//			
+
+	//			updateDrawCommandBuffer(cmdBuffer);
+
+
+
+	//			// end render pass
+	//			cmdBuffer.endRenderPass();
+	//			// end command buffer
+	//			cmdBuffer.end();
+
+
+	//		}
+
+	//	}
 
 
 
 
 
-	}
+	//}
+
+
+
 
 	// Build command buffer for rendering the scene to the offscreen frame buffer 
 	// and blitting it to the different texture targets
@@ -3457,8 +3431,8 @@ class VulkanExample : public vkx::vulkanApp {
 			submitInfo.pCommandBuffers = &offscreenCmdBuffer;
 
 			// Submit
-			queue.submit(submitInfo, nullptr);
-			//queue.submit(submitInfo, renderFence);// temporary
+			//queue.submit(submitInfo, nullptr);
+			queue.submit(submitInfo, renderFence);// temporary
 
 
 
@@ -3496,16 +3470,13 @@ class VulkanExample : public vkx::vulkanApp {
 
 		//// todo: fix / better solution
 		// Wait for fence to signal that all command buffers are ready
-		//vk::Result fenceRes;
-		//do {
-		//	fenceRes = device.waitForFences(renderFence, VK_TRUE, 100000000);
-		//} while (fenceRes == vk::Result::eTimeout);
-		//
-
-		//device.waitForFences(renderFence, VK_TRUE, 100000000);
+		vk::Result fenceRes;
+		do {
+			fenceRes = device.waitForFences(renderFence, VK_TRUE, 100000000);
+		} while (fenceRes == vk::Result::eTimeout);
 
 		// reset fence for next submit
-		//device.resetFences(renderFence);
+		device.resetFences(renderFence);
 
 
 

@@ -289,6 +289,17 @@ namespace vkx {
 				return descriptorSetLayout;
 			}
 
+			vk::DescriptorSetLayout add(std::string name, std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings) {
+
+				vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo;
+				descriptorSetLayoutCreateInfo.pBindings = descriptorSetLayoutBindings.data();
+				descriptorSetLayoutCreateInfo.bindingCount = descriptorSetLayoutBindings.size();
+
+				vk::DescriptorSetLayout descriptorSetLayout = device.createDescriptorSetLayout(descriptorSetLayoutCreateInfo, nullptr);
+				resources[name] = descriptorSetLayout;
+				return descriptorSetLayout;
+			}
+
 			void add(std::string name, vk::DescriptorSetLayout descriptorSetLayout) {
 				resources[name] = descriptorSetLayout;
 			}

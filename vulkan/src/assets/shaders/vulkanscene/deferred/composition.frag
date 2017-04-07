@@ -35,6 +35,7 @@ struct DirectionalLight {
 layout (set = 3, binding = 5) uniform UBO 
 {
     PointLight lights[NUM_LIGHTS];
+    DirectionalLight directionalLights[NUM_DIR_LIGHTS];
     vec4 viewPos;
     mat4 model;// added
     mat4 view;// added
