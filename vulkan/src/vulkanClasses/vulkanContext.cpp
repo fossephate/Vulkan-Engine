@@ -273,6 +273,30 @@ void vkx::Context::flushCommandBuffer(vk::CommandBuffer & commandBuffer, bool fr
 	}
 }
 
+// todo: remove
+void vkx::Context::flushCommandBuffer(vk::CommandBuffer commandBuffer, vk::Queue myQueue, bool free) {
+	if (!commandBuffer/* == VK_NULL_HANDLE*/) {
+		return;
+	}
+
+	//VK_CHECK_RESULT(vkEndCommandBuffer(commandBuffer));
+	commandBuffer.end();
+
+	vk::SubmitInfo submitInfo;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &commandBuffer;
+
+	//VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE));
+	myQueue.submit(1, &submitInfo, nullptr);
+	//VK_CHECK_RESULT(vkQueueWaitIdle(queue));
+	myQueue.waitIdle();
+
+	if (free) {
+		//vkFreeCommandBuffers(device, cmdPool, 1, &commandBuffer);
+		device.freeCommandBuffers(getCommandPool(), 1, &commandBuffer);
+	}
+}
+
 CreateImageResult vkx::Context::createImage(const vk::ImageCreateInfo & imageCreateInfo, const vk::MemoryPropertyFlags & memoryPropertyFlags) const {
 	CreateImageResult result;
 	result.device = device;

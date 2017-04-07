@@ -466,23 +466,23 @@ void vulkanApp::populateSubCommandBuffers(std::vector<vk::CommandBuffer>& cmdBuf
 
 
 
-//void vulkanApp::createCommandBuffers() {
-//	// Create one command buffer for each swap chain image and reuse for rendering
-//	drawCmdBuffers.resize(swapChain.imageCount);
-//
-//	vk::CommandBufferAllocateInfo cmdBufAllocateInfo;
-//	cmdBufAllocateInfo.commandPool = cmdPool;
-//	cmdBufAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
-//	cmdBufAllocateInfo.commandBufferCount = static_cast<uint32_t>(drawCmdBuffers.size());
-//
-//	//VK_CHECK_RESULT(vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, drawCmdBuffers.data()));
-//	device.allocateCommandBuffers(&cmdBufAllocateInfo, drawCmdBuffers.data());
-//}
-//
-//void vulkanApp::destroyCommandBuffers() {
-//	//vkFreeCommandBuffers(device, cmdPool, static_cast<uint32_t>(drawCmdBuffers.size()), drawCmdBuffers.data());
-//	device.freeCommandBuffers(cmdPool, static_cast<uint32_t>(drawCmdBuffers.size()), drawCmdBuffers.data());
-//}
+void vulkanApp::createCommandBuffers() {
+	// Create one command buffer for each swap chain image and reuse for rendering
+	drawCmdBuffers.resize(swapChain.imageCount);
+
+	vk::CommandBufferAllocateInfo cmdBufAllocateInfo;
+	cmdBufAllocateInfo.commandPool = cmdPool;
+	cmdBufAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
+	cmdBufAllocateInfo.commandBufferCount = static_cast<uint32_t>(drawCmdBuffers.size());
+
+	//VK_CHECK_RESULT(vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, drawCmdBuffers.data()));
+	device.allocateCommandBuffers(&cmdBufAllocateInfo, drawCmdBuffers.data());
+}
+
+void vulkanApp::destroyCommandBuffers() {
+	//vkFreeCommandBuffers(device, cmdPool, static_cast<uint32_t>(drawCmdBuffers.size()), drawCmdBuffers.data());
+	device.freeCommandBuffers(cmdPool, static_cast<uint32_t>(drawCmdBuffers.size()), drawCmdBuffers.data());
+}
 
 
 
@@ -503,6 +503,7 @@ void vulkanApp::updateDrawCommandBuffers() {
 }
 
 void vulkanApp::drawCurrentCommandBuffer(const vk::Semaphore& semaphore) {
+
 	vk::Fence fence = swapChain.getSubmitFence();
 
 	{
@@ -622,7 +623,7 @@ void vulkanApp::prepare() {
 	// create swap chain
 	swapChain.create(/*this->size*/extent, this->settings.vsync);
 
-	//createCommandBuffers();// 4/5/17
+	createCommandBuffers();// 4/5/17
 
 	setupDepthStencil();
 	setupRenderPass();
@@ -996,7 +997,7 @@ void vulkanApp::renderLoop() {
 		//buildOffscreenCommandBuffer();
 
 		// todo: remove this:
-		updateTextOverlay();
+		//updateTextOverlay();
 
 		// render
 		render();
@@ -1065,18 +1066,54 @@ void vulkanApp::getOverlayText(vkx::TextOverlay *textOverlay) {
 }
 
 void vulkanApp::prepareFrame() {
-	if (primaryCmdBuffersDirty) {
-		buildCommandBuffers();
-	}
+	//if (primaryCmdBuffersDirty) {
+	//	buildCommandBuffers();
+	//}
 	// Acquire the next image from the swap chain
 	currentBuffer = swapChain.acquireNextImage(semaphores.presentComplete);
 }
 
 void vulkanApp::submitFrame() {
+
+
+
+
+	//if (submitTextOverlay) {
+	//	// Wait for color attachment output to finish before rendering the text overlay
+	//	vk::PipelineStageFlags stageFlags = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+	//	submitInfo.pWaitDstStageMask = &stageFlags;
+
+	//	// Set semaphores
+	//	// Wait for render complete semaphore
+	//	submitInfo.waitSemaphoreCount = 1;
+	//	submitInfo.pWaitSemaphores = &semaphores.renderComplete;
+	//	// Signal ready with text overlay complete semaphpre
+	//	submitInfo.signalSemaphoreCount = 1;
+	//	submitInfo.pSignalSemaphores = &semaphores.textOverlayComplete;
+
+	//	// Submit current text overlay command buffer
+	//	submitInfo.commandBufferCount = 1;
+	//	submitInfo.pCommandBuffers = &textOverlay->cmdBuffers[currentBuffer];
+	//	//VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE));
+	//	queue.submit(1, &submitInfo, nullptr);
+
+	//	// Reset stage mask
+	//	submitInfo.pWaitDstStageMask = &submitPipelineStages;
+	//	// Reset wait and signal semaphores for rendering next frame
+	//	// Wait for swap chain presentation to finish
+	//	submitInfo.waitSemaphoreCount = 1;
+	//	submitInfo.pWaitSemaphores = &semaphores.presentComplete;
+	//	// Signal ready with offscreen semaphore
+	//	submitInfo.signalSemaphoreCount = 1;
+	//	submitInfo.pSignalSemaphores = &semaphores.renderComplete;
+	//}
+
+
+
 	// queue present
 	//swapChain.queuePresent(queue, semaphores.renderComplete);
 	swapChain.queuePresent(queue, currentBuffer, semaphores.renderComplete);// new
-	//queue.waitIdle();// new
+	queue.waitIdle();// new
 }
 
 

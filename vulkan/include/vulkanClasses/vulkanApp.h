@@ -124,20 +124,20 @@ namespace vkx
 
 
 
-			// Last frame time, measured using a high performance timer (if available)
-			float frameTimer{ 1.0f };
-			float deltaTime{ 0 };
+			//// Last frame time, measured using a high performance timer (if available)
+			//float frameTimer{ 1.0f };
+			//float deltaTime{ 0 };
 
-			// Running time since start of program
-			float runningTime = 0;
+			//// Running time since start of program
+			//float runningTime = 0;
 
-			// Frame counter to display fps
-			uint32_t frameCounter{ 0 };
+			//// Frame counter to display fps
+			//uint32_t frameCounter{ 0 };
 
-			uint32_t lastFPS{ 0 };
+			//uint32_t lastFPS{ 0 };
 
-			double debugValue1{ 0 };
-			double debugValue2{ 0 };
+			//double debugValue1{ 0 };
+			//double debugValue2{ 0 };
 
 
 			std::list<UpdateOperation> pendingUpdates;
@@ -260,6 +260,26 @@ namespace vkx
 			float timerSpeed = 0.25f;
 
 			bool paused = false;
+
+
+
+
+			// Last frame time, measured using a high performance timer (if available)
+			float frameTimer{ 1.0f };
+			float deltaTime{ 0 };
+
+			// Running time since start of program
+			float runningTime = 0;
+
+			// Frame counter to display fps
+			uint32_t frameCounter{ 0 };
+
+			uint32_t lastFPS{ 0 };
+
+			double debugValue1{ 0 };
+			double debugValue2{ 0 };
+
+
 
 			bool enableTextOverlay = true;
 			vkx::TextOverlay *textOverlay;

@@ -21,7 +21,7 @@
 #include <gli/gli.hpp>
 
 #include <imgui.h>
-#include "vk/imgui_impl_glfw_vulkan.h"
+//#include "vk/imgui_impl_glfw_vulkan.h"
 
 //#include "testBuffer.hpp"
 
@@ -29,27 +29,6 @@
 #include "vulkanOffscreenExampleBase.hpp"
 
 #define ENABLE_VALIDATION false
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -201,8 +180,8 @@ class ImGUI {
 
 		// Staging buffers for font data upload
 		//vks::Buffer stagingBuffer;
-		vkx::CreateBufferResult stagingBuffer;
-		//vkx::TestBuffer stagingBuffer;
+		//vkx::CreateBufferResult stagingBuffer;
+		vkx::TestBuffer stagingBuffer;
 
 
 
@@ -223,9 +202,15 @@ class ImGUI {
 		//memcpy(stagingBuffer.mapped, fontData, uploadSize);
 		//stagingBuffer.unmap();
 
-		stagingBuffer = context->createBuffer(
+		//stagingBuffer = context->createBuffer(
+		//	vk::BufferUsageFlagBits::eTransferSrc,
+		//	vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+		//	uploadSize);
+
+		context->createBuffer(
 			vk::BufferUsageFlagBits::eTransferSrc,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+			&stagingBuffer,
 			uploadSize);
 
 
@@ -284,7 +269,7 @@ class ImGUI {
 		
 
 		//device->flushCommandBuffer(copyCmd, copyQueue, true);
-		context->flushCommandBuffer(copyCmd, /*copyQueue,*/ true);// fix
+		context->flushCommandBuffer(copyCmd, copyQueue, true);
 
 		stagingBuffer.destroy();
 
@@ -442,20 +427,20 @@ class ImGUI {
 
 		// Update frame time display
 		if (updateFrameGraph) {
-			//std::rotate(uiSettings.frameTimes.begin(), uiSettings.frameTimes.begin() + 1, uiSettings.frameTimes.end());
-			//float frameTime = 1000.0f / (example->frameTimer * 1000.0f);
-			//uiSettings.frameTimes.back() = frameTime;
-			//if (frameTime < uiSettings.frameTimeMin) {
-			//	uiSettings.frameTimeMin = frameTime;
-			//}
-			//if (frameTime > uiSettings.frameTimeMax) {
-			//	uiSettings.frameTimeMax = frameTime;
-			//}
+			std::rotate(uiSettings.frameTimes.begin(), uiSettings.frameTimes.begin() + 1, uiSettings.frameTimes.end());
+			float frameTime = 1000.0f / (example->frameTimer * 1000.0f);
+			uiSettings.frameTimes.back() = frameTime;
+			if (frameTime < uiSettings.frameTimeMin) {
+				uiSettings.frameTimeMin = frameTime;
+			}
+			if (frameTime > uiSettings.frameTimeMax) {
+				uiSettings.frameTimeMax = frameTime;
+			}
 		}
 
 		ImGui::PlotLines("Frame Times", &uiSettings.frameTimes[0], 50, 0, "", uiSettings.frameTimeMin, uiSettings.frameTimeMax, ImVec2(0, 80));
 
-		//ImGui::Text("Camera");
+		ImGui::Text("Camera");
 		//ImGui::InputFloat3("position", &example->camera.position.x, 2);
 		//ImGui::InputFloat3("rotation", &example->camera.rotation.x, 2);
 
@@ -491,7 +476,6 @@ class ImGUI {
 			vertexBuffer.destroy();
 			//VK_CHECK_RESULT(device->createBuffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, &vertexBuffer, vertexBufferSize));// last 2 parameters are reversed
 			context->createBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vk::MemoryPropertyFlagBits::eHostVisible, &vertexBuffer, vertexBufferSize);
-			//context->createBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vk::MemoryPropertyFlagBits::eHostVisible, &vertexBuffer, vertexBufferSize);
 			
 			vertexCount = imDrawData->TotalVtxCount;
 			vertexBuffer.unmap();
@@ -607,7 +591,8 @@ class VulkanExample : public vkx::vulkanApp {
 	//} models;
 
 	//vks::Buffer uniformBufferVS;
-	vkx::CreateBufferResult uniformBufferVS;// scene data
+	//vkx::CreateBufferResult uniformBufferVS;// scene data
+	vkx::TestBuffer uniformBufferVS;// scene data
 
 	struct UBOVS {
 		glm::mat4 projection;
@@ -629,9 +614,12 @@ class VulkanExample : public vkx::vulkanApp {
 	}
 
 	~VulkanExample() {
-		vkDestroyPipeline(device, pipeline, nullptr);
-		vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-		vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+		//vkDestroyPipeline(device, pipeline, nullptr);
+		device.destroyPipeline(pipeline, nullptr);
+		//vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+		device.destroyPipelineLayout(pipelineLayout, nullptr);
+		//vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+		device.destroyDescriptorSetLayout(descriptorSetLayout, nullptr);
 
 		//models.models.destroy();
 		//models.background.destroy();
@@ -758,8 +746,7 @@ class VulkanExample : public vkx::vulkanApp {
 		device.updateDescriptorSets(static_cast<uint32_t>(writeDescriptorSets.size()), writeDescriptorSets.data(), 0, nullptr);
 	}
 
-	void preparePipelines()
-	{
+	void preparePipelines() {
 		// Rendering
 		vk::PipelineInputAssemblyStateCreateInfo inputAssemblyState =
 			vkx::pipelineInputAssemblyStateCreateInfo(vk::PrimitiveTopology::eTriangleList, {}, VK_FALSE);
@@ -846,13 +833,16 @@ class VulkanExample : public vkx::vulkanApp {
 		//	&uboVS,
 		//	sizeof(uboVS));
 
-		//context.createBuffer(
-		//	vk::BufferUsageFlagBits::eUniformBuffer,
-		//	vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
-		//	uniformBufferVS,
-		//	&uboVS);
+		context.createBuffer(
+			vk::BufferUsageFlagBits::eUniformBuffer,
+			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+			&uniformBufferVS,
+			sizeof(uboVS),
+			&uboVS);
 
-		uniformBufferVS = context.createUniformBuffer(uboVS);
+
+
+		//uniformBufferVS = context.createUniformBuffer(uboVS);
 
 
 		updateUniformBuffers();
@@ -879,12 +869,12 @@ class VulkanExample : public vkx::vulkanApp {
 	void draw() {
 		vulkanApp::prepareFrame();
 		buildCommandBuffers();
-		//submitInfo.commandBufferCount = 1;
-		//submitInfo.pCommandBuffers = &drawCmdBuffers[currentBuffer];
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &drawCmdBuffers[currentBuffer];
 		//VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE));
 		queue.submit(1, &submitInfo, nullptr);
 
-		drawCurrentCommandBuffer();
+		//drawCurrentCommandBuffer();
 
 		vulkanApp::submitFrame();
 	}
@@ -927,6 +917,7 @@ class VulkanExample : public vkx::vulkanApp {
 		// todo: Android touch/gamepad, different platforms
 #if defined(_WIN32)
 		//io.MousePos = ImVec2(mousePos.x, mousePos.y);
+		io.MousePos = ImVec2(mouse.current.x, mouse.current.y);
 		io.MouseDown[0] = (((GetKeyState(VK_LBUTTON) & 0x100) != 0));
 		io.MouseDown[1] = (((GetKeyState(VK_RBUTTON) & 0x100) != 0));
 #else

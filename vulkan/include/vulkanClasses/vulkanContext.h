@@ -308,9 +308,13 @@ namespace vkx {
 
 		void flushCommandBuffer(vk::CommandBuffer& commandBuffer, bool free = false) const;
 
+		void flushCommandBuffer(vk::CommandBuffer commandBuffer, vk::Queue myQueue, bool free);
+
         // Create a short lived command buffer which is immediately executed and released
         template <typename F>
 		void withPrimaryCommandBuffer(F f) const;
+
+		
 
 		CreateImageResult createImage(const vk::ImageCreateInfo& imageCreateInfo, const vk::MemoryPropertyFlags& memoryPropertyFlags) const;
 

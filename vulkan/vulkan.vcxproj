@@ -22,7 +22,6 @@
     <ClCompile Include="include\external\imgui\imgui.cpp" />
     <ClCompile Include="include\external\imgui\imgui_demo.cpp" />
     <ClCompile Include="include\external\imgui\imgui_draw.cpp" />
-    <ClCompile Include="include\external\imgui\vk\imgui_impl_glfw_vulkan.cpp" />
     <ClCompile Include="src\bulletClasses\PhysicsManager.cpp" />
     <ClCompile Include="src\bulletClasses\PhysicsObject.cpp" />
     <ClCompile Include="src\imguiExample.cpp" />
@@ -52,7 +51,6 @@
     <ClInclude Include="include\external\imgui\stb_rect_pack.h" />
     <ClInclude Include="include\external\imgui\stb_textedit.h" />
     <ClInclude Include="include\external\imgui\stb_truetype.h" />
-    <ClInclude Include="include\external\imgui\vk\imgui_impl_glfw_vulkan.h" />
     <ClInclude Include="include\vulkanClasses\camera.h" />
     <ClInclude Include="include\vulkanClasses\common.h" />
     <ClInclude Include="include\vulkanClasses\easings.h" />
