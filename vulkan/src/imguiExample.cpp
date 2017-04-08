@@ -113,8 +113,8 @@ class VulkanExample : public vkx::vulkanApp {
 		renderPassBeginInfo.renderPass = renderPass;
 		renderPassBeginInfo.renderArea.offset.x = 0;
 		renderPassBeginInfo.renderArea.offset.y = 0;
-		renderPassBeginInfo.renderArea.extent.width = 1280;// width;
-		renderPassBeginInfo.renderArea.extent.height = 720;// height;
+		renderPassBeginInfo.renderArea.extent.width = settings.windowSize.width;// width;
+		renderPassBeginInfo.renderArea.extent.height = settings.windowSize.height;// height;
 		renderPassBeginInfo.clearValueCount = 2;
 		renderPassBeginInfo.pClearValues = clearValues;
 

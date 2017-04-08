@@ -2208,12 +2208,26 @@ class VulkanExample : public vkx::vulkanApp {
 
 	void updateWorld() {
 
+
+
 		updateDraw = false;
 		updateOffscreen = false;
+
 
 		camera.movementSpeed = 0.005f;
 
 		camera.movementSpeed = camera.movementSpeed*deltaTime*1000.0;
+
+
+		if (keyStates.onKeyDown(&keyStates.o)) {
+			GUIOpen = !GUIOpen;
+		}
+
+		if (GUIOpen) {
+			goto endofcontrols;
+		}
+
+
 
 		if (keyStates.shift) {
 			camera.movementSpeed *= 2;
@@ -2505,7 +2519,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-		
+		endofcontrols:
 
 
 
@@ -2852,6 +2866,10 @@ class VulkanExample : public vkx::vulkanApp {
 		{
 			vk::CommandBufferBeginInfo cmdBufInfo{ vk::CommandBufferUsageFlagBits::eSimultaneousUse };
 
+			// start new imgui frame
+			imGui->newFrame(this, (frameCounter == 0));
+			imGui->updateBuffers();
+
 			for (uint32_t i = 0; i < drawCmdBuffers.size(); ++i) {
 			//for (uint32_t i = 0; i < swapChain.imageCount; ++i) {
 
@@ -2874,6 +2892,9 @@ class VulkanExample : public vkx::vulkanApp {
 				
 
 				updateDrawCommandBuffer(cmdBuffer);
+
+				// render gui
+				imGui->drawFrame(cmdBuffer);
 
 
 
@@ -3371,6 +3392,7 @@ class VulkanExample : public vkx::vulkanApp {
 			}
 		}
 
+		buildDrawCommandBuffers();
 
 		prepareFrame();
 
@@ -3458,6 +3480,25 @@ class VulkanExample : public vkx::vulkanApp {
 		if (!prepared) {
 			return;
 		}
+
+		// imgui
+		// todo: move this somewhere else
+		{
+			// Update imGui
+			ImGuiIO &io = ImGui::GetIO();
+
+			io.DisplaySize = ImVec2((float)settings.windowSize.width, (float)settings.windowSize.height);
+			io.DeltaTime = frameTimer * 1000;
+
+			// todo: Android touch/gamepad, different platforms
+			#if defined(_WIN32)
+			io.MousePos = ImVec2(mouse.current.x, mouse.current.y);
+			io.MouseDown[0] = (((GetKeyState(VK_LBUTTON) & 0x100) != 0));
+			io.MouseDown[1] = (((GetKeyState(VK_RBUTTON) & 0x100) != 0));
+			#else
+			#endif
+		}
+
 		draw();
 	}
 

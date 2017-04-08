@@ -8,7 +8,14 @@ struct UISettings {
 	bool animateLight = false;
 	float lightSpeed = 0.25f;
 	std::array<float, 50> frameTimes = { 0 };
+
+	//std::array<float, 50> FPSValues = { 0 };
+
 	float frameTimeMin = 9999.0f, frameTimeMax = 0.0f;
+
+	//float frameTimeMin = 0.0f;
+	//float frameTimeMax = 120.0f;
+
 	float lightTimer = 0.0f;
 } uiSettings;
 
@@ -79,7 +86,7 @@ class ImGUI {
 
 	// Initialize all Vulkan resources used by the ui
 	void initResources(vk::RenderPass renderPass, vk::Queue copyQueue) {
-		ImGuiIO& io = ImGui::GetIO();
+		ImGuiIO &io = ImGui::GetIO();
 
 		// Create font texture
 		unsigned char* fontData;
@@ -341,7 +348,7 @@ class ImGUI {
 		// Update frame time display
 		if (updateFrameGraph) {
 			std::rotate(uiSettings.frameTimes.begin(), uiSettings.frameTimes.begin() + 1, uiSettings.frameTimes.end());
-			float frameTime = 1000.0f / (example->frameTimer * 1000.0f);
+			float frameTime = 1000.0f / (example->deltaTime * 1000.0f);
 			uiSettings.frameTimes.back() = frameTime;
 			if (frameTime < uiSettings.frameTimeMin) {
 				uiSettings.frameTimeMin = frameTime;
@@ -352,6 +359,7 @@ class ImGUI {
 		}
 
 		ImGui::PlotLines("Frame Times", &uiSettings.frameTimes[0], 50, 0, "", uiSettings.frameTimeMin, uiSettings.frameTimeMax, ImVec2(0, 80));
+		//ImGui::PlotLines("Frame Times", &uiSettings.frameTimes[0], 50, 0, "", uiSettings.frameTimeMin, uiSettings.frameTimeMax, ImVec2(0, 200));
 
 		ImGui::Text("Camera");
 		//ImGui::InputFloat3("position", &example->camera.position.x, 2);

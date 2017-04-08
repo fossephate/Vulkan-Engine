@@ -8,7 +8,6 @@ layout(location = 0) in struct{
     vec2 UV;
 } In;
 
-void main()
-{
+void main() {
     fColor = In.Color * texture(sTexture, In.UV.st);
 }
