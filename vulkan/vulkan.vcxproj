@@ -24,6 +24,7 @@
     <ClCompile Include="include\external\imgui\imgui_draw.cpp" />
     <ClCompile Include="src\bulletClasses\PhysicsManager.cpp" />
     <ClCompile Include="src\bulletClasses\PhysicsObject.cpp" />
+    <ClCompile Include="src\imguiExample.cpp" />
     <ClCompile Include="src\vulkanClasses\camera.cpp" />
     <ClCompile Include="src\vulkanClasses\shapes.cpp" />
     <ClCompile Include="src\old\vulkanAndroid.cpp" />
@@ -39,7 +40,6 @@
     <ClCompile Include="src\vulkanClasses\vulkanTextOverlay.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTextureLoader.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanTools.cpp" />
-    <ClCompile Include="src\vulkanscene2.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\base\Object3D.h" />

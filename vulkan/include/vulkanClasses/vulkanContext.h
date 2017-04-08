@@ -257,7 +257,10 @@ namespace vkx {
             const vk::ArrayProxy<const vk::Semaphore>& signals = {},
 			const vk::Fence& fence = vk::Fence());
 
+		// todo: fix
 		void createBuffer(vk::BufferUsageFlags usageFlags, vk::MemoryPropertyFlags memoryPropertyFlags, vk::DeviceSize size, vk::Buffer * buffer, vk::DeviceMemory * memory, void * data = nullptr);
+
+		void createBuffer(vk::BufferUsageFlags usageFlags, vk::MemoryPropertyFlags memoryPropertyFlags, vkx::TestBuffer * buffer, vk::DeviceSize size, void * data = nullptr);
 
 		void createBuffer(vk::BufferUsageFlags usageFlags, vk::MemoryPropertyFlags memoryPropertyFlags, vkx::CreateBufferResult * buffer, vk::DeviceSize size, void * data = nullptr);
     

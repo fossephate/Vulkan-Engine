@@ -486,7 +486,7 @@ void vkx::Context::submit(const vk::ArrayProxy<const vk::CommandBuffer>& command
 *
 * @return VK_SUCCESS if buffer handle and memory have been created and (optionally passed) data has been copied
 */
-/*vk::Result*/void vkx::Context::createBuffer(vk::BufferUsageFlags usageFlags, vk::MemoryPropertyFlags memoryPropertyFlags, vk::DeviceSize size, vk::Buffer *buffer, vk::DeviceMemory *memory, void *data) {
+void vkx::Context::createBuffer(vk::BufferUsageFlags usageFlags, vk::MemoryPropertyFlags memoryPropertyFlags, vk::DeviceSize size, vk::Buffer *buffer, vk::DeviceMemory *memory, void *data) {
 	// Create the buffer handle
 	vk::BufferCreateInfo bufferCreateInfo = vkx::bufferCreateInfo(usageFlags, size);
 	bufferCreateInfo.sharingMode = vk::SharingMode::eExclusive;
@@ -550,7 +550,7 @@ void vkx::Context::submit(const vk::ArrayProxy<const vk::CommandBuffer>& command
 *
 * @return VK_SUCCESS if buffer handle and memory have been created and (optionally passed) data has been copied
 */
-void vkx::Context::createBuffer(vk::BufferUsageFlags usageFlags, vk::MemoryPropertyFlags memoryPropertyFlags, /*vkx::TestBuffer*/vkx::CreateBufferResult *buffer, vk::DeviceSize size, void *data) {
+void vkx::Context::createBuffer(vk::BufferUsageFlags usageFlags, vk::MemoryPropertyFlags memoryPropertyFlags, vkx::TestBuffer *buffer, vk::DeviceSize size, void *data) {
 
 	buffer->device = this->device;
 

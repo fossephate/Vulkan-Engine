@@ -54,10 +54,10 @@ class ImGUI {
 	private:
 	// Vulkan resources for rendering the UI
 	vk::Sampler sampler;
-	vkx::CreateBufferResult vertexBuffer;
-	vkx::CreateBufferResult indexBuffer;
-	//vkx::TestBuffer vertexBuffer;
-	//vkx::TestBuffer indexBuffer;
+	//vkx::CreateBufferResult vertexBuffer;
+	//vkx::CreateBufferResult indexBuffer;
+	vkx::TestBuffer vertexBuffer;
+	vkx::TestBuffer indexBuffer;
 
 	int32_t vertexCount = 0;
 	int32_t indexCount = 0;
@@ -168,8 +168,8 @@ class ImGUI {
 		fontView = context->device.createImageView(viewInfo, nullptr);
 
 		// Staging buffers for font data upload
-		vkx::CreateBufferResult stagingBuffer;
-		//vkx::TestBuffer stagingBuffer;
+		//vkx::CreateBufferResult stagingBuffer;
+		vkx::TestBuffer stagingBuffer;
 
 
 
@@ -186,9 +186,7 @@ class ImGUI {
 		//	vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
 		//	uploadSize,
 		//	&stagingBuffer);
-		//stagingBuffer.map();
-		//memcpy(stagingBuffer.mapped, fontData, uploadSize);
-		//stagingBuffer.unmap();
+
 
 		//stagingBuffer = context->createBuffer(
 		//	vk::BufferUsageFlagBits::eTransferSrc,
@@ -200,6 +198,10 @@ class ImGUI {
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
 			&stagingBuffer,
 			uploadSize);
+
+		stagingBuffer.map();
+		memcpy(stagingBuffer.mapped, fontData, uploadSize);
+		stagingBuffer.unmap();
 
 
 
@@ -578,8 +580,8 @@ class VulkanExample : public vkx::vulkanApp {
 	//	vkx::Model background;
 	//} models;
 
-	vkx::CreateBufferResult uniformBufferVS;// scene data
-	//vkx::TestBuffer uniformBufferVS;// scene data
+	//vkx::CreateBufferResult uniformBufferVS;// scene data
+	vkx::TestBuffer uniformBufferVS;// scene data
 
 	struct UBOVS {
 		glm::mat4 projection;
@@ -838,7 +840,6 @@ class VulkanExample : public vkx::vulkanApp {
 		buildCommandBuffers();
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &drawCmdBuffers[currentBuffer];
-		//VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE));
 		queue.submit(1, &submitInfo, nullptr);
 
 		//drawCurrentCommandBuffer();

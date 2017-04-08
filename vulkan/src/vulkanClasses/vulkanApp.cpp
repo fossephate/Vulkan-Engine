@@ -294,9 +294,9 @@ void vulkanApp::windowResized(const glm::uvec2 &newSize) {
 	// Command buffers need to be recreated as they may store
 	// references to the recreated frame buffer
 	buildCommandBuffers();
-	//destroyCommandBuffers();// new
-	//createCommandBuffers();// new
-	//buildCommandBuffers();// new
+	destroyCommandBuffers();// new
+	createCommandBuffers();// new
+	buildCommandBuffers();// new
 
 	// Notify derived class
 	// todo: remove?
@@ -622,7 +622,7 @@ void vulkanApp::prepare() {
 	// create swap chain
 	swapChain.create(/*this->size*/extent, this->settings.vsync);
 
-	//createCommandBuffers();// 4/5/17
+	createCommandBuffers();// 4/5/17
 
 	setupDepthStencil();
 	setupRenderPass();
@@ -1067,9 +1067,9 @@ void vulkanApp::getOverlayText(vkx::TextOverlay *textOverlay) {
 }
 
 void vulkanApp::prepareFrame() {
-	if (primaryCmdBuffersDirty) {
-		buildPrimaryCommandBuffers();
-	}
+	//if (primaryCmdBuffersDirty) {
+	//	buildPrimaryCommandBuffers();
+	//}
 	// Acquire the next image from the swap chain
 	currentBuffer = swapChain.acquireNextImage(semaphores.presentComplete);
 }
@@ -1114,9 +1114,9 @@ void vulkanApp::submitFrame() {
 
 
 	// queue present
-	swapChain.queuePresent(queue, semaphores.renderComplete);
-	//swapChain.queuePresent(queue, currentBuffer, semaphores.renderComplete);// new
-	//queue.waitIdle();// new
+	//swapChain.queuePresent(queue, semaphores.renderComplete);
+	swapChain.queuePresent(queue, currentBuffer, semaphores.renderComplete);// new
+	queue.waitIdle();// new
 }
 
 
