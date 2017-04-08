@@ -18,6 +18,7 @@
 
 
 
+
 // Maximum number of bones per mesh
 // Must not be higher than same const in skinning shader
 #define MAX_BONES 64
@@ -36,6 +37,7 @@
 
 #define SSAO_ON 1
 
+#define TEST_DEFINE 0
 
 
 
@@ -2029,7 +2031,13 @@ class VulkanExample : public vkx::vulkanApp {
 
 	void toggleDebugDisplay() {
 		debugDisplay = !debugDisplay;
-		updateDrawCommandBuffers();
+
+		if (TEST_DEFINE) {
+			updateDrawCommandBuffers();
+		} else {
+			buildDrawCommandBuffers();
+		}
+		
 		buildOffscreenCommandBuffer();
 		updateUniformBuffersScreen();
 	}
@@ -2762,8 +2770,11 @@ class VulkanExample : public vkx::vulkanApp {
 
 		if (updateDraw) {
 			// record / update draw command buffers
-			updateDrawCommandBuffers();
-			//buildDrawCommandBuffers();
+			if (TEST_DEFINE) {
+				updateDrawCommandBuffers();
+			} else {
+				buildDrawCommandBuffers();
+			}
 		}
 
 		if (updateOffscreen) {
@@ -2780,6 +2791,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 	void updateDrawCommandBuffer(const vk::CommandBuffer &cmdBuffer) {
 
+		// todo: definitely remove thise:
 		updateUniformBufferDeferredLights();
 
 		{
@@ -2833,56 +2845,49 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-	//void buildDrawCommandBuffers() {
+	void buildDrawCommandBuffers() {
 
-	//	updateUniformBufferDeferredLights();
+		updateUniformBufferDeferredLights();
 
-	//	{
+		{
+			vk::CommandBufferBeginInfo cmdBufInfo{ vk::CommandBufferUsageFlagBits::eSimultaneousUse };
 
-
-
-	//		vk::CommandBufferBeginInfo cmdBufInfo{ vk::CommandBufferUsageFlagBits::eSimultaneousUse };
-
-	//		for (uint32_t i = 0; i < drawCmdBuffers.size(); ++i) {
-	//		//for (uint32_t i = 0; i < swapChain.imageCount; ++i) {
+			for (uint32_t i = 0; i < drawCmdBuffers.size(); ++i) {
+			//for (uint32_t i = 0; i < swapChain.imageCount; ++i) {
 
 
-	//			vk::CommandBuffer &cmdBuffer = drawCmdBuffers[i];
+				vk::CommandBuffer &cmdBuffer = drawCmdBuffers[i];
 
-	//			cmdBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
+				cmdBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
 
-	//			// begin
-	//			cmdBuffer.begin(cmdBufInfo);
+				// begin
+				cmdBuffer.begin(cmdBufInfo);
 
 
-	//			// set target framebuffer
-	//			renderPassBeginInfo.framebuffer = framebuffers[i];
+				// set target framebuffer
+				renderPassBeginInfo.framebuffer = framebuffers[i];
 
-	//			// begin renderpass
-	//			//cmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eSecondaryCommandBuffers);
-	//			cmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
+				// begin renderpass
+				//cmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eSecondaryCommandBuffers);
+				cmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
 
-	//			
+				
 
-	//			updateDrawCommandBuffer(cmdBuffer);
+				updateDrawCommandBuffer(cmdBuffer);
 
 
 
-	//			// end render pass
-	//			cmdBuffer.endRenderPass();
-	//			// end command buffer
-	//			cmdBuffer.end();
+				// end render pass
+				cmdBuffer.endRenderPass();
+				// end command buffer
+				cmdBuffer.end();
 
 
-	//		}
+			}
 
-	//	}
+		}
 
-
-
-
-
-	//}
+	}
 
 
 
@@ -3347,8 +3352,11 @@ class VulkanExample : public vkx::vulkanApp {
 		start();
 
 		updateWorld();
-		updateDrawCommandBuffers();
-		//buildDrawCommandBuffers();
+		if (TEST_DEFINE) {
+			updateDrawCommandBuffers();
+		} else {
+			buildDrawCommandBuffers();
+		}
 		buildOffscreenCommandBuffer();
 
 
@@ -3357,6 +3365,13 @@ class VulkanExample : public vkx::vulkanApp {
 	}
 
 	void draw() override {
+		if (TEST_DEFINE) {
+			if (primaryCmdBuffersDirty) {
+				buildPrimaryCommandBuffers();
+			}
+		}
+
+
 		prepareFrame();
 
 		// draw current command buffers
@@ -3390,32 +3405,33 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-			//// Scene rendering
+			// Scene rendering
 
-			//////vk::Fence deferredFence = swapChain.getSubmitFence();
+			////vk::Fence deferredFence = swapChain.getSubmitFence();
 
-			//// Wait for offscreen render complete
-			//submitInfo.waitSemaphoreCount = 1;
-			//submitInfo.pWaitSemaphores = &offscreen.renderComplete;
+			// Wait for offscreen render complete
+			submitInfo.waitSemaphoreCount = 1;
+			submitInfo.pWaitSemaphores = &offscreen.renderComplete;
 
-			//// Signal ready with regular render complete semaphore
-			//submitInfo.signalSemaphoreCount = 1;
-			//submitInfo.pSignalSemaphores = &semaphores.renderComplete;
+			// Signal ready with regular render complete semaphore
+			submitInfo.signalSemaphoreCount = 1;
+			submitInfo.pSignalSemaphores = &semaphores.renderComplete;
 
-			//// Submit work
-			//submitInfo.commandBufferCount = 1;
-			////submitInfo.pCommandBuffers = &primaryCmdBuffers[currentBuffer];
-			//submitInfo.pCommandBuffers = &drawCmdBuffers[currentBuffer];
+			// Submit work
+			submitInfo.commandBufferCount = 1;
+			//submitInfo.pCommandBuffers = &primaryCmdBuffers[currentBuffer];
+			submitInfo.pCommandBuffers = &drawCmdBuffers[currentBuffer];
 
-			//// Submit
-			////queue.submit(submitInfo, deferredFence);
-			//queue.submit(submitInfo, nullptr);
+			// Submit
+			//queue.submit(submitInfo, deferredFence);
+			queue.submit(submitInfo, nullptr);
 		}
 
 
 		// draw scene && wait for offscreen.rendercomplete semaphore
-		drawCurrentCommandBuffer(offscreen.renderComplete);
-
+		if (TEST_DEFINE) {
+			drawCurrentCommandBuffer(offscreen.renderComplete);
+		}
 
 
 

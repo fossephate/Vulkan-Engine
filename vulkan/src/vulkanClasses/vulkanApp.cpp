@@ -293,7 +293,7 @@ void vulkanApp::windowResized(const glm::uvec2 &newSize) {
 
 	// Command buffers need to be recreated as they may store
 	// references to the recreated frame buffer
-	buildCommandBuffers();
+	//buildCommandBuffers();
 
 	destroyCommandBuffers();// new
 	createCommandBuffers();// new

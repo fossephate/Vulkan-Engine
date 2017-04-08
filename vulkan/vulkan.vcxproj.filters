@@ -75,7 +75,7 @@
     <ClCompile Include="include\external\imgui\imgui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\imguiExample.cpp">
+    <ClCompile Include="src\vulkanscene2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

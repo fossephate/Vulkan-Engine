@@ -130,10 +130,10 @@ class VulkanExample : public vkx::vulkanApp {
 
 			drawCmdBuffers[i].beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
 
-			vk::Viewport viewport = vkx::viewport((float)/*width*/1280, (float)/*height*/720, 0.0f, 1.0f);
+			vk::Viewport viewport = vkx::viewport((float)settings.windowSize.width, (float)settings.windowSize.height, 0.0f, 1.0f);
 			drawCmdBuffers[i].setViewport(0, 1, &viewport);
 
-			vk::Rect2D scissor = vkx::rect2D(/*width*/1280, /*height*/720, 0, 0);
+			vk::Rect2D scissor = vkx::rect2D(settings.windowSize.width, settings.windowSize.height, 0, 0);
 			drawCmdBuffers[i].setScissor(0, 1, &scissor);
 
 			// Render scene
@@ -325,7 +325,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 	void prepareImGui() {
 		imGui = new ImGUI(&context);
-		imGui->init((float)/*width*/1280, (float)/*height*/720);
+		imGui->init((float)settings.windowSize.width, (float)settings.windowSize.height);
 		imGui->initResources(renderPass, queue);
 	}
 
@@ -347,14 +347,13 @@ class VulkanExample : public vkx::vulkanApp {
 		}
 
 		// Update imGui
-		ImGuiIO& io = ImGui::GetIO();
+		ImGuiIO &io = ImGui::GetIO();
 
 		io.DisplaySize = ImVec2((float)settings.windowSize.width, (float)settings.windowSize.height);
 		io.DeltaTime = frameTimer*1000;
 
 		// todo: Android touch/gamepad, different platforms
 #if defined(_WIN32)
-		//io.MousePos = ImVec2(mousePos.x, mousePos.y);
 		io.MousePos = ImVec2(mouse.current.x, mouse.current.y);
 		io.MouseDown[0] = (((GetKeyState(VK_LBUTTON) & 0x100) != 0));
 		io.MouseDown[1] = (((GetKeyState(VK_RBUTTON) & 0x100) != 0));

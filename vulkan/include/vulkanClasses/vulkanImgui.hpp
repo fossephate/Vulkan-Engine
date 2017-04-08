@@ -323,7 +323,6 @@ class ImGUI {
 		shaderStages[0] = context->loadShader(vkx::getAssetPath() + "shaders/vulkanscene/imgui/ui.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = context->loadShader(vkx::getAssetPath() + "shaders/vulkanscene/imgui/ui.frag.spv", vk::ShaderStageFlagBits::eFragment);
 
-		//VK_CHECK_RESULT(vkCreateGraphicsPipelines(device->logicalDevice, pipelineCache, 1, &pipelineCreateInfo, nullptr, &pipeline));
 		pipeline = context->device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo);
 	}
 
