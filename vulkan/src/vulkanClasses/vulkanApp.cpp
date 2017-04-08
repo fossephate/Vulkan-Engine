@@ -687,6 +687,47 @@ void vulkanApp::updateInputInfo() {
 			}
 		}
 
+
+		ImGuiIO &io = ImGui::GetIO();
+
+		// todo: move this / do on init
+		{
+
+			io.KeyMap[ImGuiKey_Tab] = SDLK_TAB;                     // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
+			io.KeyMap[ImGuiKey_LeftArrow] = SDL_SCANCODE_LEFT;
+			io.KeyMap[ImGuiKey_RightArrow] = SDL_SCANCODE_RIGHT;
+			io.KeyMap[ImGuiKey_UpArrow] = SDL_SCANCODE_UP;
+			io.KeyMap[ImGuiKey_DownArrow] = SDL_SCANCODE_DOWN;
+			io.KeyMap[ImGuiKey_PageUp] = SDL_SCANCODE_PAGEUP;
+			io.KeyMap[ImGuiKey_PageDown] = SDL_SCANCODE_PAGEDOWN;
+			io.KeyMap[ImGuiKey_Home] = SDL_SCANCODE_HOME;
+			io.KeyMap[ImGuiKey_End] = SDL_SCANCODE_END;
+			io.KeyMap[ImGuiKey_Delete] = SDLK_DELETE;
+			io.KeyMap[ImGuiKey_Backspace] = SDLK_BACKSPACE;
+			io.KeyMap[ImGuiKey_Enter] = SDLK_RETURN;
+			io.KeyMap[ImGuiKey_Escape] = SDLK_ESCAPE;
+			io.KeyMap[ImGuiKey_A] = SDLK_a;
+			io.KeyMap[ImGuiKey_C] = SDLK_c;
+			io.KeyMap[ImGuiKey_V] = SDLK_v;
+			io.KeyMap[ImGuiKey_X] = SDLK_x;
+			io.KeyMap[ImGuiKey_Y] = SDLK_y;
+			io.KeyMap[ImGuiKey_Z] = SDLK_z;
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		if (e.type == SDL_KEYDOWN || e.type == SDL_KEYUP) {
 			bool state = (e.type == SDL_KEYDOWN) ? true : false;
 			switch (e.key.keysym.sym) {
@@ -795,7 +836,30 @@ void vulkanApp::updateInputInfo() {
 				default:
 					break;
 			}
+
+
+
+
+			int keyNum = e.key.keysym.sym & ~SDLK_SCANCODE_MASK;
+
+			
+
+			io.KeysDown[keyNum] = /*(e.type == SDL_KEYDOWN)*/state;
+			io.KeyShift = ((SDL_GetModState() & KMOD_SHIFT) != 0);
+			io.KeyCtrl = ((SDL_GetModState() & KMOD_CTRL) != 0);
+			io.KeyAlt = ((SDL_GetModState() & KMOD_ALT) != 0);
+			io.KeySuper = ((SDL_GetModState() & KMOD_GUI) != 0);
 		}
+
+		if (e.type == SDL_TEXTINPUT) {
+			io.AddInputCharactersUTF8(e.text.text);
+		}
+
+		if (e.type == SDL_MOUSEWHEEL) {
+			io.MouseWheel = e.wheel.y;
+		}
+		
+		
 
 		if (e.type == SDL_MOUSEMOTION) {
 			mouse.delta.x = e.motion.xrel;
@@ -831,6 +895,13 @@ void vulkanApp::updateInputInfo() {
 			//mouse.current.x = e.motion.x;
 			//mouse.current.y = e.motion.y;
 		}
+
+
+		io.MousePos = ImVec2(mouse.current.x, mouse.current.y);
+		io.MouseDown[0] = mouse.leftMouseButton.state;
+		io.MouseDown[1] = mouse.rightMouseButton.state;
+		io.MouseDown[2] = mouse.middleMouseButton.state;
+
 	}
 	if (!mouse.movedThisFrame) {
 		mouse.delta.x = 0;
@@ -991,12 +1062,14 @@ void vulkanApp::renderLoop() {
 		updatePhysics();
 
 
-		updateCommandBuffers();
+		
 
 		// record / update draw command buffers
 		//updateDrawCommandBuffers();
 
 		//buildOffscreenCommandBuffer();
+
+		updateCommandBuffers();
 
 		// todo: remove this:
 		//updateTextOverlay();

@@ -47,6 +47,10 @@
 	#include <SDL2/SDL_syswm.h>
 #endif
 
+// imgui
+#include "imgui.h"
+//#include "vulkanImgui.hpp"
+
 // bullet physics
 #include "bulletClasses/PhysicsManager.h"
 #include "bulletClasses/PhysicsObject.h"
@@ -234,6 +238,7 @@ namespace vkx
 			//	bool SSAO = false;
 			//} options;
 
+			//ImGUI *imGui = nullptr;
 			bool GUIOpen = false;
 			
 

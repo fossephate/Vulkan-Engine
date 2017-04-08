@@ -1,5 +1,20 @@
 #pragma once
 
+//float rand0t1() {
+//	std::random_device rd;
+//	std::mt19937 gen(rd());
+//	std::uniform_real_distribution<> dis(0.0f, 1.0f);
+//	float rnd = dis(gen);
+//	return rnd;
+//}
+
+#include <vulkan/vulkan.hpp>
+#include "vulkanTools.h"
+#include "vulkanContext.h"
+#include "imgui.h"
+//#include "vulkanApp.h"
+
+
 // Options and values to display/toggle from the UI
 struct UISettings {
 	bool displayModels = true;
@@ -11,10 +26,10 @@ struct UISettings {
 
 	//std::array<float, 50> FPSValues = { 0 };
 
-	float frameTimeMin = 9999.0f, frameTimeMax = 0.0f;
+	//float frameTimeMin = 9999.0f, frameTimeMax = 0.0f;
 
-	//float frameTimeMin = 0.0f;
-	//float frameTimeMax = 120.0f;
+	float frameTimeMin = 0.0f;
+	float frameTimeMax = 300.0f;
 
 	float lightTimer = 0.0f;
 } uiSettings;
@@ -349,11 +364,13 @@ class ImGUI {
 		if (updateFrameGraph) {
 			std::rotate(uiSettings.frameTimes.begin(), uiSettings.frameTimes.begin() + 1, uiSettings.frameTimes.end());
 			float frameTime = 1000.0f / (example->deltaTime * 1000.0f);
+			//frameTime = rand0t1() * 100;
 			uiSettings.frameTimes.back() = frameTime;
+
 			if (frameTime < uiSettings.frameTimeMin) {
 				uiSettings.frameTimeMin = frameTime;
 			}
-			if (frameTime > uiSettings.frameTimeMax) {
+			if (frameTime > uiSettings.frameTimeMax && frameTime < 900) {
 				uiSettings.frameTimeMax = frameTime;
 			}
 		}
@@ -362,7 +379,7 @@ class ImGUI {
 		//ImGui::PlotLines("Frame Times", &uiSettings.frameTimes[0], 50, 0, "", uiSettings.frameTimeMin, uiSettings.frameTimeMax, ImVec2(0, 200));
 
 		ImGui::Text("Camera");
-		//ImGui::InputFloat3("position", &example->camera.position.x, 2);
+		ImGui::InputFloat3("position", &example->camera.transform.translation.x, 2);
 		//ImGui::InputFloat3("rotation", &example->camera.rotation.x, 2);
 
 		ImGui::SetNextWindowSize(ImVec2(200, 200), ImGuiSetCond_FirstUseEver);

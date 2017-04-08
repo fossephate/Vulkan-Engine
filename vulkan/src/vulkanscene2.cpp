@@ -17,8 +17,6 @@
 
 
 
-
-
 // Maximum number of bones per mesh
 // Must not be higher than same const in skinning shader
 #define MAX_BONES 64
@@ -2434,10 +2432,10 @@ class VulkanExample : public vkx::vulkanApp {
 
 		if (keyStates.minus) {
 			settings.fpsCap -= 0.2f;
-			settings.frameTimeCapMS += 0.02f;
+			settings.frameTimeCapMS += 0.2f;
 		} else if (keyStates.equals) {
 			settings.fpsCap += 0.2f;
-			settings.frameTimeCapMS -= 0.02f;
+			settings.frameTimeCapMS -= 0.2f;
 		}
 
 
@@ -3490,13 +3488,8 @@ class VulkanExample : public vkx::vulkanApp {
 			io.DisplaySize = ImVec2((float)settings.windowSize.width, (float)settings.windowSize.height);
 			io.DeltaTime = frameTimer * 1000;
 
-			// todo: Android touch/gamepad, different platforms
-			#if defined(_WIN32)
-			io.MousePos = ImVec2(mouse.current.x, mouse.current.y);
-			io.MouseDown[0] = (((GetKeyState(VK_LBUTTON) & 0x100) != 0));
-			io.MouseDown[1] = (((GetKeyState(VK_RBUTTON) & 0x100) != 0));
-			#else
-			#endif
+
+			io.KeyMap[ImGuiKey_A] = SDLK_a;
 		}
 
 		draw();
