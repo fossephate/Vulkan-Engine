@@ -294,6 +294,7 @@ void vulkanApp::windowResized(const glm::uvec2 &newSize) {
 	// Command buffers need to be recreated as they may store
 	// references to the recreated frame buffer
 	buildCommandBuffers();
+
 	destroyCommandBuffers();// new
 	createCommandBuffers();// new
 	buildCommandBuffers();// new
@@ -622,7 +623,7 @@ void vulkanApp::prepare() {
 	// create swap chain
 	swapChain.create(/*this->size*/extent, this->settings.vsync);
 
-	createCommandBuffers();// 4/5/17
+	createCommandBuffers();// new
 
 	setupDepthStencil();
 	setupRenderPass();

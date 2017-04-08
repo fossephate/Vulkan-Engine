@@ -490,8 +490,6 @@ void vkx::Context::createBuffer(vk::BufferUsageFlags usageFlags, vk::MemoryPrope
 	// Create the buffer handle
 	vk::BufferCreateInfo bufferCreateInfo = vkx::bufferCreateInfo(usageFlags, size);
 	bufferCreateInfo.sharingMode = vk::SharingMode::eExclusive;
-	//VK_CHECK_RESULT(vkCreateBuffer(logicalDevice, &bufferCreateInfo, nullptr, buffer));
-	//buffer = &device.createBuffer(bufferCreateInfo, nullptr);
 	device.createBuffer(&bufferCreateInfo, nullptr, buffer);
 
 	// Create the memory backing up the buffer handle
@@ -503,14 +501,11 @@ void vkx::Context::createBuffer(vk::BufferUsageFlags usageFlags, vk::MemoryPrope
 	memAlloc.allocationSize = memReqs.size;
 	// Find a memory type index that fits the properties of the buffer
 	memAlloc.memoryTypeIndex = getMemoryType(memReqs.memoryTypeBits, memoryPropertyFlags);
-	//VK_CHECK_RESULT(vkAllocateMemory(logicalDevice, &memAlloc, nullptr, memory));
-	//memory = &device.allocateMemory(memAlloc, nullptr);
 	device.allocateMemory(&memAlloc, nullptr, memory);
 
 	// If a pointer to the buffer data has been passed, map the buffer and copy over the data
 	if (data != nullptr) {
 		void *mapped;
-		//VK_CHECK_RESULT(vkMapMemory(logicalDevice, *memory, 0, size, 0, &mapped));
 		mapped = device.mapMemory(*memory, 0, size, {});
 
 		memcpy(mapped, data, size);
@@ -520,23 +515,21 @@ void vkx::Context::createBuffer(vk::BufferUsageFlags usageFlags, vk::MemoryPrope
 			mappedRange.memory = *memory;
 			mappedRange.offset = 0;
 			mappedRange.size = size;
-			//vkFlushMappedMemoryRanges(logicalDevice, 1, &mappedRange);
 			device.flushMappedMemoryRanges(1, &mappedRange);
 		}
-		//vkUnmapMemory(logicalDevice, *memory);
 		device.unmapMemory(*memory);
 	}
 
 	// Attach the memory to the buffer object
-	//VK_CHECK_RESULT(vkBindBufferMemory(logicalDevice, *buffer, *memory, 0));
 	device.bindBufferMemory(*buffer, *memory, 0);
-
-	//return VK_SUCCESS;
 }
 
 
 
-
+//-------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------
 
 
 /**
@@ -550,25 +543,22 @@ void vkx::Context::createBuffer(vk::BufferUsageFlags usageFlags, vk::MemoryPrope
 *
 * @return VK_SUCCESS if buffer handle and memory have been created and (optionally passed) data has been copied
 */
-void vkx::Context::createBuffer(vk::BufferUsageFlags usageFlags, vk::MemoryPropertyFlags memoryPropertyFlags, vkx::TestBuffer *buffer, vk::DeviceSize size, void *data) {
+void vkx::Context::createBuffer(vk::BufferUsageFlags usageFlags, vk::MemoryPropertyFlags memoryPropertyFlags, vkx::CreateBufferResult *buffer, vk::DeviceSize size, void *data) {
 
 	buffer->device = this->device;
 
 	// Create the buffer handle
 	vk::BufferCreateInfo bufferCreateInfo = vkx::bufferCreateInfo(usageFlags, size);
-	//VK_CHECK_RESULT(vkCreateBuffer(logicalDevice, &bufferCreateInfo, nullptr, &buffer->buffer));
 	buffer->buffer = device.createBuffer(bufferCreateInfo, nullptr);
 
 	// Create the memory backing up the buffer handle
 	vk::MemoryRequirements memReqs;
-	vk::MemoryAllocateInfo memAlloc;// = vkx::memoryAllocateInfo();
-	//vkGetBufferMemoryRequirements(logicalDevice, buffer->buffer, &memReqs);
+	vk::MemoryAllocateInfo memAlloc;
 	memReqs = device.getBufferMemoryRequirements(buffer->buffer);
 
 	memAlloc.allocationSize = memReqs.size;
 	// Find a memory type index that fits the properties of the buffer
 	memAlloc.memoryTypeIndex = getMemoryType(memReqs.memoryTypeBits, memoryPropertyFlags);
-	//VK_CHECK_RESULT(vkAllocateMemory(logicalDevice, &memAlloc, nullptr, &buffer->memory));
 	buffer->memory = device.allocateMemory(memAlloc, nullptr);
 
 	buffer->alignment = memReqs.alignment;
@@ -578,7 +568,6 @@ void vkx::Context::createBuffer(vk::BufferUsageFlags usageFlags, vk::MemoryPrope
 
 	// If a pointer to the buffer data has been passed, map the buffer and copy over the data
 	if (data != nullptr) {
-		//VK_CHECK_RESULT(buffer->map());
 		buffer->map();
 		memcpy(buffer->mapped, data, size);
 		buffer->unmap();
@@ -588,6 +577,48 @@ void vkx::Context::createBuffer(vk::BufferUsageFlags usageFlags, vk::MemoryPrope
 	buffer->setupDescriptor();
 
 	// Attach the memory to the buffer object
-	//return buffer->bind();
 	buffer->bind();
 }
+
+
+
+
+
+
+//void vkx::Context::createBuffer(vk::BufferUsageFlags usageFlags, vk::MemoryPropertyFlags memoryPropertyFlags, vkx::TestBuffer *buffer, vk::DeviceSize size, void *data) {
+//
+//	buffer->device = this->device;
+//
+//	// Create the buffer handle
+//	vk::BufferCreateInfo bufferCreateInfo = vkx::bufferCreateInfo(usageFlags, size);
+//	buffer->buffer = device.createBuffer(bufferCreateInfo, nullptr);
+//
+//	// Create the memory backing up the buffer handle
+//	vk::MemoryRequirements memReqs;
+//	vk::MemoryAllocateInfo memAlloc;
+//	memReqs = device.getBufferMemoryRequirements(buffer->buffer);
+//
+//	memAlloc.allocationSize = memReqs.size;
+//	// Find a memory type index that fits the properties of the buffer
+//	memAlloc.memoryTypeIndex = getMemoryType(memReqs.memoryTypeBits, memoryPropertyFlags);
+//	buffer->memory = device.allocateMemory(memAlloc, nullptr);
+//
+//	buffer->alignment = memReqs.alignment;
+//	buffer->size = memAlloc.allocationSize;
+//	buffer->usageFlags = usageFlags;
+//	buffer->memoryPropertyFlags = memoryPropertyFlags;
+//
+//	// If a pointer to the buffer data has been passed, map the buffer and copy over the data
+//	if (data != nullptr) {
+//		buffer->map();
+//		memcpy(buffer->mapped, data, size);
+//		buffer->unmap();
+//	}
+//
+//	// Initialize a default descriptor that covers the whole buffer size
+//	buffer->setupDescriptor();
+//
+//	// Attach the memory to the buffer object
+//	//return buffer->bind();
+//	buffer->bind();
+//}

@@ -372,6 +372,19 @@ namespace vkx {
 				resources[name] = descriptorPool;
 				return descriptorPool;
 			}
+
+			// for convienience
+			vk::DescriptorPool add(std::string name, std::vector<vk::DescriptorPoolSize> descriptorPoolSizes, uint32_t maxSets) {
+
+				vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo;
+				descriptorPoolCreateInfo.poolSizeCount = descriptorPoolSizes.size();
+				descriptorPoolCreateInfo.pPoolSizes = descriptorPoolSizes.data();
+				descriptorPoolCreateInfo.maxSets = maxSets;
+
+				vk::DescriptorPool descriptorPool = device.createDescriptorPool(descriptorPoolCreateInfo, nullptr);
+				resources[name] = descriptorPool;
+				return descriptorPool;
+			}
 	};
 
 

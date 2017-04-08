@@ -13,6 +13,8 @@
 #include "vulkanApp.h"
 #include "vulkanOffscreenExampleBase.hpp"
 
+#include "vulkanImgui.hpp"
+
 
 
 
@@ -184,6 +186,8 @@ void alignedFree(void* data) {
 class VulkanExample : public vkx::vulkanApp {
 
 	public:
+
+	ImGUI *imGui = nullptr;
 
 
 	std::vector<std::shared_ptr<vkx::Mesh>> meshes;
@@ -549,7 +553,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 	}
 
-
+	// todo: move this somewhere else:
 	glm::vec3 generateRay() {
 
 		float mouseX = mouse.current.x;
@@ -595,35 +599,21 @@ class VulkanExample : public vkx::vulkanApp {
 		// skinned mesh vertex layout
 
 		// Binding description
-		vertices.bindingDescriptions.resize(1);
-		vertices.bindingDescriptions[0] =
-			vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, vkx::vertexSize(SSAOVertexLayout), vk::VertexInputRate::eVertex);
+		vertices.bindingDescriptions = std::vector<vk::VertexInputBindingDescription> {
+			vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, vkx::vertexSize(SSAOVertexLayout), vk::VertexInputRate::eVertex),
+		};
 
 		// Attribute descriptions
 		// Describes memory layout and shader positions
-		vertices.attributeDescriptions.resize(7);
-		// Location 0 : Position
-		vertices.attributeDescriptions[0] =
-			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 0, vk::Format::eR32G32B32Sfloat, 0);
-		// Location 1 : (UV) Texture coordinates
-		vertices.attributeDescriptions[1] =
-			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 1, vk::Format::eR32G32Sfloat, sizeof(float) * 3);
-		// Location 2 : Color
-		vertices.attributeDescriptions[2] =
-			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 2, vk::Format::eR32G32B32Sfloat, sizeof(float) * 5);
-		// Location 3 : Normal
-		vertices.attributeDescriptions[3] =
-			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 3, vk::Format::eR32G32B32Sfloat, sizeof(float) * 8);
-		// Location 4 : Tangent
-		vertices.attributeDescriptions[4] =
-			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 4, vk::Format::eR32G32B32Sfloat, sizeof(float) * 11);
-		// Location 5 : Bone weights
-		vertices.attributeDescriptions[5] =
-			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 5, vk::Format::eR32G32B32A32Sfloat, sizeof(float) * 14);
-		// Location 6 : Bone IDs
-		vertices.attributeDescriptions[6] =
-			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 6, vk::Format::eR32G32B32A32Sint, sizeof(float) * 18);
-
+		vertices.attributeDescriptions = std::vector<vk::VertexInputAttributeDescription> {
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 0, vk::Format::eR32G32B32Sfloat, 0),						// Location 0 : Position
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 1, vk::Format::eR32G32Sfloat, sizeof(float) * 3),			// Location 1 : (UV) Texture coordinates
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 2, vk::Format::eR32G32B32Sfloat, sizeof(float) * 5),		// Location 2 : Color
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 3, vk::Format::eR32G32B32Sfloat, sizeof(float) * 8),		// Location 3 : Normal
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 4, vk::Format::eR32G32B32Sfloat, sizeof(float) * 11),		// Location 4 : Tangent
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 5, vk::Format::eR32G32B32A32Sfloat, sizeof(float) * 14),	// Location 5 : Bone weights
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 6, vk::Format::eR32G32B32A32Sint, sizeof(float) * 18),		// Location 6 : Bone IDs
+		};
 
 
 		vertices.inputState.vertexBindingDescriptionCount = vertices.bindingDescriptions.size();
@@ -716,48 +706,32 @@ class VulkanExample : public vkx::vulkanApp {
 	void prepareDescriptorPools() {
 
 		// scene data
-		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes0 =
-		{
+		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes0 = {
 			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 2),// mostly static data
 		};
-
-		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo0 =
-			vkx::descriptorPoolCreateInfo(descriptorPoolSizes0.size(), descriptorPoolSizes0.data(), 1);
-		rscs.descriptorPools->add("forward.scene", descriptorPoolCreateInfo0);
+		rscs.descriptorPools->add("forward.scene", descriptorPoolSizes0, 1);
 
 		// matrix data
-		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes1 =
-		{
+		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes1 = {
 			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1),// non-static data
 		};
-
-		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo1 =
-			vkx::descriptorPoolCreateInfo(descriptorPoolSizes1.size(), descriptorPoolSizes1.data(), 1);
-		rscs.descriptorPools->add("forward.matrix", descriptorPoolCreateInfo1);
+		rscs.descriptorPools->add("forward.matrix", descriptorPoolSizes1, 1);
 
 		// material data
-		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes2 =
-		{
+		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes2 = {
 			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1),
 		};
-
-		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo2 =
-			vkx::descriptorPoolCreateInfo(descriptorPoolSizes2.size(), descriptorPoolSizes2.data(), 1);
-		rscs.descriptorPools->add("forward.material", descriptorPoolCreateInfo2);
+		rscs.descriptorPools->add("forward.material", descriptorPoolSizes2, 1);
 
 
 
 
 
 		// combined image sampler
-		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes4 =
-		{
+		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes4 = {
 			vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 100),
 		};
-
-		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo4 =
-			vkx::descriptorPoolCreateInfo(descriptorPoolSizes4.size(), descriptorPoolSizes4.data(), 100);
-		rscs.descriptorPools->add("forward.textures", descriptorPoolCreateInfo4);
+		rscs.descriptorPools->add("forward.textures", descriptorPoolSizes4, 100);
 
 		this->assetManager.materialDescriptorPool = rscs.descriptorPools->getPtr("forward.textures");
 
@@ -774,50 +748,33 @@ class VulkanExample : public vkx::vulkanApp {
 		// later:
 		// deferred:
 		// scene data
-		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes5 =
-		{
+		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes5 = {
 			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 2),// mostly static data
 		};
-
-		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo5 =
-			vkx::descriptorPoolCreateInfo(descriptorPoolSizes5.size(), descriptorPoolSizes5.data(), 1);
-		rscs.descriptorPools->add("offscreen.scene", descriptorPoolCreateInfo5);
+		rscs.descriptorPools->add("offscreen.scene", descriptorPoolSizes5, 1);
 
 
 		// matrix data
-		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes6 =
-		{
+		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes6 = {
 			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1),// non-static data
 		};
-
-		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo6 =
-			vkx::descriptorPoolCreateInfo(descriptorPoolSizes6.size(), descriptorPoolSizes6.data(), 1);
-		rscs.descriptorPools->add("offscreen.matrix", descriptorPoolCreateInfo6);
+		rscs.descriptorPools->add("offscreen.matrix", descriptorPoolSizes6, 1);
 
 
 
 		// combined image sampler
-		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes7 =
-		{
+		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes7 = {
 			vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 100),
 		};
-
-		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfo7 =
-			vkx::descriptorPoolCreateInfo(descriptorPoolSizes7.size(), descriptorPoolSizes7.data(), 100);
-		rscs.descriptorPools->add("offscreen.textures", descriptorPoolCreateInfo7);
+		rscs.descriptorPools->add("offscreen.textures", descriptorPoolSizes7, 100);
 
 
 
-		std::vector<vk::DescriptorPoolSize> descriptorPoolSizesDeferred =
-		{
+		std::vector<vk::DescriptorPoolSize> descriptorPoolSizesDeferred = {
 			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 16),
 			vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 16)
 		};
-
-		vk::DescriptorPoolCreateInfo descriptorPoolCreateInfoDeferred =
-			vkx::descriptorPoolCreateInfo(descriptorPoolSizesDeferred.size(), descriptorPoolSizesDeferred.data(), /*2*//*max descriptor sets:*/4);
-
-		rscs.descriptorPools->add("deferred.deferred", descriptorPoolCreateInfoDeferred);
+		rscs.descriptorPools->add("deferred.deferred", descriptorPoolSizesDeferred, 4);
 
 
 
@@ -872,8 +829,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// descriptor set layout 0
 		// scene data
-		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings0 =
-		{
+		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings0 = {
 			// Set 0: Binding 0 : Vertex shader uniform buffer
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBuffer,
@@ -890,8 +846,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// descriptor set layout 1
 		// matrix data
-		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings1 =
-		{
+		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings1 = {
 			// Set 1: Binding 0 : Vertex shader dynamic uniform buffer
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBufferDynamic,
@@ -902,8 +857,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// descriptor set layout 2
 		// material data
-		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings2 =
-		{
+		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings2 = {
 			// Set 2: Binding 0 : Vertex shader dynamic uniform buffer
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBufferDynamic,
@@ -919,8 +873,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// descriptor set layout 3
 		// combined image sampler
-		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings3 =
-		{
+		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings3 = {
 			// Set 3: Binding 0 : Fragment shader color map image sampler
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
@@ -1019,8 +972,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// descriptor set layout 0
 		// scene data
-		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings5 =
-		{
+		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings5 = {
 			// Set 0: Binding 0 : Vertex shader uniform buffer
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBuffer,
@@ -1038,8 +990,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// descriptor set layout 1
 		// matrix data
-		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings6 =
-		{
+		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings6 = {
 			// Set 1: Binding 0 : Vertex shader dynamic uniform buffer
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBufferDynamic,
@@ -1069,8 +1020,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// descriptor set layout 3
 		// combined image sampler
-		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings7 =
-		{
+		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings7 = {
 			// Set 2: Binding 0: Fragment shader color map image sampler
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
@@ -1101,8 +1051,7 @@ class VulkanExample : public vkx::vulkanApp {
 		// descriptor set layout for full screen quad // deferred pass
 
 		// Deferred shading layout
-		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindingsDeferred =
-		{
+		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindingsDeferred = {
 			// Set 0: Binding 0: Vertex shader uniform buffer
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBuffer,
@@ -1191,8 +1140,7 @@ class VulkanExample : public vkx::vulkanApp {
 		// SSAO Generate:
 
 
-		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings9 =
-		{
+		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings9 = {
 			// Set 0: Binding 0 : // FS Position+Depth
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
@@ -1246,8 +1194,7 @@ class VulkanExample : public vkx::vulkanApp {
 		// SSAO Blur:
 
 		// combined image sampler
-		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings10 =
-		{
+		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings10 = {
 			// Set 0: Binding 0 : // FS Sampler SSAO
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
@@ -1302,8 +1249,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-		std::vector<vk::WriteDescriptorSet> writeDescriptorSets =
-		{
+		std::vector<vk::WriteDescriptorSet> writeDescriptorSets = {
 			// Set 0: Binding 0: scene uniform buffer
 			vkx::writeDescriptorSet(
 				rscs.descriptorSets->get("forward.scene"),// descriptor set 0
@@ -1393,8 +1339,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 		// Offscreen texture targets:
-		std::vector<vk::WriteDescriptorSet> writeDescriptorSets2 =
-		{
+		std::vector<vk::WriteDescriptorSet> writeDescriptorSets2 = {
 
 
 			// set 3: Binding 0: Vertex shader uniform buffer
@@ -1452,8 +1397,7 @@ class VulkanExample : public vkx::vulkanApp {
 		// todo: combine with above
 		// or dont
 
-		std::vector<vk::WriteDescriptorSet> offscreenWriteDescriptorSets =
-		{
+		std::vector<vk::WriteDescriptorSet> offscreenWriteDescriptorSets = {
 			// Set 0: Binding 0: Vertex shader uniform buffer
 			vkx::writeDescriptorSet(
 				rscs.descriptorSets->get("offscreen.scene"),
@@ -3392,6 +3336,13 @@ class VulkanExample : public vkx::vulkanApp {
 
 		preparePipelines();
 		prepareDeferredPipelines();
+
+		
+		{
+			imGui = new ImGUI(&context);
+			imGui->init((float)settings.windowSize.width, (float)settings.windowSize.height);
+			imGui->initResources(renderPass, queue);
+		}
 
 		start();
 

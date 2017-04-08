@@ -170,5 +170,8 @@
     <ClInclude Include="include\vulkanClasses\VulkanTextOverlay2.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\vulkanClasses\vulkanImgui.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -170,8 +170,7 @@ namespace vkx {
 		* Prepare all vulkan resources required to render the font
 		* The text overlay uses separate resources for descriptors (pool, sets, layouts), pipelines and command buffers
 		*/
-		void prepareResources()
-		{
+		void prepareResources() {
 			static unsigned char font24pixels[STB_FONT_HEIGHT][STB_FONT_WIDTH];
 			STB_FONT_NAME(stbFontData, font24pixels, STB_FONT_HEIGHT);
 
@@ -469,14 +468,14 @@ namespace vkx {
 			pipelineCreateInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
 			pipelineCreateInfo.pStages = shaderStages.data();
 
-			VK_CHECK_RESULT(vkCreateGraphicsPipelines(context->device, pipelineCache, 1, &pipelineCreateInfo, nullptr, &pipeline));
+			//VK_CHECK_RESULT(vkCreateGraphicsPipelines(context->device, pipelineCache, 1, &pipelineCreateInfo, nullptr, &pipeline));
+			pipeline = context->device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
 		}
 
 		/**
 		* Prepare a separate render pass for rendering the text as an overlay
 		*/
-		void prepareRenderPass()
-		{
+		void prepareRenderPass() {
 			vk::AttachmentDescription attachments[2] = {};
 
 			// Color attachment
@@ -556,8 +555,7 @@ namespace vkx {
 		/**
 		* Maps the buffer, resets letter count
 		*/
-		void beginTextUpdate()
-		{
+		void beginTextUpdate() {
 			mappedLocal = (glm::vec4*)vertexBuffer.mapped;
 			numLetters = 0;
 		}
