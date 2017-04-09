@@ -3479,19 +3479,6 @@ class VulkanExample : public vkx::vulkanApp {
 			return;
 		}
 
-		// imgui
-		// todo: move this somewhere else
-		{
-			// Update imGui
-			ImGuiIO &io = ImGui::GetIO();
-
-			io.DisplaySize = ImVec2((float)settings.windowSize.width, (float)settings.windowSize.height);
-			io.DeltaTime = frameTimer * 1000;
-
-
-			io.KeyMap[ImGuiKey_A] = SDLK_a;
-		}
-
 		draw();
 	}
 

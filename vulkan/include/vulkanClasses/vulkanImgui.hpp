@@ -370,7 +370,7 @@ class ImGUI {
 			if (frameTime < uiSettings.frameTimeMin) {
 				uiSettings.frameTimeMin = frameTime;
 			}
-			if (frameTime > uiSettings.frameTimeMax && frameTime < 900) {
+			if (frameTime > uiSettings.frameTimeMax && frameTime < 9000) {
 				uiSettings.frameTimeMax = frameTime;
 			}
 		}
@@ -380,7 +380,7 @@ class ImGUI {
 
 		ImGui::Text("Camera");
 		ImGui::InputFloat3("position", &example->camera.transform.translation.x, 2);
-		//ImGui::InputFloat3("rotation", &example->camera.rotation.x, 2);
+		//ImGui::InputFloat3("rotation", &example->camera.transform.orientation.x, 3);
 
 		ImGui::SetNextWindowSize(ImVec2(200, 200), ImGuiSetCond_FirstUseEver);
 		ImGui::Begin("Example settings");

@@ -690,10 +690,12 @@ void vulkanApp::updateInputInfo() {
 
 		ImGuiIO &io = ImGui::GetIO();
 
+		io.DisplaySize = ImVec2((float)settings.windowSize.width, (float)settings.windowSize.height);
+
 		// todo: move this / do on init
 		{
 
-			io.KeyMap[ImGuiKey_Tab] = SDLK_TAB;                     // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
+			io.KeyMap[ImGuiKey_Tab] = SDLK_TAB;	// Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
 			io.KeyMap[ImGuiKey_LeftArrow] = SDL_SCANCODE_LEFT;
 			io.KeyMap[ImGuiKey_RightArrow] = SDL_SCANCODE_RIGHT;
 			io.KeyMap[ImGuiKey_UpArrow] = SDL_SCANCODE_UP;
