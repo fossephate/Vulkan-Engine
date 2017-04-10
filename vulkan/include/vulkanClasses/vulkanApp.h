@@ -57,6 +57,8 @@
 
 #include <vulkan/vulkan.hpp>
 
+#include "vulkanImgui.hpp"
+
 #include "keycodes.hpp"
 #include "vulkanTools.h"
 #include "vulkanDebug.h"
@@ -230,6 +232,22 @@ namespace vkx
 
 			} settings;
 
+			// Options and values to display/toggle from the UI
+			struct UISettings {
+				bool displayModels = true;
+				bool displayLogos = true;
+				bool displayBackground = true;
+				bool animateLight = false;
+				float lightSpeed = 0.25f;
+				std::array<float, 50> frameTimes = { 0 };
+				//float frameTimeMin = 9999.0f, frameTimeMax = 0.0f;
+
+				float frameTimeMin = 0.0f;
+				float frameTimeMax = 300.0f;
+
+				float lightTimer = 0.0f;
+			} uiSettings;
+
 			//struct Options {
 			//	// Size of the window
 			//	glm::vec2 windowSize{ 1280, 720 };// todo: actually use
@@ -238,8 +256,9 @@ namespace vkx
 			//	bool SSAO = false;
 			//} options;
 
-			//ImGUI *imGui = nullptr;
+			ImGUI *imGui = nullptr;
 			bool GUIOpen = false;
+			bool testBool = true;
 			
 
 			bool prepared = false;
@@ -426,6 +445,8 @@ namespace vkx
 			virtual void render();
 
 			virtual void updateWorld();
+
+			virtual void updateGUI();
 
 			//virtual void update(float deltaTime);
 

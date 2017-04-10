@@ -241,6 +241,55 @@ void vulkanApp::updateWorld() {
 	// overridden
 }
 
+void vkx::vulkanApp::updateGUI() {
+	ImGui::NewFrame();
+
+	// Init imGui windows and elements
+
+	ImVec4 clear_color = ImColor(114, 144, 154);
+	static float f = 0.0f;
+	ImGui::Text(this->title.c_str());
+	ImGui::Text(context.deviceProperties.deviceName);
+
+
+	// Update frame time display
+	if (true) {
+		std::rotate(uiSettings.frameTimes.begin(), uiSettings.frameTimes.begin() + 1, uiSettings.frameTimes.end());
+		float frameTime = 1000.0f / (this->deltaTime * 1000.0f);
+		//frameTime = rand0t1() * 100;
+		uiSettings.frameTimes.back() = frameTime;
+
+		if (frameTime < uiSettings.frameTimeMin) {
+			uiSettings.frameTimeMin = frameTime;
+		}
+		if (frameTime > uiSettings.frameTimeMax && frameTime < 9000) {
+			uiSettings.frameTimeMax = frameTime;
+		}
+	}
+
+	ImGui::PlotLines("Frame Times", &uiSettings.frameTimes[0], 50, 0, "", uiSettings.frameTimeMin, uiSettings.frameTimeMax, ImVec2(0, 80));
+	//ImGui::PlotLines("Frame Times", &uiSettings.frameTimes[0], 50, 0, "", uiSettings.frameTimeMin, uiSettings.frameTimeMax, ImVec2(0, 200));
+
+	ImGui::Text("Camera");
+	ImGui::InputFloat3("position", &this->camera.transform.translation.x, 2);
+	//ImGui::InputFloat3("rotation", &example->camera.transform.orientation.x, 3);
+
+	ImGui::SetNextWindowSize(ImVec2(200, 200), ImGuiSetCond_FirstUseEver);
+	ImGui::Begin("Example settings");
+	ImGui::Checkbox("Render models", &uiSettings.displayModels);
+	ImGui::Checkbox("Display logos", &uiSettings.displayLogos);
+	ImGui::Checkbox("Display background", &uiSettings.displayBackground);
+	ImGui::Checkbox("Animate light", &uiSettings.animateLight);
+	ImGui::SliderFloat("Light speed", &uiSettings.lightSpeed, 0.1f, 1.0f);
+	ImGui::End();
+
+	ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
+	ImGui::ShowTestWindow();
+
+	// Render to generate draw buffers
+	ImGui::Render();
+}
+
 void vkx::vulkanApp::updatePhysics() {
 	// overridden
 }

@@ -13,8 +13,6 @@
 #include "vulkanApp.h"
 #include "vulkanOffscreenExampleBase.hpp"
 
-#include "vulkanImgui.hpp"
-
 
 
 // Maximum number of bones per mesh
@@ -186,8 +184,6 @@ void alignedFree(void* data) {
 class VulkanExample : public vkx::vulkanApp {
 
 	public:
-
-	ImGUI *imGui = nullptr;
 
 
 	std::vector<std::shared_ptr<vkx::Mesh>> meshes;
@@ -2221,9 +2217,13 @@ class VulkanExample : public vkx::vulkanApp {
 			GUIOpen = !GUIOpen;
 		}
 
-		if (GUIOpen) {
-			goto endofcontrols;
+		if (keyStates.onKeyDown(&keyStates.j)) {
+			testBool = !testBool;
 		}
+
+		//if (GUIOpen) {
+		//	goto endofcontrols;
+		//}
 
 
 
@@ -2254,7 +2254,8 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 		// z-up rotations
-		camera.rotationSpeed = -0.025f;
+		camera.rotationSpeed = -0.25f;
+		camera.rotationSpeed = camera.rotationSpeed*deltaTime;
 
 		if (mouse.leftMouseButton.state) {
 			camera.rotateWorldZ(mouse.delta.x*camera.rotationSpeed);
@@ -2517,7 +2518,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-		endofcontrols:
+		//endofcontrols:
 
 
 
@@ -2762,9 +2763,6 @@ class VulkanExample : public vkx::vulkanApp {
 		//this->physicsManager.dynamicsWorld->stepSimulation(tDuration.count() / 1000.0, 4);
 		//this->physicsManager.dynamicsWorld->stepSimulation(deltaTime, 4);
 
-
-
-
 		// sync:
 		for (int i = 0; i < this->physicsObjects.size(); ++i) {
 			this->physicsObjects[i]->sync();
@@ -2793,6 +2791,58 @@ class VulkanExample : public vkx::vulkanApp {
 			buildOffscreenCommandBuffer();
 		}
 
+	}
+
+
+	void updateGUI() {
+
+		ImGui::NewFrame();
+
+		// Init imGui windows and elements
+
+		ImVec4 clear_color = ImColor(114, 144, 154);
+		static float f = 0.0f;
+		ImGui::Text(this->title.c_str());
+		ImGui::Text(context.deviceProperties.deviceName);
+
+
+		// Update frame time display
+		if (frameCounter == 0) {
+			std::rotate(uiSettings.frameTimes.begin(), uiSettings.frameTimes.begin() + 1, uiSettings.frameTimes.end());
+			float frameTime = 1000.0f / (this->deltaTime * 1000.0f);
+			//frameTime = rand0t1() * 100;
+			uiSettings.frameTimes.back() = frameTime;
+
+			if (frameTime < uiSettings.frameTimeMin) {
+				uiSettings.frameTimeMin = frameTime;
+			}
+			if (frameTime > uiSettings.frameTimeMax && frameTime < 9000) {
+				uiSettings.frameTimeMax = frameTime;
+			}
+		}
+
+		ImGui::PlotLines("Frame Times", &uiSettings.frameTimes[0], 50, 0, "", uiSettings.frameTimeMin, uiSettings.frameTimeMax, ImVec2(0, 80));
+		//ImGui::PlotLines("Frame Times", &uiSettings.frameTimes[0], 50, 0, "", uiSettings.frameTimeMin, uiSettings.frameTimeMax, ImVec2(0, 200));
+
+		ImGui::Text("Camera");
+		ImGui::InputFloat3("position", &this->camera.transform.translation.x, 2);
+		//ImGui::InputFloat3("rotation", &example->camera.transform.orientation.x, 3);
+
+		ImGui::SetNextWindowSize(ImVec2(200, 200), ImGuiSetCond_FirstUseEver);
+		ImGui::Begin("Example settings");
+
+		ImGui::Checkbox("Update Draw Command Buffers", &updateDraw);
+		ImGui::Checkbox("Update Offscreen Command Buffers", &updateOffscreen);
+		ImGui::Checkbox("SSAO", &settings.SSAO);
+		ImGui::Checkbox("Add Boxes", &keyStates.b);
+		ImGui::SliderFloat("FPS Cap", &settings.frameTimeCapMS, 0.01f, 100.0f);
+		ImGui::End();
+
+		ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
+		ImGui::ShowTestWindow();
+
+		// Render to generate draw buffers
+		ImGui::Render();
 	}
 
 
@@ -2859,14 +2909,18 @@ class VulkanExample : public vkx::vulkanApp {
 
 	void buildDrawCommandBuffers() {
 
+		// todo: remove this:
 		updateUniformBufferDeferredLights();
 
 		{
 			vk::CommandBufferBeginInfo cmdBufInfo{ vk::CommandBufferUsageFlagBits::eSimultaneousUse };
 
 			// start new imgui frame
-			imGui->newFrame(this, (frameCounter == 0));
-			imGui->updateBuffers();
+			if (GUIOpen) {
+				updateGUI();
+				imGui->updateBuffers();
+			}
+
 
 			for (uint32_t i = 0; i < drawCmdBuffers.size(); ++i) {
 			//for (uint32_t i = 0; i < swapChain.imageCount; ++i) {
@@ -2892,8 +2946,9 @@ class VulkanExample : public vkx::vulkanApp {
 				updateDrawCommandBuffer(cmdBuffer);
 
 				// render gui
-				imGui->drawFrame(cmdBuffer);
-
+				if (GUIOpen) {
+					imGui->drawFrame(cmdBuffer);
+				}
 
 
 				// end render pass
@@ -3376,6 +3431,7 @@ class VulkanExample : public vkx::vulkanApp {
 		} else {
 			buildDrawCommandBuffers();
 		}
+
 		buildOffscreenCommandBuffer();
 
 

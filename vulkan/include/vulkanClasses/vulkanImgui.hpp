@@ -15,24 +15,24 @@
 //#include "vulkanApp.h"
 
 
-// Options and values to display/toggle from the UI
-struct UISettings {
-	bool displayModels = true;
-	bool displayLogos = true;
-	bool displayBackground = true;
-	bool animateLight = false;
-	float lightSpeed = 0.25f;
-	std::array<float, 50> frameTimes = { 0 };
-
-	//std::array<float, 50> FPSValues = { 0 };
-
-	//float frameTimeMin = 9999.0f, frameTimeMax = 0.0f;
-
-	float frameTimeMin = 0.0f;
-	float frameTimeMax = 300.0f;
-
-	float lightTimer = 0.0f;
-} uiSettings;
+//// Options and values to display/toggle from the UI
+//struct UISettings {
+//	bool displayModels = true;
+//	bool displayLogos = true;
+//	bool displayBackground = true;
+//	bool animateLight = false;
+//	float lightSpeed = 0.25f;
+//	std::array<float, 50> frameTimes = { 0 };
+//
+//	//std::array<float, 50> FPSValues = { 0 };
+//
+//	//float frameTimeMin = 9999.0f, frameTimeMax = 0.0f;
+//
+//	float frameTimeMin = 0.0f;
+//	float frameTimeMax = 300.0f;
+//
+//	float lightTimer = 0.0f;
+//} uiSettings;
 
 // ----------------------------------------------------------------------------
 // ImGUI class
@@ -57,7 +57,6 @@ class ImGUI {
 	vk::DescriptorSet descriptorSet;
 	//vks::VulkanDevice *device;
 	vkx::Context *context;
-	vkx::vulkanApp *example;
 	public:
 	// UI params are set via push constants
 	struct PushConstBlock {
@@ -348,55 +347,55 @@ class ImGUI {
 		pipeline = context->device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo);
 	}
 
-	// Starts a new imGui frame and sets up windows and ui elements
-	void newFrame(vkx::vulkanApp *example, bool updateFrameGraph) {
-		ImGui::NewFrame();
+	//// Starts a new imGui frame and sets up windows and ui elements
+	//void newFrame(vkx::vulkanApp *example, bool updateFrameGraph) {
+	//	ImGui::NewFrame();
 
-		// Init imGui windows and elements
+	//	// Init imGui windows and elements
 
-		ImVec4 clear_color = ImColor(114, 144, 154);
-		static float f = 0.0f;
-		ImGui::Text(example->title.c_str());
-		ImGui::Text(context->deviceProperties.deviceName);
+	//	ImVec4 clear_color = ImColor(114, 144, 154);
+	//	static float f = 0.0f;
+	//	ImGui::Text(example->title.c_str());
+	//	ImGui::Text(context->deviceProperties.deviceName);
 
 
-		// Update frame time display
-		if (updateFrameGraph) {
-			std::rotate(uiSettings.frameTimes.begin(), uiSettings.frameTimes.begin() + 1, uiSettings.frameTimes.end());
-			float frameTime = 1000.0f / (example->deltaTime * 1000.0f);
-			//frameTime = rand0t1() * 100;
-			uiSettings.frameTimes.back() = frameTime;
+	//	// Update frame time display
+	//	if (updateFrameGraph) {
+	//		std::rotate(uiSettings.frameTimes.begin(), uiSettings.frameTimes.begin() + 1, uiSettings.frameTimes.end());
+	//		float frameTime = 1000.0f / (example->deltaTime * 1000.0f);
+	//		//frameTime = rand0t1() * 100;
+	//		uiSettings.frameTimes.back() = frameTime;
 
-			if (frameTime < uiSettings.frameTimeMin) {
-				uiSettings.frameTimeMin = frameTime;
-			}
-			if (frameTime > uiSettings.frameTimeMax && frameTime < 9000) {
-				uiSettings.frameTimeMax = frameTime;
-			}
-		}
+	//		if (frameTime < uiSettings.frameTimeMin) {
+	//			uiSettings.frameTimeMin = frameTime;
+	//		}
+	//		if (frameTime > uiSettings.frameTimeMax && frameTime < 9000) {
+	//			uiSettings.frameTimeMax = frameTime;
+	//		}
+	//	}
 
-		ImGui::PlotLines("Frame Times", &uiSettings.frameTimes[0], 50, 0, "", uiSettings.frameTimeMin, uiSettings.frameTimeMax, ImVec2(0, 80));
-		//ImGui::PlotLines("Frame Times", &uiSettings.frameTimes[0], 50, 0, "", uiSettings.frameTimeMin, uiSettings.frameTimeMax, ImVec2(0, 200));
+	//	ImGui::PlotLines("Frame Times", &uiSettings.frameTimes[0], 50, 0, "", uiSettings.frameTimeMin, uiSettings.frameTimeMax, ImVec2(0, 80));
+	//	//ImGui::PlotLines("Frame Times", &uiSettings.frameTimes[0], 50, 0, "", uiSettings.frameTimeMin, uiSettings.frameTimeMax, ImVec2(0, 200));
 
-		ImGui::Text("Camera");
-		ImGui::InputFloat3("position", &example->camera.transform.translation.x, 2);
-		//ImGui::InputFloat3("rotation", &example->camera.transform.orientation.x, 3);
+	//	ImGui::Text("Camera");
+	//	ImGui::InputFloat3("position", &example->camera.transform.translation.x, 2);
+	//	//ImGui::InputFloat3("rotation", &example->camera.transform.orientation.x, 3);
 
-		ImGui::SetNextWindowSize(ImVec2(200, 200), ImGuiSetCond_FirstUseEver);
-		ImGui::Begin("Example settings");
-		ImGui::Checkbox("Render models", &uiSettings.displayModels);
-		ImGui::Checkbox("Display logos", &uiSettings.displayLogos);
-		ImGui::Checkbox("Display background", &uiSettings.displayBackground);
-		ImGui::Checkbox("Animate light", &uiSettings.animateLight);
-		ImGui::SliderFloat("Light speed", &uiSettings.lightSpeed, 0.1f, 1.0f);
-		ImGui::End();
+	//	ImGui::SetNextWindowSize(ImVec2(200, 200), ImGuiSetCond_FirstUseEver);
+	//	ImGui::Begin("Example settings");
+	//	ImGui::Checkbox("Render models", &uiSettings.displayModels);
+	//	ImGui::Checkbox("Display logos", &uiSettings.displayLogos);
+	//	ImGui::Checkbox("Display background", &uiSettings.displayBackground);
+	//	ImGui::Checkbox("Animate light", &uiSettings.animateLight);
+	//	ImGui::SliderFloat("Light speed", &uiSettings.lightSpeed, 0.1f, 1.0f);
+	//	ImGui::End();
 
-		ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
-		ImGui::ShowTestWindow();
+	//	ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
+	//	ImGui::ShowTestWindow();
 
-		// Render to generate draw buffers
-		ImGui::Render();
-	}
+	//	// Render to generate draw buffers
+	//	ImGui::Render();
+	//}
 
 	// Update vertex and index buffer containing the imGui elements when required
 	void updateBuffers() {
