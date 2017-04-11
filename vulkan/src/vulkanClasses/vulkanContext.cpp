@@ -136,6 +136,7 @@ void vkx::Context::createContext(bool enableValidation) {
 void vkx::Context::destroyContext() {
 	queue.waitIdle();
 	device.waitIdle();
+
 	for (const auto &trash : dumpster) {
 		trash();
 	}

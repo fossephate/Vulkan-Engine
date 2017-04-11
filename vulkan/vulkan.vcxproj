@@ -65,7 +65,6 @@
     <ClInclude Include="include\vulkanClasses\vulkanMesh.h" />
     <ClInclude Include="include\vulkanClasses\vulkanMeshLoader.h" />
     <ClInclude Include="include\vulkanClasses\vulkanOffscreen.h" />
-    <ClInclude Include="include\vulkanClasses\vulkanOffscreenExampleBase.hpp" />
     <ClInclude Include="include\vulkanClasses\vulkanShaders.h" />
     <ClInclude Include="include\vulkanClasses\vulkanSkinnedMesh.h" />
     <ClInclude Include="include\vulkanClasses\vulkanSwapChain.h" />

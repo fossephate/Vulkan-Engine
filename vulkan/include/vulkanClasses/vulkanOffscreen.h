@@ -90,6 +90,7 @@ namespace vkx {
 			}
 			framebuffers.clear();
 			context.device.freeCommandBuffers(context.getCommandPool(), cmdBuffer);
+
 			//context.device.destroyRenderPass(renderPass);
 			context.device.destroySemaphore(renderComplete);
 		}

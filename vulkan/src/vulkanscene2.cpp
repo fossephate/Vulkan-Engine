@@ -11,7 +11,6 @@
 */
 
 #include "vulkanApp.h"
-#include "vulkanOffscreenExampleBase.hpp"
 
 
 
@@ -454,6 +453,7 @@ class VulkanExample : public vkx::vulkanApp {
 		// todo: fix this all up
 
 		offscreen.destroy();
+		imGui->destroy();
 
 
 		// destroy pipelines
@@ -464,19 +464,32 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// destroy uniform buffers
 		uniformData.sceneVS.destroy();
+		uniformData.matrixVS.destroy();
+		uniformData.materialVS.destroy();
+		uniformData.bonesVS.destroy();
+		
+		
+
 
 		// destroy offscreen uniform buffers
 		uniformDataDeferred.vsOffscreen.destroy();
 		uniformDataDeferred.vsFullScreen.destroy();
 		uniformDataDeferred.fsLights.destroy();
 
+		uniformDataDeferred.matrixVS.destroy();
+		uniformDataDeferred.ssaoKernel.destroy();
+		uniformDataDeferred.ssaoParams.destroy();
+
+		// destroy textures:
+		// todo: move / clean this up
+		textures.ssaoNoise.destroy();
+		textures.colorMap.destroy();
+
+
 		// destroy offscreen command buffer
 		device.freeCommandBuffers(cmdPool, offscreenCmdBuffer);
 
 		device.destroyFence(renderFence, nullptr);// temp
-
-		//textures.colorMap.destroy();
-		//textures.ssaoNoise.destroy();
 
 
 		for (auto &mesh : meshes) {
@@ -504,18 +517,12 @@ class VulkanExample : public vkx::vulkanApp {
 		}
 
 
-
-
-
 		for (auto &physicsObject : physicsObjects) {
 			physicsObject->destroy();
 		}
 
-		//textures.colorMap.destroy();
 
-		uniformDataDeferred.vsOffscreen.destroy();
-		uniformDataDeferred.vsFullScreen.destroy();
-		uniformDataDeferred.fsLights.destroy();
+
 
 		// Destroy and free mesh resources
 
@@ -533,9 +540,6 @@ class VulkanExample : public vkx::vulkanApp {
 		rscs.descriptorSets->destroy();// does nothing, fix
 
 		rscs.descriptorSetLayouts->destroy();
-
-		//device.allocateMemory
-		//device.freeMemory
 		
 
 		
@@ -1328,10 +1332,13 @@ class VulkanExample : public vkx::vulkanApp {
 		vk::DescriptorImageInfo texDescriptorAlbedo =
 			vkx::descriptorImageInfo(offscreen.framebuffers[0].attachments[0].sampler, offscreen.framebuffers[0].attachments[2].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-		// todo: fix
+		
 		vk::DescriptorImageInfo texDescriptorSSAOBlurred =
 			vkx::descriptorImageInfo(offscreen.framebuffers[0].attachments[0].sampler, offscreen.framebuffers[2].attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 
+		//// todo: fix
+		//vk::DescriptorImageInfo texDescriptorShadowMap =
+		//	vkx::descriptorImageInfo(offscreen.framebuffers[0].depthAttachment.sampler, offscreen.framebuffers[0].depthAttachment.view, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 
 		// Offscreen texture targets:
@@ -1376,6 +1383,8 @@ class VulkanExample : public vkx::vulkanApp {
 				vk::DescriptorType::eUniformBuffer,
 				5,
 				&uniformDataDeferred.fsLights.descriptor),
+
+
 
 		};
 
@@ -2433,10 +2442,10 @@ class VulkanExample : public vkx::vulkanApp {
 
 		if (keyStates.minus) {
 			settings.fpsCap -= 0.2f;
-			settings.frameTimeCapMS += 0.2f;
+			//settings.frameTimeCapMS += 0.2f;
 		} else if (keyStates.equals) {
 			settings.fpsCap += 0.2f;
-			settings.frameTimeCapMS -= 0.2f;
+			//settings.frameTimeCapMS -= 0.2f;
 		}
 
 
@@ -2835,7 +2844,7 @@ class VulkanExample : public vkx::vulkanApp {
 		ImGui::Checkbox("Update Offscreen Command Buffers", &updateOffscreen);
 		ImGui::Checkbox("SSAO", &settings.SSAO);
 		ImGui::Checkbox("Add Boxes", &keyStates.b);
-		ImGui::SliderFloat("FPS Cap", &settings.frameTimeCapMS, 0.01f, 100.0f);
+		ImGui::SliderFloat("FPS Cap", &settings.fpsCap, 5.0f, 500.0f);
 		ImGui::End();
 
 		ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);

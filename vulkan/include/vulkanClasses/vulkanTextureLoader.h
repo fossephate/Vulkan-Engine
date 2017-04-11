@@ -21,10 +21,11 @@
 namespace vkx {
 
 	struct Texture {
-		vk::Device device;
-		vk::Image image;
-		vk::DeviceMemory memory;
-		vk::Sampler sampler;
+		vk::Device device = nullptr;
+		vk::Image image = nullptr;
+		vk::DeviceMemory memory = nullptr;
+		vk::Sampler sampler = nullptr;
+
 		vk::ImageLayout imageLayout{ vk::ImageLayout::eShaderReadOnlyOptimal };
 		vk::ImageView view;
 		vk::Extent3D extent{ 0, 0, 1 };
@@ -41,7 +42,24 @@ namespace vkx {
 			return *this;
 		}
 
-		void destroy();
+		void destroy() {
+			if (sampler) {
+				device.destroySampler(sampler);
+				sampler = vk::Sampler();
+			}
+			if (view) {
+				device.destroyImageView(view);
+				view = vk::ImageView();
+			}
+			if (image) {
+				device.destroyImage(image);
+				image = vk::Image();
+			}
+			if (memory) {
+				device.freeMemory(memory);
+				memory = vk::DeviceMemory();
+			}
+		}
 	};
 
 	class TextureLoader {

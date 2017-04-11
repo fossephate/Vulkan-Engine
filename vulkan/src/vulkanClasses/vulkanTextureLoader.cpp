@@ -1,24 +1,5 @@
 #include "vulkanTextureLoader.h"
 
-void vkx::Texture::destroy() {
-	if (sampler) {
-		device.destroySampler(sampler);
-		sampler = vk::Sampler();
-	}
-	if (view) {
-		device.destroyImageView(view);
-		view = vk::ImageView();
-	}
-	if (image) {
-		device.destroyImage(image);
-		image = vk::Image();
-	}
-	if (memory) {
-		device.freeMemory(memory);
-		memory = vk::DeviceMemory();
-	}
-}
-
 //vkx::TextureLoader::TextureLoader(const Context &context) {
 //	this->context = &context;
 //
@@ -694,6 +675,8 @@ void vkx::TextureLoader::createTexture(void* buffer, vk::DeviceSize bufferSize, 
 
 	assert(buffer);
 
+	texture->device = this->context.device;
+
 	//texture->width = width;
 	//texture->height = height;
 	texture->extent.setWidth(width);
@@ -873,8 +856,8 @@ void vkx::TextureLoader::createTexture(void* buffer, vk::DeviceSize bufferSize, 
 
 	// Create image view
 	vk::ImageViewCreateInfo view;
-	view.pNext = NULL;
-	view.image = VK_NULL_HANDLE;
+	view.pNext = nullptr;
+	view.image = nullptr;
 	view.viewType = vk::ImageViewType::e2D;
 	view.format = format;
 	view.components = { vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eG, vk::ComponentSwizzle::eB, vk::ComponentSwizzle::eA };
@@ -885,8 +868,8 @@ void vkx::TextureLoader::createTexture(void* buffer, vk::DeviceSize bufferSize, 
 	texture->view = context.device.createImageView(view, nullptr);
 
 	// Fill descriptor image info that can be used for setting up descriptor sets
-	texture->descriptor.imageLayout = vk::ImageLayout::eGeneral;
-	//texture->descriptor.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+	//texture->descriptor.imageLayout = vk::ImageLayout::eGeneral;
+	texture->descriptor.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 	texture->descriptor.imageView = texture->view;
 	texture->descriptor.sampler = texture->sampler;
 }

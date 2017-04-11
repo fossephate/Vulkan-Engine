@@ -123,7 +123,7 @@ namespace vkx
 
 
 		protected:
-			bool enableVsync{ false };
+			//bool enableVsync{ false };
 			// Command buffers used for rendering
 			std::vector<vk::CommandBuffer> primaryCmdBuffers;
 			std::vector<vk::CommandBuffer> textCmdBuffers;// secondary?
@@ -150,16 +150,17 @@ namespace vkx
 			std::vector<vk::Framebuffer>framebuffers;
 			// Active frame buffer index
 			uint32_t currentBuffer = 0;
-			// Descriptor set pool
+			// Descriptor pool
 			vk::DescriptorPool descriptorPool;
-			// Wraps the swap chain to present images (framebuffers) to the windowing system
-			vkx::VulkanSwapChain swapChain;
 
 			// Command buffer pool
 			vk::CommandPool cmdPool;
 
+			// Wraps the swap chain to present images (framebuffers) to the windowing system
+			vkx::VulkanSwapChain swapChain;
+
 			// initialize and set references to context
-			vkx::Context context{};
+			vkx::Context context;
 			vk::Device &device = context.device;
 			vk::PhysicalDevice &physicalDevice = context.physicalDevice;
 			vk::Queue &queue = context.queue;
@@ -199,7 +200,7 @@ namespace vkx
 
 
 			// Returns the base asset path (for shaders, models, textures) depending on the os
-			const std::string& getAssetPath();
+			const std::string &getAssetPath();
 
 
 
@@ -220,6 +221,8 @@ namespace vkx
 				float fpsCap = 60.0f;
 				/** @brief frame time cap value */
 				float frameTimeCapMS = 16.66666;
+				/** @brief v-sync */
+				bool enableVsync = false;
 
 				// Size of the window
 				//glm::vec2 windowSize{ 1280, 720 };

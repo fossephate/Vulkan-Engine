@@ -68,7 +68,8 @@ class ImGUI {
 
 	};
 
-	~ImGUI() {
+	void destroy() {
+
 		// Release all Vulkan resources required for rendering imGui
 		vertexBuffer.destroy();
 		indexBuffer.destroy();

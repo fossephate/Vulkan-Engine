@@ -45,7 +45,7 @@ vulkanApp::vulkanApp(bool enableValidation) : swapChain(this->context) {
 
 vulkanApp::~vulkanApp() {
 
-	//device.waitIdle();// added
+	device.waitIdle();// added
 
 	// Clean up Vulkan resources
 	swapChain.cleanup();
@@ -1054,6 +1054,7 @@ void vulkanApp::renderLoop() {
 
 		float sleepThreshold = 1.8;//1.4
 
+		settings.frameTimeCapMS = 1000.0 / settings.fpsCap;
 
 		// run cpu in circles
 		while (tFrameDurationMS < settings.frameTimeCapMS) {

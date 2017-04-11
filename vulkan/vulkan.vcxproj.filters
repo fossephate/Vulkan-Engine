@@ -131,9 +131,6 @@
     <ClInclude Include="include\vulkanClasses\vulkanDebug.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\vulkanClasses\vulkanOffscreenExampleBase.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\vulkanClasses\vulkanAssetManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
