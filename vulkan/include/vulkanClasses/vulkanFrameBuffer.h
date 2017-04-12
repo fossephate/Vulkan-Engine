@@ -256,9 +256,7 @@ namespace vkx {
 			framebufferInfo.height = height;
 			framebufferInfo.layers = maxLayers;
 			//VK_CHECK_RESULT(vkCreateFramebuffer(vulkanDevice->logicalDevice, &framebufferInfo, nullptr, &framebuffer));
-
-
-			//return VK_SUCCESS;
+			this->framebuffer = device.createFramebuffer(framebufferInfo, nullptr);
 		}
 
 

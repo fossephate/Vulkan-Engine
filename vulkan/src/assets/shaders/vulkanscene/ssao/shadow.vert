@@ -7,17 +7,24 @@
 layout (location = 0) in vec4 inPos;
 
 
-// todo: figure set and binding
-layout (set = ?, binding = ?) uniform UBO
-{
-    mat4 depthMVP;
-} ubo;
+layout (location = 0) out int outInstanceIndex;
+
+// // todo: figure set and binding
+// layout (set = ?, binding = ?) uniform UBO
+// {
+//     mat4 depthMVP;
+// } ubo;
 
 out gl_PerVertex
 {
 	vec4 gl_Position;
 };
 
+
 void main() {
-	gl_Position = depthMVP * inPos;
+
+	outInstanceIndex = gl_InstanceIndex;
+
+	//gl_Position = depthMVP * inPos;
+	gl_Position = inPos;
 }

@@ -16,8 +16,8 @@ glslangvalidator -V composition.frag -o composition.frag.spv
 
 glslangvalidator -V blur.frag -o blur.frag.spv
 
-rem glslangvalidator -V shadow.vert -o shadow.vert.spv
-rem glslangvalidator -V shadow.frag -o shadow.frag.spv
-rem glslangvalidator -V shadow.geom -o shadow.geom.spv
+glslangvalidator -V shadow.vert -o shadow.vert.spv
+glslangvalidator -V shadow.frag -o shadow.frag.spv
+glslangvalidator -V shadow.geom -o shadow.geom.spv
 
 pause

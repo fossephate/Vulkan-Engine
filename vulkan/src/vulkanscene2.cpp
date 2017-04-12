@@ -1793,38 +1793,38 @@ class VulkanExample : public vkx::vulkanApp {
 
 		{
 
-			//// Shadow mapping pipeline
-			//// The shadow mapping pipeline uses geometry shader instancing (invocations layout modifier) to output 
-			//// shadow maps for multiple lights sources into the different shadow map layers in one single render pass
-			//std::array<vk::PipelineShaderStageCreateInfo, 3> shadowStages;
-			//shadowStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/shadow.vert.spv", vk::ShaderStageFlagBits::eVertex);
-			//shadowStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/shadow.frag.spv", vk::ShaderStageFlagBits::eFragment);
-			//shadowStages[2] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/shadow.geom.spv", vk::ShaderStageFlagBits::eGeometry);
+			// Shadow mapping pipeline
+			// The shadow mapping pipeline uses geometry shader instancing (invocations layout modifier) to output 
+			// shadow maps for multiple lights sources into the different shadow map layers in one single render pass
+			std::array<vk::PipelineShaderStageCreateInfo, 3> shadowStages;
+			shadowStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/shadow.vert.spv", vk::ShaderStageFlagBits::eVertex);
+			shadowStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/shadow.frag.spv", vk::ShaderStageFlagBits::eFragment);
+			shadowStages[2] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/shadow.geom.spv", vk::ShaderStageFlagBits::eGeometry);
 
-			//pipelineCreateInfo.pStages = shadowStages.data();
-			//pipelineCreateInfo.stageCount = static_cast<uint32_t>(shadowStages.size());
+			pipelineCreateInfo.pStages = shadowStages.data();
+			pipelineCreateInfo.stageCount = static_cast<uint32_t>(shadowStages.size());
 
-			//// Shadow pass doesn't use any color attachments
-			//colorBlendState.attachmentCount = 0;
-			//colorBlendState.pAttachments = nullptr;
-			//// Cull front faces
-			//rasterizationState.cullMode = vk::CullModeFlagBits::eFront;
-			//depthStencilState.depthCompareOp = vk::CompareOp::eLessOrEqual;
-			//// Enable depth bias
-			//rasterizationState.depthBiasEnable = VK_TRUE;
-			//// Add depth bias to dynamic state, so we can change it at runtime
-			//dynamicStateEnables.push_back(vk::DynamicState::eDepthBias);
-			///*dynamicState =
-			//	vks::initializers::pipelineDynamicStateCreateInfo(
-			//		dynamicStateEnables.data(),
-			//		static_cast<uint32_t>(dynamicStateEnables.size()),
-			//		0);*/
+			// Shadow pass doesn't use any color attachments
+			colorBlendState.attachmentCount = 0;
+			colorBlendState.pAttachments = nullptr;
+			// Cull front faces
+			rasterizationState.cullMode = vk::CullModeFlagBits::eFront;
+			depthStencilState.depthCompareOp = vk::CompareOp::eLessOrEqual;
+			// Enable depth bias
+			rasterizationState.depthBiasEnable = VK_TRUE;
+			// Add depth bias to dynamic state, so we can change it at runtime
+			dynamicStateEnables.push_back(vk::DynamicState::eDepthBias);
+			/*dynamicState =
+				vks::initializers::pipelineDynamicStateCreateInfo(
+					dynamicStateEnables.data(),
+					static_cast<uint32_t>(dynamicStateEnables.size()),
+					0);*/
 
-			//		// Reset blend attachment state
-			//pipelineCreateInfo.renderPass = offscreen.framebuffers[3].renderPass;
+					// Reset blend attachment state
+			pipelineCreateInfo.renderPass = offscreen.framebuffers[3].renderPass;
 
-			//vk::Pipeline shadowPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
-			//rscs.pipelines->add("shadow", shadowPipeline);
+			vk::Pipeline shadowPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+			rscs.pipelines->add("shadow", shadowPipeline);
 
 		}
 

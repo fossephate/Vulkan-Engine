@@ -4,14 +4,19 @@
 #extension GL_ARB_shading_language_420pack : enable
 
 
-layout (location = 0) in vec4 inPos;
 
+#define LIGHT_COUNT 3
 
-// todo: figure set and binding
-layout (set = ?, binding = ?) uniform UBO
+layout (triangles, invocations = LIGHT_COUNT) in;
+layout (triangle_strip, max_vertices = 3) out;
+
+layout (binding = 0) uniform UBO 
 {
-    mat4 depthMVP;
+	mat4 mvp[LIGHT_COUNT];
+	vec4 instancePos[3];
 } ubo;
+
+layout (location = 0) in int inInstanceIndex[];
 
 out gl_PerVertex
 {
@@ -19,5 +24,14 @@ out gl_PerVertex
 };
 
 void main() {
-	gl_Position = depthMVP * inPos;
+
+	vec4 instancedPos = ubo.instancePos[inInstanceIndex[0]]; 
+	
+	for (int i = 0; i < gl_in.length(); i++) {
+		gl_Layer = gl_InvocationID;
+		vec4 tmpPos = gl_in[i].gl_Position + instancedPos;
+		gl_Position = ubo.mvp[gl_InvocationID] * tmpPos;
+		EmitVertex();
+	}
+	EndPrimitive();
 }

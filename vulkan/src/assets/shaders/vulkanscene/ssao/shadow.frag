@@ -7,7 +7,7 @@
 // Ouput data
 layout(location = 0) out float fragmentdepth;
 
-void main(){
+void main() {
 
     fragmentdepth = gl_FragCoord.z;
 }

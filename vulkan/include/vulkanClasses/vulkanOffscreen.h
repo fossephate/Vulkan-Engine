@@ -59,7 +59,7 @@ namespace vkx {
 			addSSAOGenerateFramebuffer();
 			addSSAOBlurFramebuffer();
 
-			//addShadowPassFramebuffer();
+			addShadowPassFramebuffer();
 
 
 
@@ -650,7 +650,7 @@ namespace vkx {
 				}
 				attachments.push_back(deferredFramebuffer.depthAttachment.view);// depth attachment
 
-				vk::FramebufferCreateInfo fbufCreateInfo;/* = vkTools::initializers::framebufferCreateInfo();*/
+				vk::FramebufferCreateInfo fbufCreateInfo;
 				fbufCreateInfo.renderPass = deferredFramebuffer.renderPass;
 				fbufCreateInfo.pAttachments = attachments.data();
 				fbufCreateInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
@@ -690,90 +690,8 @@ namespace vkx {
 			
 			
 			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
 			framebuffers.push_back(deferredFramebuffer);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 		}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -784,47 +702,6 @@ namespace vkx {
 		// add SSAO frame buffer
 		void addSSAOGenerateFramebuffer() {
 
-			// -------------------------------------------------------------------------------
-			// -------------------------------------------------------------------------------
-			// Options
-
-			glm::uvec2 size = this->size;
-			std::vector<vk::Format> colorFormats = std::vector<vk::Format>{ {
-					vk::Format::eR16G16B16A16Sfloat,
-					vk::Format::eR16G16B16A16Sfloat,
-					vk::Format::eR8G8B8A8Unorm
-			}};
-			// This value is chosen as an invalid default that signals that the code should pick a specific depth buffer
-			// Alternative, you can set this to undefined to explicitly declare you want no depth buffer.
-			vk::Format depthFormat = vk::Format::eR8Uscaled;
-
-			// Find a suitable depth format
-			if (depthFormat == vk::Format::eR8Uscaled) {
-				depthFormat = vkx::getSupportedDepthFormat(context.physicalDevice);
-			}
-
-			vk::ImageUsageFlags attachmentUsage{ vk::ImageUsageFlagBits::eSampled };
-			vk::ImageUsageFlags depthAttachmentUsage;
-			vk::ImageLayout colorFinalLayout{ vk::ImageLayout::eShaderReadOnlyOptimal };
-			vk::ImageLayout depthFinalLayout{ vk::ImageLayout::eUndefined };
-
-
-			// End of options
-			// ---------------------------------------------------------------------------------
-
-
-
-
-
-			
-
-
-
-
-
-
-
-
 
 			vkx::Framebuffer SSAOGenerateFramebuffer;
 			SSAOGenerateFramebuffer.device = context.device;
@@ -834,109 +711,14 @@ namespace vkx {
 			SSAOGenerateFramebuffer.createAttachment(vk::Format::eR8Unorm, vk::ImageUsageFlagBits::eColorAttachment, this->size.x, this->size.y);
 
 
-
-			// SSAO 
-			{
-				vk::AttachmentDescription attachmentDescription;
-				attachmentDescription.format = SSAOGenerateFramebuffer.attachments[0].format;
-				attachmentDescription.samples = vk::SampleCountFlagBits::e1;
-				attachmentDescription.loadOp = vk::AttachmentLoadOp::eClear;
-				attachmentDescription.storeOp = vk::AttachmentStoreOp::eStore;
-				attachmentDescription.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-				attachmentDescription.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-				attachmentDescription.initialLayout = vk::ImageLayout::eUndefined;
-				attachmentDescription.finalLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-
-				vk::AttachmentReference colorReference = { 0, vk::ImageLayout::eColorAttachmentOptimal };
-
-				vk::SubpassDescription subpass;
-				subpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
-				subpass.pColorAttachments = &colorReference;
-				subpass.colorAttachmentCount = 1;
-
-				std::array<vk::SubpassDependency, 2> dependencies;
-
-				dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-				dependencies[0].dstSubpass = 0;
-				dependencies[0].srcStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
-				dependencies[0].dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-				dependencies[0].srcAccessMask = vk::AccessFlagBits::eMemoryRead;
-				dependencies[0].dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite;
-				dependencies[0].dependencyFlags = vk::DependencyFlagBits::eByRegion;
-
-				dependencies[1].srcSubpass = 0;
-				dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-				dependencies[1].srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-				dependencies[1].dstStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
-				dependencies[1].srcAccessMask = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite;
-				dependencies[1].dstAccessMask = vk::AccessFlagBits::eMemoryRead;
-				dependencies[1].dependencyFlags = vk::DependencyFlagBits::eByRegion;
-
-				vk::RenderPassCreateInfo renderPassInfo;
-				renderPassInfo.pAttachments = &attachmentDescription;
-				renderPassInfo.attachmentCount = 1;
-				renderPassInfo.subpassCount = 1;
-				renderPassInfo.pSubpasses = &subpass;
-				renderPassInfo.dependencyCount = 2;
-				renderPassInfo.pDependencies = dependencies.data();
-				SSAOGenerateFramebuffer.renderPass = context.device.createRenderPass(renderPassInfo, nullptr);
-
-				vk::FramebufferCreateInfo fbufCreateInfo;
-				fbufCreateInfo.renderPass = SSAOGenerateFramebuffer.renderPass;
-				fbufCreateInfo.pAttachments = &SSAOGenerateFramebuffer.attachments[0].view;
-				fbufCreateInfo.attachmentCount = 1;
-				fbufCreateInfo.width = this->size.x;
-				fbufCreateInfo.height = this->size.y;
-				fbufCreateInfo.layers = 1;
-				SSAOGenerateFramebuffer.framebuffer = context.device.createFramebuffer(fbufCreateInfo, nullptr);
-			}
-
-
-
-
-
-
-
-
-
-
-
-
-
+			SSAOGenerateFramebuffer.createRenderPass();
 
 			framebuffers.push_back(SSAOGenerateFramebuffer);
 		}
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 		void addSSAOBlurFramebuffer() {
-
-
 
 			vkx::Framebuffer SSAOBlurFramebuffer;
 			SSAOBlurFramebuffer.device = context.device;
@@ -945,68 +727,7 @@ namespace vkx {
 
 			SSAOBlurFramebuffer.createAttachment(vk::Format::eR8Unorm, vk::ImageUsageFlagBits::eColorAttachment, this->size.x, this->size.y);
 
-
-			// SSAO Blur 
-			{
-				vk::AttachmentDescription attachmentDescription;
-				attachmentDescription.format = SSAOBlurFramebuffer.attachments[0].format;
-				attachmentDescription.samples = vk::SampleCountFlagBits::e1;
-				attachmentDescription.loadOp = vk::AttachmentLoadOp::eClear;
-				attachmentDescription.storeOp = vk::AttachmentStoreOp::eStore;
-				attachmentDescription.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-				attachmentDescription.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-				attachmentDescription.initialLayout = vk::ImageLayout::eUndefined;
-				attachmentDescription.finalLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-
-				vk::AttachmentReference colorReference = { 0, vk::ImageLayout::eColorAttachmentOptimal };
-
-				vk::SubpassDescription subpass;
-				subpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
-				subpass.pColorAttachments = &colorReference;
-				subpass.colorAttachmentCount = 1;
-
-				std::array<vk::SubpassDependency, 2> dependencies;
-
-				dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-				dependencies[0].dstSubpass = 0;
-				dependencies[0].srcStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
-				dependencies[0].dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-				dependencies[0].srcAccessMask = vk::AccessFlagBits::eMemoryRead;
-				dependencies[0].dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite;
-				dependencies[0].dependencyFlags = vk::DependencyFlagBits::eByRegion;
-
-				dependencies[1].srcSubpass = 0;
-				dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-				dependencies[1].srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-				dependencies[1].dstStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
-				dependencies[1].srcAccessMask = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite;
-				dependencies[1].dstAccessMask = vk::AccessFlagBits::eMemoryRead;
-				dependencies[1].dependencyFlags = vk::DependencyFlagBits::eByRegion;
-
-				vk::RenderPassCreateInfo renderPassInfo;
-				renderPassInfo.pAttachments = &attachmentDescription;
-				renderPassInfo.attachmentCount = 1;
-				renderPassInfo.subpassCount = 1;
-				renderPassInfo.pSubpasses = &subpass;
-				renderPassInfo.dependencyCount = 2;
-				renderPassInfo.pDependencies = dependencies.data();
-				SSAOBlurFramebuffer.renderPass = context.device.createRenderPass(renderPassInfo, nullptr);
-
-				vk::FramebufferCreateInfo fbufCreateInfo;
-				fbufCreateInfo.renderPass = SSAOBlurFramebuffer.renderPass;
-				fbufCreateInfo.pAttachments = &SSAOBlurFramebuffer.attachments[0].view;
-				fbufCreateInfo.attachmentCount = 1;
-				fbufCreateInfo.width = this->size.x;
-				fbufCreateInfo.height = this->size.y;
-				fbufCreateInfo.layers = 1;
-				SSAOBlurFramebuffer.framebuffer = context.device.createFramebuffer(fbufCreateInfo, nullptr);
-			}
-
-
-
-
-
-
+			SSAOBlurFramebuffer.createRenderPass();
 
 
 			framebuffers.push_back(SSAOBlurFramebuffer);
@@ -1017,90 +738,29 @@ namespace vkx {
 
 
 
-		//void addShadowPassFramebuffer() {
+		void addShadowPassFramebuffer() {
 
 
 
-		//	vkx::Framebuffer shadowFramebuffer;
-		//	shadowFramebuffer.device = context.device;
+			vkx::Framebuffer shadowFramebuffer;
+			shadowFramebuffer.device = context.device;
+			shadowFramebuffer.context = &context;
+			shadowFramebuffer.width = this->size.x;
+			shadowFramebuffer.height = this->size.y;
+
+
+			
+			shadowFramebuffer.createAttachment(vk::Format::eR8Unorm, vk::ImageUsageFlagBits::eColorAttachment, this->size.x, this->size.y, 3);
+
+			shadowFramebuffer.attachments[0].sampler = createSampler(vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eClampToEdge);
+
+			shadowFramebuffer.createRenderPass();
 
 
 
+			framebuffers.push_back(shadowFramebuffer);
 
-		//	shadowFramebuffer.attachments.resize(1);
-		//	shadowFramebuffer.attachments[0] = createAttachment(vk::Format::eR8Unorm, vk::ImageUsageFlagBits::eColorAttachment, this->size.x, this->size.y);
-
-		//	shadowFramebuffer.attachments[0].sampler = createSampler(vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eClampToEdge);
-
-		//	
-		//	
-
-		//	// SSAO Blur 
-		//	{
-		//		vk::AttachmentDescription attachmentDescription;
-		//		attachmentDescription.format = shadowFramebuffer.attachments[0].format;
-		//		attachmentDescription.samples = vk::SampleCountFlagBits::e1;
-		//		attachmentDescription.loadOp = vk::AttachmentLoadOp::eClear;
-		//		attachmentDescription.storeOp = vk::AttachmentStoreOp::eStore;
-		//		attachmentDescription.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-		//		attachmentDescription.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-		//		attachmentDescription.initialLayout = vk::ImageLayout::eUndefined;
-		//		attachmentDescription.finalLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-
-		//		vk::AttachmentReference colorReference = { 0, vk::ImageLayout::eColorAttachmentOptimal };
-
-		//		vk::SubpassDescription subpass;
-		//		subpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
-		//		subpass.pColorAttachments = &colorReference;
-		//		subpass.colorAttachmentCount = 1;
-
-		//		std::array<vk::SubpassDependency, 2> dependencies;
-
-		//		dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-		//		dependencies[0].dstSubpass = 0;
-		//		dependencies[0].srcStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
-		//		dependencies[0].dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-		//		dependencies[0].srcAccessMask = vk::AccessFlagBits::eMemoryRead;
-		//		dependencies[0].dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite;
-		//		dependencies[0].dependencyFlags = vk::DependencyFlagBits::eByRegion;
-
-		//		dependencies[1].srcSubpass = 0;
-		//		dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-		//		dependencies[1].srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-		//		dependencies[1].dstStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
-		//		dependencies[1].srcAccessMask = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite;
-		//		dependencies[1].dstAccessMask = vk::AccessFlagBits::eMemoryRead;
-		//		dependencies[1].dependencyFlags = vk::DependencyFlagBits::eByRegion;
-
-		//		vk::RenderPassCreateInfo renderPassInfo;
-		//		renderPassInfo.pAttachments = &attachmentDescription;
-		//		renderPassInfo.attachmentCount = 1;
-		//		renderPassInfo.subpassCount = 1;
-		//		renderPassInfo.pSubpasses = &subpass;
-		//		renderPassInfo.dependencyCount = 2;
-		//		renderPassInfo.pDependencies = dependencies.data();
-		//		shadowFramebuffer.renderPass = context.device.createRenderPass(renderPassInfo, nullptr);
-
-		//		vk::FramebufferCreateInfo fbufCreateInfo;
-		//		fbufCreateInfo.renderPass = shadowFramebuffer.renderPass;
-		//		fbufCreateInfo.pAttachments = &shadowFramebuffer.attachments[0].view;
-		//		fbufCreateInfo.attachmentCount = 1;
-		//		fbufCreateInfo.width = this->size.x;
-		//		fbufCreateInfo.height = this->size.y;
-		//		fbufCreateInfo.layers = 1;
-		//		shadowFramebuffer.framebuffer = context.device.createFramebuffer(fbufCreateInfo, nullptr);
-		//	}
-
-
-
-
-
-
-
-
-		//	framebuffers.push_back(shadowFramebuffer);
-
-		//}
+		}
 
 
 
