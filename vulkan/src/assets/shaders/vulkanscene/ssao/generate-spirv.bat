@@ -1,5 +1,6 @@
 glslangvalidator -V debug.vert -o debug.vert.spv
 glslangvalidator -V debug.frag -o debug.frag.spv
+
 glslangvalidator -V deferred.vert -o deferred.vert.spv
 glslangvalidator -V deferred.frag -o deferred.frag.spv
 glslangvalidator -V mrtMesh.vert -o mrtMesh.vert.spv
@@ -14,4 +15,9 @@ glslangvalidator -V composition.vert -o composition.vert.spv
 glslangvalidator -V composition.frag -o composition.frag.spv
 
 glslangvalidator -V blur.frag -o blur.frag.spv
+
+rem glslangvalidator -V shadow.vert -o shadow.vert.spv
+rem glslangvalidator -V shadow.frag -o shadow.frag.spv
+rem glslangvalidator -V shadow.geom -o shadow.geom.spv
+
 pause
