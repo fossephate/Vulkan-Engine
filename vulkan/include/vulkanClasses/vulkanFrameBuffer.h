@@ -341,6 +341,7 @@ namespace vkx {
 			imageInfo.samples = vk::SampleCountFlagBits::e1;
 			imageInfo.tiling = vk::ImageTiling::eOptimal;
 			imageInfo.usage = usage | vk::ImageUsageFlagBits::eSampled;
+			//imageInfo.usage = usage;
 
 			//imageInfo.initialLayout = imageLayout;// added 4/11/17
 
@@ -389,7 +390,7 @@ namespace vkx {
 			imageViewInfo.image = newAttachment.image;
 			vk::ImageView imageView = device.createImageView(imageViewInfo);
 
-
+			
 
 
 
@@ -409,6 +410,7 @@ namespace vkx {
 			} else {
 				newAttachment.description.finalLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 			}
+			
 			
 
 			

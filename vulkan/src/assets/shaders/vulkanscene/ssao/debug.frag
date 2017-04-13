@@ -8,7 +8,8 @@ layout (set = 3, binding = 2) uniform sampler2D samplerNormal;
 layout (set = 3, binding = 3) uniform usampler2D samplerAlbedo;
 layout (set = 3, binding = 4) uniform sampler2D samplerSSAO;
 
-layout (set = 3, binding = 6) uniform sampler2D samplerShadowMap;
+//layout (set = 3, binding = 6) uniform sampler2D samplerShadowMap;
+layout (set = 3, binding = 6) uniform sampler2DArray samplerShadowMap;
 
 layout (location = 0) in vec3 inUV;// vec3
 
@@ -36,7 +37,8 @@ void main()
 	//vec4 ssao = texture(samplerSSAO, inUV.st);
 	//components[2] = vec3(ssao.r);
 
-	vec4 shadow = texture(samplerShadowMap, inUV.st);
+	//vec4 shadow = texture(samplerShadowMap, inUV.st);
+	vec4 shadow = texture(samplerShadowMap, vec3(inUV));
 	components[2] = vec3(shadow.r);
 
 	//components[2] = vec3(ssao);

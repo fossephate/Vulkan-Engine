@@ -30,6 +30,8 @@
 #define SSAO_RADIUS 2.0f
 #define SSAO_NOISE_DIM 4
 
+#define LIGHT_COUNT 3
+
 #define SSAO_ON 1
 
 #define TEST_DEFINE 0
@@ -315,17 +317,17 @@ class VulkanExample : public vkx::vulkanApp {
 		glm::vec4 _pad;
 	};
 
-	//struct SpotLight2 {
-	//	glm::vec4 position;
-	//	glm::vec4 target;
-	//	glm::vec4 color;
-	//	glm::mat4 viewMatrix;
-	//};
+	struct SpotLight2 {
+		glm::vec4 position;
+		glm::vec4 target;
+		glm::vec4 color;
+		glm::mat4 viewMatrix;
+	};
 
 	struct {
 		PointLight lights[100];
 		//DirectionalLight directionalLights[10];
-		//SpotLight2 spotlights[3];
+		SpotLight2 spotlights[LIGHT_COUNT];
 		glm::vec4 viewPos;
 		glm::mat4 model;// added
 		glm::mat4 view;// added
@@ -344,6 +346,14 @@ class VulkanExample : public vkx::vulkanApp {
 		glm::vec4 samples[SSAO_KERNEL_SIZE];
 	} uboSSAOKernel;
 
+	// This UBO stores the shadow matrices for all of the light sources
+	// The matrices are indexed using geometry shader instancing
+	// The instancePos is used to place the models using instanced draws
+	struct {
+		glm::mat4 mvp[LIGHT_COUNT];
+		glm::vec4 instancePos[3];
+	} uboShadowGS;
+
 	struct {
 		vkx::UniformData vsFullScreen;
 		vkx::UniformData vsOffscreen;
@@ -354,6 +364,8 @@ class VulkanExample : public vkx::vulkanApp {
 
 		vkx::UniformData ssaoKernel;
 		vkx::UniformData ssaoParams;
+
+		vkx::UniformData gsShadow;
 
 	} uniformDataDeferred;
 
@@ -1063,7 +1075,8 @@ class VulkanExample : public vkx::vulkanApp {
 			// Set 0: Binding 0: Vertex shader uniform buffer
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBuffer,
-				vk::ShaderStageFlagBits::eVertex,
+				//vk::ShaderStageFlagBits::eVertex,
+				vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eGeometry,// added geometry 4/12/17
 				0),
 			// Set 0: Binding 1: Position texture target / Scene colormap
 			vkx::descriptorSetLayoutBinding(
@@ -1103,7 +1116,16 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-
+		// Geometry shader descriptor set layout binding
+		// set layout 4
+		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindingsShadow = {
+			// Set 0: Binding 0: Vertex shader uniform buffer
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eUniformBuffer,
+				vk::ShaderStageFlagBits::eGeometry,// geometry shader
+				0),
+		};
+		rscs.descriptorSetLayouts->add("geometry.shadow", descriptorSetLayoutBindingsShadow);
 
 
 
@@ -1119,6 +1141,7 @@ class VulkanExample : public vkx::vulkanApp {
 			rscs.descriptorSetLayouts->get("offscreen.matrix"),
 			rscs.descriptorSetLayouts->get("offscreen.textures"),
 			rscs.descriptorSetLayouts->get("deferred.deferred"),
+			rscs.descriptorSetLayouts->get("geometry.shadow"),// todo: remove
 		};
 
 		// use all descriptor set layouts
@@ -1351,8 +1374,11 @@ class VulkanExample : public vkx::vulkanApp {
 			vkx::descriptorImageInfo(offscreen.framebuffers[0].attachments[0].sampler, offscreen.framebuffers[2].attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 		// todo: fix
+		//vk::DescriptorImageInfo texDescriptorDepthStencil =
+		//	vkx::descriptorImageInfo(offscreen.framebuffers[0].attachments[0].sampler, offscreen.framebuffers[0].depthAttachment.view, vk::ImageLayout::eShaderReadOnlyOptimal);
+
 		vk::DescriptorImageInfo texDescriptorShadowMap =
-			vkx::descriptorImageInfo(/*offscreen.framebuffers[0].depthAttachment.sampler*/offscreen.framebuffers[0].attachments[0].sampler, offscreen.framebuffers[0].depthAttachment.view, vk::ImageLayout::eShaderReadOnlyOptimal);
+			vkx::descriptorImageInfo(offscreen.framebuffers[3].attachments[0].sampler, offscreen.framebuffers[3].attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 
 		// Offscreen texture targets:
@@ -1538,6 +1564,25 @@ class VulkanExample : public vkx::vulkanApp {
 				&texDescriptorSSAOBlur),
 		};
 		device.updateDescriptorSets(ssaoBlurWriteDescriptorSets, nullptr);
+
+
+
+		// shadow mapping:
+
+		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfoShadow =
+			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred.deferred"), &rscs.descriptorSetLayouts->get("geometry.shadow"), 1);
+		rscs.descriptorSets->add("shadow", descriptorSetAllocateInfoShadow);// todo: actually make a descriptor pool for this set
+
+		std::vector<vk::WriteDescriptorSet> writeDescriptorSetsShadow =
+		{
+			// Set 0: Binding 0: Fragment shader image sampler
+			vkx::writeDescriptorSet(
+				rscs.descriptorSets->get("shadow"),
+				vk::DescriptorType::eUniformBuffer,
+				0,
+				&uniformDataDeferred.gsShadow.descriptor),
+		};
+		device.updateDescriptorSets(writeDescriptorSetsShadow, nullptr);
 
 
 	}
@@ -1813,14 +1858,14 @@ class VulkanExample : public vkx::vulkanApp {
 			// Enable depth bias
 			rasterizationState.depthBiasEnable = VK_TRUE;
 			// Add depth bias to dynamic state, so we can change it at runtime
-			dynamicStateEnables.push_back(vk::DynamicState::eDepthBias);
+			//dynamicStateEnables.push_back(vk::DynamicState::eDepthBias);
 			/*dynamicState =
 				vks::initializers::pipelineDynamicStateCreateInfo(
 					dynamicStateEnables.data(),
 					static_cast<uint32_t>(dynamicStateEnables.size()),
 					0);*/
 
-					// Reset blend attachment state
+			// Reset blend attachment state
 			pipelineCreateInfo.renderPass = offscreen.framebuffers[3].renderPass;
 
 			vk::Pipeline shadowPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
@@ -1939,18 +1984,34 @@ class VulkanExample : public vkx::vulkanApp {
 		uniformDataDeferred.matrixVS = context.createDynamicUniformBuffer(matrixNodes);
 
 
-		// Update
-		updateUniformBuffersScreen();
-		updateSceneBufferDeferred();
-		updateMatrixBufferDeferred();
-		updateUniformBufferDeferredLights();
+
 
 		// ssao
 		uniformDataDeferred.ssaoParams = context.createUniformBuffer(uboSSAOParams);
 		uniformDataDeferred.ssaoKernel = context.createUniformBuffer(uboSSAOKernel);
 
+
+
+
+		// shadow mapping
+		uniformDataDeferred.gsShadow = context.createUniformBuffer(uboShadowGS);
+
+
+
+		// Update uniform buffers:
+
+		// offscreen:
+		updateUniformBuffersScreen();
+		updateSceneBufferDeferred();
+		updateMatrixBufferDeferred();
+		updateUniformBufferDeferredLights();
+
+		// ssao:
 		updateUniformBufferSSAOParams();
 		updateUniformBufferSSAOKernel();
+
+		// shadow mapping:
+		updateUniformBufferShadow();
 
 	}
 
@@ -2015,6 +2076,21 @@ class VulkanExample : public vkx::vulkanApp {
 		//uboFSLights.directionalLights[0].position = glm::vec4(0.0, 1.0, 2.0, 0.0);
 		//uboFSLights.directionalLights[0].direction = glm::vec4(0.0, 0.0, -1.0, 0.0);
 
+		float zNear = 1.0f;
+		float zFar = 512.0f;
+		float lightFOV = 100.0f;
+
+		for (uint32_t i = 0; i < LIGHT_COUNT; i++) {
+			// mvp from light's pov (for shadows)
+			glm::mat4 shadowProj = glm::perspective(glm::radians(lightFOV), 1.0f, zNear, zFar);
+			glm::mat4 shadowView = glm::lookAt(glm::vec3(uboFSLights.spotlights[i].position), glm::vec3(uboFSLights.spotlights[i].target), glm::vec3(0.0f, 1.0f, 0.0f));
+			glm::mat4 shadowModel = glm::mat4();
+
+			uboShadowGS.mvp[i] = shadowProj * shadowView * shadowModel;
+			uboFSLights.spotlights[i].viewMatrix = uboShadowGS.mvp[i];
+		}
+
+		updateUniformBufferShadow();
 
 
 
@@ -2095,6 +2171,13 @@ class VulkanExample : public vkx::vulkanApp {
 		textureLoader->createTexture(ssaoNoise.data(), ssaoNoise.size() * sizeof(glm::vec4), vk::Format::eR32G32B32A32Sfloat, SSAO_NOISE_DIM, SSAO_NOISE_DIM, &textures.ssaoNoise, vk::Filter::eNearest);
 
 	}
+
+
+
+	void updateUniformBufferShadow() {
+		uniformDataDeferred.gsShadow.copy(uboShadowGS);
+	}
+
 
 	void toggleDebugDisplay() {
 		debugDisplay = !debugDisplay;
@@ -3054,11 +3137,125 @@ class VulkanExample : public vkx::vulkanApp {
 
 		vk::CommandBufferBeginInfo commandBufferBeginInfo{vk::CommandBufferUsageFlagBits::eSimultaneousUse};
 
-
-		
-
 		// begin offscreen command buffer
 		offscreenCmdBuffer.begin(commandBufferBeginInfo);
+
+
+
+
+
+
+		// shadow pass?
+		{
+
+			// Clear values for all attachments written in the fragment shader
+			std::array<vk::ClearValue, 1> clearValues;
+			clearValues[0].depthStencil = { 1.0f, 0 };
+
+			vk::RenderPassBeginInfo renderPassBeginInfo;
+			renderPassBeginInfo.renderPass = offscreen.framebuffers[3].renderPass;
+			renderPassBeginInfo.framebuffer = offscreen.framebuffers[3].framebuffer;
+			renderPassBeginInfo.renderArea.extent.width = offscreen.framebuffers[3].width;
+			renderPassBeginInfo.renderArea.extent.height = offscreen.framebuffers[3].height;
+			renderPassBeginInfo.clearValueCount = clearValues.size();
+			renderPassBeginInfo.pClearValues = clearValues.data();
+
+
+			// begin offscreen render pass
+			offscreenCmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
+
+
+			// start of render pass
+			// todo: update size to shadow map's size
+			vk::Viewport viewport = vkx::viewport(offscreen.size);
+			offscreenCmdBuffer.setViewport(0, viewport);
+			vk::Rect2D scissor = vkx::rect2D(offscreen.size);
+			offscreenCmdBuffer.setScissor(0, scissor);
+
+
+
+
+
+
+
+
+
+
+			//if (settings.SSAO) {
+			//	offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("offscreen.meshes.ssao"));
+			//} else {
+			//	offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("offscreen.meshes"));
+			//}
+
+			offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("shadow"));
+
+			// for each model
+			// model = group of meshes
+			// todo: add skinned / animated model support
+			for (auto &model : modelsDeferred) {
+
+				// todo: fix
+				//model->checkIfReady();
+				if (!model->buffersReady) {
+					continue;
+				}
+
+				// for each of the model's meshes
+				for (auto &mesh : model->meshes) {
+
+
+					// bind vertex & index buffers
+					offscreenCmdBuffer.bindVertexBuffers(mesh.vertexBufferBinding, mesh.meshBuffer.vertices.buffer, vk::DeviceSize());
+					offscreenCmdBuffer.bindIndexBuffer(mesh.meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
+
+					// descriptor set #
+					uint32_t setIndex;
+
+					// bind scene descriptor set
+					//setIndex = 0;
+					//offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("offscreen"), setIndex, rscs.descriptorSets->get("offscreen.scene"), nullptr);
+
+					// bind shadow descriptor set?
+					// for vs uniform buffer?
+					// bind deferred descriptor set
+					// layout: offscreen, set index = 4
+					setIndex = 4;
+					offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("offscreen"), setIndex, rscs.descriptorSets->get("shadow"), nullptr);
+
+
+					// draw:
+					offscreenCmdBuffer.drawIndexed(mesh.meshBuffer.indexCount, 1, 0, 0, 0);
+				}
+
+			}
+
+
+
+			offscreenCmdBuffer.endRenderPass();
+
+
+
+
+
+
+
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3085,8 +3282,6 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 			// start of render pass
-
-
 			vk::Viewport viewport = vkx::viewport(offscreen.size);
 			offscreenCmdBuffer.setViewport(0, viewport);
 			vk::Rect2D scissor = vkx::rect2D(offscreen.size);

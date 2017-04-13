@@ -706,6 +706,9 @@ namespace vkx {
 			vkx::Framebuffer SSAOGenerateFramebuffer;
 			SSAOGenerateFramebuffer.device = context.device;
 			SSAOGenerateFramebuffer.context = &context;
+			SSAOGenerateFramebuffer.width = this->size.x;
+			SSAOGenerateFramebuffer.height = this->size.y;
+
 
 
 			SSAOGenerateFramebuffer.createAttachment(vk::Format::eR8Unorm, vk::ImageUsageFlagBits::eColorAttachment, this->size.x, this->size.y);
@@ -723,6 +726,8 @@ namespace vkx {
 			vkx::Framebuffer SSAOBlurFramebuffer;
 			SSAOBlurFramebuffer.device = context.device;
 			SSAOBlurFramebuffer.context = &context;
+			SSAOBlurFramebuffer.width = this->size.x;
+			SSAOBlurFramebuffer.height = this->size.y;
 
 
 			SSAOBlurFramebuffer.createAttachment(vk::Format::eR8Unorm, vk::ImageUsageFlagBits::eColorAttachment, this->size.x, this->size.y);

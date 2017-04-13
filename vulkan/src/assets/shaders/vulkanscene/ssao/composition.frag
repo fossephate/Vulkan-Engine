@@ -39,12 +39,12 @@ struct PointLight {
 // };
 
 
-// struct SpotLight2 {
-//     vec4 position;
-//     vec4 target;
-//     vec4 color;
-//     mat4 viewMatrix;
-// };
+struct SpotLight2 {
+    vec4 position;
+    vec4 target;
+    vec4 color;
+    mat4 viewMatrix;
+};
 
 
 
@@ -55,7 +55,7 @@ struct PointLight {
 layout (set = 3, binding = 5) uniform UBO 
 {
     PointLight lights[NUM_LIGHTS];
-    //SpotLight2 spotlights[3];
+    SpotLight2 spotlights[3];
     //DirectionalLight directionalLights[NUM_DIR_LIGHTS];
     vec4 viewPos;
     mat4 model;// added

@@ -328,7 +328,7 @@ namespace vkx {
 	*
 	* @return vk::Result of the queue presentation
 	*/
-	vk::Result vkx::VulkanSwapChain::queuePresent(vk::Queue queue, uint32_t imageIndex, vk::Semaphore waitSemaphore = VK_NULL_HANDLE) {
+	vk::Result vkx::VulkanSwapChain::queuePresent(vk::Queue queue, uint32_t imageIndex, vk::Semaphore waitSemaphore = nullptr) {
 		vk::PresentInfoKHR presentInfo;
 		presentInfo.swapchainCount = 1;
 		presentInfo.pSwapchains = &swapChain;
