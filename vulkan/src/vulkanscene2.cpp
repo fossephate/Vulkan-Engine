@@ -351,7 +351,7 @@ class VulkanExample : public vkx::vulkanApp {
 	// The instancePos is used to place the models using instanced draws
 	struct {
 		glm::mat4 mvp[LIGHT_COUNT];
-		glm::vec4 instancePos[3];
+		glm::vec4 pos;
 	} uboShadowGS;
 
 	struct {
@@ -1122,7 +1122,7 @@ class VulkanExample : public vkx::vulkanApp {
 			// Set 0: Binding 0: Vertex shader uniform buffer
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBuffer,
-				vk::ShaderStageFlagBits::eGeometry,// geometry shader
+				vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eGeometry,// geometry shader
 				0),
 		};
 		rscs.descriptorSetLayouts->add("geometry.shadow", descriptorSetLayoutBindingsShadow);
@@ -2004,6 +2004,8 @@ class VulkanExample : public vkx::vulkanApp {
 		updateUniformBuffersScreen();
 		updateSceneBufferDeferred();
 		updateMatrixBufferDeferred();
+
+		initLights();
 		updateUniformBufferDeferredLights();
 
 		// ssao:
@@ -2011,6 +2013,8 @@ class VulkanExample : public vkx::vulkanApp {
 		updateUniformBufferSSAOKernel();
 
 		// shadow mapping:
+		
+
 		updateUniformBufferShadow();
 
 	}
@@ -2034,6 +2038,21 @@ class VulkanExample : public vkx::vulkanApp {
 
 	void updateMatrixBufferDeferred() {
 		uniformDataDeferred.matrixVS.copy(matrixNodes);
+	}
+
+
+	SpotLight2 initLight(glm::vec3 pos, glm::vec3 target, glm::vec3 color) {
+		SpotLight2 light;
+		light.position = glm::vec4(pos, 1.0f);
+		light.target = glm::vec4(target, 0.0f);
+		light.color = glm::vec4(color, 0.0f);
+		return light;
+	}
+
+	void initLights() {
+		uboFSLights.spotlights[0] = initLight(glm::vec3(-14.0f, -0.5f, 15.0f), glm::vec3(-2.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.5f));
+		uboFSLights.spotlights[1] = initLight(glm::vec3(14.0f, -4.0f, 12.0f), glm::vec3(2.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		uboFSLights.spotlights[2] = initLight(glm::vec3(0.0f, -10.0f, 4.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 	}
 
 	// Update fragment shader light position uniform block
@@ -2076,14 +2095,17 @@ class VulkanExample : public vkx::vulkanApp {
 		//uboFSLights.directionalLights[0].position = glm::vec4(0.0, 1.0, 2.0, 0.0);
 		//uboFSLights.directionalLights[0].direction = glm::vec4(0.0, 0.0, -1.0, 0.0);
 
-		float zNear = 1.0f;
-		float zFar = 512.0f;
+		/*float zNear = 1.0f;
+		float zFar = 512.0f;*/
+		float zNear = 0.1f;
+		float zFar = 64.0f;
 		float lightFOV = 100.0f;
 
 		for (uint32_t i = 0; i < LIGHT_COUNT; i++) {
 			// mvp from light's pov (for shadows)
 			glm::mat4 shadowProj = glm::perspective(glm::radians(lightFOV), 1.0f, zNear, zFar);
-			glm::mat4 shadowView = glm::lookAt(glm::vec3(uboFSLights.spotlights[i].position), glm::vec3(uboFSLights.spotlights[i].target), glm::vec3(0.0f, 1.0f, 0.0f));
+			//glm::mat4 shadowView = glm::lookAt(glm::vec3(uboFSLights.spotlights[i].position), glm::vec3(uboFSLights.spotlights[i].target), glm::vec3(0.0f, 1.0f, 0.0f));
+			glm::mat4 shadowView = glm::lookAt(glm::vec3(uboFSLights.spotlights[i].position), glm::vec3(uboFSLights.spotlights[i].target), glm::vec3(0.0f, 0.0f, 1.0f));
 			glm::mat4 shadowModel = glm::mat4();
 
 			uboShadowGS.mvp[i] = shadowProj * shadowView * shadowModel;
@@ -2552,7 +2574,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 		if (keyStates.m) {
-			if (modelsDeferred.size() > 2) {
+			if (modelsDeferred.size() > 3) {
 				modelsDeferred[modelsDeferred.size() - 1]->destroy();
 				modelsDeferred.pop_back();
 				//updateDraw = true;
@@ -2561,7 +2583,7 @@ class VulkanExample : public vkx::vulkanApp {
 		}
 
 		if (keyStates.n) {
-			if (physicsObjects.size() > 2) {
+			if (physicsObjects.size() > 3) {
 				physicsObjects[physicsObjects.size() - 1]->destroy();
 				physicsObjects.pop_back();
 				updateOffscreen = true;

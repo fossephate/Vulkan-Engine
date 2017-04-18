@@ -6,8 +6,11 @@
 layout (set = 3, binding = 1) uniform sampler2D samplerPosition;
 layout (set = 3, binding = 2) uniform sampler2D samplerNormal;
 layout (set = 3, binding = 3) uniform usampler2D samplerAlbedo;// this is a usampler(on ssao)
-//layout (set = 3, binding = 4) uniform sampler2D samplerSSAO;
+layout (set = 3, binding = 4) uniform sampler2D samplerSSAO;
 
+//layout (set = 3, binding = 6) uniform sampler2DShadow samplerShadowMap;
+layout (set = 3, binding = 6) uniform sampler2DArray samplerShadowMap;
+//layout (set = 3, binding = 6) uniform sampler2D samplerShadowMap;
 
 struct PointLight {
     vec4 position;
@@ -18,12 +21,30 @@ struct PointLight {
     float _pad;
 };
 
-struct DirectionalLight {
+// struct DirectionalLight {
+//     vec4 position;// definitely remove
+//     vec4 target;//remove?
+//     vec4 color;
+//     vec4 direction;
+    
+//     //float radius;
+// };
+
+// struct SpotLight {
+//     vec4 position;
+//     vec4 color;
+//     float attenuation;
+//     float ambientCoefficient;
+//     float coneAngle;    // new
+//     vec4 coneDirection; // new
+// };
+
+
+struct SpotLight2 {
     vec4 position;
+    vec4 target;
     vec4 color;
-    vec4 direction;
-    vec4 _pad;
-    //float radius;
+    mat4 viewMatrix;
 };
 
 
@@ -35,7 +56,8 @@ struct DirectionalLight {
 layout (set = 3, binding = 5) uniform UBO 
 {
     PointLight lights[NUM_LIGHTS];
-    DirectionalLight directionalLights[NUM_DIR_LIGHTS];
+    SpotLight2 spotlights[3];
+    //DirectionalLight directionalLights[NUM_DIR_LIGHTS];
     vec4 viewPos;
     mat4 model;// added
     mat4 view;// added

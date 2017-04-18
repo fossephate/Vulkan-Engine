@@ -34,15 +34,16 @@ void main()
 	//components[2] = vec3(spec.r);
 	//components[0] = vec3(spec.r);
 
-	//vec4 ssao = texture(samplerSSAO, inUV.st);
-	//components[2] = vec3(ssao.r);
+	vec4 ssao = texture(samplerSSAO, inUV.st);
+	components[2] = vec3(ssao.r);
 
 	//vec4 shadow = texture(samplerShadowMap, inUV.st);
-	vec4 shadow = texture(samplerShadowMap, vec3(inUV));
+	// inUV.w = number of light source
+	// vec4 shadow = texture(samplerShadowMap, vec3(inUV));
+	vec4 shadow = texture(samplerShadowMap, vec3(inUV.st, 0));
 	components[2] = vec3(shadow.r);
 
 	//components[2] = vec3(ssao);
-
 	//components[2] = texture(samplerAlbedo, inUV.st).rgb;
 
 	//components[0] = color.rgb;
