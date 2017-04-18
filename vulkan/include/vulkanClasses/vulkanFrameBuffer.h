@@ -215,6 +215,7 @@ namespace vkx {
 			dependencies[0].dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
 			dependencies[0].srcAccessMask = vk::AccessFlagBits::eMemoryRead;
 			dependencies[0].dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite;
+			//dependencies[0].dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentRead;
 			dependencies[0].dependencyFlags = vk::DependencyFlagBits::eByRegion;
 
 			dependencies[1].srcSubpass = 0;
@@ -279,7 +280,8 @@ namespace vkx {
 		// Create a frame buffer attachment
 		vkx::FramebufferAttachment createAttachment(
 			vk::Format format,
-			vk::ImageUsageFlagBits usage,
+			//vk::ImageUsageFlagBits usage,
+			vk::ImageUsageFlags usage,
 			uint32_t width,
 			uint32_t height,
 			uint32_t layerCount = 1)
@@ -294,32 +296,32 @@ namespace vkx {
 			// image created is stored there
 
 			vk::ImageAspectFlags aspectMask;
-			vk::ImageLayout imageLayout;
+			//vk::ImageLayout imageLayout;
 
 			// todo: don't cast, figure out how to & these
 
-			// if this is a color attachment
-			if ((VkImageUsageFlagBits)usage & (VkImageUsageFlagBits)vk::ImageUsageFlagBits::eColorAttachment) {
-				aspectMask = vk::ImageAspectFlagBits::eColor;
-				imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
-			}
-			// if this is a depth stencil attachment
-			if ((VkImageUsageFlagBits)usage & (VkImageUsageFlagBits)vk::ImageUsageFlagBits::eDepthStencilAttachment) {
-				//aspectMask = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
-				aspectMask = vk::ImageAspectFlagBits::eDepth;// changed 4/11/17 bc validation layers
-				imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-			}
+			//// if this is a color attachment
+			//if ((VkImageUsageFlagBits)usage & (VkImageUsageFlagBits)vk::ImageUsageFlagBits::eColorAttachment) {
+			//	aspectMask = vk::ImageAspectFlagBits::eColor;
+			//	imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+			//}
+			//// if this is a depth stencil attachment
+			//if ((VkImageUsageFlagBits)usage & (VkImageUsageFlagBits)vk::ImageUsageFlagBits::eDepthStencilAttachment) {
+			//	//aspectMask = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
+			//	aspectMask = vk::ImageAspectFlagBits::eDepth;// changed 4/11/17 bc validation layers
+			//	imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+			//}
 
 
 			// Select aspect mask and layout depending on usage
 
 			// Color attachment
-			if ((VkImageUsageFlagBits)usage & (VkImageUsageFlagBits)vk::ImageUsageFlagBits::eColorAttachment) {
+			if ((VkImageUsageFlags)usage & (VkImageUsageFlagBits)vk::ImageUsageFlagBits::eColorAttachment) {
 				aspectMask = vk::ImageAspectFlagBits::eColor;
 			}
 
 			// Depth (and/or stencil) attachment
-			if ((VkImageUsageFlagBits)usage & (VkImageUsageFlagBits)vk::ImageUsageFlagBits::eDepthStencilAttachment) {
+			if ((VkImageUsageFlags)usage & (VkImageUsageFlagBits)vk::ImageUsageFlagBits::eDepthStencilAttachment) {
 				if (newAttachment.hasDepth()) {
 					aspectMask = vk::ImageAspectFlagBits::eDepth;
 				}
@@ -398,7 +400,7 @@ namespace vkx {
 			newAttachment.description = {};
 			newAttachment.description.samples = vk::SampleCountFlagBits::e1;
 			newAttachment.description.loadOp = vk::AttachmentLoadOp::eClear;
-			newAttachment.description.storeOp = ((VkImageUsageFlagBits)usage & (VkImageUsageFlagBits)vk::ImageUsageFlagBits::eSampled) ? vk::AttachmentStoreOp::eStore : vk::AttachmentStoreOp::eDontCare;// todo figure out bitmasks with vulkan.hpp
+			newAttachment.description.storeOp = ((VkImageUsageFlags)usage & (VkImageUsageFlagBits)vk::ImageUsageFlagBits::eSampled) ? vk::AttachmentStoreOp::eStore : vk::AttachmentStoreOp::eDontCare;// todo figure out bitmasks with vulkan.hpp
 			newAttachment.description.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
 			newAttachment.description.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
 			newAttachment.description.format = format;

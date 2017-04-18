@@ -1853,8 +1853,8 @@ class VulkanExample : public vkx::vulkanApp {
 			pipelineCreateInfo.stageCount = static_cast<uint32_t>(shadowStages.size());
 
 			// Shadow pass doesn't use any color attachments
-			//colorBlendState.attachmentCount = 0;
-			//colorBlendState.pAttachments = nullptr;
+			colorBlendState.attachmentCount = 0;
+			colorBlendState.pAttachments = nullptr;
 			// Cull front faces
 			rasterizationState.cullMode = vk::CullModeFlagBits::eFront;
 			depthStencilState.depthCompareOp = vk::CompareOp::eLessOrEqual;
@@ -2110,6 +2110,7 @@ class VulkanExample : public vkx::vulkanApp {
 			glm::mat4 shadowProj = glm::perspective(glm::radians(lightFOV), 1.0f, zNear, zFar);
 			//glm::mat4 shadowView = glm::lookAt(glm::vec3(uboFSLights.spotlights[i].position), glm::vec3(uboFSLights.spotlights[i].target), glm::vec3(0.0f, 1.0f, 0.0f));
 			glm::mat4 shadowView = glm::lookAt(glm::vec3(uboFSLights.spotlights[i].position), glm::vec3(uboFSLights.spotlights[i].target), glm::vec3(0.0f, 0.0f, 1.0f));
+			//glm::mat4 shadowView = camera.matrices.view;
 			glm::mat4 shadowModel = glm::mat4();
 
 			uboShadowGS.mvp[i] = shadowProj * shadowView * shadowModel;
@@ -3247,6 +3248,7 @@ class VulkanExample : public vkx::vulkanApp {
 					// layout: offscreen, set index = 4
 					setIndex = 4;
 					offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("offscreen"), setIndex, rscs.descriptorSets->get("shadow"), nullptr);
+
 
 
 					// draw:

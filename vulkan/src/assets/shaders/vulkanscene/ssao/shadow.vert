@@ -18,11 +18,11 @@ layout (location = 0) out int outInstanceIndex;
 
 
 
-// layout (set = 0, binding = 0) uniform UBO 
-// {
-// 	mat4 mvp[LIGHT_COUNT];
-// 	vec4 pos;
-// } ubo;
+layout (set = 0, binding = 0) uniform UBO 
+{
+	mat4 mvp[LIGHT_COUNT];
+	vec4 pos;
+} ubo;
 
 out gl_PerVertex
 {
@@ -43,5 +43,6 @@ void main() {
 	//outPos = ubo.instancePos[0];
 
 	//gl_Position = depthMVP * inPos;
-	gl_Position = inPos;
+	//gl_Position = inPos;
+	gl_Position = ubo.mvp[0]*inPos;
 }
