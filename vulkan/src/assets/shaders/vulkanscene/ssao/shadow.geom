@@ -72,8 +72,8 @@ void main() {
 
 	for (int i = 0; i < gl_in.length(); i++) {
 		gl_Layer = gl_InvocationID;
-		//vec4 tmpPos = gl_in[i].gl_Position + instancedPos;
 		vec4 tmpPos = gl_in[i].gl_Position;
+		//vec4 tmpPos = ubo.mvp[gl_InvocationID] * tmpPos;
 		//gl_Position = ubo.mvp[gl_InvocationID] * tmpPos;
 		gl_Position = tmpPos;
 		EmitVertex();

@@ -8,16 +8,16 @@
     <CaptureCallstacksOnlyDraws>false</CaptureCallstacksOnlyDraws>
     <DelayForDebugger>0</DelayForDebugger>
     <VerifyMapWrites>false</VerifyMapWrites>
-    <HookIntoChildren>true</HookIntoChildren>
+    <HookIntoChildren>false</HookIntoChildren>
     <RefAllResources>false</RefAllResources>
-    <SaveAllInitials>false</SaveAllInitials>
+    <SaveAllInitials>true</SaveAllInitials>
     <CaptureAllCmdLists>false</CaptureAllCmdLists>
     <DebugOutputMute>true</DebugOutputMute>
   </Options>
   <Inject>false</Inject>
   <AutoStart>false</AutoStart>
-  <Executable>C:\Users\Matt\Documents\Visual Studio 2017\Projects\graphicalProjects\vulkan\build\x64\Debug\vulkan.exe</Executable>
-  <WorkingDir>C:\Users\Matt\Documents\Visual Studio 2017\Projects\graphicalProjects\vulkan\build\x64\Debug\</WorkingDir>
+  <Executable>C:\Users\mattc\Desktop\graphicalProjects\vulkan\build\x64\Debug\vulkan.exe</Executable>
+  <WorkingDir />
   <CmdLine />
   <Environment />
 </CaptureSettings>

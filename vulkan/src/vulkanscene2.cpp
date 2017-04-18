@@ -1379,7 +1379,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		vk::DescriptorImageInfo texDescriptorShadowMap =
 			vkx::descriptorImageInfo(offscreen.framebuffers[3].attachments[0].sampler, offscreen.framebuffers[3].attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
-
+			//vkx::descriptorImageInfo(offscreen.framebuffers[0].attachments[0].sampler, offscreen.framebuffers[3].attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 		// Offscreen texture targets:
 		std::vector<vk::WriteDescriptorSet> writeDescriptorSets2 = {
@@ -1575,7 +1575,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		std::vector<vk::WriteDescriptorSet> writeDescriptorSetsShadow =
 		{
-			// Set 0: Binding 0: Fragment shader image sampler
+			// Set 0: Binding 0: geometry shader uniform buffer
 			vkx::writeDescriptorSet(
 				rscs.descriptorSets->get("shadow"),
 				vk::DescriptorType::eUniformBuffer,
@@ -1832,8 +1832,8 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-
-
+		// change vertex input state back to what it was:
+		pipelineCreateInfo.pVertexInputState = &vertices.inputState;// important
 
 
 		{
@@ -1842,21 +1842,25 @@ class VulkanExample : public vkx::vulkanApp {
 			// The shadow mapping pipeline uses geometry shader instancing (invocations layout modifier) to output 
 			// shadow maps for multiple lights sources into the different shadow map layers in one single render pass
 			std::array<vk::PipelineShaderStageCreateInfo, 3> shadowStages;
+			//std::array<vk::PipelineShaderStageCreateInfo, 2> shadowStages;
 			shadowStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/shadow.vert.spv", vk::ShaderStageFlagBits::eVertex);
 			shadowStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/shadow.frag.spv", vk::ShaderStageFlagBits::eFragment);
 			shadowStages[2] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/shadow.geom.spv", vk::ShaderStageFlagBits::eGeometry);
+			//shadowStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/fullscreen.vert.spv", vk::ShaderStageFlagBits::eVertex);
+			//shadowStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/shadow.frag.spv", vk::ShaderStageFlagBits::eFragment);
 
 			pipelineCreateInfo.pStages = shadowStages.data();
 			pipelineCreateInfo.stageCount = static_cast<uint32_t>(shadowStages.size());
 
 			// Shadow pass doesn't use any color attachments
-			colorBlendState.attachmentCount = 0;
-			colorBlendState.pAttachments = nullptr;
+			//colorBlendState.attachmentCount = 0;
+			//colorBlendState.pAttachments = nullptr;
 			// Cull front faces
 			rasterizationState.cullMode = vk::CullModeFlagBits::eFront;
 			depthStencilState.depthCompareOp = vk::CompareOp::eLessOrEqual;
+			
 			// Enable depth bias
-			rasterizationState.depthBiasEnable = VK_TRUE;
+			//rasterizationState.depthBiasEnable = VK_TRUE;
 			// Add depth bias to dynamic state, so we can change it at runtime
 			//dynamicStateEnables.push_back(vk::DynamicState::eDepthBias);
 			/*dynamicState =

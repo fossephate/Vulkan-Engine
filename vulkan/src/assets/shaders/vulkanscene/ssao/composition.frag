@@ -9,8 +9,8 @@ layout (set = 3, binding = 3) uniform usampler2D samplerAlbedo;// this is a usam
 layout (set = 3, binding = 4) uniform sampler2D samplerSSAO;
 
 //layout (set = 3, binding = 6) uniform sampler2DShadow samplerShadowMap;
-layout (set = 3, binding = 6) uniform sampler2DArray samplerShadowMap;
-//layout (set = 3, binding = 6) uniform sampler2D samplerShadowMap;
+//layout (set = 3, binding = 6) uniform sampler2DArray samplerShadowMap;
+layout (set = 3, binding = 6) uniform sampler2D samplerShadowMap;
 
 struct PointLight {
     vec4 position;
