@@ -1266,13 +1266,13 @@ class VulkanExample : public vkx::vulkanApp {
 		rscs.descriptorSetLayouts->add("shadow.matrix", descriptorSetLayoutBindingsShadowMatrix);
 
 
-		std::vector<vk::DescriptorSetLayout> descriptorSetLayoutsSSAOBlur {
+		std::vector<vk::DescriptorSetLayout> descriptorSetLayoutsShadow {
 			rscs.descriptorSetLayouts->get("shadow.scene"),// descriptor set layout
 			rscs.descriptorSetLayouts->get("shadow.matrix"),// descriptor set layout
 		};
 
 		// create pipelineLayout from descriptorSetLayouts
-		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfoShadow = vkx::pipelineLayoutCreateInfo(descriptorSetLayoutsSSAOBlur.data(), descriptorSetLayoutsSSAOBlur.size());
+		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfoShadow = vkx::pipelineLayoutCreateInfo(descriptorSetLayoutsShadow.data(), descriptorSetLayoutsShadow.size());
 		rscs.pipelineLayouts->add("offscreen.shadow", pPipelineLayoutCreateInfoShadow);
 
 
@@ -1597,14 +1597,14 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// descriptor set 0
 		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfoShadow =
-			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred.deferred"), &rscs.descriptorSetLayouts->get("deferred.deferred"), 1);
-		rscs.descriptorSets->add("shadow", descriptorSetAllocateInfoShadow);// todo: actually make a descriptor pool for this set
+			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred.deferred"), &rscs.descriptorSetLayouts->get("shadow.scene"), 1);
+		rscs.descriptorSets->add("shadow.scene", descriptorSetAllocateInfoShadow);// todo: actually make a descriptor pool for this set
 
 
 		// descriptor set 1
 		// matrix data
 		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfoShadowMatrix =
-			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("offscreen.matrix"), &rscs.descriptorSetLayouts->get("offscreen.matrix"), 1);
+			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("offscreen.matrix"), &rscs.descriptorSetLayouts->get("shadow.matrix"), 1);
 		rscs.descriptorSets->add("shadow.matrix", descriptorSetAllocateInfoShadowMatrix);
 
 		std::vector<vk::WriteDescriptorSet> writeDescriptorSetsShadow =
@@ -1873,8 +1873,13 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
+
+
 		// change vertex input state back to what it was:
 		pipelineCreateInfo.pVertexInputState = &vertices.inputState;// important
+
+		// seperate pipeline layout:
+		pipelineCreateInfo.layout = rscs.pipelineLayouts->get("offscreen.shadow");
 
 
 		{
@@ -2152,16 +2157,16 @@ class VulkanExample : public vkx::vulkanApp {
 			//glm::mat4 shadowProj = camera.matrices.projection;
 			//glm::mat4 shadowView = glm::lookAt(glm::vec3(uboFSLights.spotlights[i].position), glm::vec3(uboFSLights.spotlights[i].target), glm::vec3(0.0f, 1.0f, 0.0f));
 			//glm::mat4 shadowView = glm::lookAt(glm::vec3(uboFSLights.spotlights[i].position), glm::vec3(uboFSLights.spotlights[i].target), glm::vec3(0.0f, 0.0f, 1.0f));
-			glm::mat4 shadowView = glm::lookAt(
-				glm::vec3(1.0f, 1.0f, 10.0f),
-				glm::vec3(0.0f, 0.0f, 0.0f),
-				glm::vec3(0.0f, 0.0f, 1.0f));
+			//glm::mat4 shadowView = glm::lookAt(
+			//	glm::vec3(1.0f, 1.0f, 10.0f),
+			//	glm::vec3(0.0f, 0.0f, 0.0f),
+			//	glm::vec3(0.0f, 0.0f, 1.0f));
 
-			//glm::mat4 shadowView = camera.matrices.view;
+			glm::mat4 shadowView = camera.matrices.view;
 			glm::mat4 shadowModel = glm::mat4();
 
-			//uboShadowGS.mvp[i] = shadowProj * shadowView * shadowModel;
-			uboShadowGS.mvp[i] = glm::mat4(1.0);
+			uboShadowGS.mvp[i] = shadowProj * shadowView * shadowModel;
+			//uboShadowGS.mvp[i] = glm::rotate(glm::mat4(), 90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 			uboFSLights.spotlights[i].viewMatrix = uboShadowGS.mvp[i];
 		}
 
@@ -3313,14 +3318,14 @@ class VulkanExample : public vkx::vulkanApp {
 					// for vs uniform buffer?
 					// bind deferred descriptor set
 					// layout: offscreen, set index = 0
-					setNum = 3;
-					offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred"), setNum, rscs.descriptorSets->get("shadow"), nullptr);
+					setNum = 0;
+					offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("offscreen.shadow"), setNum, rscs.descriptorSets->get("shadow.scene"), nullptr);
 
 
 					// dynamic uniform buffer to position objects
-					//uint32_t offset1 = model->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
-					//setNum = 1;
-					//offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("offscreen"), setNum, 1, &rscs.descriptorSets->get("shadow.matrix"), 1, &offset1);
+					uint32_t offset1 = model->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
+					setNum = 1;
+					offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("offscreen.shadow"), setNum, 1, &rscs.descriptorSets->get("shadow.matrix"), 1, &offset1);
 
 
 
