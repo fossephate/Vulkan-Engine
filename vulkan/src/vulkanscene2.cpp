@@ -1904,6 +1904,7 @@ class VulkanExample : public vkx::vulkanApp {
 			colorBlendState.pAttachments = nullptr;
 			// Cull front faces
 			rasterizationState.cullMode = vk::CullModeFlagBits::eFront;
+			//rasterizationState.cullMode = vk::CullModeFlagBits::eNone;
 			depthStencilState.depthCompareOp = vk::CompareOp::eLessOrEqual;
 			
 			// Enable depth bias
@@ -2105,7 +2106,7 @@ class VulkanExample : public vkx::vulkanApp {
 		//uboFSLights.spotlights[1] = initLight(glm::vec3(14.0f, 12.0f, -4.0f), glm::vec3(2.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		//uboFSLights.spotlights[2] = initLight(glm::vec3(0.0f, 4.0f, -10.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 
-		uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(2.0f, 0.0f, 1.0f), glm::vec3(1.0f, 0.5f, 0.5f));
+		uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 2.0f), glm::vec3(6.0f, 0.0f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
 		//uboFSLights.spotlights[1] = initLight(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(-2.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		//uboFSLights.spotlights[2] = initLight(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 	}
@@ -2154,11 +2155,11 @@ class VulkanExample : public vkx::vulkanApp {
 		float zFar = 512.0f;*/
 		float zNear = 0.1f;
 		float zFar = 64.0f;
-		float lightFOV = 100.0f;
+		float lightFOV = 60.0f;
 
 		for (uint32_t i = 0; i < LIGHT_COUNT; i++) {
 			// mvp from light's pov (for shadows)
-			glm::mat4 shadowProj = glm::perspective(glm::radians(lightFOV), 1.0f, zNear, zFar);
+			glm::mat4 shadowProj = glm::perspective(lightFOV, 1.0f, zNear, zFar);
 			//glm::mat4 shadowProj = camera.matrices.projection;
 			//glm::mat4 shadowView = glm::lookAt(glm::vec3(uboFSLights.spotlights[i].position), glm::vec3(uboFSLights.spotlights[i].target), glm::vec3(0.0f, 1.0f, 0.0f));
 			glm::mat4 shadowView = glm::lookAt(glm::vec3(uboFSLights.spotlights[i].position), glm::vec3(uboFSLights.spotlights[i].target), glm::vec3(0.0f, 0.0f, 1.0f));

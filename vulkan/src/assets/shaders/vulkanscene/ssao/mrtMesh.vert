@@ -46,8 +46,6 @@ void main() {
 	// Vertex position in world space
 	outPos = vec3(instance.model * inPos);
 
-
-
 	// Vertex position in view space
 	//outPos = vec3(scene.view * instance.model * inPos);
 
@@ -55,11 +53,11 @@ void main() {
 	
 	// Normal in world space
 	mat3 mNormal = transpose(inverse(mat3(instance.model)));
-    //outNormal = mNormal * normalize(inNormal);
+    outNormal = mNormal * normalize(inNormal);
 
 	// Normal in view space
 	mat3 normalMatrix = transpose(inverse(mat3(scene.view * instance.model)));
-	outNormal = normalMatrix * inNormal;
+	//outNormal = normalMatrix * inNormal;
 
 	outTangent = mNormal * inTangent;
 

@@ -58,7 +58,7 @@ struct SpotLight2 {
 #define USE_PCF
 
 const int SSAO_ENABLED = 1;
-const float AMBIENT_FACTOR = 0.2;
+const float AMBIENT_FACTOR = 0.5;
 
 const int USE_SHADOWS = 1;
 
@@ -206,16 +206,21 @@ void main() {
 
 
 
-        // for(int i = 0; i < NUM_DIR_LIGHTS; ++i) {
+
+
+
+        // // spot lights:
+        // for(int i = 0; i < LIGHT_COUNT; ++i) {
+
+
         //     // Vector to light
-        //     vec3 L = ubo.directionalLights[i].position.xyz - fragPos;
+        //     vec3 L = ubo.spotlights[i].position.xyz - fragPos;
         //     // Distance from light to fragment position
         //     float dist = length(L);
         //     L = normalize(L);
 
         //     // Viewer to fragment
-        //     vec3 viewPos = vec3(ubo.view * ubo.model * vec4(ubo.viewPos.xyz, 1.0));
-        //     vec3 V = /*ubo.*/viewPos.xyz - fragPos;
+        //     vec3 V = ubo.viewPos.xyz - fragPos;
         //     V = normalize(V);
 
         //     float lightCosInnerAngle = cos(radians(15.0));
@@ -223,7 +228,7 @@ void main() {
         //     float lightRange = 100.0;
 
         //     // Direction vector from source to target
-        //     vec3 dir = normalize(ubo.directionalLights[i].position.xyz - ubo.directionalLights[i].target.xyz);
+        //     vec3 dir = normalize(ubo.lights[i].position.xyz - ubo.spotlights[i].target.xyz);
 
         //     // Dual cone spot light with smooth transition between inner and outer angle
         //     float cosDir = dot(L, dir);
@@ -240,7 +245,7 @@ void main() {
         //     float NdotR = max(0.0, dot(R, V));
         //     vec3 spec = vec3(pow(NdotR, 16.0) * albedo.a * 2.5);
 
-        //     fragcolor += vec3((diff + spec) * spotEffect * heightAttenuation) * ubo.directionalLights[i].color.rgb * albedo.rgb;
+        //     fragcolor += vec3((diff + spec) * spotEffect * heightAttenuation) * ubo.spotlights[i].color.rgb * albedo.rgb;
         // }
 
 

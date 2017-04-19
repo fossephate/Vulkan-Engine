@@ -647,11 +647,13 @@ namespace vkx {
 
 
 
+			int SHADOW_MAP_DIM = 2048;
+
 			vkx::Framebuffer shadowFramebuffer;
 			shadowFramebuffer.device = context.device;
 			shadowFramebuffer.context = &context;
-			shadowFramebuffer.width = this->size.x;
-			shadowFramebuffer.height = this->size.y;
+			shadowFramebuffer.width = /*this->size.x*/SHADOW_MAP_DIM;
+			shadowFramebuffer.height = /*this->size.y*/SHADOW_MAP_DIM;
 
 			vk::ImageUsageFlags usage = vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled;
 
@@ -659,7 +661,7 @@ namespace vkx {
 
 			//shadowFramebuffer.createAttachment(vk::Format::eR8Unorm, vk::ImageUsageFlagBits::eColorAttachment, this->size.x, this->size.y, 1);
 			// depth stencil attachment:
-			shadowFramebuffer.createAttachment(shadowMapFormat, usage, this->size.x, this->size.y, 3);
+			shadowFramebuffer.createAttachment(shadowMapFormat, usage, /*this->size.x*/SHADOW_MAP_DIM, /*this->size.y*/SHADOW_MAP_DIM, 3);
 
 			shadowFramebuffer.attachments[0].sampler = createSampler(vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eClampToEdge);
 
