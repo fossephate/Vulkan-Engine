@@ -351,7 +351,7 @@ class VulkanExample : public vkx::vulkanApp {
 	// The instancePos is used to place the models using instanced draws
 	struct {
 		glm::mat4 mvp[LIGHT_COUNT];
-		glm::vec4 pos;
+		//glm::vec4 pos[3];
 	} uboShadowGS;
 
 	struct {
@@ -776,9 +776,9 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// matrix data
 		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes6 = {
-			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1),// non-static data
+			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 2),// non-static data
 		};
-		rscs.descriptorPools->add("offscreen.matrix", descriptorPoolSizes6, 1);
+		rscs.descriptorPools->add("offscreen.matrix", descriptorPoolSizes6, 2);
 
 
 
@@ -1072,63 +1072,47 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// Deferred shading layout
 		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindingsDeferred = {
-			// Set 0: Binding 0: Vertex shader uniform buffer
+			// Set 3: Binding 0: Vertex shader uniform buffer
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBuffer,
 				//vk::ShaderStageFlagBits::eVertex,
 				vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eGeometry,// added geometry 4/12/17
 				0),
-			// Set 0: Binding 1: Position texture target / Scene colormap
+			// Set 3: Binding 1: Position texture target / Scene colormap
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
 				1),
-			// Set 0: Binding 2: Normals texture target
+			// Set 3: Binding 2: Normals texture target
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
 				2),
-			// Set 0: Binding 3: Albedo texture target
+			// Set 3: Binding 3: Albedo texture target
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
 				3),
 
-			// Set 0: Binding 4: SSAO Sampler texture target
+			// Set 3: Binding 4: SSAO Sampler texture target
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
 				4),
 
-			// Set 0: Binding 5: Fragment shader uniform buffer
+			// Set 3: Binding 5: Fragment shader uniform buffer
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBuffer,
 				vk::ShaderStageFlagBits::eFragment,
 				5),
 
-			// Set 0: Binding 6: Shadow Map
+			// Set 3: Binding 6: Shadow Map
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
 				6),
 		};
 		rscs.descriptorSetLayouts->add("deferred.deferred", descriptorSetLayoutBindingsDeferred);
-
-
-
-		// Geometry shader descriptor set layout binding
-		// set layout 4
-		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindingsShadow = {
-			// Set 0: Binding 0: Vertex shader uniform buffer
-			vkx::descriptorSetLayoutBinding(
-				vk::DescriptorType::eUniformBuffer,
-				vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eGeometry,// geometry shader
-				0),
-		};
-		rscs.descriptorSetLayouts->add("geometry.shadow", descriptorSetLayoutBindingsShadow);
-
-
-
 
 
 
@@ -1141,7 +1125,7 @@ class VulkanExample : public vkx::vulkanApp {
 			rscs.descriptorSetLayouts->get("offscreen.matrix"),
 			rscs.descriptorSetLayouts->get("offscreen.textures"),
 			rscs.descriptorSetLayouts->get("deferred.deferred"),
-			rscs.descriptorSetLayouts->get("geometry.shadow"),// todo: remove
+			//rscs.descriptorSetLayouts->get("geometry.shadow"),// todo: remove
 		};
 
 		// use all descriptor set layouts
@@ -1255,6 +1239,41 @@ class VulkanExample : public vkx::vulkanApp {
 		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfoSSAOBlur = vkx::pipelineLayoutCreateInfo(descriptorSetLayoutsSSAOBlur.data(), descriptorSetLayoutsSSAOBlur.size());
 		rscs.pipelineLayouts->add("offscreen.ssaoBlur", pPipelineLayoutCreateInfoSSAOBlur);
 
+
+
+		// ---------------------------------------------------------------------------------------
+		// ---------------------------------------------------------------------------------------
+		// shadow:
+
+		// Geometry shader descriptor set layout binding
+		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindingsShadow = {
+			// Set 0: Binding 0: Vertex shader uniform buffer
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eUniformBuffer,
+				vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eGeometry,// geometry shader
+				0),
+		};
+		rscs.descriptorSetLayouts->add("shadow.scene", descriptorSetLayoutBindingsShadow);
+
+		// Geometry shader descriptor set layout binding
+		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindingsShadowMatrix = {
+			// Set 0: Binding 0: Vertex shader uniform buffer
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eUniformBufferDynamic,
+				vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eGeometry,// geometry shader
+				0),
+		};
+		rscs.descriptorSetLayouts->add("shadow.matrix", descriptorSetLayoutBindingsShadowMatrix);
+
+
+		std::vector<vk::DescriptorSetLayout> descriptorSetLayoutsSSAOBlur {
+			rscs.descriptorSetLayouts->get("shadow.scene"),// descriptor set layout
+			rscs.descriptorSetLayouts->get("shadow.matrix"),// descriptor set layout
+		};
+
+		// create pipelineLayout from descriptorSetLayouts
+		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfoShadow = vkx::pipelineLayoutCreateInfo(descriptorSetLayoutsSSAOBlur.data(), descriptorSetLayoutsSSAOBlur.size());
+		rscs.pipelineLayouts->add("offscreen.shadow", pPipelineLayoutCreateInfoShadow);
 
 
 	}
@@ -1541,6 +1560,8 @@ class VulkanExample : public vkx::vulkanApp {
 		}
 
 		// ------------------------------------------------------------------------------------------
+		// ------------------------------------------------------------------------------------------
+		// ------------------------------------------------------------------------------------------
 		// SSAO Blur
 
 
@@ -1567,20 +1588,40 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
+
+		// ------------------------------------------------------------------------------------------
+		// ------------------------------------------------------------------------------------------
+		// ------------------------------------------------------------------------------------------
 		// shadow mapping:
 
+
+		// descriptor set 0
 		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfoShadow =
-			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred.deferred"), &rscs.descriptorSetLayouts->get("geometry.shadow"), 1);
+			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred.deferred"), &rscs.descriptorSetLayouts->get("deferred.deferred"), 1);
 		rscs.descriptorSets->add("shadow", descriptorSetAllocateInfoShadow);// todo: actually make a descriptor pool for this set
+
+
+		// descriptor set 1
+		// matrix data
+		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfoShadowMatrix =
+			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("offscreen.matrix"), &rscs.descriptorSetLayouts->get("offscreen.matrix"), 1);
+		rscs.descriptorSets->add("shadow.matrix", descriptorSetAllocateInfoShadowMatrix);
 
 		std::vector<vk::WriteDescriptorSet> writeDescriptorSetsShadow =
 		{
 			// Set 0: Binding 0: geometry shader uniform buffer
 			vkx::writeDescriptorSet(
-				rscs.descriptorSets->get("shadow"),
+				rscs.descriptorSets->get("shadow.scene"),
 				vk::DescriptorType::eUniformBuffer,
 				0,
 				&uniformDataDeferred.gsShadow.descriptor),
+
+			// Set 1: Binding 0: Vertex shader uniform buffer
+			vkx::writeDescriptorSet(
+				rscs.descriptorSets->get("shadow.matrix"),
+				vk::DescriptorType::eUniformBufferDynamic,
+				0,
+				&uniformData.matrixVS.descriptor),// bind to forward descriptor since it's the same
 		};
 		device.updateDescriptorSets(writeDescriptorSetsShadow, nullptr);
 
@@ -2108,12 +2149,19 @@ class VulkanExample : public vkx::vulkanApp {
 		for (uint32_t i = 0; i < LIGHT_COUNT; i++) {
 			// mvp from light's pov (for shadows)
 			glm::mat4 shadowProj = glm::perspective(glm::radians(lightFOV), 1.0f, zNear, zFar);
+			//glm::mat4 shadowProj = camera.matrices.projection;
 			//glm::mat4 shadowView = glm::lookAt(glm::vec3(uboFSLights.spotlights[i].position), glm::vec3(uboFSLights.spotlights[i].target), glm::vec3(0.0f, 1.0f, 0.0f));
-			glm::mat4 shadowView = glm::lookAt(glm::vec3(uboFSLights.spotlights[i].position), glm::vec3(uboFSLights.spotlights[i].target), glm::vec3(0.0f, 0.0f, 1.0f));
+			//glm::mat4 shadowView = glm::lookAt(glm::vec3(uboFSLights.spotlights[i].position), glm::vec3(uboFSLights.spotlights[i].target), glm::vec3(0.0f, 0.0f, 1.0f));
+			glm::mat4 shadowView = glm::lookAt(
+				glm::vec3(1.0f, 1.0f, 10.0f),
+				glm::vec3(0.0f, 0.0f, 0.0f),
+				glm::vec3(0.0f, 0.0f, 1.0f));
+
 			//glm::mat4 shadowView = camera.matrices.view;
 			glm::mat4 shadowModel = glm::mat4();
 
-			uboShadowGS.mvp[i] = shadowProj * shadowView * shadowModel;
+			//uboShadowGS.mvp[i] = shadowProj * shadowView * shadowModel;
+			uboShadowGS.mvp[i] = glm::mat4(1.0);
 			uboFSLights.spotlights[i].viewMatrix = uboShadowGS.mvp[i];
 		}
 
@@ -3008,17 +3056,36 @@ class VulkanExample : public vkx::vulkanApp {
 		//ImGui::PlotLines("Frame Times", &uiSettings.frameTimes[0], 50, 0, "", uiSettings.frameTimeMin, uiSettings.frameTimeMax, ImVec2(0, 200));
 
 		ImGui::Text("Camera");
-		ImGui::InputFloat3("position", &this->camera.transform.translation.x, 2);
+		//ImGui::InputFloat3("position", &this->camera.transform.translation.x, 2);
+		ImGui::DragFloat3("position", &this->camera.transform.translation.x, 0.1f);
 		//ImGui::InputFloat3("rotation", &example->camera.transform.orientation.x, 3);
 
 		ImGui::SetNextWindowSize(ImVec2(200, 200), ImGuiSetCond_FirstUseEver);
-		ImGui::Begin("Example settings");
+		ImGui::Begin("Settings");
 
 		ImGui::Checkbox("Update Draw Command Buffers", &updateDraw);
 		ImGui::Checkbox("Update Offscreen Command Buffers", &updateOffscreen);
 		ImGui::Checkbox("SSAO", &settings.SSAO);
 		ImGui::Checkbox("Add Boxes", &keyStates.b);
 		ImGui::SliderFloat("FPS Cap", &settings.fpsCap, 5.0f, 500.0f);
+
+
+
+		// testing:
+		//ImGui::InputFloat4("pos", &uboShadowGS.pos.x, 3);
+		//ImGui::InputFloat4("pos", &uboShadowGS.pos.x, 3);
+
+		//ImGui::DragFloat4("pos", &uboShadowGS.pos[0].x, 0.1f);
+		//ImGui::DragFloat4("pos", &uboShadowGS.pos[1].x, 0.1f);
+		//ImGui::DragFloat4("pos", &uboShadowGS.pos[2].x, 0.1f);
+
+		//ImGui::DragIntRange2("range int (no bounds)", &begin_i, &end_i, 5, 0, 0, "Min: %.0f units", "Max: %.0f units");
+		//ImGui::InputFloat4("mat4[0]", &uboShadowGS.mvp[0][0][0], 3);
+		//ImGui::InputFloat4("mat4[1]", &uboShadowGS.mvp[0][1][0], 3);
+		//ImGui::InputFloat4("mat4[2]", &uboShadowGS.mvp[0][2][0], 3);
+		//ImGui::InputFloat4("mat4[3]", &uboShadowGS.mvp[0][3][0], 3);
+
+
 		ImGui::End();
 
 		ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
@@ -3236,7 +3303,7 @@ class VulkanExample : public vkx::vulkanApp {
 					offscreenCmdBuffer.bindIndexBuffer(mesh.meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
 
 					// descriptor set #
-					uint32_t setIndex;
+					uint32_t setNum;
 
 					// bind scene descriptor set
 					//setIndex = 0;
@@ -3245,9 +3312,15 @@ class VulkanExample : public vkx::vulkanApp {
 					// bind shadow descriptor set?
 					// for vs uniform buffer?
 					// bind deferred descriptor set
-					// layout: offscreen, set index = 4
-					setIndex = 4;
-					offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("offscreen"), setIndex, rscs.descriptorSets->get("shadow"), nullptr);
+					// layout: offscreen, set index = 0
+					setNum = 3;
+					offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred"), setNum, rscs.descriptorSets->get("shadow"), nullptr);
+
+
+					// dynamic uniform buffer to position objects
+					//uint32_t offset1 = model->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
+					//setNum = 1;
+					//offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("offscreen"), setNum, 1, &rscs.descriptorSets->get("shadow.matrix"), 1, &offset1);
 
 
 

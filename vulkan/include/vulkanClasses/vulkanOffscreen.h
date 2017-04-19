@@ -659,7 +659,7 @@ namespace vkx {
 
 			//shadowFramebuffer.createAttachment(vk::Format::eR8Unorm, vk::ImageUsageFlagBits::eColorAttachment, this->size.x, this->size.y, 1);
 			// depth stencil attachment:
-			shadowFramebuffer.createAttachment(shadowMapFormat, usage, this->size.x, this->size.y, 1);
+			shadowFramebuffer.createAttachment(shadowMapFormat, usage, this->size.x, this->size.y, 3);
 
 			shadowFramebuffer.attachments[0].sampler = createSampler(vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eClampToEdge);
 

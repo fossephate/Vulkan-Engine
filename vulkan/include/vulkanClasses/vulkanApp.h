@@ -249,6 +249,8 @@ namespace vkx
 				float frameTimeMax = 300.0f;
 
 				float lightTimer = 0.0f;
+
+
 			} uiSettings;
 
 			//struct Options {

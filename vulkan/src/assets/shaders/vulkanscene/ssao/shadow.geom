@@ -10,16 +10,25 @@
 layout (triangles, invocations = LIGHT_COUNT) in;
 layout (triangle_strip, max_vertices = 3) out;
 
-layout (set = 0, binding = 0) uniform UBO 
+layout (set = 3, binding = 0) uniform UBO 
 {
-	mat4 mvp[LIGHT_COUNT];
-	vec4 pos;
+	mat4 mvp[3];
+	//vec4 pos[3];
 } ubo;
 
-layout (location = 0) in int inInstanceIndex[];
+// matrix data
+layout (set = 1, binding = 0) uniform matrixBuffer
+{
+	mat4 model;
+	int boneIndex;
+	vec3 padding;
+	vec4 padding2[3];
+	//mat4 boneIndex;
+	mat4 g1;
+	mat4 g2;
+} instance;
 
-//layout (location = 1) in mat4 inTestMVP[];
-//layout (location = 20) in vec4 inPos[];
+layout (location = 0) in int inInstanceIndex[];
 
 
 out gl_PerVertex
@@ -65,25 +74,19 @@ void main() {
 	// 	0.5, 0.5, 0.0, 1.0 );
 
 
-	const mat4 testMVP = mat4( 
-		0.0, 0.708880484, 0.535902381, 0.535064995,
-		-0.839099526, 0.0, 0.0, 0.0,
-		0.0, 0.448972762, -0.846133053, -0.844810963,
-		-6.12674285e-07, -0.414078623, 25.8597565, 25.9193497 );
 
-
-
-
-	vec4 instancedPos = vec4(0.0);
+	//vec4 instancedPos = vec4(0.0);
 	//vec4 instancedPos = ubo.pos;
+	//vec4 instancedPos = ubo.pos[inInstanceIndex[0]];
+	mat4 test1 = mat4(1.0);
+	mat4 test2 = ubo.mvp[0];
+
 
 	for (int i = 0; i < gl_in.length(); i++) {
 		gl_Layer = gl_InvocationID;
-		vec4 tmpPos = gl_in[i].gl_Position;
-		//vec4 tmpPos = ubo.mvp[gl_InvocationID] * gl_in[i].gl_Position;
-		//gl_Position = ubo.mvp[gl_InvocationID] * tmpPos;
+		//vec4 tmpPos = /*ubo.mvp[gl_InvocationID] **/ (gl_in[i].gl_Position + instancedPos);
+		vec4 tmpPos = test2 * gl_in[i].gl_Position /** instance.model*/;
 		gl_Position = tmpPos;
-		//gl_Position = testMVP * tmpPos;
 		EmitVertex();
 	}
 	EndPrimitive();
