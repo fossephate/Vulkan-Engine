@@ -44,12 +44,12 @@ void main() {
 	outUV.t = 1.0 - outUV.t;// bc vulkan
 
 	// Vertex position in world space
-	//outPos = vec3(instance.model * inPos);
+	outPos = vec3(instance.model * inPos);
 
 
 
 	// Vertex position in view space
-	outPos = vec3(scene.view * instance.model * inPos);
+	//outPos = vec3(scene.view * instance.model * inPos);
 
 
 	

@@ -331,6 +331,7 @@ class VulkanExample : public vkx::vulkanApp {
 		glm::vec4 viewPos;
 		glm::mat4 model;// added
 		glm::mat4 view;// added
+		glm::mat4 inverseViewProjection;// added 4/19/17
 	} uboFSLights;
 
 	// ssao
@@ -2100,9 +2101,13 @@ class VulkanExample : public vkx::vulkanApp {
 	}
 
 	void initLights() {
-		uboFSLights.spotlights[0] = initLight(glm::vec3(-14.0f, -0.5f, 15.0f), glm::vec3(-2.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.5f));
-		uboFSLights.spotlights[1] = initLight(glm::vec3(14.0f, -4.0f, 12.0f), glm::vec3(2.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		uboFSLights.spotlights[2] = initLight(glm::vec3(0.0f, -10.0f, 4.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+		//uboFSLights.spotlights[0] = initLight(glm::vec3(-14.0f, 15.0f, -0.5f), glm::vec3(-2.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.5f));
+		//uboFSLights.spotlights[1] = initLight(glm::vec3(14.0f, 12.0f, -4.0f), glm::vec3(2.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		//uboFSLights.spotlights[2] = initLight(glm::vec3(0.0f, 4.0f, -10.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+
+		uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(2.0f, 0.0f, 1.0f), glm::vec3(1.0f, 0.5f, 0.5f));
+		//uboFSLights.spotlights[1] = initLight(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(-2.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		//uboFSLights.spotlights[2] = initLight(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 	}
 
 	// Update fragment shader light position uniform block
@@ -2156,13 +2161,13 @@ class VulkanExample : public vkx::vulkanApp {
 			glm::mat4 shadowProj = glm::perspective(glm::radians(lightFOV), 1.0f, zNear, zFar);
 			//glm::mat4 shadowProj = camera.matrices.projection;
 			//glm::mat4 shadowView = glm::lookAt(glm::vec3(uboFSLights.spotlights[i].position), glm::vec3(uboFSLights.spotlights[i].target), glm::vec3(0.0f, 1.0f, 0.0f));
-			//glm::mat4 shadowView = glm::lookAt(glm::vec3(uboFSLights.spotlights[i].position), glm::vec3(uboFSLights.spotlights[i].target), glm::vec3(0.0f, 0.0f, 1.0f));
+			glm::mat4 shadowView = glm::lookAt(glm::vec3(uboFSLights.spotlights[i].position), glm::vec3(uboFSLights.spotlights[i].target), glm::vec3(0.0f, 0.0f, 1.0f));
 			//glm::mat4 shadowView = glm::lookAt(
 			//	glm::vec3(1.0f, 1.0f, 10.0f),
 			//	glm::vec3(0.0f, 0.0f, 0.0f),
 			//	glm::vec3(0.0f, 0.0f, 1.0f));
 
-			glm::mat4 shadowView = camera.matrices.view;
+			//glm::mat4 shadowView = camera.matrices.view;
 			glm::mat4 shadowModel = glm::mat4();
 
 			uboShadowGS.mvp[i] = shadowProj * shadowView * shadowModel;
@@ -2180,6 +2185,10 @@ class VulkanExample : public vkx::vulkanApp {
 
 		uboFSLights.view = camera.matrices.view;
 		uboFSLights.model = glm::mat4();
+
+
+		uboFSLights.inverseViewProjection = glm::inverse(camera.matrices.view * camera.matrices.projection);// new
+
 
 		uniformDataDeferred.fsLights.copy(uboFSLights);
 	}

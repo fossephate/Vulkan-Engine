@@ -52,6 +52,18 @@ struct SpotLight2 {
 #define NUM_LIGHTS 100
 #define NUM_DIR_LIGHTS 10
 
+#define LIGHT_COUNT 1
+#define SHADOW_FACTOR 0.25
+#define AMBIENT_LIGHT 0.1
+#define USE_PCF
+
+const int SSAO_ENABLED = 1;
+const float AMBIENT_FACTOR = 0.2;
+
+const int USE_SHADOWS = 1;
+
+
+
 // todo: make this another set(1) rather than binding = 4
 layout (set = 3, binding = 5) uniform UBO 
 {
@@ -61,6 +73,7 @@ layout (set = 3, binding = 5) uniform UBO
     vec4 viewPos;
     mat4 model;// added
     mat4 view;// added
+    mat4 inverseViewProjection;// added 4/19/17
 } ubo;
 
 layout (location = 0) in vec2 inUV;
@@ -68,8 +81,20 @@ layout (location = 0) out vec4 outFragcolor;
 
 
 
-/*layout (constant_id = 0) */const int SSAO_ENABLED = 1;
-/*layout (constant_id = 1) */const float AMBIENT_FACTOR = 0.2;
+
+
+// reconstruct world position from depth buffer:
+// this is slow, find a better solution
+vec3 calculate_world_position(vec2 texture_coordinate, float depth_from_depth_buffer) {
+    vec4 clip_space_position = vec4(texture_coordinate * 2.0 - vec2(1.0), 2.0 * depth_from_depth_buffer - 1.0, 1.0);
+
+    //vec4 position = inverse_projection_matrix * clip_space_position; // Use this for view space
+    //vec4 position = inverse_view_projection_matrix * clip_space_position; // Use this for world space
+    // definitely don't do this:
+    vec4 position = ubo.inverseViewProjection * clip_space_position; // Use this for world space
+
+    return(position.xyz / position.w);
+}
 
 
 
@@ -79,42 +104,39 @@ layout (location = 0) out vec4 outFragcolor;
 
 
 
-
-
-
-// float textureProj(vec4 P, float layer, vec2 offset) {
-//     float shadow = 1.0;
-//     vec4 shadowCoord = P / P.w;
-//     shadowCoord.st = shadowCoord.st * 0.5 + 0.5;
+float textureProj(vec4 P, float layer, vec2 offset) {
+    float shadow = 1.0;
+    vec4 shadowCoord = P / P.w;
+    shadowCoord.st = shadowCoord.st * 0.5 + 0.5;
     
-//     if (shadowCoord.z > -1.0 && shadowCoord.z < 1.0) {
-//         float dist = texture2D(samplerShadowMap, vec3(shadowCoord.st + offset, layer)).r;
-//         if (shadowCoord.w > 0.0 && dist < shadowCoord.z) {
-//             shadow = SHADOW_FACTOR;
-//         }
-//     }
-//     return shadow;
-// }
+    if (shadowCoord.z > -1.0 && shadowCoord.z < 1.0)  {
+        float dist = texture(samplerShadowMap, vec3(shadowCoord.st + offset, layer)).r;
+        if (shadowCoord.w > 0.0 && dist < shadowCoord.z)  {
+            shadow = SHADOW_FACTOR;
+        }
+    }
+    return shadow;
+}
 
-// float filterPCF(vec4 sc, float layer) {
-//     ivec2 texDim = textureSize(samplerShadowMap, 0).xy;
-//     float scale = 1.5;
-//     float dx = scale * 1.0 / float(texDim.x);
-//     float dy = scale * 1.0 / float(texDim.y);
+float filterPCF(vec4 sc, float layer) {
+    ivec2 texDim = textureSize(samplerShadowMap, 0).xy;
+    float scale = 1.5;
+    float dx = scale * 1.0 / float(texDim.x);
+    float dy = scale * 1.0 / float(texDim.y);
 
-//     float shadowFactor = 0.0;
-//     int count = 0;
-//     int range = 1;
+    float shadowFactor = 0.0;
+    int count = 0;
+    int range = 1;
     
-//     for (int x = -range; x <= range; x++) {
-//         for (int y = -range; y <= range; y++) {
-//             shadowFactor += textureProj(sc, layer, vec2(dx*x, dy*y));
-//             count++;
-//         }
+    for (int x = -range; x <= range; x++) {
+        for (int y = -range; y <= range; y++) {
+            shadowFactor += textureProj(sc, layer, vec2(dx*x, dy*y));
+            count++;
+        }
     
-//     }
-//     return shadowFactor / count;
-// }
+    }
+    return shadowFactor / count;
+}
 
 
 
@@ -123,7 +145,13 @@ layout (location = 0) out vec4 outFragcolor;
 
 void main() {
     // Get G-Buffer values
-    vec3 fragPos = texture(samplerPosition, inUV).rgb;
+    vec4 samplerPos = texture(samplerPosition, inUV).rgba;
+
+    //vec3 fragPos = texture(samplerPosition, inUV).rgb;
+    vec3 fragPos = samplerPos.rgb;
+
+    float depth = samplerPos.a;
+
     vec3 normal = texture(samplerNormal, inUV).rgb * 2.0 - 1.0;
 
     // unpack
@@ -142,7 +170,8 @@ void main() {
     
     if (length(fragPos) == 0.0) {
         fragcolor = color.rgb;
-    } else {    
+    } else {
+
         for(int i = 0; i < NUM_LIGHTS; ++i) {
             // Light to fragment
             vec3 lightPos = vec3(ubo.view * ubo.model * vec4(ubo.lights[i].position.xyz, 1.0));
@@ -218,7 +247,25 @@ void main() {
 
 
 
+        // Shadow calculations in a separate pass
+        if (USE_SHADOWS > 0) {
+            for(int i = 0; i < LIGHT_COUNT; ++i) {
 
+                //vec3 worldPos = calculate_world_position(inUV, depth);
+                vec3 worldPos = fragPos;
+
+                vec4 shadowClip = ubo.spotlights[i].viewMatrix * vec4(worldPos, 1.0);
+
+                float shadowFactor;
+                #ifdef USE_PCF
+                    shadowFactor = filterPCF(shadowClip, i);
+                #else
+                    shadowFactor = textureProj(shadowClip, i, vec2(0.0));
+                #endif
+
+                fragcolor *= shadowFactor;
+            }
+        }
 
 
 
