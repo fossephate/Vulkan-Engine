@@ -53,7 +53,9 @@ void main() {
 	
 	// Normal in world space
 	mat3 mNormal = transpose(inverse(mat3(instance.model)));
-    //outNormal = mNormal * normalize(inNormal);
+    outNormal = mNormal * normalize(inNormal);
+
+
 
 	// Normal in view space
 	mat3 normalMatrix = transpose(inverse(mat3(scene.view * instance.model)));

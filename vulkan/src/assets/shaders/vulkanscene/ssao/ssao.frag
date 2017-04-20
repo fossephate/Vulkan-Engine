@@ -85,6 +85,24 @@ float rand(vec2 co){
 // }
 
 
+vec3 normal_from_depth(vec2 texCoords, float depth) {
+  
+  vec2 offset1 = vec2(0.0,0.001);
+  vec2 offset2 = vec2(0.001,0.0);
+  
+  float depth1 = texture(samplerPositionDepth, texCoords + offset1).a;
+  float depth2 = texture(samplerPositionDepth, texCoords + offset2).a;
+  
+  vec3 p1 = vec3(offset1, depth1 - depth);
+  vec3 p2 = vec3(offset2, depth2 - depth);
+  
+  vec3 normal = cross(p1, p2);
+  normal.z = -normal.z;
+  
+  return normalize(normal);
+}
+
+
 
 
 
@@ -97,7 +115,7 @@ void main() {
 
 	// Get G-Buffer values
 
-	vec3 samplerPos = texture(samplerPositionDepth, inUV).rgb;
+	vec4 samplerPos = texture(samplerPositionDepth, inUV).rgba;
 
 	
 
@@ -110,13 +128,19 @@ void main() {
 
 
 
-	vec3 normal = normalize(texture(samplerNormal, inUV).rgb * 2.0 - 1.0);// view space normal
+
 
 	//normal = vec3(normal.x, -normal.z, normal.y);
 	//normal = vec3(0.0, 0.0, 0.0);
 
-	float originalOriginalDepth = texture(samplerPositionDepth, inUV).a;
-	float originalDepth = 1 - texture(samplerPositionDepth, inUV).a/512.0;
+	//float originalOriginalDepth = texture(samplerPositionDepth, inUV).a;
+	//float originalDepth = 1 - texture(samplerPositionDepth, inUV).a/512.0;
+
+	vec3 normal = normalize(texture(samplerNormal, inUV).rgb * 2.0 - 1.0);// view space normal
+
+	//vec3 normal = normal_from_depth(inUV, samplerPos.a);// construct from depth
+
+
 
 
 	// Get a random vector using a noise lookup

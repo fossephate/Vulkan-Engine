@@ -2105,7 +2105,7 @@ class VulkanExample : public vkx::vulkanApp {
 		//uboFSLights.spotlights[1] = initLight(glm::vec3(14.0f, 12.0f, -4.0f), glm::vec3(2.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		//uboFSLights.spotlights[2] = initLight(glm::vec3(0.0f, 4.0f, -10.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 
-		uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 4.0f), glm::vec3(6.0f, 0.0f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
+		uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(6.0f, 0.0f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
 		//uboFSLights.spotlights[1] = initLight(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(-2.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		//uboFSLights.spotlights[2] = initLight(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 	}
@@ -2145,7 +2145,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		}
 
-
+		//uboFSLights.spotlights[0].target = glm::vec4(cos(globalP)*4.0f, sin(globalP)*2.0f, 0.0f, 0.0f);
 		//uboFSLights.directionalLights[0].color = glm::vec4(1.0, 0.0, 0.0, 0.0);
 		//uboFSLights.directionalLights[0].position = glm::vec4(0.0, 1.0, 2.0, 0.0);
 		//uboFSLights.directionalLights[0].direction = glm::vec4(0.0, 0.0, -1.0, 0.0);
@@ -2154,7 +2154,7 @@ class VulkanExample : public vkx::vulkanApp {
 		float zFar = 512.0f;*/
 		float zNear = 0.1f;
 		float zFar = 64.0f;
-		float lightFOV = 60.0f;
+		float lightFOV = 80.0f;
 
 		for (uint32_t i = 0; i < LIGHT_COUNT; i++) {
 			// mvp from light's pov (for shadows)
