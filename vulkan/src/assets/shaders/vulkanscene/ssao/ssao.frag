@@ -25,7 +25,7 @@ layout (set = 0, binding = 3) uniform UBOSSAOKernel
 layout (set = 0, binding = 4) uniform UBO 
 {
 	mat4 projection;
-	//mat4 g1;
+	mat4 view;// added 4/20/17
 } ubo;
 
 layout (location = 0) in vec2 inUV;
@@ -53,6 +53,42 @@ float rand(vec2 co){
 // }
 
 
+// // reconstruct world position from depth buffer:
+// // this is slow, find a better solution
+// vec3 calculate_world_position(vec2 texture_coordinate, float depth_from_depth_buffer) {
+//     vec4 clip_space_position = vec4(texture_coordinate * 2.0 - vec2(1.0), 2.0 * depth_from_depth_buffer - 1.0, 1.0);
+
+//     //vec4 position = inverse_projection_matrix * clip_space_position; // Use this for view space
+//     //vec4 position = inverse_view_projection_matrix * clip_space_position; // Use this for world space
+//     // definitely don't do this:
+//     //vec4 position = ubo.inverseViewProjection * clip_space_position; // Use this for world space
+//     vec4 position = inverse(ubo.projection*ubo.view) * clip_space_position; // Use this for world space
+
+//     return(position.xyz / position.w);
+// }
+
+// // this is supposed to get the world position from the depth buffer
+// vec3 worldPosFromDepth(vec2 texCoord, float depth) {
+//     float z = depth * 2.0 - 1.0;
+
+//     vec4 clipSpacePosition = vec4(texCoord * 2.0 - 1.0, z, 1.0);
+//     //vec4 viewSpacePosition = projMatrixInv * clipSpacePosition;
+//     vec4 viewSpacePosition = inverse(ubo.projection) * clipSpacePosition;
+
+//     // Perspective division
+//     viewSpacePosition /= viewSpacePosition.w;
+
+//     //vec4 worldSpacePosition = viewMatrixInv * viewSpacePosition;
+//     vec4 worldSpacePosition = inverse(ubo.view) * viewSpacePosition;
+
+//     return worldSpacePosition.xyz;
+// }
+
+
+
+
+
+
 
 void main() {
 
@@ -60,8 +96,21 @@ void main() {
 	//vec4 posView = getViewPos(inUV);
 
 	// Get G-Buffer values
-	vec3 fragPos = texture(samplerPositionDepth, inUV).rgb;
-	vec3 normal = normalize(texture(samplerNormal, inUV).rgb * 2.0 - 1.0);
+
+	vec3 samplerPos = texture(samplerPositionDepth, inUV).rgb;
+
+	
+
+	
+	vec3 viewPos = vec3(ubo.view * vec4(samplerPos.rgb, 1.0));// calculate view space position
+	//vec3 worldPos = samplerPos.rgb;
+
+	vec3 fragPos = viewPos;// view space position
+	//vec3 fragPos = samplerPos.rgb;
+
+
+
+	vec3 normal = normalize(texture(samplerNormal, inUV).rgb * 2.0 - 1.0);// view space normal
 
 	//normal = vec3(normal.x, -normal.z, normal.y);
 	//normal = vec3(0.0, 0.0, 0.0);
@@ -143,5 +192,10 @@ void main() {
 	//outFragColor = randomVec.x;
 	//outFragColor = normal.x;
 	//outFragColor = fragPos.x;
+
+	//outFragColor = worldPosFromDepth(inUV, originalOriginalDepth).b;
+
+	//outFragColor = calculate_world_position(inUV, originalOriginalDepth).b;
+
 }
 

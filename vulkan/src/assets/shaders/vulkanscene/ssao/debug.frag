@@ -15,10 +15,15 @@ layout (location = 0) in vec3 inUV;// vec3
 
 layout (location = 0) out vec4 outFragColor;
 
-void main() 
-{
+
+
+
+
+void main() {
 	vec3 components[3];
-	components[0] = texture(samplerPosition, inUV.st).rgb;
+
+	//components[0] = texture(samplerPosition, inUV.st).rgb;
+	//components[0] = vec3(texture(samplerPosition, inUV.st).r);
 	//components[0] = vec3(texture(samplerPosition, inUV.st).a);
 
 	components[1] = texture(samplerNormal, inUV.st).rgb;  

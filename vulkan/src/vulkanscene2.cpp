@@ -312,9 +312,9 @@ class VulkanExample : public vkx::vulkanApp {
 
 	struct DirectionalLight {
 		glm::vec4 position;
+		glm::vec4 target;
 		glm::vec4 color;
-		glm::vec4 direction;
-		glm::vec4 _pad;
+		glm::mat4 viewMatrix;
 	};
 
 	struct SpotLight2 {
@@ -331,13 +331,14 @@ class VulkanExample : public vkx::vulkanApp {
 		glm::vec4 viewPos;
 		glm::mat4 model;// added
 		glm::mat4 view;// added
-		glm::mat4 inverseViewProjection;// added 4/19/17
+		//glm::mat4 inverseViewProjection;// added 4/19/17
+		glm::mat4 projection;// added 4/20/17
 	} uboFSLights;
 
 	// ssao
 	struct {
 		glm::mat4 projection;
-		glm::mat4 g1;
+		glm::mat4 view;// added 4/20/17
 		//uint32_t ssao = true;
 		//uint32_t ssaoOnly = false;
 		//uint32_t ssaoBlur = true;
@@ -2104,7 +2105,7 @@ class VulkanExample : public vkx::vulkanApp {
 		//uboFSLights.spotlights[1] = initLight(glm::vec3(14.0f, 12.0f, -4.0f), glm::vec3(2.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		//uboFSLights.spotlights[2] = initLight(glm::vec3(0.0f, 4.0f, -10.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 
-		uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 2.0f), glm::vec3(6.0f, 0.0f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
+		uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 4.0f), glm::vec3(6.0f, 0.0f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
 		//uboFSLights.spotlights[1] = initLight(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(-2.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		//uboFSLights.spotlights[2] = initLight(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 	}
@@ -2186,7 +2187,8 @@ class VulkanExample : public vkx::vulkanApp {
 		uboFSLights.model = glm::mat4();
 
 
-		uboFSLights.inverseViewProjection = glm::inverse(camera.matrices.view * camera.matrices.projection);// new
+		//uboFSLights.inverseViewProjection = glm::inverse(camera.matrices.view * camera.matrices.projection);// new
+		uboFSLights.projection = camera.matrices.projection;// new
 
 
 		uniformDataDeferred.fsLights.copy(uboFSLights);
@@ -2196,6 +2198,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 	void updateUniformBufferSSAOParams() {
 		uboSSAOParams.projection = camera.matrices.projection;
+		uboSSAOParams.view = camera.matrices.view;
 		uniformDataDeferred.ssaoParams.copy(uboSSAOParams);
 	}
 
@@ -3122,6 +3125,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// todo: definitely remove thise:
 		updateUniformBufferDeferredLights();
+		updateUniformBufferSSAOParams();
 
 		{
 			/* DEFERRED QUAD */

@@ -14,8 +14,6 @@ layout (location = 0) out vec4 outPosition;
 layout (location = 1) out vec4 outNormal;
 layout (location = 2) out uvec4 outAlbedo;// this is a uvec
 
-layout (location = 4) out vec4 outDepth;// this is a uvec
-
 
 /*layout (constant_id = 0) */const float NEAR_PLANE = 1.0f;
 /*layout (constant_id = 1) */const float FAR_PLANE = 512.0f;
@@ -69,8 +67,6 @@ void main() {
 	outAlbedo.r = packHalf2x16(color.rg);
 	outAlbedo.g = packHalf2x16(color.ba);
 	outAlbedo.b = packHalf2x16(vec2(specular, 0.0));
-
-	outDepth = vec4(1.0, 0.0, 0.0, 0.0);
 
 // test:
 
