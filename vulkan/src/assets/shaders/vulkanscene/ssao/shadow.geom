@@ -12,7 +12,7 @@ layout (triangle_strip, max_vertices = 3) out;
 
 layout (set = 0, binding = 0) uniform UBO 
 {
-	mat4 mvp[3];
+	mat4 mvp[LIGHT_COUNT];
 	//vec4 pos[3];
 } ubo;
 
@@ -78,14 +78,15 @@ void main() {
 	//vec4 instancedPos = vec4(0.0);
 	//vec4 instancedPos = ubo.pos;
 	//vec4 instancedPos = ubo.pos[inInstanceIndex[0]];
-	mat4 test1 = mat4(1.0);
-	mat4 test2 = ubo.mvp[0];
+	//mat4 test1 = mat4(1.0);
+	//mat4 test2 = ubo.mvp[0];
 
 
 	for (int i = 0; i < gl_in.length(); i++) {
 		gl_Layer = gl_InvocationID;
 		//vec4 tmpPos = /*ubo.mvp[gl_InvocationID] **/ (gl_in[i].gl_Position + instancedPos);
-		vec4 tmpPos = ubo.mvp[gl_InvocationID] * gl_in[i].gl_Position * instance.model;
+		//vec4 tmpPos = ubo.mvp[gl_InvocationID] * gl_in[i].gl_Position * instance.model;
+		vec4 tmpPos = ubo.mvp[gl_InvocationID] * instance.model * gl_in[i].gl_Position;
 		gl_Position = tmpPos;
 		EmitVertex();
 	}

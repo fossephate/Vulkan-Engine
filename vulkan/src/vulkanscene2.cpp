@@ -1908,14 +1908,12 @@ class VulkanExample : public vkx::vulkanApp {
 			depthStencilState.depthCompareOp = vk::CompareOp::eLessOrEqual;
 			
 			// Enable depth bias
-			//rasterizationState.depthBiasEnable = VK_TRUE;
+			rasterizationState.depthBiasEnable = VK_TRUE;
 			// Add depth bias to dynamic state, so we can change it at runtime
-			//dynamicStateEnables.push_back(vk::DynamicState::eDepthBias);
-			/*dynamicState =
-				vks::initializers::pipelineDynamicStateCreateInfo(
-					dynamicStateEnables.data(),
-					static_cast<uint32_t>(dynamicStateEnables.size()),
-					0);*/
+			dynamicStateEnables.push_back(vk::DynamicState::eDepthBias);
+			dynamicState = vkx::pipelineDynamicStateCreateInfo(
+				dynamicStateEnables.data(),
+				static_cast<uint32_t>(dynamicStateEnables.size()));
 
 			// Reset blend attachment state
 			pipelineCreateInfo.renderPass = offscreen.framebuffers[3].renderPass;
@@ -2503,7 +2501,9 @@ class VulkanExample : public vkx::vulkanApp {
 		camera.rotationSpeed = -0.25f;
 		camera.rotationSpeed = camera.rotationSpeed*deltaTime;
 
-		if (mouse.leftMouseButton.state) {
+		//if (mouse.leftMouseButton.state) {
+		if (mouse.leftMouseButton.state && !GUIOpen) {
+
 			camera.rotateWorldZ(mouse.delta.x*camera.rotationSpeed);
 			camera.rotateLocalX(mouse.delta.y*camera.rotationSpeed);
 
@@ -2513,13 +2513,13 @@ class VulkanExample : public vkx::vulkanApp {
 			}
 
 
-			SDL_SetRelativeMouseMode((SDL_bool)1);
+			//SDL_SetRelativeMouseMode((SDL_bool)1);
 		} else {
-			bool isCursorLocked = (bool)SDL_GetRelativeMouseMode();
-			if (isCursorLocked) {
-				SDL_SetRelativeMouseMode((SDL_bool)0);
-				SDL_WarpMouseInWindow(this->SDLWindow, mouse.leftMouseButton.pressedCoords.x, mouse.leftMouseButton.pressedCoords.y);
-			}
+			//bool isCursorLocked = (bool)SDL_GetRelativeMouseMode();
+			//if (isCursorLocked) {
+			//	SDL_SetRelativeMouseMode((SDL_bool)0);
+			//	SDL_WarpMouseInWindow(this->SDLWindow, mouse.leftMouseButton.pressedCoords.x, mouse.leftMouseButton.pressedCoords.y);
+			//}
 		}
 
 
@@ -2550,9 +2550,9 @@ class VulkanExample : public vkx::vulkanApp {
 			//}
 		}
 
-		if (keyStates.onKeyDown(&keyStates.t)) {
-			camera.isFirstPerson = !camera.isFirstPerson;
-		}
+		//if (keyStates.onKeyDown(&keyStates.t)) {
+		//	camera.isFirstPerson = !camera.isFirstPerson;
+		//}
 
 		if (keyStates.onKeyDown(&keyStates.r)) {
 			toggleDebugDisplay();
@@ -3093,6 +3093,8 @@ class VulkanExample : public vkx::vulkanApp {
 		//ImGui::DragFloat4("pos", &uboShadowGS.pos[0].x, 0.1f);
 		//ImGui::DragFloat4("pos", &uboShadowGS.pos[1].x, 0.1f);
 		//ImGui::DragFloat4("pos", &uboShadowGS.pos[2].x, 0.1f);
+		ImGui::DragFloat("Depth Bias Slope", &settings.depthBiasSlope, 0.01f);
+		ImGui::DragFloat("Depth Bias Constant", &settings.depthBiasConstant, 0.01f);
 
 		//ImGui::DragIntRange2("range int (no bounds)", &begin_i, &end_i, 5, 0, 0, "Min: %.0f units", "Max: %.0f units");
 		//ImGui::InputFloat4("mat4[0]", &uboShadowGS.mvp[0][0][0], 3);
@@ -3273,15 +3275,17 @@ class VulkanExample : public vkx::vulkanApp {
 			// begin offscreen render pass
 			offscreenCmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
 
-
-			// start of render pass
-			// todo: update size to shadow map's size
-			vk::Viewport viewport = vkx::viewport(offscreen.size);
+			// set viewport and scissor
+			vk::Viewport viewport = vkx::viewport(glm::uvec2(offscreen.framebuffers[3].width, offscreen.framebuffers[3].height));
 			offscreenCmdBuffer.setViewport(0, viewport);
-			vk::Rect2D scissor = vkx::rect2D(offscreen.size);
+			vk::Rect2D scissor = vkx::rect2D(glm::uvec2(offscreen.framebuffers[3].width, offscreen.framebuffers[3].height));
 			offscreenCmdBuffer.setScissor(0, scissor);
 
+			// todo: move these:
 
+
+			// Set depth bias (aka "Polygon offset")
+			offscreenCmdBuffer.setDepthBias(settings.depthBiasConstant, 0.0f, settings.depthBiasSlope);
 
 
 
@@ -3706,12 +3710,6 @@ class VulkanExample : public vkx::vulkanApp {
 	void generateQuads() {
 		// Setup vertices for multiple screen aligned quads
 		// Used for displaying final result and debug 
-		//struct Vertex {
-		//	float pos[3];
-		//	float uv[2];
-		//	float col[3];
-		//	float normal[3];
-		//};
 		struct Vertex {
 			float pos[3];
 			float uv[2];
@@ -3724,20 +3722,41 @@ class VulkanExample : public vkx::vulkanApp {
 
 		std::vector<Vertex> vertexBuffer;
 
-		float x = 0.0f;
-		float y = 0.0f;
-		for (uint32_t i = 0; i < 3; i++) {
-			// Last component of normal is used for debug display sampler index
-			vertexBuffer.push_back({ { x + 1.0f, y + 1.0f, 0.0f },{ 1.0f, 1.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, (float)i } });
-			vertexBuffer.push_back({ { x,      y + 1.0f, 0.0f },{ 0.0f, 1.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, (float)i } });
-			vertexBuffer.push_back({ { x,      y,      0.0f },{ 0.0f, 0.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, (float)i } });
-			vertexBuffer.push_back({ { x + 1.0f, y,      0.0f },{ 1.0f, 0.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, (float)i } });
-			x += 1.0f;
-			if (x > 1.0f) {
-				x = 0.0f;
-				y += 1.0f;
-			}
-		}
+		//float x = 0.0f;
+		//float y = 0.0f;
+		//for (uint32_t i = 0; i < 3; i++) {
+		//	// Last component of normal is used for debug display sampler index
+		//	vertexBuffer.push_back({ { x + 1.0f, y + 1.0f, 0.0f },{ 1.0f, 1.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, (float)i } });
+		//	vertexBuffer.push_back({ { x,      y + 1.0f, 0.0f },{ 0.0f, 1.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, (float)i } });
+		//	vertexBuffer.push_back({ { x,      y,      0.0f },{ 0.0f, 0.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, (float)i } });
+		//	vertexBuffer.push_back({ { x + 1.0f, y,      0.0f },{ 1.0f, 0.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, (float)i } });
+		//	x += 1.0f;
+		//	if (x > 1.0f) {
+		//		x = 0.0f;
+		//		y += 1.0f;
+		//	}
+		//}
+
+		// Last component of normal is used for debug display sampler index
+			
+		// top left:
+		vertexBuffer.push_back({ { 1.0f, 1.0f, 0.0f },{ 1.0f, 1.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, 0.0f } });// 0.0f
+		vertexBuffer.push_back({ { 0.0f, 1.0f, 0.0f },{ 0.0f, 1.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, 0.0f } });
+		vertexBuffer.push_back({ { 0.0f, 0.0f, 0.0f },{ 0.0f, 0.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, 0.0f } });
+		vertexBuffer.push_back({ { 1.0f, 0.0f, 0.0f },{ 1.0f, 0.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, 0.0f } });
+
+		// top right:
+		vertexBuffer.push_back({ { 2.0f, 1.0f, 0.0f },{ 1.0f, 1.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, 1.0f } });// 1.0f
+		vertexBuffer.push_back({ { 1.0f, 1.0f, 0.0f },{ 0.0f, 1.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, 1.0f } });
+		vertexBuffer.push_back({ { 1.0f, 0.0f, 0.0f },{ 0.0f, 0.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, 1.0f } });
+		vertexBuffer.push_back({ { 2.0f, 0.0f, 0.0f },{ 1.0f, 0.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, 1.0f } });
+
+		// bottom left:
+		vertexBuffer.push_back({ { 1.0f, 2.0f, 0.0f },{ 1.0f, 1.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, 2.0f } });// 2.0f
+		vertexBuffer.push_back({ { 0.0f, 2.0f, 0.0f },{ 0.0f, 1.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, 2.0f } });
+		vertexBuffer.push_back({ { 0.0f, 1.0f, 0.0f },{ 0.0f, 0.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, 2.0f } });
+		vertexBuffer.push_back({ { 1.0f, 1.0f, 0.0f },{ 1.0f, 0.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, 2.0f } });
+
 		meshBuffers.quad.vertices = context.stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
 
 		// Setup indices

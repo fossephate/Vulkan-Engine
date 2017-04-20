@@ -231,6 +231,10 @@ namespace vkx
 				// whether to use Screen Space Ambient Occlusion
 				bool SSAO = true;
 
+				// shadow mapping:
+				float depthBiasConstant = 1.25f;
+				float depthBiasSlope = 1.75f;
+
 
 
 			} settings;
@@ -249,6 +253,7 @@ namespace vkx
 				float frameTimeMax = 300.0f;
 
 				float lightTimer = 0.0f;
+
 
 
 			} uiSettings;

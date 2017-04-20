@@ -23,7 +23,7 @@ void main()
 
 	components[1] = texture(samplerNormal, inUV.st).rgb;  
 	ivec2 texDim = textureSize(samplerAlbedo, 0);
-	uvec4 albedo = texelFetch(samplerAlbedo, ivec2(inUV.st * texDim ), 0);
+	uvec4 albedo = texelFetch(samplerAlbedo, ivec2(inUV.st * texDim), 0);
 //	uvec4 albedo = texture(samplerAlbedo, inUV.st, 0);
 
 	vec4 color;
