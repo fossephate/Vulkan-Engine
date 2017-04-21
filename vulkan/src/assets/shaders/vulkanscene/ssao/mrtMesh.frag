@@ -30,8 +30,6 @@ layout (set = 2, binding = 2) uniform sampler2D samplerNormal;
 float linearDepth(float depth) {
 	float z = depth * 2.0f - 1.0f;
 	return (2.0f * NEAR_PLANE * FAR_PLANE) / (FAR_PLANE + NEAR_PLANE - z * (FAR_PLANE - NEAR_PLANE));
-
-
 }
 
 

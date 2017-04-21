@@ -107,6 +107,13 @@ float rand0t1() {
 	return rnd;
 }
 
+float rnd(float min, float max) {
+	float range = max - min;
+	float num = rand0t1()*range;
+	num = num + min;
+	return num;
+}
+
 
 
 
@@ -2155,7 +2162,7 @@ class VulkanExample : public vkx::vulkanApp {
 		float zFar = 512.0f;*/
 		float zNear = 0.1f;
 		float zFar = 64.0f;
-		float lightFOV = 80.0f;
+		float lightFOV = 45.0f;
 
 		for (uint32_t i = 0; i < LIGHT_COUNT; i++) {
 			// mvp from light's pov (for shadows)
@@ -2611,7 +2618,7 @@ class VulkanExample : public vkx::vulkanApp {
 			btConvexHullShape *convexHullShape = createConvexHullFromMesh(testModel->meshLoader);
 			physicsBall->createRigidBody(convexHullShape, 1.0f);
 			physicsBall->rigidBody->activate();
-			physicsBall->rigidBody->translate(btVector3(0., 0., 10.));
+			physicsBall->rigidBody->translate(btVector3(rnd(-10, 10), rnd(-10, 10), 10.));
 			physicsObjects.push_back(physicsBall);
 
 			//updateMaterialBuffer();

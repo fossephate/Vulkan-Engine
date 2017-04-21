@@ -140,6 +140,12 @@ void main() {
 
 	//vec3 normal = normal_from_depth(inUV, samplerPos.a);// construct from depth
 
+	// testing normal reconstruction:
+	// vec2 depth_size = vec2(1280, 720);
+
+	// vec4 pos = vec4((inUV.st - depth_size.xy * 0.5) / (depth_size* 0.5), w, 1.0) * w * inverse(ubo.projection);
+	// vec3 n = normalize(cross(dFdx(pos.xyz), dFdy(pos.xyz))) * 0.5 + 0.5;
+	// normal = n;
 
 
 

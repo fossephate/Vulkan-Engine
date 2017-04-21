@@ -54,11 +54,11 @@ struct SpotLight2 {
 #define NUM_SPOT_LIGHTS 1
 
 #define SHADOW_FACTOR 0.25
-#define AMBIENT_LIGHT 0.1
+#define AMBIENT_LIGHT 0.4
 #define USE_PCF
 
-const int SSAO_ENABLED = 0;
-const float AMBIENT_FACTOR = 0.1;
+const int SSAO_ENABLED = 1;
+//const float AMBIENT_FACTOR = 0.1;
 
 const int USE_SHADOWS = 1;
 
@@ -214,7 +214,7 @@ void main() {
     vec4 spec;
     spec.rg = unpackHalf2x16(albedo.b); 
 
-    vec3 ambient = color.rgb * AMBIENT_FACTOR;
+    vec3 ambient = color.rgb * AMBIENT_LIGHT;
 
     vec3 fragcolor  = ambient;
     
@@ -286,7 +286,7 @@ void main() {
 
             // Diffuse part
             float NdotL = max(0.0, dot(N, lightDir));// NdotL
-            vec3 diffuse = NdotL * light.color.rgb * attenuation;
+            vec3 diffuse = vec3(NdotL);
             //vec3 diffuse = NdotL * light.color.rgb * color.rgb * attenuation;
 
 
@@ -294,7 +294,7 @@ void main() {
 
 
             // Specular part
-            float specularStrength = 0.5f;
+            //float specularStrength = 0.5f;
 
 
             vec3 viewDir = normalize(viewPos - worldPos);
@@ -305,9 +305,9 @@ void main() {
             //vec3 specular = light.color.rgb * spec.r * pow(NdotR, 16.0) * (attenuation * 1.5);
 
             float NdotR = /*pow(*/max(0.0, dot(viewDir, reflectDir))/*, 16.0)*/;// NdotR, pow?
-            vec3 specular = light.color.rgb * spec.r * pow(NdotR, 16.0) * attenuation;
+            vec3 specular = vec3(spec.r * pow(NdotR, 16.0));
 
-            fragcolor += (diffuse + specular);
+            fragcolor += (diffuse + specular) * color.rgb * light.color.rgb * attenuation;
         }
 
 
