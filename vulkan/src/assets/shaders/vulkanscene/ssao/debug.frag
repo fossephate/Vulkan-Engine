@@ -15,14 +15,14 @@ layout (location = 0) in vec3 inUV;// vec3
 
 layout (location = 0) out vec4 outFragColor;
 
-#define NEAR_PLANE 0.1
-#define FAR_PLANE 64.0
+// #define NEAR_PLANE 0.1
+// #define FAR_PLANE 64.0
 
 
-float linearDepth(float depth) {
-	float z = depth * 2.0f - 1.0f;
-	return (2.0f * NEAR_PLANE * FAR_PLANE) / (FAR_PLANE + NEAR_PLANE - z * (FAR_PLANE - NEAR_PLANE));
-}
+// float linearDepth(float depth) {
+// 	float z = depth * 2.0f - 1.0f;
+// 	return (2.0f * NEAR_PLANE * FAR_PLANE) / (FAR_PLANE + NEAR_PLANE - z * (FAR_PLANE - NEAR_PLANE));
+// }
 
 
 void main() {
@@ -52,8 +52,16 @@ void main() {
 	// inUV.w = number of light source
 	//vec4 shadow = texture(samplerShadowMap, inUV.st);
 	//vec4 shadow = texture(samplerShadowMap, vec3(inUV));
-	vec4 shadow = texture(samplerShadowMap, vec3(inUV.st, 1));
-	components[2] = vec3(linearDepth(shadow.r));
+	vec4 shadow = texture(samplerShadowMap, vec3(inUV.st, 0));
+	components[2] = vec3(shadow.r);
+	//components[2] = vec3(linearDepth(shadow.r));
+
+
+
+	//shadow = texture(samplerShadowMap, vec3(inUV.st, 1));
+	//components[1] = vec3(shadow.r);
+	//components[2] = vec3(linearDepth(shadow.r));
+
 
 	//components[2] = vec3(ssao);
 	//components[2] = texture(samplerAlbedo, inUV.st).rgb;

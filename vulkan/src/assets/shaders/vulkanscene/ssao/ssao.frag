@@ -85,6 +85,62 @@ float rand(vec2 co){
 // }
 
 
+// mat3 computeTBNMatrixFromDepth(in sampler2D depthTex, in vec2 uv) {
+//     // Compute the normal and TBN matrix
+//     float ld = -getLinearDepth(depthTex, uv);
+//     vec3 x = vec3(uv.x, 0., ld);
+//     vec3 y = vec3(0., uv.y, ld);
+//     x = dFdx(x);
+//     y = dFdy(y);
+//     x = normalize(x);
+//     y = normalize(y);
+//     vec3 normal = normalize(cross(x, y));
+//     return mat3(x, y, normal);
+// }
+
+
+
+#define NEAR_PLANE 0.1
+#define FAR_PLANE 64.0
+
+
+float linearDepth(float depth) {
+	float z = depth * 2.0f - 1.0f;
+	return (2.0f * NEAR_PLANE * FAR_PLANE) / (FAR_PLANE + NEAR_PLANE - z * (FAR_PLANE - NEAR_PLANE));
+}
+
+mat3 computeTBNMatrixFromDepth(in sampler2D depthTex, in vec2 uv) {
+    // Compute the normal and TBN matrix
+    //float ld = -getLinearDepth(depthTex, uv);
+    //float ld = -linearDepth(texture(depthTex, uv).a);
+    float ld = (texture(depthTex, uv).a);
+    vec3 a = vec3(uv, ld);
+    vec3 x = vec3(uv.x + dFdx(uv.x), uv.y, ld + dFdx(ld));
+    vec3 y = vec3(uv.x, uv.y + dFdy(uv.y), ld + dFdy(ld));
+    //x = dFdx(x);
+    //y = dFdy(y);`
+    //x = normalize(x);
+    //y = normalize(y);
+    vec3 normal = normalize(cross(x - a, y - a));
+    vec3 first_axis = cross(normal, vec3(1.0f, 0.0f, 0.0f));
+    vec3 second_axis = cross(first_axis, normal);
+    return mat3(normalize(first_axis), normalize(second_axis), normal);
+}
+
+vec3 normalFromDepth(in sampler2D depthTex, in vec2 uv) {
+
+    float ld = -linearDepth(texture(depthTex, uv).a);
+    vec3 a = vec3(uv, ld);
+    vec3 x = vec3(uv.x + dFdx(uv.x), uv.y, ld + dFdx(ld));
+    vec3 y = vec3(uv.x, uv.y + dFdy(uv.y), ld + dFdy(ld));
+    //x = dFdx(x);
+    //y = dFdy(y);`
+    //x = normalize(x);
+    //y = normalize(y);
+    vec3 normal = normalize(cross(x - a, y - a));
+    return normal;
+}
+
 vec3 normal_from_depth(vec2 texCoords, float depth) {
   
   vec2 offset1 = vec2(0.0,0.001);
@@ -161,10 +217,16 @@ void main() {
 	//randomVec = vec3(0.0, 0.0, 1.0);
 	
 	// Create TBN matrix
-	vec3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
-	vec3 bitangent = cross(normal, tangent);
 
-	mat3 TBN = mat3(tangent, bitangent, normal);
+
+	
+	//vec3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
+	//vec3 bitangent = cross(normal, tangent);
+
+	//mat3 TBN = mat3(tangent, bitangent, normal);
+
+	mat3 TBN = computeTBNMatrixFromDepth(samplerPositionDepth, inUV);
+
 
 	// Calculate occlusion value
 	float occlusion = 0.0f;

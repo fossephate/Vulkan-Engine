@@ -30,15 +30,6 @@ struct PointLight {
 //     //float radius;
 // };
 
-// struct SpotLight {
-//     vec4 position;
-//     vec4 color;
-//     float attenuation;
-//     float ambientCoefficient;
-//     float coneAngle;    // new
-//     vec4 coneDirection; // new
-// };
-
 
 struct SpotLight2 {
     vec4 position;
@@ -174,7 +165,46 @@ float filterPCF(vec4 sc, float layer) {
     return shadowFactor / count;
 }
 
+#define NEAR_PLANE 1.0
+#define FAR_PLANE 512.0
 
+
+float linearDepth(float depth) {
+    float z = depth * 2.0f - 1.0f;
+    return (2.0f * NEAR_PLANE * FAR_PLANE) / (FAR_PLANE + NEAR_PLANE - z * (FAR_PLANE - NEAR_PLANE));
+}
+
+mat3 computeTBNMatrixFromDepth(in sampler2D depthTex, in vec2 uv) {
+    // Compute the normal and TBN matrix
+    //float ld = -getLinearDepth(depthTex, uv);
+    float ld = -linearDepth(texture(depthTex, uv).a);
+    vec3 a = vec3(uv, ld);
+    vec3 x = vec3(uv.x + dFdx(uv.x), uv.y, ld + dFdx(ld));
+    vec3 y = vec3(uv.x, uv.y + dFdy(uv.y), ld + dFdy(ld));
+    //x = dFdx(x);
+    //y = dFdy(y);`
+    //x = normalize(x);
+    //y = normalize(y);
+    vec3 normal = normalize(cross(x - a, y - a));
+    vec3 first_axis = cross(normal, vec3(1.0f, 0.0f, 0.0f));
+    vec3 second_axis = cross(first_axis, normal);
+    return mat3(normalize(first_axis), normalize(second_axis), normal);
+}
+
+vec3 normalFromDepth(in sampler2D depthTex, in vec2 uv) {
+
+    //float ld = -linearDepth(texture(depthTex, uv).a);
+    float ld = (texture(depthTex, uv).a);
+    vec3 a = vec3(uv, ld);
+    vec3 x = vec3(uv.x + dFdx(uv.x), uv.y, ld + dFdx(ld));
+    vec3 y = vec3(uv.x, uv.y + dFdy(uv.y), ld + dFdy(ld));
+    //x = dFdx(x);
+    //y = dFdy(y);`
+    //x = normalize(x);
+    //y = normalize(y);
+    vec3 normal = normalize(cross(x - a, y - a));
+    return normal;
+}
 
 
 
@@ -542,5 +572,9 @@ void main() {
         }
     }
    
-    outFragcolor = vec4(fragcolor, 1.0);    
+    outFragcolor = vec4(fragcolor, 1.0);
+
+    //vec3 test = normalFromDepth(samplerPosition, inUV);
+    //vec3 test = vec3(depth/512.0);
+    //outFragcolor = vec4(test, 1.0);
 }
