@@ -3184,7 +3184,7 @@ class VulkanExample : public vkx::vulkanApp {
 		updateUniformBufferDeferredLights();
 
 		{
-			vk::CommandBufferBeginInfo cmdBufInfo{ vk::CommandBufferUsageFlagBits::eSimultaneousUse };
+			
 
 			// start new imgui frame
 			if (GUIOpen) {
@@ -3192,6 +3192,9 @@ class VulkanExample : public vkx::vulkanApp {
 				imGui->updateBuffers();
 			}
 
+			//context.trashCommandBuffers(drawCmdBuffers);
+
+			vk::CommandBufferBeginInfo cmdBufInfo{ vk::CommandBufferUsageFlagBits::eSimultaneousUse };
 
 			for (uint32_t i = 0; i < drawCmdBuffers.size(); ++i) {
 			//for (uint32_t i = 0; i < swapChain.imageCount; ++i) {
@@ -3284,8 +3287,6 @@ class VulkanExample : public vkx::vulkanApp {
 			offscreenCmdBuffer.setViewport(0, viewport);
 			vk::Rect2D scissor = vkx::rect2D(glm::uvec2(offscreen.framebuffers[3].width, offscreen.framebuffers[3].height));
 			offscreenCmdBuffer.setScissor(0, scissor);
-
-			// todo: move these:
 
 
 			// Set depth bias (aka "Polygon offset")

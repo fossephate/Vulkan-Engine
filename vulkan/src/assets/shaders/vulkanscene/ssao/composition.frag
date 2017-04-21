@@ -15,6 +15,7 @@ layout (set = 3, binding = 6) uniform sampler2DArray samplerShadowMap;
 struct PointLight {
     vec4 position;
     vec4 color;
+
     float radius;
     float quadraticFalloff;
     float linearFalloff;
@@ -213,7 +214,8 @@ void main() {
     vec4 spec;
     spec.rg = unpackHalf2x16(albedo.b); 
 
-    vec3 ambient = color.rgb * AMBIENT_FACTOR; 
+    vec3 ambient = color.rgb * AMBIENT_FACTOR;
+
     vec3 fragcolor  = ambient;
     
     if (length(fragPos) == 0.0) {
@@ -223,71 +225,87 @@ void main() {
 
         // // screen space point lights:
         // for(int i = 0; i < NUM_POINT_LIGHTS; ++i) {
-        //     // Light to fragment
-        //     vec3 lightPos = vec3(ubo.view * ubo.model * vec4(ubo.pointlights[i].position.xyz, 1.0));
-        //     vec3 L = lightPos - fragPos;
-        //     float dist = length(L);
-        //     L = normalize(L);
+            // Light to fragment
 
-        //     // Viewer to fragment
-        //     //vec3 viewPos = vec3(ubo.view * ubo.model * vec4(ubo.viewPos.xyz, 1.0));
-        //     //vec3 V = viewPos - fragPos;
+            // vec3 lightPos = vec3(ubo.view * ubo.model * vec4(ubo.pointlights[i].position.xyz, 1.0));// view space light position
+            // vec3 L = lightPos - viewPos;
+            // float dist = length(L);
+            // L = normalize(L);
+
+            // // Viewer to fragment
+            // // view space:
+            // vec3 vPos = vec3(ubo.view * ubo.model * vec4(ubo.viewPos.xyz, 1.0));// view space position
+            // vec3 V = vPos - viewPos;
             
-        //     vec3 V = ubo.viewPos.xyz - worldPos;
-        //     V = normalize(V);
+            // //vec3 V = ubo.viewPos.xyz - worldPos;
+            // V = normalize(V);
 
-        //     // Attenuation
-        //     float atten = ubo.pointlights[i].radius / (pow(dist, 2.0) + 1.0);
-        //     //float atten = 1.0 / (1.0 + ubo.pointlights[i].linearFalloff * dist + ubo.pointlights[i].quadraticFalloff * dist * dist);
+            // // Attenuation
+            // float atten = ubo.pointlights[i].radius / (pow(dist, 2.0) + 1.0);
+            // //float atten = 1.0 / (1.0 + ubo.pointlights[i].linearFalloff * dist + ubo.pointlights[i].quadraticFalloff * dist * dist);
 
 
-        //     // Diffuse part
-        //     vec3 N = normalize(normal);
-        //     float NdotL = max(0.0, dot(N, L));
-        //     vec3 diff = ubo.pointlights[i].color.rgb * color.rgb * NdotL * atten;
+            // // Diffuse part
+            // vec3 N = normalize(normal);
+            // float NdotL = max(0.0, dot(N, L));
+            // vec3 diff = ubo.pointlights[i].color.rgb * color.rgb * NdotL * atten;
 
-        //     // Specular part
-        //     vec3 R = reflect(-L, N);
-        //     float NdotR = max(0.0, dot(R, V));
-        //     vec3 spec = ubo.pointlights[i].color.rgb * spec.r * pow(NdotR, 16.0) * (atten * 1.5);
+            // // Specular part
+            // vec3 R = reflect(-L, N);
+            // float NdotR = max(0.0, dot(R, V));
+            // vec3 spec = ubo.pointlights[i].color.rgb * spec.r * pow(NdotR, 16.0) * (atten * 1.5);
 
-        //     fragcolor += diff + spec;               
+            // fragcolor += diff + spec;
         // }
 
 
         // screen space point lights:
         for(int i = 0; i < NUM_POINT_LIGHTS; ++i) {
-            // Light to fragment
 
-            vec3 lightPos = vec3(ubo.view * ubo.model * vec4(ubo.pointlights[i].position.xyz, 1.0));// view space light position
-            vec3 L = lightPos - viewPos;
-            float dist = length(L);
-            L = normalize(L);
+            PointLight light = ubo.pointlights[i];
 
-            // Viewer to fragment
-            // view space:
-            vec3 vPos = vec3(ubo.view * ubo.model * vec4(ubo.viewPos.xyz, 1.0));// view space position
-            vec3 V = vPos - viewPos;
-            
-            //vec3 V = ubo.viewPos.xyz - worldPos;
-            V = normalize(V);
+            vec3 lightPos = light.position.xyz;// world space light position
+            vec3 lightVec = lightPos - worldPos;// world space light to fragment
+
+            vec3 lightDir = normalize(lightVec);// direction
+            float dist = length(lightVec);// distance from light to frag
+
+
 
             // Attenuation
-            float atten = ubo.pointlights[i].radius / (pow(dist, 2.0) + 1.0);
-            //float atten = 1.0 / (1.0 + ubo.pointlights[i].linearFalloff * dist + ubo.pointlights[i].quadraticFalloff * dist * dist);
+            //float attenuation = 1.0f / (light.radius + light.linearFalloff * dist + light.quadraticFalloff * (dist * dist));
+            float attenuation = 1.0 / (light.radius + (light.linearFalloff * dist) + (light.quadraticFalloff * (dist * dist)));
 
+            
+            float atten = ubo.pointlights[i].radius / (pow(dist, 2.0) + 1.0);
+
+
+
+            vec3 N = normalize(normal);// nomralized normal
 
             // Diffuse part
-            vec3 N = normalize(normal);
-            float NdotL = max(0.0, dot(N, L));
-            vec3 diff = ubo.pointlights[i].color.rgb * color.rgb * NdotL * atten;
+            float NdotL = max(0.0, dot(N, lightDir));// NdotL
+            vec3 diffuse = NdotL * light.color.rgb;
+            //vec3 diffuse = NdotL * light.color.rgb * color.rgb * atten;
+
+
+
+
 
             // Specular part
-            vec3 R = reflect(-L, N);
-            float NdotR = max(0.0, dot(R, V));
-            vec3 spec = ubo.pointlights[i].color.rgb * spec.r * pow(NdotR, 16.0) * (atten * 1.5);
+            float specularStrength = 0.5f;
 
-            fragcolor += diff + spec;               
+
+            vec3 viewDir = normalize(viewPos - worldPos);
+            vec3 reflectDir = reflect(-lightDir, N);// reflect
+
+            //float NdotR = max(0.0, dot(R, V));
+            //vec3 specular = light.color.rgb * spec.r * pow(NdotR, 16.0) * (atten * 1.5);
+
+            float NdotR = /*pow(*/max(0.0, dot(viewDir, reflectDir))/*, 16.0)*/;// NdotR, pow?
+            vec3 specular = light.color.rgb * spec.r * pow(NdotR, 16.0);
+
+            fragcolor += diffuse + specular;
         }
 
 

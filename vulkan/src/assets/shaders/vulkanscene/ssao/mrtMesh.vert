@@ -44,7 +44,7 @@ void main() {
 	outUV.t = 1.0 - outUV.t;// bc vulkan
 
 	// Vertex position in world space
-	outPos = vec3(instance.model * inPos);
+	outPos = vec3(instance.model * inPos);// world space position
 
 	// Vertex position in view space
 	//outPos = vec3(scene.view * instance.model * inPos);
@@ -52,14 +52,16 @@ void main() {
 
 	
 	// Normal in world space
+	// todo: add this matrix to the matrix nodes dynamic uniform buffer
 	mat3 mNormal = transpose(inverse(mat3(instance.model)));
-    outNormal = mNormal * normalize(inNormal);
+	//mat3 mNormal = transpose(inverse(mat3(instance.model)));
+    outNormal = mNormal * normalize(inNormal);// world space normal
 
 
 
 	// Normal in view space
 	mat3 normalMatrix = transpose(inverse(mat3(scene.view * instance.model)));
-	outNormal = normalMatrix * inNormal;
+	//outNormal = normalMatrix * inNormal;
 
 	outTangent = mNormal * inTangent;
 

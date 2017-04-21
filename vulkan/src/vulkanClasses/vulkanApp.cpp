@@ -670,7 +670,7 @@ void vulkanApp::prepare() {
 
 	vk::Extent2D extent = vk::Extent2D(settings.windowSize.width, settings.windowSize.height);
 	// create swap chain
-	swapChain.create(/*this->size*/extent, this->settings.vsync);
+	swapChain.create(extent, this->settings.vsync);
 
 	createCommandBuffers();// new
 
@@ -692,7 +692,7 @@ void vulkanApp::prepare() {
 	if (enableTextOverlay) {
 		// Load the text rendering shaders
 		textOverlay = new TextOverlay(this->context, settings.windowSize.width, settings.windowSize.height, renderPass);
-		updateTextOverlay();
+		//updateTextOverlay();
 	}
 }
 
@@ -1083,7 +1083,7 @@ void vulkanApp::renderLoop() {
 			lastFPS = frameCounter / (tSinceUpdate.count() / 1000000.0);
 			frameCounter = 0;
 
-			updateTextOverlay();
+			//updateTextOverlay();
 		}
 		
 
