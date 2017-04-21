@@ -2105,7 +2105,8 @@ class VulkanExample : public vkx::vulkanApp {
 		//uboFSLights.spotlights[1] = initLight(glm::vec3(14.0f, 12.0f, -4.0f), glm::vec3(2.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		//uboFSLights.spotlights[2] = initLight(glm::vec3(0.0f, 4.0f, -10.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 
-		uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(6.0f, 0.0f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
+		//uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 6.0f), glm::vec3(6.0f, 0.0f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
+		uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 6.0f), glm::vec3(5.0f, 0.0f, 0.5f), glm::vec3(1.0f, 0.0f, 0.0f));
 		//uboFSLights.spotlights[1] = initLight(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(-2.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		//uboFSLights.spotlights[2] = initLight(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 	}
@@ -2136,8 +2137,8 @@ class VulkanExample : public vkx::vulkanApp {
 				uboFSLights.lights[n].position = glm::vec4(x, y, z, 0.0f);
 				uboFSLights.lights[n].color = glm::vec4((i * 2) - 3.0f, i, j, 0.0f) * glm::vec4(2.5f);
 				uboFSLights.lights[n].radius = 2.0f;
-				uboFSLights.lights[n].linearFalloff = 0.3f;
-				uboFSLights.lights[n].quadraticFalloff = 0.4f;
+				uboFSLights.lights[n].linearFalloff = 0.2f;
+				uboFSLights.lights[n].quadraticFalloff = 0.2f;
 
 				// increment counter
 				n++;
@@ -2145,7 +2146,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		}
 
-		//uboFSLights.spotlights[0].target = glm::vec4(cos(globalP)*4.0f, sin(globalP)*2.0f, 0.0f, 0.0f);
+		uboFSLights.spotlights[0].target = glm::vec4(cos(globalP*8.0f)*9.0f, sin(globalP*8.0f)*4.0f, 0.0f, 0.0f);
 		//uboFSLights.directionalLights[0].color = glm::vec4(1.0, 0.0, 0.0, 0.0);
 		//uboFSLights.directionalLights[0].position = glm::vec4(0.0, 1.0, 2.0, 0.0);
 		//uboFSLights.directionalLights[0].direction = glm::vec4(0.0, 0.0, -1.0, 0.0);

@@ -56,6 +56,7 @@ void main() {
 	mat3 mNormal = transpose(inverse(mat3(instance.model)));
 	//mat3 mNormal = transpose(inverse(mat3(instance.model)));
     outNormal = mNormal * normalize(inNormal);// world space normal
+    //outNormal = inNormal;
 
 
 

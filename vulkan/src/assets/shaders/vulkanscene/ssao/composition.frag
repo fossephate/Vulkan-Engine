@@ -57,8 +57,8 @@ struct SpotLight2 {
 #define AMBIENT_LIGHT 0.1
 #define USE_PCF
 
-const int SSAO_ENABLED = 1;
-const float AMBIENT_FACTOR = 0.5;
+const int SSAO_ENABLED = 0;
+const float AMBIENT_FACTOR = 0.1;
 
 const int USE_SHADOWS = 1;
 
@@ -259,7 +259,7 @@ void main() {
         // }
 
 
-        // screen space point lights:
+        // world space point lights:
         for(int i = 0; i < NUM_POINT_LIGHTS; ++i) {
 
             PointLight light = ubo.pointlights[i];
@@ -273,20 +273,21 @@ void main() {
 
 
             // Attenuation
+            //float attenuation = ubo.pointlights[i].radius / (pow(dist, 2.0) + 1.0);
             //float attenuation = 1.0f / (light.radius + light.linearFalloff * dist + light.quadraticFalloff * (dist * dist));
             float attenuation = 1.0 / (light.radius + (light.linearFalloff * dist) + (light.quadraticFalloff * (dist * dist)));
 
             
-            float atten = ubo.pointlights[i].radius / (pow(dist, 2.0) + 1.0);
+            
 
 
 
-            vec3 N = normalize(normal);// nomralized normal
+            vec3 N = normalize(normal);// normalized normal
 
             // Diffuse part
             float NdotL = max(0.0, dot(N, lightDir));// NdotL
-            vec3 diffuse = NdotL * light.color.rgb;
-            //vec3 diffuse = NdotL * light.color.rgb * color.rgb * atten;
+            vec3 diffuse = NdotL * light.color.rgb * attenuation;
+            //vec3 diffuse = NdotL * light.color.rgb * color.rgb * attenuation;
 
 
 
@@ -297,15 +298,16 @@ void main() {
 
 
             vec3 viewDir = normalize(viewPos - worldPos);
+            //vec3 viewDir = normalize(ubo.viewPos.xyz - worldPos);
             vec3 reflectDir = reflect(-lightDir, N);// reflect
 
             //float NdotR = max(0.0, dot(R, V));
-            //vec3 specular = light.color.rgb * spec.r * pow(NdotR, 16.0) * (atten * 1.5);
+            //vec3 specular = light.color.rgb * spec.r * pow(NdotR, 16.0) * (attenuation * 1.5);
 
             float NdotR = /*pow(*/max(0.0, dot(viewDir, reflectDir))/*, 16.0)*/;// NdotR, pow?
-            vec3 specular = light.color.rgb * spec.r * pow(NdotR, 16.0);
+            vec3 specular = light.color.rgb * spec.r * pow(NdotR, 16.0) * attenuation;
 
-            fragcolor += diffuse + specular;
+            fragcolor += (diffuse + specular);
         }
 
 
@@ -422,40 +424,85 @@ void main() {
         // }
 
 
-        // // spot lights world pos:
-        // for(int i = 0; i < NUM_SPOT_LIGHTS; ++i) {
+        // world space spot lights:
+        for(int i = 0; i < NUM_SPOT_LIGHTS; ++i) {
 
-        //     //ubo.spotlights[i].color.rgb
+            SpotLight2 light = ubo.spotlights[i];
 
-        //     // Diffuse 
-        //     vec3 norm = normalize(Normal);        
-        //     vec3 lightDir = normalize(ubo.spotlights[i].position - FragPos);
-        //     float diff = max(dot(norm, lightDir), 0.0);
-        //     vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, TexCoords));  
+            vec3 N = normalize(normal);
             
-        //     // Specular
-        //     vec3 viewDir = normalize(viewPos - FragPos);
-        //     vec3 reflectDir = reflect(-lightDir, norm);  
-        //     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-        //     vec3 specular = ubo.spotlights[i].specular * spec * vec3(texture(material.specular, TexCoords));
-            
-        //     // Spotlight (soft edges)
-        //     float theta = dot(lightDir, normalize(-ubo.spotlights[i].direction)); 
-        //     float epsilon = (/*ubo.spotlights[i].cutOff*/12.5 - /*ubo.spotlights[i].outerCutOff*/0.9);
-        //     float intensity = clamp((theta - ubo.spotlights[i].outerCutOff) / epsilon, 0.0, 1.0);
-        //     diffuse  *= intensity;
-        //     specular *= intensity;
-            
-        //     // Attenuation
-        //     float distance    = length(light.position - FragPos);
-        //     float attenuation = 1.0f / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
-        //     ambient  *= attenuation; 
-        //     diffuse  *= attenuation;
-        //     specular *= attenuation;
+            vec3 lightPos = light.position.xyz;// world space light position
+            vec3 lightVec = (lightPos - worldPos);// world space light to fragment
+            //vec3 lightVec = (worldPos - lightPos);// world space light to fragment// reversed??
+
+            vec3 lightDir = normalize(lightVec);// direction
+            float dist = length(lightVec);// distance from light to frag
 
 
-        //     fragcolor += (diff + spec);
-        // }
+            // Viewer to fragment
+            vec3 V = ubo.viewPos.xyz - worldPos;
+            //vec3 V = viewPos - fragPos;
+            V = normalize(V);
+
+
+
+            // Attenuation
+            //float attenuation = 1.0f / (/*light.radius + (light.linearFalloff * dist) +*/ (light.quadraticFalloff * (dist * dist)));
+            float attenuation = 1.0;
+
+
+            // Diffuse
+            float NdotL = max(0.0, dot(N, lightDir));// NdotL
+            vec3 diffuse = vec3(NdotL) /** light.color.rgb * attenuation*/;
+            
+
+            // Specular
+            vec3 viewDir = normalize(-viewPos - worldPos);
+            vec3 reflectDir = reflect(-lightDir, N);// reflect
+
+            //float NdotR = /*pow(*/max(0.0, dot(viewDir, reflectDir))/*, 16.0)*/;// NdotR, pow?
+            float NdotR = max(0.0, dot(reflectDir, V));
+            //vec3 specular = /*light.color.rgb */ spec.r * pow(NdotR, 16.0) /** attenuation*/;
+            vec3 specular = vec3(pow(NdotR, 16.0) * albedo.a * 2.5);
+
+
+
+
+
+
+            // todo: replace with light struct member variables
+            float lightCosInnerAngle = cos(radians(40.0));
+            float lightCosOuterAngle = cos(radians(45.0));
+            //float lightCosInnerAngle = cos(5.0);
+            //float lightCosOuterAngle = cos(15.0);
+            float lightRange = 100.0;
+            
+            // Spotlight (soft edges)
+            vec3 spotDir = normalize(vec3(light.position - light.target));
+
+            float theta = dot(lightDir, normalize(-spotDir));
+            float epsilon = (/*ubo.spotlights[i].cutOff*/12.5 - /*ubo.spotlights[i].outerCutOff*/0.9);
+            //float epsilon = lightCosInnerAngle - lightCosOuterAngle;
+            float intensity = clamp((theta - lightCosOuterAngle) / epsilon, 0.0, 1.0);
+            //diffuse  *= intensity;
+            //specular *= intensity;
+
+
+
+
+            // Dual cone spot light with smooth transition between inner and outer angle
+            float cosDir = dot(lightDir, spotDir);
+            float spotEffect = smoothstep(lightCosOuterAngle, lightCosInnerAngle, cosDir);
+            float heightAttenuation = smoothstep(lightRange, 0.0, dist);
+
+
+            //diffuse  *= attenuation;
+            //specular *= attenuation;
+
+
+
+            fragcolor += vec3((diffuse + specular) * spotEffect * heightAttenuation) * light.color.rgb * color.rgb;
+        }
 
 
 
