@@ -408,7 +408,7 @@ namespace vkx {
 			// Final layout
 			// If not, final layout depends on attachment type
 			if (newAttachment.hasDepth() || newAttachment.hasStencil()) {
-				newAttachment.description.finalLayout = vk::ImageLayout::eDepthStencilReadOnlyOptimal;
+				newAttachment.description.finalLayout = vk::ImageLayout::eDepthStencilReadOnlyOptimal;// causes errors on gtx 1070, // todo: fix
 			} else {
 				newAttachment.description.finalLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 			}
