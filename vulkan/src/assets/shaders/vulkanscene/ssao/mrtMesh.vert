@@ -60,9 +60,9 @@ void main() {
 
 
 	// Normal in view space
-	mat3 normalMatrix = transpose(inverse(mat3(scene.view * instance.model)));
-	outNormal = normalMatrix * inNormal;
-	outTangent = normalMatrix * inTangent;
+	//mat3 normalMatrix = transpose(inverse(mat3(scene.view * instance.model)));
+	//outNormal = normalMatrix * inNormal;
+	//outTangent = normalMatrix * inTangent;
 	
 
 	

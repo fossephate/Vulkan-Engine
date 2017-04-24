@@ -32,7 +32,9 @@ void main() {
 	//components[0] = vec3(texture(samplerPosition, inUV.st).r);
 	//components[0] = vec3(texture(samplerPosition, inUV.st).a);
 
-	components[1] = texture(samplerNormal, inUV.st).rgb;  
+	//components[1] = texture(samplerNormal, inUV.st).rgb;
+	components[1] = normalize(texture(samplerNormal, inUV.st).rgb * 2.0 - 1.0);
+
 	ivec2 texDim = textureSize(samplerAlbedo, 0);
 	uvec4 albedo = texelFetch(samplerAlbedo, ivec2(inUV.st * texDim), 0);
 //	uvec4 albedo = texture(samplerAlbedo, inUV.st, 0);

@@ -146,29 +146,40 @@ vec3 normalFromDepth(in sampler2D depthTex, in vec2 uv) {
 
 vec3 normalFromDepth2(in sampler2D depthTex, in vec2 texCoords) {
   
-  const float off = 0.0001;// 0.001
+	const float off = 0.0001;// 0.001
 
-  vec2 offset1 = vec2(0.0,off);
-  vec2 offset2 = vec2(off,0.0);
-  
-  float depth = texture(depthTex, texCoords).a;
-  float depth1 = texture(depthTex, texCoords + offset1).a;
-  float depth2 = texture(depthTex, texCoords + offset2).a;
-  
-  vec3 p1 = vec3(offset1, depth1 - depth);
-  vec3 p2 = vec3(offset2, depth2 - depth);
-  
-  vec3 normal = cross(p1, p2);
-  //normal.z = -normal.z;
+	vec2 offset1 = vec2(0.0,off);
+	vec2 offset2 = vec2(off,0.0);
 
-  vec3 temp = normal;
-  normal.x = temp.x;
-  normal.y = temp.y;
-  normal.z = -temp.z;
-  
-  return normalize(normal);
+	float depth = texture(depthTex, texCoords).a;
+	float depth1 = texture(depthTex, texCoords + offset1).a;
+	float depth2 = texture(depthTex, texCoords + offset2).a;
+
+	vec3 p1 = vec3(offset1, depth1 - depth);
+	vec3 p2 = vec3(offset2, depth2 - depth);
+
+	vec3 normal = cross(p1, p2);
+
+	float diff = dot(p1, p2);
+
+	//normal.z = -normal.z;
+
+	vec3 temp = normal;
+	normal.x = temp.x;
+	normal.y = -temp.y;
+	normal.z = -temp.z;
+
+	return normalize(normal);
 }
 
+
+vec3 normalFromDepth3(vec3 viewPos) {
+    vec3 normal = normalize(cross(dFdx(viewPos), dFdy(viewPos)));
+    normal.x = -normal.x;
+    normal.y = -normal.y;
+    normal.z = -normal.z;
+	return normalize(normal);
+}
 
 
 
@@ -204,7 +215,10 @@ void main() {
 
 	//vec3 normal = normalize(texture(samplerNormal, inUV).rgb * 2.0 - 1.0);// view space normal
 	//vec3 normal = normalFromDepth2(samplerPositionDepth, inUV);// construct from depth
-	vec3 normal = normalFromDepth(samplerPositionDepth, inUV);// construct from depth
+	//vec3 normal = normalFromDepth(samplerPositionDepth, inUV);// construct from depth
+
+	vec3 normal = normalFromDepth3(viewPos);// construct from depth?
+
 	// testing normal reconstruction:
 	// vec2 depth_size = vec2(1280, 720);
 
