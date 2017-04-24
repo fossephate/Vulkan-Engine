@@ -18,22 +18,25 @@
 #ifndef VULKANANDROID_HPP
 #define VULKANANDROID_HPP
 
-#include <vulkan/vulkan.hpp>
+#include "vulkan/vulkan.hpp"
 
 #if defined(__ANDROID__)
 
 #include <android/log.h>
+#include <android_native_app_glue.h>
+#include <android/configuration.h>
 #include <memory>
 
 // Missing from the NDK
-namespace std
-{
+namespace std {
 	template<typename T, typename... Args>
-	std::unique_ptr<T> make_unique(Args&&... args)
-	{
+	std::unique_ptr<T> make_unique(Args&&... args) {
 		return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 	}
 }
+
+// Global reference to android application object
+extern android_app* androidApp;
 
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "vulkanExample", __VA_ARGS__))
 #define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "vulkanExample", __VA_ARGS__))
@@ -81,6 +84,7 @@ extern PFN_vkFreeMemory vkFreeMemory;
 extern PFN_vkCreateRenderPass vkCreateRenderPass;
 extern PFN_vkCmdBeginRenderPass vkCmdBeginRenderPass;
 extern PFN_vkCmdEndRenderPass vkCmdEndRenderPass;
+extern PFN_vkCmdNextSubpass vkCmdNextSubpass;
 extern PFN_vkCmdExecuteCommands vkCmdExecuteCommands;
 extern PFN_vkCreateImage vkCreateImage;
 extern PFN_vkGetImageMemoryRequirements vkGetImageMemoryRequirements;
@@ -146,9 +150,23 @@ extern PFN_vkCmdCopyQueryPoolResults vkCmdCopyQueryPoolResults;
 extern PFN_vkCreateAndroidSurfaceKHR vkCreateAndroidSurfaceKHR;
 extern PFN_vkDestroySurfaceKHR vkDestroySurfaceKHR;
 
-bool loadVulkanLibrary();
-void loadVulkanFunctions(VkInstance instance);
-void freeVulkanLibrary();
+namespace vkx
+{
+	namespace android
+	{
+		/* @brief Touch control thresholds from Android NDK samples */
+		const int32_t DOUBLE_TAP_TIMEOUT = 300 * 1000000;
+		const int32_t DOUBLE_TAP_SLOP = 100;
+
+		/** @brief Density of the device screen (in DPI) */
+		extern int32_t screenDensity;
+
+		bool loadVulkanLibrary();
+		void loadVulkanFunctions(VkInstance instance);
+		void freeVulkanLibrary();
+		void getDeviceConfig();
+	}
+}
 
 #endif
 

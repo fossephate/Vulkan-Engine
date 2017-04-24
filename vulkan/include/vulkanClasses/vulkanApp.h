@@ -59,7 +59,7 @@
 
 #include "vulkanImgui.hpp"
 
-#include "keycodes.hpp"
+#include "vulkanInit.hpp"
 #include "vulkanTools.h"
 #include "vulkanDebug.h"
 
@@ -161,17 +161,17 @@ namespace vkx
 
 			// initialize and set references to context
 			vkx::Context context;
-			vk::Device &device = context.device;
-			vk::PhysicalDevice &physicalDevice = context.physicalDevice;
-			vk::Queue &queue = context.queue;
-			std::vector<vk::ShaderModule> &shaderModules = context.shaderModules;
-			vk::PipelineCache &pipelineCache = context.pipelineCache;
-			vk::Instance &instance = context.instance;
-			std::vector<vk::PhysicalDevice> &physicalDevices = context.physicalDevices;
+			//vk::Device &device = context.device;
+			//vk::PhysicalDevice &physicalDevice = context.physicalDevice;
+			//vk::Queue &queue = context.queue;
+			//std::vector<vk::ShaderModule> &shaderModules = context.shaderModules;
+			//vk::PipelineCache &pipelineCache = context.pipelineCache;
+			//vk::Instance &instance = context.instance;
+			//std::vector<vk::PhysicalDevice> &physicalDevices = context.physicalDevices;
 		
-			vk::PhysicalDeviceProperties &deviceProperties = context.deviceProperties;
-			vk::PhysicalDeviceFeatures &deviceFeatures = context.deviceFeatures;
-			vk::PhysicalDeviceMemoryProperties &deviceMemoryProperties = context.deviceMemoryProperties;
+			//vk::PhysicalDeviceProperties &deviceProperties = context.deviceProperties;
+			//vk::PhysicalDeviceFeatures &deviceFeatures = context.deviceFeatures;
+			//vk::PhysicalDeviceMemoryProperties &deviceMemoryProperties = context.deviceMemoryProperties;
 
 			//trashCommandBuffers = context.trashCommandBuffers;
 			//void(&trashCommandBuffers)(std::vector<vk::CommandBuffer>& cmdBuffers) = context.trashCommandBuffers;
@@ -421,6 +421,9 @@ namespace vkx
 			} mouse;
 
 
+
+
+
 			// Gamepad state (only one pad supported)
 			struct {
 				glm::vec2 axisLeft = glm::vec2(0.0f);
@@ -430,6 +433,20 @@ namespace vkx
 			#if USE_SDL2
 			SDL_Window * SDLWindow;
 			SDL_SysWMinfo windowInfo;
+			#endif
+
+			#if defined(__ANDROID__)
+			// true if application has focused, false if moved to background
+			bool focused = false;
+			struct TouchPos {
+				int32_t x;
+				int32_t y;
+			} touchPos;
+			bool touchDown = false;
+			double touchTimer = 0.0;
+			int64_t lastTapTime = 0;
+			/** @brief Product model and manufacturer of the Android device (via android.Product*) */
+			std::string androidProduct;
 			#endif
 
 
@@ -444,7 +461,11 @@ namespace vkx
 			void initVulkan(bool enableValidation);
 
 			// windows only:
+			#if defined(_WIN32)
 			void setupConsole(std::string title);
+			//HWND setupWindow(HINSTANCE hinstance, WNDPROC wndproc);
+			//void handleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+			#endif
 
 			virtual void setupWindow();
 

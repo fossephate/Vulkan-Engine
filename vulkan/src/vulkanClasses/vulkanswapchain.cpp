@@ -81,7 +81,8 @@ namespace vkx {
 #elif defined(__ANDROID__)
 		vk::AndroidSurfaceCreateInfoKHR surfaceCreateInfo;
 		surfaceCreateInfo.window = window;
-		err = vkCreateAndroidSurfaceKHR(instance, &surfaceCreateInfo, NULL, &surface);
+		//err = vkCreateAndroidSurfaceKHR(instance, &surfaceCreateInfo, NULL, &surface);
+		surface = context.instance.createAndroidSurfaceKHR(surfaceCreateInfo);
 #endif
 
 		// Get available queue family properties
@@ -191,7 +192,7 @@ namespace vkx {
 		}
 
 		vk::SwapchainCreateInfoKHR swapchainCI;
-		swapchainCI.pNext = NULL;
+		swapchainCI.pNext = nullptr;
 		swapchainCI.surface = surface;
 		swapchainCI.minImageCount = desiredNumberOfSwapchainImages;
 		swapchainCI.imageFormat = colorFormat;
@@ -202,7 +203,7 @@ namespace vkx {
 		swapchainCI.imageArrayLayers = 1;
 		swapchainCI.imageSharingMode = vk::SharingMode::eExclusive;
 		swapchainCI.queueFamilyIndexCount = 0;
-		swapchainCI.pQueueFamilyIndices = NULL;
+		swapchainCI.pQueueFamilyIndices = nullptr;
 		swapchainCI.presentMode = swapchainPresentMode;
 		swapchainCI.oldSwapchain = oldSwapchain;
 		// Setting clipped to VK_TRUE allows the implementation to discard rendering outside of the surface area

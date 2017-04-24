@@ -31,7 +31,7 @@ layout (set = 1, binding = 0) uniform matrixBuffer
 	vec3 padding;
 	vec4 padding2[3];
 	//mat4 boneIndex;
-	mat4 g1;
+	mat4 g1;// more paddding
 	mat4 g2;
 } instance;
 
@@ -54,17 +54,16 @@ void main() {
 	// Normal in world space
 	// todo: add this matrix to the matrix nodes dynamic uniform buffer
 	mat3 mNormal = transpose(inverse(mat3(instance.model)));
-	//mat3 mNormal = transpose(inverse(mat3(instance.model)));
     outNormal = mNormal * normalize(inNormal);// world space normal
-    //outNormal = inNormal;
+    outTangent = mNormal * inTangent;
 
 
 
 	// Normal in view space
 	mat3 normalMatrix = transpose(inverse(mat3(scene.view * instance.model)));
-	//outNormal = normalMatrix * inNormal;
-
-	outTangent = mNormal * inTangent;
+	outNormal = normalMatrix * inNormal;
+	outTangent = normalMatrix * inTangent;
+	
 
 	
 	// Currently just vertex color

@@ -70,11 +70,6 @@
 namespace vkx
 {
 
-	/*typedef struct _SwapChainBuffers {
-		vk::Image image;
-		vk::ImageView view;
-	} SwapChainBuffer;*/
-
 	struct SwapChainImage {//better
 		vk::Image image;
 		vk::ImageView view;
@@ -103,8 +98,6 @@ namespace vkx
 
 	public:
 		std::vector<SwapChainImage> scimages;
-
-		std::vector<vk::Image> images;
 		
 
 		vk::Format colorFormat;

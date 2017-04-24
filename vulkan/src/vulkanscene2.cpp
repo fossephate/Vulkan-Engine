@@ -26,11 +26,13 @@
 
 #define PI 3.14159265359
 
-#define SSAO_KERNEL_SIZE 32
+#define SSAO_KERNEL_SIZE 64
 #define SSAO_RADIUS 2.0f
 #define SSAO_NOISE_DIM 4
 
-#define LIGHT_COUNT 3
+#define NUM_POINT_LIGHTS 100
+#define NUM_DIR_LIGHTS 1
+#define NUM_SPOT_LIGHTS 1
 
 #define SSAO_ON 1
 
@@ -317,24 +319,23 @@ class VulkanExample : public vkx::vulkanApp {
 		float _pad;
 	};
 
-	struct DirectionalLight {
-		glm::vec4 position;
-		glm::vec4 target;
-		glm::vec4 color;
-		glm::mat4 viewMatrix;
+	struct SpotLight {
+		glm::vec4 position;		// position
+		glm::vec4 target;		// where the light points
+		glm::vec4 color;		// color of the light
+		glm::mat4 viewMatrix;	// view matrix (used in geometry shader and fragment shader)
 	};
 
-	struct SpotLight2 {
-		glm::vec4 position;
-		glm::vec4 target;
-		glm::vec4 color;
-		glm::mat4 viewMatrix;
+	struct DirectionalLight {
+		glm::vec4 direction;	// unit directional vector
+		glm::vec4 color;		// color of the light
+		glm::mat4 viewMatrix;	// view matrix (used in geometry shader and fragment shader)
 	};
 
 	struct {
-		PointLight lights[100];
-		//DirectionalLight directionalLights[10];
-		SpotLight2 spotlights[LIGHT_COUNT];
+		PointLight pointlights[NUM_POINT_LIGHTS];
+		SpotLight spotlights[NUM_SPOT_LIGHTS];
+		DirectionalLight directionalLights[NUM_DIR_LIGHTS];
 		glm::vec4 viewPos;
 		glm::mat4 model;// added
 		glm::mat4 view;// added
@@ -359,7 +360,7 @@ class VulkanExample : public vkx::vulkanApp {
 	// The matrices are indexed using geometry shader instancing
 	// The instancePos is used to place the models using instanced draws
 	struct {
-		glm::mat4 mvp[LIGHT_COUNT];
+		glm::mat4 mvp[NUM_SPOT_LIGHTS];
 		//glm::vec4 pos[3];
 	} uboShadowGS;
 
@@ -434,12 +435,12 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-		rscs.pipelineLayouts = new vkx::PipelineLayoutList(device);
-		rscs.pipelines = new vkx::PipelineList(device);
+		rscs.pipelineLayouts = new vkx::PipelineLayoutList(context.device);
+		rscs.pipelines = new vkx::PipelineList(context.device);
 
-		rscs.descriptorPools = new vkx::DescriptorPoolList(device);
-		rscs.descriptorSetLayouts = new vkx::DescriptorSetLayoutList(device);
-		rscs.descriptorSets = new vkx::DescriptorSetList(device);
+		rscs.descriptorPools = new vkx::DescriptorPoolList(context.device);
+		rscs.descriptorSetLayouts = new vkx::DescriptorSetLayoutList(context.device);
+		rscs.descriptorSets = new vkx::DescriptorSetList(context.device);
 
 
 		//camera.setTranslation({ -0.0f, -16.0f, 3.0f });
@@ -468,7 +469,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		title = "Vulkan test";
 
-		renderFence = device.createFence(vk::FenceCreateInfo(), nullptr);// temporary
+		renderFence = context.device.createFence(vk::FenceCreateInfo(), nullptr);// temporary
 
 
 	}
@@ -516,9 +517,9 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 		// destroy offscreen command buffer
-		device.freeCommandBuffers(cmdPool, offscreenCmdBuffer);
+		context.device.freeCommandBuffers(cmdPool, offscreenCmdBuffer);
 
-		device.destroyFence(renderFence, nullptr);// temp
+		context.device.destroyFence(renderFence, nullptr);// temp
 
 
 		for (auto &mesh : meshes) {
@@ -590,11 +591,11 @@ class VulkanExample : public vkx::vulkanApp {
 		float screenWidth = settings.windowSize.width;
 		float screenHeight = settings.windowSize.height;
 
-		// The ray Start and End positions, in Normalized Device Coordinates (Have you read Tutorial 4 ?)
+		// The ray Start and End positions, in Normalized device Coordinates (Have you read Tutorial 4 ?)
 		glm::vec4 lRayStart_NDC(
 			((float)mouseX / (float)screenWidth - 0.5f) * 2.0f, // [0,1024] -> [-1,1]
 			((float)mouseY / (float)screenHeight - 0.5f) * 2.0f, // [0, 768] -> [-1,1]
-			-1.0, // The near plane maps to Z=-1 in Normalized Device Coordinates
+			-1.0, // The near plane maps to Z=-1 in Normalized device Coordinates
 			1.0f
 		);
 		glm::vec4 lRayEnd_NDC(
@@ -1348,7 +1349,7 @@ class VulkanExample : public vkx::vulkanApp {
 		};
 
 
-		device.updateDescriptorSets(writeDescriptorSets, nullptr);
+		context.device.updateDescriptorSets(writeDescriptorSets, nullptr);
 
 
 
@@ -1462,7 +1463,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		};
 
-		device.updateDescriptorSets(writeDescriptorSets2, nullptr);
+		context.device.updateDescriptorSets(writeDescriptorSets2, nullptr);
 
 
 
@@ -1511,7 +1512,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 		};
-		device.updateDescriptorSets(offscreenWriteDescriptorSets, nullptr);
+		context.device.updateDescriptorSets(offscreenWriteDescriptorSets, nullptr);
 
 
 
@@ -1565,7 +1566,7 @@ class VulkanExample : public vkx::vulkanApp {
 					4,
 					&uniformDataDeferred.ssaoParams.descriptor),
 			};
-			device.updateDescriptorSets(ssaoGenerateWriteDescriptorSets, nullptr);
+			context.device.updateDescriptorSets(ssaoGenerateWriteDescriptorSets, nullptr);
 		}
 
 		// ------------------------------------------------------------------------------------------
@@ -1593,7 +1594,7 @@ class VulkanExample : public vkx::vulkanApp {
 				0,
 				&texDescriptorSSAOBlur),
 		};
-		device.updateDescriptorSets(ssaoBlurWriteDescriptorSets, nullptr);
+		context.device.updateDescriptorSets(ssaoBlurWriteDescriptorSets, nullptr);
 
 
 
@@ -1632,7 +1633,7 @@ class VulkanExample : public vkx::vulkanApp {
 				0,
 				&uniformData.matrixVS.descriptor),// bind to forward descriptor since it's the same
 		};
-		device.updateDescriptorSets(writeDescriptorSetsShadow, nullptr);
+		context.device.updateDescriptorSets(writeDescriptorSetsShadow, nullptr);
 
 
 	}
@@ -1712,7 +1713,7 @@ class VulkanExample : public vkx::vulkanApp {
 		// meshes:
 		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/mesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/mesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		vk::Pipeline meshPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		vk::Pipeline meshPipeline = context.device.createGraphicsPipeline(context.pipelineCache, pipelineCreateInfo, nullptr);
 		rscs.pipelines->add("forward.meshes", meshPipeline);
 
 
@@ -1720,7 +1721,7 @@ class VulkanExample : public vkx::vulkanApp {
 		// skinned meshes:
 		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/skinnedMesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/skinnedMesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		vk::Pipeline skinnedMeshPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		vk::Pipeline skinnedMeshPipeline = context.device.createGraphicsPipeline(context.pipelineCache, pipelineCreateInfo, nullptr);
 		rscs.pipelines->add("forward.skinnedMeshes", skinnedMeshPipeline);
 
 
@@ -1744,28 +1745,28 @@ class VulkanExample : public vkx::vulkanApp {
 		// fullscreen quad
 		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/composition.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/composition.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		vk::Pipeline deferredPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		vk::Pipeline deferredPipeline = context.device.createGraphicsPipeline(context.pipelineCache, pipelineCreateInfo, nullptr);
 		rscs.pipelines->add("deferred.composition", deferredPipeline);
 
 
 		// fullscreen quad
 		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/composition.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/composition.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		vk::Pipeline deferredSSAOQuadPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		vk::Pipeline deferredSSAOQuadPipeline = context.device.createGraphicsPipeline(context.pipelineCache, pipelineCreateInfo, nullptr);
 		rscs.pipelines->add("deferred.composition.ssao", deferredSSAOQuadPipeline);
 
 
 		// Debug display pipeline
 		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/debug.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/debug.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		vk::Pipeline debugPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		vk::Pipeline debugPipeline = context.device.createGraphicsPipeline(context.pipelineCache, pipelineCreateInfo, nullptr);
 		rscs.pipelines->add("deferred.debug", debugPipeline);
 
 
 		// Debug display pipeline
 		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/debug.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/debug.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		vk::Pipeline debugPipelineSSAO = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		vk::Pipeline debugPipelineSSAO = context.device.createGraphicsPipeline(context.pipelineCache, pipelineCreateInfo, nullptr);
 		rscs.pipelines->add("deferred.debug.ssao", debugPipelineSSAO);
 
 
@@ -1803,13 +1804,13 @@ class VulkanExample : public vkx::vulkanApp {
 		// Offscreen pipeline
 		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/mrtMesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/mrtMesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		vk::Pipeline deferredMeshPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		vk::Pipeline deferredMeshPipeline = context.device.createGraphicsPipeline(context.pipelineCache, pipelineCreateInfo, nullptr);
 		rscs.pipelines->add("offscreen.meshes", deferredMeshPipeline);
 
 		// Offscreen pipeline
 		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/mrtSkinnedMesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/mrtSkinnedMesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		vk::Pipeline deferredSkinnedMeshPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		vk::Pipeline deferredSkinnedMeshPipeline = context.device.createGraphicsPipeline(context.pipelineCache, pipelineCreateInfo, nullptr);
 		rscs.pipelines->add("offscreen.skinnedMeshes", deferredSkinnedMeshPipeline);
 
 		// ssao:
@@ -1817,13 +1818,13 @@ class VulkanExample : public vkx::vulkanApp {
 		// Offscreen pipeline
 		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/mrtMesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/mrtMesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		vk::Pipeline deferredMeshSSAOPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		vk::Pipeline deferredMeshSSAOPipeline = context.device.createGraphicsPipeline(context.pipelineCache, pipelineCreateInfo, nullptr);
 		rscs.pipelines->add("offscreen.meshes.ssao", deferredMeshSSAOPipeline);
 
 		// Offscreen pipeline
 		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/mrtSkinnedMesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
 		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/mrtSkinnedMesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		vk::Pipeline deferredSkinnedMeshSSAOPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		vk::Pipeline deferredSkinnedMeshSSAOPipeline = context.device.createGraphicsPipeline(context.pipelineCache, pipelineCreateInfo, nullptr);
 		rscs.pipelines->add("offscreen.skinnedMeshes.ssao", deferredSkinnedMeshSSAOPipeline);
 
 
@@ -1865,7 +1866,7 @@ class VulkanExample : public vkx::vulkanApp {
 			pipelineCreateInfo.renderPass = offscreen.framebuffers[1].renderPass;// SSAO Generate render pass
 			pipelineCreateInfo.layout = rscs.pipelineLayouts->get("offscreen.ssaoGenerate");
 
-			vk::Pipeline ssaoGenerate = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+			vk::Pipeline ssaoGenerate = context.device.createGraphicsPipeline(context.pipelineCache, pipelineCreateInfo, nullptr);
 			rscs.pipelines->add("ssao.generate", ssaoGenerate);
 		}
 
@@ -1876,7 +1877,7 @@ class VulkanExample : public vkx::vulkanApp {
 		pipelineCreateInfo.renderPass = offscreen.framebuffers[2].renderPass;// SSAO Blur render pass
 		pipelineCreateInfo.layout = rscs.pipelineLayouts->get("offscreen.ssaoBlur");
 
-		vk::Pipeline ssaoBlur = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+		vk::Pipeline ssaoBlur = context.device.createGraphicsPipeline(context.pipelineCache, pipelineCreateInfo, nullptr);
 		rscs.pipelines->add("ssao.blur", ssaoBlur);
 
 
@@ -1926,7 +1927,7 @@ class VulkanExample : public vkx::vulkanApp {
 			// Reset blend attachment state
 			pipelineCreateInfo.renderPass = offscreen.framebuffers[3].renderPass;
 
-			vk::Pipeline shadowPipeline = device.createGraphicsPipeline(pipelineCache, pipelineCreateInfo, nullptr);
+			vk::Pipeline shadowPipeline = context.device.createGraphicsPipeline(context.pipelineCache, pipelineCreateInfo, nullptr);
 			rscs.pipelines->add("shadow", shadowPipeline);
 
 		}
@@ -2099,8 +2100,8 @@ class VulkanExample : public vkx::vulkanApp {
 	}
 
 
-	SpotLight2 initLight(glm::vec3 pos, glm::vec3 target, glm::vec3 color) {
-		SpotLight2 light;
+	SpotLight initLight(glm::vec3 pos, glm::vec3 target, glm::vec3 color) {
+		SpotLight light;
 		light.position = glm::vec4(pos, 1.0f);
 		light.target = glm::vec4(target, 0.0f);
 		light.color = glm::vec4(color, 0.0f);
@@ -2141,11 +2142,11 @@ class VulkanExample : public vkx::vulkanApp {
 				//float z = (10.0f) + (sin((0.5*globalP) + n)*2.0f);
 				float z = (10.0f) + 10*(sin((2.5*globalP) + n)*2.0f);
 
-				uboFSLights.lights[n].position = glm::vec4(x, y, z, 0.0f);
-				uboFSLights.lights[n].color = glm::vec4((i * 2) - 3.0f, i, j, 0.0f) * glm::vec4(2.5f);
-				uboFSLights.lights[n].radius = 2.0f;
-				uboFSLights.lights[n].linearFalloff = 0.2f;
-				uboFSLights.lights[n].quadraticFalloff = 0.2f;
+				uboFSLights.pointlights[n].position = glm::vec4(x, y, z, 0.0f);
+				uboFSLights.pointlights[n].color = glm::vec4((i * 2) - 3.0f, i, j, 0.0f) * glm::vec4(2.5f);
+				uboFSLights.pointlights[n].radius = 2.0f;
+				uboFSLights.pointlights[n].linearFalloff = 0.2f;
+				uboFSLights.pointlights[n].quadraticFalloff = 0.2f;
 
 				// increment counter
 				n++;
@@ -2164,16 +2165,12 @@ class VulkanExample : public vkx::vulkanApp {
 		float zFar = 64.0f;
 		float lightFOV = 45.0f;
 
-		for (uint32_t i = 0; i < LIGHT_COUNT; i++) {
+		for (uint32_t i = 0; i < NUM_SPOT_LIGHTS; i++) {
 			// mvp from light's pov (for shadows)
 			glm::mat4 shadowProj = glm::perspective(lightFOV, 1.0f, zNear, zFar);
 			//glm::mat4 shadowProj = camera.matrices.projection;
 			//glm::mat4 shadowView = glm::lookAt(glm::vec3(uboFSLights.spotlights[i].position), glm::vec3(uboFSLights.spotlights[i].target), glm::vec3(0.0f, 1.0f, 0.0f));
 			glm::mat4 shadowView = glm::lookAt(glm::vec3(uboFSLights.spotlights[i].position), glm::vec3(uboFSLights.spotlights[i].target), glm::vec3(0.0f, 0.0f, 1.0f));
-			//glm::mat4 shadowView = glm::lookAt(
-			//	glm::vec3(1.0f, 1.0f, 10.0f),
-			//	glm::vec3(0.0f, 0.0f, 0.0f),
-			//	glm::vec3(0.0f, 0.0f, 1.0f));
 
 			//glm::mat4 shadowView = camera.matrices.view;
 			glm::mat4 shadowModel = glm::mat4();
@@ -3256,7 +3253,7 @@ class VulkanExample : public vkx::vulkanApp {
 		// rendering
 		if (!offscreenCmdBuffer) {
 			vk::CommandBufferAllocateInfo cmd = vkx::commandBufferAllocateInfo(cmdPool, vk::CommandBufferLevel::ePrimary, 1);
-			offscreenCmdBuffer = device.allocateCommandBuffers(cmd)[0];
+			offscreenCmdBuffer = context.device.allocateCommandBuffers(cmd)[0];
 		}
 
 		// todo: create semaphore here?:
@@ -3836,7 +3833,7 @@ class VulkanExample : public vkx::vulkanApp {
 		{
 			imGui = new ImGUI(&context);
 			imGui->init((float)settings.windowSize.width, (float)settings.windowSize.height);
-			imGui->initResources(renderPass, queue);
+			imGui->initResources(renderPass, context.queue);
 		}
 
 		start();
@@ -3890,7 +3887,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 			// Submit
 			//queue.submit(submitInfo, nullptr);
-			queue.submit(submitInfo, renderFence);// temporary
+			context.queue.submit(submitInfo, renderFence);// temporary
 
 
 
@@ -3916,7 +3913,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 			// Submit
 			//queue.submit(submitInfo, deferredFence);
-			queue.submit(submitInfo, nullptr);
+			context.queue.submit(submitInfo, nullptr);
 		}
 
 
@@ -3931,11 +3928,11 @@ class VulkanExample : public vkx::vulkanApp {
 		// Wait for fence to signal that all command buffers are ready
 		vk::Result fenceRes;
 		do {
-			fenceRes = device.waitForFences(renderFence, VK_TRUE, 100000000);
+			fenceRes = context.device.waitForFences(renderFence, VK_TRUE, 100000000);
 		} while (fenceRes == vk::Result::eTimeout);
 
 		// reset fence for next submit
-		device.resetFences(renderFence);
+		context.device.resetFences(renderFence);
 
 
 
@@ -3980,7 +3977,7 @@ class VulkanExample : public vkx::vulkanApp {
 		ss.str("");ss.clear();
 
 		//ss << "GPU: ";
-		//ss << deviceProperties.deviceName;
+		//ss << context.deviceProperties.deviceName;
 		//textOverlay->addText(ss.str(), 5.0f, 65.0f, vkx::TextOverlay::alignLeft);
 		//ss.str(""); ss.clear();
 

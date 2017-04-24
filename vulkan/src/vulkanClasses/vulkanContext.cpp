@@ -47,9 +47,15 @@ void vkx::Context::createContext(bool enableValidation) {
 		enabledExtensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
 		#elif defined(__ANDROID__)
 		enabledExtensions.push_back(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
+		#elif defined(_DIRECT2DISPLAY)
+		enabledExtensions.push_back(VK_KHR_DISPLAY_EXTENSION_NAME);
+		#elif defined(VK_USE_PLATFORM_WAYLAND_KHR)
+		enabledExtensions.push_back(VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME);
 		#elif defined(__linux__)
 		enabledExtensions.push_back(VK_KHR_XCB_SURFACE_EXTENSION_NAME);
 		#endif
+
+
 		vk::InstanceCreateInfo instanceCreateInfo;
 		instanceCreateInfo.pApplicationInfo = &appInfo;
 		if (enabledExtensions.size() > 0) {

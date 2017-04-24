@@ -71,7 +71,7 @@ namespace vkx {
 
 			vk::CommandBuffer cmdBuffer;
 
-			vk::Queue queue;
+			//vk::Queue queue;
 			vk::CommandPool cmdPool;
 
 		
@@ -80,7 +80,7 @@ namespace vkx {
 
 			TextureLoader(const Context &context);
 
-			TextureLoader(const Context &context, vk::Queue queue, vk::CommandPool cmdPool);
+			TextureLoader(const Context &context, vk::CommandPool cmdPool);
 
 			~TextureLoader();
 

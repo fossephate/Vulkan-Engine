@@ -5,15 +5,16 @@
 
 
 
-#define LIGHT_COUNT 3
+#define NUM_SPOT_LIGHTS 3
+#define NUM_DIR_LIGHTS 1
 
-layout (triangles, invocations = LIGHT_COUNT) in;
+layout (triangles, invocations = NUM_SPOT_LIGHTS) in;
 layout (triangle_strip, max_vertices = 3) out;
 
 layout (set = 0, binding = 0) uniform UBO 
 {
-	mat4 mvp[LIGHT_COUNT];
-	//vec4 pos[3];
+	mat4 mvp[NUM_SPOT_LIGHTS];
+	
 } ubo;
 
 // matrix data

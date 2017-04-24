@@ -26,7 +26,7 @@
     <ClCompile Include="src\bulletClasses\PhysicsObject.cpp" />
     <ClCompile Include="src\vulkanClasses\camera.cpp" />
     <ClCompile Include="src\vulkanClasses\shapes.cpp" />
-    <ClCompile Include="src\old\vulkanAndroid.cpp" />
+    <ClCompile Include="src\vulkanClasses\vulkanAndroid.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanApp.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanContext.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanDebug.cpp" />
@@ -55,8 +55,10 @@
     <ClInclude Include="include\vulkanClasses\common.h" />
     <ClInclude Include="include\vulkanClasses\easings.h" />
     <ClInclude Include="include\vulkanClasses\shapes.h" />
+    <ClInclude Include="include\vulkanClasses\vulkanAndroid.h" />
     <ClInclude Include="include\vulkanClasses\vulkanAssetManager.h" />
     <ClInclude Include="include\vulkanClasses\vulkanImgui.hpp" />
+    <ClInclude Include="include\vulkanClasses\vulkanInit.hpp" />
     <ClInclude Include="include\vulkanClasses\vulkanModel.h" />
     <ClInclude Include="include\vulkanClasses\vulkanApp.h" />
     <ClInclude Include="include\vulkanClasses\vulkanContext.h" />

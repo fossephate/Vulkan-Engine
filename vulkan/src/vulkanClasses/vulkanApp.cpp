@@ -45,33 +45,33 @@ vulkanApp::vulkanApp(bool enableValidation) : swapChain(this->context) {
 
 vulkanApp::~vulkanApp() {
 
-	device.waitIdle();// added
+	context.device.waitIdle();// added
 
 	// Clean up Vulkan resources
 	swapChain.cleanup();
 
 	if (descriptorPool) {
-		device.destroyDescriptorPool(descriptorPool);
+		context.device.destroyDescriptorPool(descriptorPool);
 	}
 	if (!primaryCmdBuffers.empty()) {
-		device.freeCommandBuffers(cmdPool, primaryCmdBuffers);
+		context.device.freeCommandBuffers(cmdPool, primaryCmdBuffers);
 		primaryCmdBuffers.clear();
 	}
 	if (!drawCmdBuffers.empty()) {
-		device.freeCommandBuffers(cmdPool, drawCmdBuffers);
+		context.device.freeCommandBuffers(cmdPool, drawCmdBuffers);
 		drawCmdBuffers.clear();
 	}
 	if (!textCmdBuffers.empty()) {
-		device.freeCommandBuffers(cmdPool, textCmdBuffers);
+		context.device.freeCommandBuffers(cmdPool, textCmdBuffers);
 		textCmdBuffers.clear();
 	}
-	device.destroyRenderPass(renderPass);
+	context.device.destroyRenderPass(renderPass);
 	for (uint32_t i = 0; i < framebuffers.size(); i++) {
-		device.destroyFramebuffer(framebuffers[i]);
+		context.device.destroyFramebuffer(framebuffers[i]);
 	}
 
-	for (auto &shaderModule : shaderModules) {
-		device.destroyShaderModule(shaderModule);
+	for (auto &shaderModule : context.shaderModules) {
+		context.device.destroyShaderModule(shaderModule);
 	}
 	depthStencil.destroy();
 
@@ -83,9 +83,9 @@ vulkanApp::~vulkanApp() {
 		delete textOverlay;
 	}
 
-	device.destroySemaphore(semaphores.presentComplete);
-	device.destroySemaphore(semaphores.renderComplete);
-	device.destroySemaphore(semaphores.textOverlayComplete);
+	context.device.destroySemaphore(semaphores.presentComplete);
+	context.device.destroySemaphore(semaphores.renderComplete);
+	context.device.destroySemaphore(semaphores.textOverlayComplete);
 
 	context.destroyContext();
 
@@ -119,28 +119,28 @@ void vulkanApp::run() {
 	renderLoop();
 
 	// Once we exit the render loop, wait for everything to become idle before proceeding to the destructor.
-	queue.waitIdle();
-	device.waitIdle();
+	context.queue.waitIdle();
+	context.device.waitIdle();
 }
 
 void vulkanApp::initVulkan(bool enableValidation) {
 	context.createContext(enableValidation);
 
 	// Find a suitable depth format
-	depthFormat = getSupportedDepthFormat(physicalDevice);
+	depthFormat = getSupportedDepthFormat(context.physicalDevice);
 
 	// Create synchronization objects
 	vk::SemaphoreCreateInfo semaphoreCreateInfo;
 	// Create a semaphore used to synchronize image presentation
 	// Ensures that the image is displayed before we start submitting new commands to the queu
-	semaphores.presentComplete = device.createSemaphore(semaphoreCreateInfo);
+	semaphores.presentComplete = context.device.createSemaphore(semaphoreCreateInfo);
 	// Create a semaphore used to synchronize command submission
 	// Ensures that the image is not presented until all commands have been sumbitted and executed
-	semaphores.renderComplete = device.createSemaphore(semaphoreCreateInfo);
+	semaphores.renderComplete = context.device.createSemaphore(semaphoreCreateInfo);
 	// Create a semaphore used to synchronize command submission
 	// Ensures that the image is not presented until all commands for the text overlay have been sumbitted and executed
 	// Will be inserted after the render complete semaphore if the text overlay is enabled
-	semaphores.textOverlayComplete = device.createSemaphore(semaphoreCreateInfo);
+	semaphores.textOverlayComplete = context.device.createSemaphore(semaphoreCreateInfo);
 
 
 	// Set up submit info structure
@@ -306,8 +306,8 @@ void vulkanApp::windowResized(const glm::uvec2 &newSize) {
 	prepared = false;
 
 	// Ensure all operations on the device have been finished before destroying resources
-	queue.waitIdle();
-	device.waitIdle();
+	context.queue.waitIdle();
+	context.device.waitIdle();
 
 
 	// Recreate swap chain
@@ -329,7 +329,7 @@ void vulkanApp::windowResized(const glm::uvec2 &newSize) {
 
 
 
-	device.waitIdle();// 4/5/17
+	context.device.waitIdle();// 4/5/17
 
 	if (enableTextOverlay) {
 		//updateTextOverlay();
@@ -365,7 +365,7 @@ void vulkanApp::setupDepthStencil() {
 	vk::ImageAspectFlags aspect = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
 	vk::ImageCreateInfo image;
 	image.imageType = vk::ImageType::e2D;
-	image.extent = vk::Extent3D{ /*size.width*/settings.windowSize.width, /*size.height*/settings.windowSize.height, 1 };
+	image.extent = vk::Extent3D{ settings.windowSize.width, settings.windowSize.height, 1 };
 	image.format = depthFormat;
 	image.mipLevels = 1;
 	image.arrayLayers = 1;
@@ -390,14 +390,14 @@ void vulkanApp::setupDepthStencil() {
 	depthStencilView.subresourceRange.levelCount = 1;
 	depthStencilView.subresourceRange.layerCount = 1;
 	depthStencilView.image = depthStencil.image;
-	depthStencil.view = device.createImageView(depthStencilView);
+	depthStencil.view = context.device.createImageView(depthStencilView);
 }
 
 void vulkanApp::setupFrameBuffer() {
 	// Recreate the frame buffers
 	if (!framebuffers.empty()) {
 		for (uint32_t i = 0; i < framebuffers.size(); i++) {
-			device.destroyFramebuffer(framebuffers[i]);
+			context.device.destroyFramebuffer(framebuffers[i]);
 		}
 		framebuffers.clear();
 	}
@@ -411,8 +411,8 @@ void vulkanApp::setupFrameBuffer() {
 	framebufferCreateInfo.renderPass = renderPass;
 	framebufferCreateInfo.attachmentCount = 2;
 	framebufferCreateInfo.pAttachments = attachments;
-	framebufferCreateInfo.width = /*size.width*/settings.windowSize.width;
-	framebufferCreateInfo.height = /*size.height*/settings.windowSize.height;
+	framebufferCreateInfo.width = settings.windowSize.width;
+	framebufferCreateInfo.height = settings.windowSize.height;
 	framebufferCreateInfo.layers = 1;
 
 	// Create frame buffers for every swap chain image
@@ -421,7 +421,7 @@ void vulkanApp::setupFrameBuffer() {
 
 void vulkanApp::setupRenderPass() {
 	if (renderPass) {
-		device.destroyRenderPass(renderPass);
+		context.device.destroyRenderPass(renderPass);
 	}
 
 	std::vector<vk::AttachmentDescription> attachments;
@@ -481,7 +481,7 @@ void vulkanApp::setupRenderPass() {
 	renderPassInfo.pSubpasses = subpasses.data();
 	renderPassInfo.dependencyCount = subpassDependencies.size();
 	renderPassInfo.pDependencies = subpassDependencies.data();
-	renderPass = device.createRenderPass(renderPassInfo);
+	renderPass = context.device.createRenderPass(renderPassInfo);
 }
 
 
@@ -494,7 +494,7 @@ void vulkanApp::populateSubCommandBuffers(std::vector<vk::CommandBuffer>& cmdBuf
 	cmdBufAllocateInfo.commandPool = context.getCommandPool();
 	cmdBufAllocateInfo.commandBufferCount = swapChain.imageCount;
 	cmdBufAllocateInfo.level = vk::CommandBufferLevel::eSecondary;
-	cmdBuffers = device.allocateCommandBuffers(cmdBufAllocateInfo);
+	cmdBuffers = context.device.allocateCommandBuffers(cmdBufAllocateInfo);
 
 	vk::CommandBufferInheritanceInfo inheritance;
 	inheritance.renderPass = renderPass;
@@ -526,11 +526,11 @@ void vulkanApp::createCommandBuffers() {
 	cmdBufAllocateInfo.commandBufferCount = static_cast<uint32_t>(drawCmdBuffers.size());
 
 	//VK_CHECK_RESULT(vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, drawCmdBuffers.data()));
-	device.allocateCommandBuffers(&cmdBufAllocateInfo, drawCmdBuffers.data());
+	context.device.allocateCommandBuffers(&cmdBufAllocateInfo, drawCmdBuffers.data());
 }
 
 void vulkanApp::destroyCommandBuffers() {
-	device.freeCommandBuffers(cmdPool, static_cast<uint32_t>(drawCmdBuffers.size()), drawCmdBuffers.data());
+	context.device.freeCommandBuffers(cmdPool, static_cast<uint32_t>(drawCmdBuffers.size()), drawCmdBuffers.data());
 }
 
 
@@ -571,7 +571,7 @@ void vulkanApp::drawCurrentCommandBuffer(const vk::Semaphore& semaphore) {
 		waitSemaphores.push_back(transferComplete);
 		waitStages.push_back(vk::PipelineStageFlagBits::eTransfer);
 		context.dumpster.push_back([transferComplete, this] {
-			device.destroySemaphore(transferComplete);
+			context.device.destroySemaphore(transferComplete);
 		});
 	}
 
@@ -580,7 +580,7 @@ void vulkanApp::drawCurrentCommandBuffer(const vk::Semaphore& semaphore) {
 	vk::Semaphore transferPending;
 	std::vector<vk::Semaphore> signalSemaphores{ { semaphores.renderComplete } };
 	if (!pendingUpdates.empty()) {
-		transferPending = device.createSemaphore(vk::SemaphoreCreateInfo());
+		transferPending = context.device.createSemaphore(vk::SemaphoreCreateInfo());
 		signalSemaphores.push_back(transferPending);
 	}
 
@@ -598,7 +598,7 @@ void vulkanApp::drawCurrentCommandBuffer(const vk::Semaphore& semaphore) {
 
 		submitInfo.pCommandBuffers = &primaryCmdBuffers[currentBuffer];
 		// Submit to queue
-		queue.submit(submitInfo, fence);
+		context.queue.submit(submitInfo, fence);
 	}
 
 	executePendingTransfers(transferPending);
@@ -608,8 +608,8 @@ void vulkanApp::drawCurrentCommandBuffer(const vk::Semaphore& semaphore) {
 // todo: figure this out:
 void vulkanApp::executePendingTransfers(vk::Semaphore transferPending) {
 	if (!pendingUpdates.empty()) {
-		vk::Fence transferFence = device.createFence(vk::FenceCreateInfo());
-		semaphores.transferComplete = device.createSemaphore(vk::SemaphoreCreateInfo());
+		vk::Fence transferFence = context.device.createFence(vk::FenceCreateInfo());
+		semaphores.transferComplete = context.device.createSemaphore(vk::SemaphoreCreateInfo());
 		assert(transferPending);
 		assert(semaphores.transferComplete);
 		// Command buffers store a reference to the
@@ -621,7 +621,7 @@ void vulkanApp::executePendingTransfers(vk::Semaphore transferPending) {
 			vk::CommandBufferAllocateInfo cmdBufAllocateInfo;
 			cmdBufAllocateInfo.commandPool = cmdPool;
 			cmdBufAllocateInfo.commandBufferCount = 1;
-			transferCmdBuffer = device.allocateCommandBuffers(cmdBufAllocateInfo)[0];
+			transferCmdBuffer = context.device.allocateCommandBuffers(cmdBufAllocateInfo)[0];
 		}
 
 
@@ -645,12 +645,12 @@ void vulkanApp::executePendingTransfers(vk::Semaphore transferPending) {
 			transferSubmitInfo.waitSemaphoreCount = 1;
 			transferSubmitInfo.commandBufferCount = 1;
 			transferSubmitInfo.pCommandBuffers = &transferCmdBuffer;
-			queue.submit(transferSubmitInfo, transferFence);
+			context.queue.submit(transferSubmitInfo, transferFence);
 		}
 
 		context.recycler.push({ transferFence, [transferPending, transferCmdBuffer, this] {
-			device.destroySemaphore(transferPending);
-			device.freeCommandBuffers(cmdPool, transferCmdBuffer);
+			context.device.destroySemaphore(transferPending);
+			context.device.freeCommandBuffers(cmdPool, transferCmdBuffer);
 		} });
 		pendingUpdates.clear();
 	}
@@ -660,10 +660,10 @@ void vulkanApp::executePendingTransfers(vk::Semaphore transferPending) {
 //prepare goes here
 void vulkanApp::prepare() {
 	if (this->settings.validation) {
-		debug::setupDebugging(instance, vk::DebugReportFlagBitsEXT::eError | vk::DebugReportFlagBitsEXT::eWarning);
+		debug::setupDebugging(context.instance, vk::DebugReportFlagBitsEXT::eError | vk::DebugReportFlagBitsEXT::eWarning);
 	}
 	if (this->settings.debugMarkers) {
-		debug::marker::setup(device);
+		debug::marker::setup(context.device);
 	}
 	// get command pool
 	cmdPool = context.getCommandPool();
@@ -681,7 +681,8 @@ void vulkanApp::prepare() {
 
 	// Create a simple texture loader class
 	// todo: move this into asset manager class
-	textureLoader = new TextureLoader(this->context, this->queue, this->cmdPool);
+	textureLoader = new TextureLoader(this->context, this->cmdPool);
+
 
 
 	// todo: add mesh loader here// important
@@ -1008,35 +1009,6 @@ void vulkanApp::renderLoop() {
 		// number of frames that have been rendered
 		frameCounter++;
 
-		//// the time it took originally to render the frame
-		//auto tOriginalFrameTime = std::chrono::duration<double, std::milli>(tNow - tFrameStart);
-		////auto tFrameTime = std::chrono::duration_cast<std::chrono::milliseconds>(tNow - tFrameStart);
-		//// set FPS
-		////double FPS = 6000.0;
-		//std::chrono::duration<double, std::milli> minWorkTime(1000.0 / settings.fpsCap);
-		////std::chrono::duration<std::chrono::milliseconds> minWorkTime(1000.0 / settings.fpsCap);
-
-		////if (tFrameTime < minWorkTime) {
-		//	std::this_thread::sleep_for(minWorkTime - tOriginalFrameTime);
-		////}
-		//// calculate new frame time after sleeping
-		//tNow = std::chrono::high_resolution_clock::now();
-		////auto tFrameDuration = std::chrono::duration<double, std::milli>(tNow - tFrameStart);
-		//auto tFrameDuration = std::chrono::duration_cast<std::chrono::milliseconds>(tNow - tFrameStart);
-		//frameTimer = tFrameDuration.count() / 1000.0;
-		//lastFPS = 1.0 / frameTimer;
-
-
-		//fpsTimer += (float)tFrameDuration.count();
-		//if (fpsTimer > 1000.0f) {
-		//	//lastFPS = frameCounter;
-		//	updateTextOverlay();
-		//	fpsTimer = 0.0f;
-		//	frameCounter = 0;
-		//}
-
-
-
 
 		// get the application's runtime duration in ms
 		runningTime = std::chrono::duration_cast<std::chrono::milliseconds>(tNow - tApplicationStart).count();
@@ -1085,15 +1057,6 @@ void vulkanApp::renderLoop() {
 
 			//updateTextOverlay();
 		}
-		
-
-		//tLastUpdate += tFrameTime.count();
-		
-
-		//lastFPS = tFrameTime.count();
-
-		//printf("%lld \n", tFrameTime.count());
-		//if(tFrameStart - tNow)
 
 
 
@@ -1118,9 +1081,7 @@ void vulkanApp::renderLoop() {
 
 		// record / update draw command buffers
 		//updateDrawCommandBuffers();
-
 		//buildOffscreenCommandBuffer();
-
 		updateCommandBuffers();
 
 		// todo: remove this:
@@ -1140,7 +1101,7 @@ void vulkanApp::renderLoop() {
 
 
 std::string vulkanApp::getWindowTitle() {
-	std::string device(deviceProperties.deviceName);
+	std::string device(context.deviceProperties.deviceName);
 	std::string windowTitle;
 	windowTitle = title + " - " + device + " - " + std::to_string(frameCounter) + " fps";
 	return windowTitle;
@@ -1241,8 +1202,8 @@ void vulkanApp::submitFrame() {
 
 	// queue present
 	//swapChain.queuePresent(queue, semaphores.renderComplete);
-	swapChain.queuePresent(queue, currentBuffer, semaphores.renderComplete);// new
-	queue.waitIdle();// new
+	swapChain.queuePresent(context.queue, currentBuffer, semaphores.renderComplete);// new
+	context.queue.waitIdle();// new
 }
 
 
@@ -1289,7 +1250,7 @@ void vulkanApp::buildPrimaryCommandBuffers() {
 
 	// FIXME find a better way to ensure that the draw and text buffers are no longer in use before 
 	// executing them within this command buffer.
-	queue.waitIdle();
+	context.queue.waitIdle();
 
 	// Destroy command buffers if already present
 	if (primaryCmdBuffers.empty()) {
@@ -1302,7 +1263,7 @@ void vulkanApp::buildPrimaryCommandBuffers() {
 		vk::CommandBufferAllocateInfo cmdBufAllocateInfo;
 		cmdBufAllocateInfo.commandPool = cmdPool;
 		cmdBufAllocateInfo.commandBufferCount = swapChain.imageCount;
-		primaryCmdBuffers = device.allocateCommandBuffers(cmdBufAllocateInfo);
+		primaryCmdBuffers = context.device.allocateCommandBuffers(cmdBufAllocateInfo);
 	}
 
 	vk::CommandBufferBeginInfo cmdBufInfo{vk::CommandBufferUsageFlagBits::eSimultaneousUse};

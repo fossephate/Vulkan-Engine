@@ -28,7 +28,7 @@ vkx::TextureLoader::TextureLoader(const Context &context)
 	cmdBuffer = context.device.allocateCommandBuffers(cmdBufInfo)[0];
 }
 
-vkx::TextureLoader::TextureLoader(const Context &context, vk::Queue queue, vk::CommandPool cmdPool)
+vkx::TextureLoader::TextureLoader(const Context &context, vk::CommandPool cmdPool)
 	: context(context)
 {
 
@@ -41,7 +41,7 @@ vkx::TextureLoader::TextureLoader(const Context &context, vk::Queue queue, vk::C
 
 	cmdBuffer = context.device.allocateCommandBuffers(cmdBufInfo)[0];
 
-	this->queue = queue;
+	//this->queue = queue;
 	this->cmdPool = cmdPool;
 }
 
@@ -825,7 +825,7 @@ void vkx::TextureLoader::createTexture(void* buffer, vk::DeviceSize bufferSize, 
 	submitInfo.pCommandBuffers = &cmdBuffer;
 
 	//VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, copyFence));
-	queue.submit(1, &submitInfo, copyFence);
+	context.queue.submit(1, &submitInfo, copyFence);
 
 	//VK_CHECK_RESULT(vkWaitForFences(vulkanDevice->logicalDevice, 1, &copyFence, VK_TRUE, DEFAULT_FENCE_TIMEOUT));
 	context.device.waitForFences(1, &copyFence, VK_TRUE, DEFAULT_FENCE_TIMEOUT);

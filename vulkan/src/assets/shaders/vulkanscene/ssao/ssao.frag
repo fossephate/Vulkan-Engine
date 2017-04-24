@@ -7,7 +7,7 @@ layout (set = 0, binding = 0) uniform sampler2D samplerPositionDepth;
 layout (set = 0, binding = 1) uniform sampler2D samplerNormal;
 layout (set = 0, binding = 2) uniform sampler2D ssaoNoise;
 
-/*layout (constant_id = 0) */const int SSAO_KERNEL_SIZE = 32;// changed from 32
+/*layout (constant_id = 0) */const int SSAO_KERNEL_SIZE = 64;// changed from 32
 /*layout (constant_id = 1) */const float SSAO_RADIUS = 2.0;//2.0
 /*layout (constant_id = 2) */const float SSAO_POWER = 2.5;//1.5;
 
@@ -129,7 +129,8 @@ mat3 computeTBNMatrixFromDepth(in sampler2D depthTex, in vec2 uv) {
 
 vec3 normalFromDepth(in sampler2D depthTex, in vec2 uv) {
 
-    float ld = -linearDepth(texture(depthTex, uv).a);
+    //float ld = -linearDepth(texture(depthTex, uv).a);
+    float ld = (texture(depthTex, uv).a);
     vec3 a = vec3(uv, ld);
     vec3 x = vec3(uv.x + dFdx(uv.x), uv.y, ld + dFdx(ld));
     vec3 y = vec3(uv.x, uv.y + dFdy(uv.y), ld + dFdy(ld));
@@ -141,23 +142,32 @@ vec3 normalFromDepth(in sampler2D depthTex, in vec2 uv) {
     return normal;
 }
 
-vec3 normal_from_depth(vec2 texCoords, float depth) {
+
+
+vec3 normalFromDepth2(in sampler2D depthTex, in vec2 texCoords) {
   
-  vec2 offset1 = vec2(0.0,0.001);
-  vec2 offset2 = vec2(0.001,0.0);
+  const float off = 0.0001;// 0.001
+
+  vec2 offset1 = vec2(0.0,off);
+  vec2 offset2 = vec2(off,0.0);
   
-  float depth1 = texture(samplerPositionDepth, texCoords + offset1).a;
-  float depth2 = texture(samplerPositionDepth, texCoords + offset2).a;
+  float depth = texture(depthTex, texCoords).a;
+  float depth1 = texture(depthTex, texCoords + offset1).a;
+  float depth2 = texture(depthTex, texCoords + offset2).a;
   
   vec3 p1 = vec3(offset1, depth1 - depth);
   vec3 p2 = vec3(offset2, depth2 - depth);
   
   vec3 normal = cross(p1, p2);
-  normal.z = -normal.z;
+  //normal.z = -normal.z;
+
+  vec3 temp = normal;
+  normal.x = temp.x;
+  normal.y = temp.y;
+  normal.z = -temp.z;
   
   return normalize(normal);
 }
-
 
 
 
@@ -192,10 +202,9 @@ void main() {
 	//float originalOriginalDepth = texture(samplerPositionDepth, inUV).a;
 	//float originalDepth = 1 - texture(samplerPositionDepth, inUV).a/512.0;
 
-	vec3 normal = normalize(texture(samplerNormal, inUV).rgb * 2.0 - 1.0);// view space normal
-
-	//vec3 normal = normal_from_depth(inUV, samplerPos.a);// construct from depth
-
+	//vec3 normal = normalize(texture(samplerNormal, inUV).rgb * 2.0 - 1.0);// view space normal
+	//vec3 normal = normalFromDepth2(samplerPositionDepth, inUV);// construct from depth
+	vec3 normal = normalFromDepth(samplerPositionDepth, inUV);// construct from depth
 	// testing normal reconstruction:
 	// vec2 depth_size = vec2(1280, 720);
 
@@ -220,12 +229,11 @@ void main() {
 
 
 	
-	//vec3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
-	//vec3 bitangent = cross(normal, tangent);
+	vec3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
+	vec3 bitangent = cross(normal, tangent);
+	mat3 TBN = mat3(tangent, bitangent, normal);
 
-	//mat3 TBN = mat3(tangent, bitangent, normal);
-
-	mat3 TBN = computeTBNMatrixFromDepth(samplerPositionDepth, inUV);
+	//mat3 TBN = computeTBNMatrixFromDepth(samplerPositionDepth, inUV);
 
 
 	// Calculate occlusion value

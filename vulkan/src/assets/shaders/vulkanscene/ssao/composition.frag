@@ -22,18 +22,16 @@ struct PointLight {
     float _pad;
 };
 
-// struct DirectionalLight {
-//     vec4 position;// definitely remove
-//     vec4 target;//remove?
-//     vec4 color;
-//     vec4 direction;
-//     //float radius;
-// };
 
-
-struct SpotLight2 {
+struct SpotLight {
     vec4 position;
     vec4 target;
+    vec4 color;
+    mat4 viewMatrix;
+};
+
+struct DirectionalLight {
+    vec4 direction;
     vec4 color;
     mat4 viewMatrix;
 };
@@ -59,8 +57,8 @@ const int USE_SHADOWS = 1;
 layout (set = 3, binding = 5) uniform UBO 
 {
     PointLight pointlights[NUM_POINT_LIGHTS];
-    SpotLight2 spotlights[3];
-    //DirectionalLight directionalLights[NUM_DIR_LIGHTS];
+    SpotLight spotlights[NUM_SPOT_LIGHTS];
+    DirectionalLight directionallights[NUM_DIR_LIGHTS];
     vec4 viewPos;
     mat4 model;// added
     mat4 view;// added
@@ -204,6 +202,31 @@ vec3 normalFromDepth(in sampler2D depthTex, in vec2 uv) {
     //y = normalize(y);
     vec3 normal = normalize(cross(x - a, y - a));
     return normal;
+}
+
+vec3 normalFromDepth2(in sampler2D depthTex, in vec2 texCoords) {
+  
+  const float off = 0.0001;// 0.001
+
+  vec2 offset1 = vec2(0.0,off);
+  vec2 offset2 = vec2(off,0.0);
+  
+  float depth = texture(depthTex, texCoords).a;
+  float depth1 = texture(depthTex, texCoords + offset1).a;
+  float depth2 = texture(depthTex, texCoords + offset2).a;
+  
+  vec3 p1 = vec3(offset1, depth1 - depth);
+  vec3 p2 = vec3(offset2, depth2 - depth);
+  
+  vec3 normal = cross(p1, p2);
+  //normal.z = -normal.z;
+
+  vec3 temp = normal;
+  normal.x = temp.x;
+  normal.y = temp.y;
+  normal.z = -temp.z;
+  
+  return normalize(normal);
 }
 
 
@@ -457,7 +480,7 @@ void main() {
         // world space spot lights:
         for(int i = 0; i < NUM_SPOT_LIGHTS; ++i) {
 
-            SpotLight2 light = ubo.spotlights[i];
+            SpotLight light = ubo.spotlights[i];
 
             vec3 N = normalize(normal);
             
@@ -575,6 +598,7 @@ void main() {
     outFragcolor = vec4(fragcolor, 1.0);
 
     //vec3 test = normalFromDepth(samplerPosition, inUV);
+    //vec3 test = normalFromDepth2(samplerPosition, inUV);
     //vec3 test = vec3(depth/512.0);
     //outFragcolor = vec4(test, 1.0);
 }
