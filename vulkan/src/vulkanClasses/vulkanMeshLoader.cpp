@@ -25,7 +25,7 @@ namespace vkx {
 
 	// Load the mesh with custom flags
 	bool vkx::MeshLoader::load(const std::string &filename, int flags) {
-#if defined(__ANDROID__)
+		#if defined(__ANDROID__)
 		// Meshes are stored inside the apk on Android (compressed)
 		// So they need to be loaded via the asset manager
 
@@ -42,7 +42,10 @@ namespace vkx {
 		pScene = Importer.ReadFileFromMemory(meshData, size, flags);
 
 		free(meshData);
-#else
+		#else
+
+		this->filename = filename;
+
 
 
 		// use asset manager
@@ -56,9 +59,21 @@ namespace vkx {
 		}
 
 
+		if (this->assetManager->meshBuffers.present(filename)) {
+			// assumes correct vertex layout
+			meshBuffers = this->assetManager->meshBuffers.get(filename);
+		} else {
+			//pScene = Importer.ReadFile(filename.c_str(), flags);
+			//Importer.ReadFile(filename.c_str(), flags);
+			//pScene = Importer.GetOrphanedScene();
+			//this->assetManager->scenes.add(filename, pScene);
+		}
 
 
-#endif
+
+
+
+		#endif
 
 		if (!pScene) {
 			throw std::runtime_error("Unable to parse " + filename);
@@ -485,6 +500,7 @@ namespace vkx {
 
 
 
+
 	void vkx::MeshLoader::createMeshBuffers(const std::vector<VertexComponent> &layout, float scale) {
 
 
@@ -495,6 +511,19 @@ namespace vkx {
 		//printf("\n");
 
 		auto tStart = std::chrono::high_resolution_clock::now();
+
+		//if (this->assetManager->scenes.present(filename)) {
+		//	pScene = this->assetManager->scenes.get(filename);
+		//} else {
+		//	//pScene = Importer.ReadFile(filename.c_str(), flags);
+		//	Importer.ReadFile(filename.c_str(), flags);
+		//	pScene = Importer.GetOrphanedScene();
+		//	this->assetManager->scenes.add(filename, pScene);
+		//}
+
+		if (this->meshBuffers.size() > 0) {
+			return;
+		}
 
 
 		for (int m = 0; m < m_Entries.size(); m++) {
@@ -559,6 +588,8 @@ namespace vkx {
 			}
 
 			MeshBuffer meshBuffer;
+			meshBuffer.vertexLayout = layout;
+
 			meshBuffer.vertices.size = vertexBuffer.size() * sizeof(float);
 
 			dim.min *= scale;
@@ -580,18 +611,24 @@ namespace vkx {
 			meshBuffer.dim = dim.size;
 
 			meshBuffer.materialIndex = m_Entries[m].materialIndex;
-
 			meshBuffer.materialName = m_Entries[m].materialName;
 
 
 			meshBuffers.push_back(meshBuffer);
 		}
 
+
+
 		//this->meshes.resize(this->meshBuffers.size());
 
 		//for (int i = 0; i < meshBuffers.size(); ++i) {
 		//	vkx::Mesh m(meshBuffers[i])
 		//}
+
+		// if these mesh buffers haven't been stored, store them
+		if (!this->assetManager->meshBuffers.present(this->filename)) {
+			this->assetManager->meshBuffers.add(filename, meshBuffers);
+		}
 
 
 

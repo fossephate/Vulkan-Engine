@@ -2392,24 +2392,24 @@ class VulkanExample : public vkx::vulkanApp {
 		//modelsDeferred.push_back(planeModel2);
 
 
-		for (int i = 0; i < 2; ++i) {
-			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
-			testModel->load(getAssetPath() + "models/monkey.fbx");
-			testModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
+		//for (int i = 0; i < 2; ++i) {
+		//	auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
+		//	testModel->load(getAssetPath() + "models/monkey.fbx");
+		//	testModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
 
-			modelsDeferred.push_back(testModel);
-		}
+		//	modelsDeferred.push_back(testModel);
+		//}
 
 
 		for (int i = 0; i < 1; ++i) {
 
-			auto testSkinnedMesh = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
-			testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");
-			testSkinnedMesh->createSkinnedMeshBuffer(SSAOVertexLayout, 0.0005f);
+			//auto testSkinnedMesh = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
+			//testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");
+			//testSkinnedMesh->createSkinnedMeshBuffer(SSAOVertexLayout, 0.0005f);
 			// todo: figure out why there must be atleast one deferred skinned mesh here
 			// inorder to not cause problems
 			// fixed?
-			skinnedMeshesDeferred.push_back(testSkinnedMesh);
+			//skinnedMeshesDeferred.push_back(testSkinnedMesh);
 		}
 
 
@@ -2418,7 +2418,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		auto wallModel1 = std::make_shared<vkx::Model>(&context, &assetManager);
 		wallModel1->load(getAssetPath() + "models/plane.fbx");
-		wallModel1->createMeshes(SSAOVertexLayout, 5.0f, VERTEX_BUFFER_BIND_ID);
+		wallModel1->createMeshes(SSAOVertexLayout, 10.0f, VERTEX_BUFFER_BIND_ID);
 		modelsDeferred.push_back(wallModel1);
 
 
@@ -2653,7 +2653,7 @@ class VulkanExample : public vkx::vulkanApp {
 			if (modelsDeferred.size() > 3) {
 				modelsDeferred[modelsDeferred.size() - 1]->destroy();
 				modelsDeferred.pop_back();
-				//updateDraw = true;
+				updateDraw = true;// probably not necessary here
 				updateOffscreen = true;
 			}
 		}

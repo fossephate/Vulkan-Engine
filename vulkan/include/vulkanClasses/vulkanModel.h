@@ -40,6 +40,7 @@ namespace vkx {
 
 			// todo: change to meshbuffers:
 			std::vector<Mesh> meshes;
+			//std::vector<std::shared_ptr<MeshBuffer>> meshes;
 
 			uint32_t matrixIndex = -1;
 			uint32_t vertexBufferBinding = 0;

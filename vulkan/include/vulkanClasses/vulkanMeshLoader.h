@@ -84,50 +84,6 @@ namespace vkx {
 		//VERTEX_COMPONENT_BONE_WEIGHT = 0x9,// added 1/20/17
 	} VertexComponent;
 
-	///** @brief Vertex layout components */
-	//typedef enum Component {
-	//	VERTEX_COMPONENT_POSITION = 0x0,
-	//	VERTEX_COMPONENT_NORMAL = 0x1,
-	//	VERTEX_COMPONENT_COLOR = 0x2,
-	//	VERTEX_COMPONENT_UV = 0x3,
-	//	VERTEX_COMPONENT_TANGENT = 0x4,
-	//	VERTEX_COMPONENT_BITANGENT = 0x5,
-	//	VERTEX_COMPONENT_DUMMY_FLOAT = 0x6,
-	//	VERTEX_COMPONENT_DUMMY_VEC4 = 0x7
-	//} Component;
-
-	///** @brief Stores vertex layout components for model loading and Vulkan vertex input and atribute bindings  */
-	//struct VertexLayout {
-	//	public:
-	//	/** @brief Components used to generate vertices from */
-	//	std::vector<Component> components;
-
-	//	VertexLayout(std::vector<Component> components) {
-	//		this->components = std::move(components);
-	//	}
-
-	//	uint32_t stride() {
-	//		uint32_t res = 0;
-	//		for (auto &component : components) {
-	//			switch (component) {
-	//				case VERTEX_COMPONENT_UV:
-	//					res += 2 * sizeof(float);
-	//					break;
-	//				case VERTEX_COMPONENT_DUMMY_FLOAT:
-	//					res += sizeof(float);
-	//					break;
-	//				case VERTEX_COMPONENT_DUMMY_VEC4:
-	//					res += 4 * sizeof(float);
-	//					break;
-	//				default:
-	//					// All components except the ones listed above are made up of 3 floats
-	//					res += 3 * sizeof(float);
-	//			}
-	//		}
-	//		return res;
-	//	}
-	//};
-
 
 	struct MaterialProperties;
 	struct Material;
@@ -140,7 +96,9 @@ namespace vkx {
 		vkx::CreateBufferResult vertices;
 		vkx::CreateBufferResult indices;
 
-		// size? I'm not sure what this is
+		std::vector<VertexComponent> vertexLayout;// 4/26/17
+
+		// dimensions of the mesh?
 		glm::vec3 dim;
 
 		uint32_t indexCount{ 0 };
@@ -312,9 +270,9 @@ namespace vkx {
 
 
 
-
-
-
+			
+			// name of file that is loaded
+			std::string filename = "";
 
 
 
@@ -339,17 +297,17 @@ namespace vkx {
 
 
 
-			// Optional
-			struct {
-				vk::Buffer buf;
-				vk::DeviceMemory mem;
-			} vertexBuffer;
+			//// Optional
+			//struct {
+			//	vk::Buffer buf;
+			//	vk::DeviceMemory mem;
+			//} vertexBuffer;
 
-			struct {
-				vk::Buffer buf;
-				vk::DeviceMemory mem;
-				uint32_t count;
-			} indexBuffer;
+			//struct {
+			//	vk::Buffer buf;
+			//	vk::DeviceMemory mem;
+			//	uint32_t count;
+			//} indexBuffer;
 
 			
 
@@ -368,9 +326,9 @@ namespace vkx {
 			//vk::Device device;
 			//vk::Queue queue;
 
-			TextureLoader *textureLoader{ nullptr };
-			//const aiScene *pScene{ nullptr };
-			aiScene *pScene{ nullptr };
+			TextureLoader *textureLoader = nullptr;
+			//const aiScene *pScene = nullptr;
+			aiScene *pScene = nullptr;
 
 			MeshLoader(vkx::Context *context, vkx::AssetManager *assetManager);
 

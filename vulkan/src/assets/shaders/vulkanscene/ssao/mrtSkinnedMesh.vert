@@ -70,23 +70,22 @@ void main() {
 	outUV.t = 1.0 - outUV.t;// bc vulkan
 
 	// // Vertex position in world space
-	//outWorldPos = vec3(newModelMatrix * inPos);
+	outPos = vec3(newModelMatrix * inPos);
 
 	// Vertex position in view space
-	outPos = vec3(scene.view * newModelMatrix * inPos);
+	//outPos = vec3(scene.view * newModelMatrix * inPos);
 
 	
 	// Normal in world space
 	// todo: do the inverse transpose on cpu
 	mat3 mNormal = transpose(inverse(mat3(newModelMatrix)));
-    //outNormal = mNormal * normalize(inNormal);
+    outNormal = mNormal * inNormal;
+    outTangent = mNormal * inTangent;
 
 	// Normal in view space
-	mat3 normalMatrix = transpose(inverse(mat3(scene.view * newModelMatrix)));
-	outNormal = normalMatrix * inNormal;
-
-
-    outTangent = mNormal * normalize(inTangent);
+	//mat3 normalMatrix = transpose(inverse(mat3(scene.view * newModelMatrix)));
+	//outNormal = normalMatrix * inNormal;
+    //outTangent = mNormal * inTangent;
 	
 	// Currently just vertex color
 	outColor = inColor;

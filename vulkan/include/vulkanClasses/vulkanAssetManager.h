@@ -116,6 +116,9 @@ namespace vkx {
 	//	std::vector<MeshEntry> m_Entries;
 	//};
 
+	struct MeshBuffer;// defined in vulkanMeshLoader.h
+
+
 
 
 
@@ -403,6 +406,43 @@ namespace vkx {
 			}
 	};
 
+	
+	// allows for different vertex layouts but is awful to use:
+	//class MeshBuffersList : public ResourceList<std::vector<std::vector<MeshBuffer>>> {
+
+	//	public:
+
+	//		//DescriptorPoolList(vk::Device &dev) : VulResourceList(dev) {};
+
+	//		~MeshBuffersList() {
+
+	//		}
+
+	//		void add(std::string name, std::vector<MeshBuffer> meshBuffers) {
+	//			if (present(name)) {
+	//				resources[name].push_back(meshBuffers);
+	//			} else {
+	//				std::vector<std::vector<MeshBuffer>> buffers;
+	//				buffers.push_back(meshBuffers);
+	//				resources[name] = buffers;
+	//			}
+	//		}
+	//};
+
+	//std::vector<std::shared_ptr<MeshBuffer>> meshesDeferred;
+
+	// assumes correct vertex layout / will overwrite even if vertex layout is different:
+	class MeshBuffersList : public ResourceList<std::vector<MeshBuffer>> {
+
+		public:
+			~MeshBuffersList() {
+			}
+
+			void add(std::string name, std::vector<MeshBuffer> meshBuffers) {
+				resources[name] = meshBuffers;
+			}
+	};
+
 
 
 	class TextureList : public ResourceList<vkx::Texture> {
@@ -543,6 +583,8 @@ namespace vkx {
 			TextureList textures;
 
 			SceneList scenes;
+
+			MeshBuffersList meshBuffers;
 
 			void destroy() {
 				//textures.destroy();

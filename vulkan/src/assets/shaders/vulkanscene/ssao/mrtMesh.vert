@@ -54,9 +54,8 @@ void main() {
 	// Normal in world space
 	// todo: add this matrix to the matrix nodes dynamic uniform buffer
 	mat3 mNormal = transpose(inverse(mat3(instance.model)));
-    outNormal = mNormal * normalize(inNormal);// world space normal
+    outNormal = mNormal * inNormal;// world space normal
     outTangent = mNormal * inTangent;
-
 
 
 	// Normal in view space
