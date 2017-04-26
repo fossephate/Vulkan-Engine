@@ -525,26 +525,33 @@ class VulkanExample : public vkx::vulkanApp {
 		for (auto &mesh : meshes) {
 			mesh->destroy();
 		}
+		meshes.clear();
 
 		for (auto &model : models) {
 			model->destroy();
 		}
+		models.clear();
 
 		for (auto &skinnedMesh : skinnedMeshes) {
 			skinnedMesh->destroy();
 		}
+		skinnedMeshes.clear();
 
 		for (auto &mesh : meshesDeferred) {
 			mesh->destroy();
+			mesh->meshBuffer->destroy();
 		}
+		meshesDeferred.clear();
 
 		for (auto &model : modelsDeferred) {
 			model->destroy();
 		}
+		modelsDeferred.clear();
 		
 		for (auto &skinnedMesh : skinnedMeshesDeferred) {
 			skinnedMesh->destroy();
 		}
+		skinnedMeshesDeferred.clear();
 
 
 		for (auto &physicsObject : physicsObjects) {
@@ -2651,7 +2658,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		if (keyStates.m) {
 			if (modelsDeferred.size() > 3) {
-				modelsDeferred[modelsDeferred.size() - 1]->destroy();
+				//modelsDeferred[modelsDeferred.size() - 1]->destroy();
 				modelsDeferred.pop_back();
 				updateDraw = true;// probably not necessary here
 				updateOffscreen = true;
@@ -3328,8 +3335,8 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 					// bind vertex & index buffers
-					offscreenCmdBuffer.bindVertexBuffers(mesh.vertexBufferBinding, mesh.meshBuffer.vertices.buffer, vk::DeviceSize());
-					offscreenCmdBuffer.bindIndexBuffer(mesh.meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
+					offscreenCmdBuffer.bindVertexBuffers(mesh.vertexBufferBinding, mesh.meshBuffer->vertices.buffer, vk::DeviceSize());
+					offscreenCmdBuffer.bindIndexBuffer(mesh.meshBuffer->indices.buffer, 0, vk::IndexType::eUint32);
 
 					// descriptor set #
 					uint32_t setNum;
@@ -3354,7 +3361,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 					// draw:
-					offscreenCmdBuffer.drawIndexed(mesh.meshBuffer.indexCount, 1, 0, 0, 0);
+					offscreenCmdBuffer.drawIndexed(mesh.meshBuffer->indexCount, 1, 0, 0, 0);
 				}
 
 			}
@@ -3453,8 +3460,8 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 					// bind vertex & index buffers
-					offscreenCmdBuffer.bindVertexBuffers(mesh.vertexBufferBinding, mesh.meshBuffer.vertices.buffer, vk::DeviceSize());
-					offscreenCmdBuffer.bindIndexBuffer(mesh.meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
+					offscreenCmdBuffer.bindVertexBuffers(mesh.vertexBufferBinding, mesh.meshBuffer->vertices.buffer, vk::DeviceSize());
+					offscreenCmdBuffer.bindIndexBuffer(mesh.meshBuffer->indices.buffer, 0, vk::IndexType::eUint32);
 
 					// descriptor set #
 					uint32_t setNum;
@@ -3470,11 +3477,11 @@ class VulkanExample : public vkx::vulkanApp {
 					offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("offscreen"), setNum, 1, &rscs.descriptorSets->get("offscreen.matrix"), 1, &offset1);
 
 
-					if (lastMaterialName != mesh.meshBuffer.materialName) {
+					if (lastMaterialName != mesh.meshBuffer->materialName) {
 
-						lastMaterialName = mesh.meshBuffer.materialName;
+						lastMaterialName = mesh.meshBuffer->materialName;
 
-						vkx::Material m = this->assetManager.materials.get(mesh.meshBuffer.materialName);
+						vkx::Material m = this->assetManager.materials.get(mesh.meshBuffer->materialName);
 						//uint32_t materialIndex = this->assetManager.materials.get(mesh.meshBuffer.materialName).index;
 
 						//uint32_t offset2 = m.index * alignedMaterialSize;
@@ -3496,7 +3503,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 					// draw:
-					offscreenCmdBuffer.drawIndexed(mesh.meshBuffer.indexCount, 1, 0, 0, 0);
+					offscreenCmdBuffer.drawIndexed(mesh.meshBuffer->indexCount, 1, 0, 0, 0);
 				}
 
 			}
@@ -3524,8 +3531,8 @@ class VulkanExample : public vkx::vulkanApp {
 			}
 			for (auto &skinnedMesh : skinnedMeshesDeferred) {
 				// bind vertex & index buffers
-				offscreenCmdBuffer.bindVertexBuffers(skinnedMesh->vertexBufferBinding, skinnedMesh->meshBuffer.vertices.buffer, vk::DeviceSize());
-				offscreenCmdBuffer.bindIndexBuffer(skinnedMesh->meshBuffer.indices.buffer, 0, vk::IndexType::eUint32);
+				offscreenCmdBuffer.bindVertexBuffers(skinnedMesh->vertexBufferBinding, skinnedMesh->meshBuffer->vertices.buffer, vk::DeviceSize());
+				offscreenCmdBuffer.bindIndexBuffer(skinnedMesh->meshBuffer->indices.buffer, 0, vk::IndexType::eUint32);
 
 				// descriptor set #
 				uint32_t setNum;
@@ -3544,9 +3551,9 @@ class VulkanExample : public vkx::vulkanApp {
 				setNum = 1;
 				offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("offscreen"), setNum, 1, &rscs.descriptorSets->get("offscreen.matrix"), 1, &offset1);
 
-				if (lastMaterialName != skinnedMesh->meshBuffer.materialName) {
-					lastMaterialName = skinnedMesh->meshBuffer.materialName;
-					vkx::Material m = this->assetManager.materials.get(skinnedMesh->meshBuffer.materialName);
+				if (lastMaterialName != skinnedMesh->meshBuffer->materialName) {
+					lastMaterialName = skinnedMesh->meshBuffer->materialName;
+					vkx::Material m = this->assetManager.materials.get(skinnedMesh->meshBuffer->materialName);
 
 					// Set 2: Binding: 0
 					//uint32_t offset2 = m.index * alignedMaterialSize;
@@ -3562,7 +3569,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 				// draw:
-				offscreenCmdBuffer.drawIndexed(skinnedMesh->meshBuffer.indexCount, 1, 0, 0, 0);
+				offscreenCmdBuffer.drawIndexed(skinnedMesh->meshBuffer->indexCount, 1, 0, 0, 0);
 			}
 
 

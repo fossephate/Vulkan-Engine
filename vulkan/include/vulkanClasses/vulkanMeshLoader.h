@@ -110,6 +110,11 @@ namespace vkx {
 			vertices.destroy();
 			indices.destroy();
 		}
+
+		//~MeshBuffer() {
+		//	vertices.destroy();
+		//	indices.destroy();
+		//}
 	};
 
 
@@ -279,8 +284,11 @@ namespace vkx {
 			
 
 			// fitted to vertex layout && usable to draw
-			MeshBuffer combinedBuffer;
-			std::vector<MeshBuffer> meshBuffers;
+			//MeshBuffer combinedBuffer;
+			//std::vector<MeshBuffer> meshBuffers;
+			std::shared_ptr<MeshBuffer> combinedBuffer;
+			std::vector<std::shared_ptr<MeshBuffer>> meshBuffers;
+
 			//std::vector<Mesh> meshes;
 
 			// temporary materials vector

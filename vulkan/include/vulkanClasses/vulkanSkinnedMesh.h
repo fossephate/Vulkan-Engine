@@ -18,85 +18,6 @@
 
 namespace vkx {
 
-
-
-
-
-
-
-
-
-
-
-	// Vertex layout used in this example
-	//struct Vertex {
-	//struct tempVertex {
-	//	glm::vec3 pos;
-	//	glm::vec3 normal;
-	//	glm::vec2 uv;
-	//	glm::vec3 color;
-	//	// Max. four bones per vertex
-	//	float boneWeights[4];
-	//	uint32_t boneIDs[4];
-	//};
-
-
-
-
-
-
-
-
-	//// Per-vertex bone IDs and weights
-	//struct VertexBoneData {
-	//	std::array<uint32_t, MAX_BONES_PER_VERTEX> IDs;
-	//	std::array<float, MAX_BONES_PER_VERTEX> weights;
-
-	//	// Add bone weighting to vertex info
-	//	void add(uint32_t boneID, float weight) {
-	//		for (uint32_t i = 0; i < MAX_BONES_PER_VERTEX; i++) {
-	//			if (weights[i] == 0.0f) {
-	//				IDs[i] = boneID;
-	//				weights[i] = weight;
-	//				return;
-	//			}
-	//		}
-	//	}
-	//};
-
-	//// Per-vertex bone IDs and weights
-	//struct VertexBoneData {
-	//	std::array<uint32_t, 4> IDs;
-	//	std::array<float, 4> weights;
-
-	//	// Add bone weighting to vertex info
-	//	void add(uint32_t boneID, float weight) {
-	//		for (uint32_t i = 0; i < 4; i++) {
-	//			if (weights[i] == 0.0f) {
-	//				IDs[i] = boneID;
-	//				weights[i] = weight;
-	//				return;
-	//			}
-	//		}
-	//	}
-	//};
-
-	//// Stores information on a single bone
-	//struct BoneInfo {
-	//	aiMatrix4x4 offset;
-	//	aiMatrix4x4 finalTransformation;
-
-	//	//BoneInfo() {
-	//	//	offset = aiMatrix4x4();
-	//	//	finalTransformation = aiMatrix4x4();
-	//	//};
-	//};
-
-
-
-
-
-
 	class SkinnedMesh : public Object3D {
 
 		private:
@@ -105,7 +26,8 @@ namespace vkx {
 
 			//vkx::Mesh mesh;
 
-			vkx::MeshBuffer meshBuffer;
+			//vkx::MeshBuffer meshBuffer;
+			std::shared_ptr<MeshBuffer> meshBuffer = nullptr;
 
 			uint32_t matrixIndex;
 			uint32_t boneIndex;

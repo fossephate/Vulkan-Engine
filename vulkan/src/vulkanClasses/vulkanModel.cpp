@@ -25,14 +25,11 @@ namespace vkx {
 	void Model::asyncCreateMeshes(const std::vector<VertexComponent> &layout, float scale, uint32_t binding) {
 		this->meshLoader->createMeshBuffers(layout, scale);
 
-		std::vector<MeshBuffer> meshBuffers = this->meshLoader->meshBuffers;
-
-		this->meshes.resize(meshBuffers.size());
+		std::vector<std::shared_ptr<MeshBuffer>> &meshBuffers = this->meshLoader->meshBuffers;
 	
 		for (int i = 0; i < meshBuffers.size(); ++i) {
 			vkx::Mesh m(meshBuffers[i]);
-			/*this->meshes.push_back(m);*/
-			this->meshes[i] = m;
+			this->meshes.push_back(m);
 		}
 
 		this->vertexBufferBinding = binding;// important

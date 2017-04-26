@@ -11,12 +11,16 @@ namespace vkx {
 	Mesh::Mesh() {
 	}
 
-	Mesh::Mesh(vkx::MeshBuffer meshBuffer) {
+	//Mesh::Mesh(vkx::MeshBuffer meshBuffer) {
+	//	this->meshBuffer = meshBuffer;
+	//}
+
+	Mesh::Mesh(std::shared_ptr<MeshBuffer> meshBuffer) {
 		this->meshBuffer = meshBuffer;
 	}
 
 	void Mesh::destroy() {
-		this->meshBuffer.destroy();
+		this->meshBuffer->destroy();
 	}
 
 }

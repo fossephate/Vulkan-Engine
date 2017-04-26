@@ -59,17 +59,6 @@ namespace vkx {
 		}
 
 
-		if (this->assetManager->meshBuffers.present(filename)) {
-			// assumes correct vertex layout
-			meshBuffers = this->assetManager->meshBuffers.get(filename);
-		} else {
-			//pScene = Importer.ReadFile(filename.c_str(), flags);
-			//Importer.ReadFile(filename.c_str(), flags);
-			//pScene = Importer.GetOrphanedScene();
-			//this->assetManager->scenes.add(filename, pScene);
-		}
-
-
 
 
 
@@ -472,8 +461,9 @@ namespace vkx {
 			}
 		}
 
-		MeshBuffer meshBuffer;
-		meshBuffer.vertices.size = vertexBuffer.size() * sizeof(float);
+		//MeshBuffer meshBuffer;
+		std::shared_ptr<MeshBuffer> meshBuffer;
+		meshBuffer->vertices.size = vertexBuffer.size() * sizeof(float);
 
 		dim.min *= scale;
 		dim.max *= scale;
@@ -487,13 +477,13 @@ namespace vkx {
 			}
 		}
 
-		meshBuffer.indexCount = (uint32_t)indexBuffer.size();
+		meshBuffer->indexCount = (uint32_t)indexBuffer.size();
 		// Use staging buffer to move vertex and index buffer to device local memory
 		// Vertex buffer
-		meshBuffer.vertices = context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
+		meshBuffer->vertices = context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
 		// Index buffer
-		meshBuffer.indices = context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);
-		meshBuffer.dim = dim.size;
+		meshBuffer->indices = context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);
+		meshBuffer->dim = dim.size;
 
 		this->combinedBuffer = meshBuffer;
 	}
@@ -512,16 +502,11 @@ namespace vkx {
 
 		auto tStart = std::chrono::high_resolution_clock::now();
 
-		//if (this->assetManager->scenes.present(filename)) {
-		//	pScene = this->assetManager->scenes.get(filename);
-		//} else {
-		//	//pScene = Importer.ReadFile(filename.c_str(), flags);
-		//	Importer.ReadFile(filename.c_str(), flags);
-		//	pScene = Importer.GetOrphanedScene();
-		//	this->assetManager->scenes.add(filename, pScene);
-		//}
 
-		if (this->meshBuffers.size() > 0) {
+
+		if (this->assetManager->meshBuffers.present(filename)) {
+			// assumes correct vertex layout
+			this->meshBuffers = this->assetManager->meshBuffers.get(filename);
 			return;
 		}
 
@@ -587,10 +572,15 @@ namespace vkx {
 				}
 			}
 
-			MeshBuffer meshBuffer;
-			meshBuffer.vertexLayout = layout;
+			//std::shared_ptr<MeshBuffer> meshesDeferred;
+			auto meshBuffer = std::make_shared<MeshBuffer>();
 
-			meshBuffer.vertices.size = vertexBuffer.size() * sizeof(float);
+			
+
+			//MeshBuffer meshBuffer;
+			meshBuffer->vertexLayout = layout;
+
+			meshBuffer->vertices.size = vertexBuffer.size() * sizeof(float);
 
 			dim.min *= scale;
 			dim.max *= scale;
@@ -602,16 +592,16 @@ namespace vkx {
 				indexBuffer.push_back(m_Entries[m].Indices[i] + indexBase);
 			}
 
-			meshBuffer.indexCount = (uint32_t)indexBuffer.size();
+			meshBuffer->indexCount = (uint32_t)indexBuffer.size();
 			// Use staging buffer to move vertex and index buffer to device local memory
 			// Vertex buffer
-			meshBuffer.vertices = this->context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
+			meshBuffer->vertices = this->context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
 			// Index buffer
-			meshBuffer.indices = this->context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);
-			meshBuffer.dim = dim.size;
+			meshBuffer->indices = this->context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);
+			meshBuffer->dim = dim.size;
 
-			meshBuffer.materialIndex = m_Entries[m].materialIndex;
-			meshBuffer.materialName = m_Entries[m].materialName;
+			meshBuffer->materialIndex = m_Entries[m].materialIndex;
+			meshBuffer->materialName = m_Entries[m].materialName;
 
 
 			meshBuffers.push_back(meshBuffer);
@@ -754,12 +744,12 @@ namespace vkx {
 			}
 		}
 		uint32_t indexBufferSize = indexBuffer.size() * sizeof(uint32_t);
-		this->combinedBuffer.indexCount = indexBuffer.size();
-		this->combinedBuffer.vertices = context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
-		this->combinedBuffer.indices = context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);
+		this->combinedBuffer->indexCount = indexBuffer.size();
+		this->combinedBuffer->vertices = context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
+		this->combinedBuffer->indices = context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);
 
-		this->combinedBuffer.materialIndex = m_Entries[0].materialIndex;
-		this->combinedBuffer.materialName = m_Entries[0].materialName;
+		this->combinedBuffer->materialIndex = m_Entries[0].materialIndex;
+		this->combinedBuffer->materialName = m_Entries[0].materialName;
 	}
 
 

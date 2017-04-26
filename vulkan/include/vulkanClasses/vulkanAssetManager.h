@@ -432,13 +432,14 @@ namespace vkx {
 	//std::vector<std::shared_ptr<MeshBuffer>> meshesDeferred;
 
 	// assumes correct vertex layout / will overwrite even if vertex layout is different:
-	class MeshBuffersList : public ResourceList<std::vector<MeshBuffer>> {
-
+	
+	/*class MeshBuffersList : public ResourceList<std::vector<MeshBuffer>> {*/
+	class MeshBuffersList : public ResourceList<std::vector<std::shared_ptr<MeshBuffer>>> {
 		public:
 			~MeshBuffersList() {
 			}
 
-			void add(std::string name, std::vector<MeshBuffer> meshBuffers) {
+			void add(std::string name, std::vector<std::shared_ptr<MeshBuffer>> meshBuffers) {
 				resources[name] = meshBuffers;
 			}
 	};

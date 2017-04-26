@@ -24,10 +24,12 @@ namespace vkx {
 			uint32_t vertexBufferBinding = 0;
 
 			// Mesh buffer
-			vkx::MeshBuffer meshBuffer;
+			//vkx::MeshBuffer meshBuffer;
+			std::shared_ptr<MeshBuffer> meshBuffer = nullptr;
 
 			Mesh();
-			Mesh(vkx::MeshBuffer meshBuffer);
+			//Mesh(vkx::MeshBuffer meshBuffer);
+			Mesh(std::shared_ptr<MeshBuffer> meshBuffer);
 
 			void destroy();
 	};

@@ -44,7 +44,7 @@ namespace vkx {
 	}
 
 	void SkinnedMesh::destroy() {
-		this->meshBuffer.destroy();
+		this->meshBuffer->destroy();
 		delete this->meshLoader;
 	}
 

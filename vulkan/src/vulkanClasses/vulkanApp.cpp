@@ -697,17 +697,17 @@ void vulkanApp::prepare() {
 	}
 }
 
-// todo: remove this
-MeshBuffer vulkanApp::loadMesh(const std::string& filename, const std::vector<VertexComponent>& vertexLayout, float scale) {
-	MeshLoader loader(&this->context, &this->assetManager);
-	#if defined(__ANDROID__)
-	loader.assetManager = androidApp->activity->assetManager;
-	#endif
-	loader.load(filename);
-	assert(loader.m_Entries.size() > 0);
-	loader.createMeshBuffer(vertexLayout, scale);
-	return loader.combinedBuffer;
-}
+//// todo: remove this
+//MeshBuffer vulkanApp::loadMesh(const std::string& filename, const std::vector<VertexComponent>& vertexLayout, float scale) {
+//	MeshLoader loader(&this->context, &this->assetManager);
+//	#if defined(__ANDROID__)
+//	loader.assetManager = androidApp->activity->assetManager;
+//	#endif
+//	loader.load(filename);
+//	assert(loader.m_Entries.size() > 0);
+//	loader.createMeshBuffer(vertexLayout, scale);
+//	return loader.combinedBuffer;
+//}
 
 
 void vulkanApp::updateInputInfo() {
