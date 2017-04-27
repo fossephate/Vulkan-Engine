@@ -324,6 +324,11 @@ class VulkanExample : public vkx::vulkanApp {
 		glm::vec4 target;		// where the light points
 		glm::vec4 color;		// color of the light
 		glm::mat4 viewMatrix;	// view matrix (used in geometry shader and fragment shader)
+		float innerAngle = 45.0f;
+		float outerAngle = 50.0f;
+		float range = 100.0f;
+		float zNear = 0.1f;
+		float zFar = 64.0f;
 	};
 
 	struct DirectionalLight {
@@ -2121,7 +2126,8 @@ class VulkanExample : public vkx::vulkanApp {
 		//uboFSLights.spotlights[2] = initLight(glm::vec3(0.0f, 4.0f, -10.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 
 		//uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 6.0f), glm::vec3(6.0f, 0.0f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
-		uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 6.0f), glm::vec3(5.0f, 0.0f, 0.5f), glm::vec3(1.0f, 0.0f, 0.0f));
+		//uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 6.0f), glm::vec3(5.0f, 0.0f, 0.5f), glm::vec3(1.0f, 0.0f, 0.0f));
+		uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(5.0f, 0.0f, 0.5f), glm::vec3(1.0f, 0.0f, 0.0f));
 		//uboFSLights.spotlights[1] = initLight(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(-2.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		//uboFSLights.spotlights[2] = initLight(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 	}
@@ -2168,22 +2174,31 @@ class VulkanExample : public vkx::vulkanApp {
 
 		/*float zNear = 1.0f;
 		float zFar = 512.0f;*/
+		//float zNear = 0.1f;
+		//float zFar = 64.0f;
 		float zNear = 0.1f;
 		float zFar = 64.0f;
 		float lightFOV = 45.0f;
 
 		for (uint32_t i = 0; i < NUM_SPOT_LIGHTS; i++) {
+
+			float zNear = uboFSLights.spotlights[i].zNear;
+			float zFar = uboFSLights.spotlights[i].zFar;
+
+			lightFOV = uboFSLights.spotlights[i].innerAngle;
+
 			// mvp from light's pov (for shadows)
 			glm::mat4 shadowProj = glm::perspective(lightFOV, 1.0f, zNear, zFar);
-			//glm::mat4 shadowProj = camera.matrices.projection;
-			//glm::mat4 shadowView = glm::lookAt(glm::vec3(uboFSLights.spotlights[i].position), glm::vec3(uboFSLights.spotlights[i].target), glm::vec3(0.0f, 1.0f, 0.0f));
+			
 			glm::mat4 shadowView = glm::lookAt(glm::vec3(uboFSLights.spotlights[i].position), glm::vec3(uboFSLights.spotlights[i].target), glm::vec3(0.0f, 0.0f, 1.0f));
 
+			//glm::mat4 shadowProj = camera.matrices.projection;
 			//glm::mat4 shadowView = camera.matrices.view;
+
+
 			glm::mat4 shadowModel = glm::mat4();
 
 			uboShadowGS.mvp[i] = shadowProj * shadowView * shadowModel;
-			//uboShadowGS.mvp[i] = glm::rotate(glm::mat4(), 90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 			uboFSLights.spotlights[i].viewMatrix = uboShadowGS.mvp[i];
 		}
 
@@ -2399,24 +2414,24 @@ class VulkanExample : public vkx::vulkanApp {
 		//modelsDeferred.push_back(planeModel2);
 
 
-		//for (int i = 0; i < 2; ++i) {
-		//	auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
-		//	testModel->load(getAssetPath() + "models/monkey.fbx");
-		//	testModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
+		for (int i = 0; i < 10; ++i) {
+			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
+			testModel->load(getAssetPath() + "models/monkey.fbx");
+			testModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
 
-		//	modelsDeferred.push_back(testModel);
-		//}
+			modelsDeferred.push_back(testModel);
+		}
 
 
 		for (int i = 0; i < 1; ++i) {
 
-			//auto testSkinnedMesh = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
-			//testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");
-			//testSkinnedMesh->createSkinnedMeshBuffer(SSAOVertexLayout, 0.0005f);
-			// todo: figure out why there must be atleast one deferred skinned mesh here
-			// inorder to not cause problems
-			// fixed?
-			//skinnedMeshesDeferred.push_back(testSkinnedMesh);
+			auto testSkinnedMesh = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
+			testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");// breaks size?
+			testSkinnedMesh->createSkinnedMeshBuffer(SSAOVertexLayout, 0.0005f);
+			 //todo: figure out why there must be atleast one deferred skinned mesh here
+			 //inorder to not cause problems
+			 //fixed?
+			skinnedMeshesDeferred.push_back(testSkinnedMesh);
 		}
 
 
@@ -3099,6 +3114,8 @@ class VulkanExample : public vkx::vulkanApp {
 		ImGui::Checkbox("Add Boxes", &keyStates.b);
 		ImGui::SliderFloat("FPS Cap", &settings.fpsCap, 5.0f, 500.0f);
 
+		
+
 
 
 		// testing:
@@ -3109,7 +3126,12 @@ class VulkanExample : public vkx::vulkanApp {
 		//ImGui::DragFloat4("pos", &uboShadowGS.pos[1].x, 0.1f);
 		//ImGui::DragFloat4("pos", &uboShadowGS.pos[2].x, 0.1f);
 		ImGui::DragFloat("Depth Bias Slope", &settings.depthBiasSlope, 0.01f);
-		ImGui::DragFloat("Depth Bias Constant", &settings.depthBiasConstant, 0.01f);
+		ImGui::DragFloat("Depth Bias Constant", &settings.depthBiasConstant, 0.1f);
+		ImGui::DragFloat("Spot Light FOV", &uboFSLights.spotlights[0].innerAngle, 0.05f);
+		ImGui::DragFloat("Spot Light FOV2", &uboFSLights.spotlights[0].outerAngle, 0.05f);
+		ImGui::DragFloat("Spot Light range", &uboFSLights.spotlights[0].range, 0.05f);
+		ImGui::DragFloat("Spot Light Near", &uboFSLights.spotlights[0].zNear, 0.05f);
+		ImGui::DragFloat("Spot Light Far", &uboFSLights.spotlights[0].zFar, 0.05f);
 
 		//ImGui::DragIntRange2("range int (no bounds)", &begin_i, &end_i, 5, 0, 0, "Min: %.0f units", "Max: %.0f units");
 		//ImGui::InputFloat4("mat4[0]", &uboShadowGS.mvp[0][0][0], 3);

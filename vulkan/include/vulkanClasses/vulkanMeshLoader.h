@@ -286,7 +286,7 @@ namespace vkx {
 			// fitted to vertex layout && usable to draw
 			//MeshBuffer combinedBuffer;
 			//std::vector<MeshBuffer> meshBuffers;
-			std::shared_ptr<MeshBuffer> combinedBuffer;
+			std::shared_ptr<MeshBuffer> combinedBuffer = nullptr;
 			std::vector<std::shared_ptr<MeshBuffer>> meshBuffers;
 
 			//std::vector<Mesh> meshes;

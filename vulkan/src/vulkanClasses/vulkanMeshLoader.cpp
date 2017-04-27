@@ -503,18 +503,15 @@ namespace vkx {
 		auto tStart = std::chrono::high_resolution_clock::now();
 
 
-
-		if (this->assetManager->meshBuffers.present(filename)) {
-			// assumes correct vertex layout
-			this->meshBuffers = this->assetManager->meshBuffers.get(filename);
-			return;
-		}
+		// todo: fix:
+		//if (this->assetManager->meshBuffers.present(filename)) {
+		//	// assumes correct vertex layout
+		//	this->meshBuffers = this->assetManager->meshBuffers.get(filename);
+		//	return;
+		//}
 
 
 		for (int m = 0; m < m_Entries.size(); m++) {
-
-			//printf("\rIn progress %d", m / m_Entries.size());
-			//fflush(stdout);
 
 
 			std::vector<float> vertexBuffer;
@@ -683,6 +680,7 @@ namespace vkx {
 
 	void vkx::MeshLoader::createSkinnedMeshBuffer(const std::vector<VertexComponent> &layout, float scale) {
 
+		this->combinedBuffer = std::make_shared<MeshBuffer>();
 
 		this->setAnimation(0);
 

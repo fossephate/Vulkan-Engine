@@ -15,14 +15,16 @@ layout (location = 0) in vec3 inUV;// vec3
 
 layout (location = 0) out vec4 outFragColor;
 
-// #define NEAR_PLANE 0.1
-// #define FAR_PLANE 64.0
+#define NEAR_PLANE 0.1
+#define FAR_PLANE 64.0
+// #define NEAR_PLANE 1.0
+// #define FAR_PLANE 512.0
 
 
-// float linearDepth(float depth) {
-// 	float z = depth * 2.0f - 1.0f;
-// 	return (2.0f * NEAR_PLANE * FAR_PLANE) / (FAR_PLANE + NEAR_PLANE - z * (FAR_PLANE - NEAR_PLANE));
-// }
+float linearDepth(float depth) {
+	float z = depth * 2.0f - 1.0f;
+	return (2.0f * NEAR_PLANE * FAR_PLANE) / (FAR_PLANE + NEAR_PLANE - z * (FAR_PLANE - NEAR_PLANE));
+}
 
 
 void main() {
@@ -49,6 +51,9 @@ void main() {
 
 	vec4 ssao = texture(samplerSSAO, inUV.st);
 	components[0] = vec3(ssao.r);
+
+	// vec4 shadow1 = texture(samplerShadowMap, vec3(inUV.st, 1));
+	// components[0] = vec3(shadow1.r);
 
 	//vec4 shadow = texture(samplerShadowMap, inUV.st);
 	// inUV.w = number of light source
