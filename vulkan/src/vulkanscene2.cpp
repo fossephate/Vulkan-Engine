@@ -33,6 +33,7 @@
 #define NUM_POINT_LIGHTS 100
 #define NUM_DIR_LIGHTS 1
 #define NUM_SPOT_LIGHTS 1
+#define NUM_LIGHTS_TOTAL 2
 
 #define SSAO_ON 1
 
@@ -335,6 +336,8 @@ class VulkanExample : public vkx::vulkanApp {
 		glm::vec4 direction;	// unit directional vector
 		glm::vec4 color;		// color of the light
 		glm::mat4 viewMatrix;	// view matrix (used in geometry shader and fragment shader)
+		float zNear = 0.1f;
+		float zFar = 64.0f;
 	};
 
 	struct {
@@ -366,7 +369,7 @@ class VulkanExample : public vkx::vulkanApp {
 	// The instancePos is used to place the models using instanced draws
 	struct {
 		glm::mat4 mvp[NUM_SPOT_LIGHTS];
-		//glm::vec4 pos[3];
+		glm::mat4 mvp2[NUM_DIR_LIGHTS];
 	} uboShadowGS;
 
 	struct {
@@ -2127,7 +2130,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		//uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 6.0f), glm::vec3(6.0f, 0.0f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
 		//uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 6.0f), glm::vec3(5.0f, 0.0f, 0.5f), glm::vec3(1.0f, 0.0f, 0.0f));
-		uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(5.0f, 0.0f, 0.5f), glm::vec3(1.0f, 0.0f, 0.0f));
+		uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 		//uboFSLights.spotlights[1] = initLight(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(-2.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		//uboFSLights.spotlights[2] = initLight(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 	}
@@ -2167,10 +2170,19 @@ class VulkanExample : public vkx::vulkanApp {
 
 		}
 
-		uboFSLights.spotlights[0].target = glm::vec4(cos(globalP*8.0f)*9.0f, sin(globalP*8.0f)*4.0f, 0.0f, 0.0f);
+		//uboFSLights.spotlights[0].target = glm::vec4(cos(globalP*8.0f)*9.0f, sin(globalP*8.0f)*4.0f, 0.0f, 0.0f);
+		//uboFSLights.spotlights[0].target = glm::vec4(cos(globalP*4.0f)*10.0f, sin(globalP*4.0f)*10.0f, 0.0f, 0.0f);
+		//uboFSLights.spotlights[0].target = glm::vec4(4.0f, 0.0f, 0.0f, 0.0f);
 		//uboFSLights.directionalLights[0].color = glm::vec4(1.0, 0.0, 0.0, 0.0);
 		//uboFSLights.directionalLights[0].position = glm::vec4(0.0, 1.0, 2.0, 0.0);
 		//uboFSLights.directionalLights[0].direction = glm::vec4(0.0, 0.0, -1.0, 0.0);
+
+		//uboFSLights.spotlights[0].position = vec4(camera.transform.translation, 1.0);
+		//uboFSLights.spotlights[0].target = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+
+		
+		//uboFSLights.directionalLights[0].direction = glm::normalize(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f) - glm::vec4(camera.transform.translation, 0.0f));
+		uboFSLights.directionalLights[0].direction = glm::vec4(0.5f, 0.0f, -0.5f, 0.0f);
 
 		/*float zNear = 1.0f;
 		float zFar = 512.0f;*/
@@ -2180,17 +2192,24 @@ class VulkanExample : public vkx::vulkanApp {
 		float zFar = 64.0f;
 		float lightFOV = 45.0f;
 
+		// spot lights:
 		for (uint32_t i = 0; i < NUM_SPOT_LIGHTS; i++) {
 
-			float zNear = uboFSLights.spotlights[i].zNear;
-			float zFar = uboFSLights.spotlights[i].zFar;
+			zNear = uboFSLights.spotlights[i].zNear;
+			zFar = uboFSLights.spotlights[i].zFar;
 
 			lightFOV = uboFSLights.spotlights[i].innerAngle;
 
 			// mvp from light's pov (for shadows)
-			glm::mat4 shadowProj = glm::perspective(lightFOV, 1.0f, zNear, zFar);
+			//glm::mat4 shadowProj = glm::perspectiveRH(glm::radians(lightFOV), 1.0f, zNear, zFar);
+			glm::mat4 shadowProj = glm::perspectiveRH(glm::radians(lightFOV), 1280.0f/720.0f, zNear, zFar);
+			shadowProj[1][1] *= -1;// because glm produces matrix for opengl and this is vulkan
+
+			//glm::mat4 shadowProj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, zNear, zFar);
 			
 			glm::mat4 shadowView = glm::lookAt(glm::vec3(uboFSLights.spotlights[i].position), glm::vec3(uboFSLights.spotlights[i].target), glm::vec3(0.0f, 0.0f, 1.0f));
+
+
 
 			//glm::mat4 shadowProj = camera.matrices.projection;
 			//glm::mat4 shadowView = camera.matrices.view;
@@ -2200,6 +2219,31 @@ class VulkanExample : public vkx::vulkanApp {
 
 			uboShadowGS.mvp[i] = shadowProj * shadowView * shadowModel;
 			uboFSLights.spotlights[i].viewMatrix = uboShadowGS.mvp[i];
+		}
+
+		// directional lights:
+		for (uint32_t i = 0; i < NUM_DIR_LIGHTS; i++) {
+
+			//zNear = uboFSLights.directionalLights[i].zNear;
+			//zFar = uboFSLights.directionalLights[i].zFar;
+			zNear = uboFSLights.spotlights[i].zNear;
+			zFar = uboFSLights.spotlights[i].zFar;
+
+			// mvp from light's pov (for shadows)
+
+			glm::mat4 shadowProj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, zNear, zFar);
+			shadowProj[1][1] *= -1;// because glm produces matrix for opengl and this is vulkan
+
+			glm::mat4 shadowView = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(uboFSLights.directionalLights[i].direction), glm::vec3(0.0f, 0.0f, 1.0f));
+
+			//glm::mat4 shadowProj = camera.matrices.projection;
+			//glm::mat4 shadowView = camera.matrices.view;
+
+
+			glm::mat4 shadowModel = glm::mat4();
+
+			uboShadowGS.mvp2[i] = shadowProj * shadowView * shadowModel;
+			uboFSLights.directionalLights[i].viewMatrix = uboShadowGS.mvp2[i];
 		}
 
 		updateUniformBufferShadow();
@@ -3128,7 +3172,9 @@ class VulkanExample : public vkx::vulkanApp {
 		ImGui::DragFloat("Depth Bias Slope", &settings.depthBiasSlope, 0.01f);
 		ImGui::DragFloat("Depth Bias Constant", &settings.depthBiasConstant, 0.1f);
 		ImGui::DragFloat("Spot Light FOV", &uboFSLights.spotlights[0].innerAngle, 0.05f);
-		ImGui::DragFloat("Spot Light FOV2", &uboFSLights.spotlights[0].outerAngle, 0.05f);
+		ImGui::DragFloat3("Spot Light Position", &uboFSLights.spotlights[0].position.x, 0.1f);
+		ImGui::DragFloat3("Spot Light Target", &uboFSLights.spotlights[0].target.x, 0.1f);
+		//ImGui::DragFloat("Spot Light FOV2", &uboFSLights.spotlights[0].outerAngle, 0.05f);
 		ImGui::DragFloat("Spot Light range", &uboFSLights.spotlights[0].range, 0.05f);
 		ImGui::DragFloat("Spot Light Near", &uboFSLights.spotlights[0].zNear, 0.05f);
 		ImGui::DragFloat("Spot Light Far", &uboFSLights.spotlights[0].zFar, 0.05f);
@@ -3297,7 +3343,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-		// shadow pass?
+		// shadow pass:
 		{
 
 			// Clear values for all attachments written in the fragment shader

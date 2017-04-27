@@ -6,15 +6,18 @@
 //#extension GL_ARB_shading_language_include : enable
 //#extension GL_GOOGLE_include_directive : enable
 
-#define NUM_SPOT_LIGHTS 3
+#define NUM_SPOT_LIGHTS 1
 #define NUM_DIR_LIGHTS 1
+#define NUM_LIGHTS_TOTAL 2
 
-layout (triangles, invocations = NUM_SPOT_LIGHTS) in;
+//layout (triangles, invocations = NUM_SPOT_LIGHTS) in;
+layout (triangles, invocations = NUM_LIGHTS_TOTAL) in;
 layout (triangle_strip, max_vertices = 3) out;
 
 layout (set = 0, binding = 0) uniform UBO 
 {
 	mat4 mvp[NUM_SPOT_LIGHTS];
+	mat4 mvp2[NUM_DIR_LIGHTS];
 	
 } ubo;
 
@@ -84,14 +87,40 @@ void main() {
 	//mat4 test2 = ubo.mvp[0];
 
 
-	for (int i = 0; i < gl_in.length(); i++) {
-		gl_Layer = gl_InvocationID;
-		//vec4 tmpPos = /*ubo.mvp[gl_InvocationID] **/ (gl_in[i].gl_Position + instancedPos);
-		//vec4 tmpPos = ubo.mvp[gl_InvocationID] * gl_in[i].gl_Position * instance.model;
-		vec4 tmpPos = ubo.mvp[gl_InvocationID] * instance.model * gl_in[i].gl_Position;
-		gl_Position = tmpPos;
-		EmitVertex();
+	// for (int i = 0; i < gl_in.length(); i++) {
+	// 	gl_Layer = gl_InvocationID;
+	// 	//vec4 tmpPos = /*ubo.mvp[gl_InvocationID] **/ (gl_in[i].gl_Position + instancedPos);
+	// 	//vec4 tmpPos = ubo.mvp[gl_InvocationID] * gl_in[i].gl_Position * instance.model;
+	// 	vec4 tmpPos = ubo.mvp[gl_InvocationID] * instance.model * gl_in[i].gl_Position;
+	// 	gl_Position = tmpPos;
+	// 	EmitVertex();
+	// }
+	// EndPrimitive();
+
+
+	if(gl_InvocationID < NUM_SPOT_LIGHTS) {
+		// spot lights:
+		for (int i = 0; i < gl_in.length(); i++) {
+			gl_Layer = gl_InvocationID;
+			vec4 tmpPos = ubo.mvp[gl_InvocationID] * instance.model * gl_in[i].gl_Position;
+			gl_Position = tmpPos;
+			EmitVertex();
+		}
+	// 	//EndPrimitive();
+
+	} else {
+		// // directional lights:
+		// for (int i = 0; i < gl_in.length(); i++) {
+		// 	gl_Layer = gl_InvocationID;
+		// 	vec4 tmpPos = ubo.mvp2[gl_InvocationID] * instance.model * gl_in[i].gl_Position;
+		// 	gl_Position = tmpPos;
+		// 	EmitVertex();
+		// }
+		// EndPrimitive();
 	}
+
+
 	EndPrimitive();
+
 
 }

@@ -4,6 +4,7 @@
 #include "vulkanFramebuffer.h"
 
 #define SHADOW_MAP_DIM 2048
+#define NUM_LIGHTS_TOTAL 2
 
 namespace vkx {
 
@@ -200,14 +201,14 @@ namespace vkx {
 		*
 		* @return VkResult for the sampler creation
 		*/
-		vk::Sampler createSampler(vk::Filter magFilter, vk::Filter minFilter, vk::SamplerAddressMode adressMode) {
+		vk::Sampler createSampler(vk::Filter magFilter, vk::Filter minFilter, vk::SamplerAddressMode addressMode) {
 			vk::SamplerCreateInfo samplerInfo;
 			samplerInfo.magFilter = magFilter;
 			samplerInfo.minFilter = minFilter;
 			samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
-			samplerInfo.addressModeU = adressMode;
-			samplerInfo.addressModeV = adressMode;
-			samplerInfo.addressModeW = adressMode;
+			samplerInfo.addressModeU = addressMode;
+			samplerInfo.addressModeV = addressMode;
+			samplerInfo.addressModeW = addressMode;
 			samplerInfo.mipLodBias = 0.0f;
 			samplerInfo.maxAnisotropy = 0;
 			samplerInfo.minLod = 0.0f;
@@ -665,7 +666,7 @@ namespace vkx {
 
 			//shadowFramebuffer.createAttachment(vk::Format::eR8Unorm, vk::ImageUsageFlagBits::eColorAttachment, this->size.x, this->size.y, 1);
 			// depth stencil attachment:
-			shadowFramebuffer.createAttachment(shadowMapFormat, usage, SHADOW_MAP_DIM, SHADOW_MAP_DIM, 3);
+			shadowFramebuffer.createAttachment(shadowMapFormat, usage, SHADOW_MAP_DIM, SHADOW_MAP_DIM, NUM_LIGHTS_TOTAL);
 			//shadowFramebuffer.createAttachment(shadowMapFormat, usage, this->size.x, this->size.y, 3);
 
 			shadowFramebuffer.attachments[0].sampler = createSampler(vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerAddressMode::eClampToEdge);

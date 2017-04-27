@@ -31,14 +31,16 @@ struct SpotLight {
     float innerAngle;
     float outerAngle;
     float range;
-    float near;
-    float far;
+    float zNear;
+    float zFar;
 };
 
 struct DirectionalLight {
     vec4 direction;
     vec4 color;
     mat4 viewMatrix;
+    float zNear;
+    float zFar;
 };
 
 
@@ -46,15 +48,18 @@ struct DirectionalLight {
 #define NUM_POINT_LIGHTS 100
 #define NUM_DIR_LIGHTS 1
 #define NUM_SPOT_LIGHTS 1
+#define NUM_LIGHTS_TOTAL 2
 
 #define SHADOW_FACTOR 0.1//0.25
 #define AMBIENT_LIGHT 0.2
-#define USE_PCF
+//#define USE_PCF
 
 const int SSAO_ENABLED = 1;
 //const float AMBIENT_FACTOR = 0.1;
 
 const int USE_SHADOWS = 1;
+const int USE_PCF = 0;
+
 
 
 
@@ -63,7 +68,7 @@ layout (set = 3, binding = 5) uniform UBO
 {
     PointLight pointlights[NUM_POINT_LIGHTS];
     SpotLight spotlights[NUM_SPOT_LIGHTS];
-    DirectionalLight directionallights[NUM_DIR_LIGHTS];
+    DirectionalLight directionalLights[NUM_DIR_LIGHTS];
     vec4 viewPos;
     mat4 model;// added
     mat4 view;// added
@@ -135,17 +140,22 @@ vec3 normal_from_depth(vec2 texCoord, float depth) {
 
 
 float textureProj(vec4 P, float layer, vec2 offset) {
-    float shadow = 1.0;
-    vec4 shadowCoord = P / P.w;
-    shadowCoord.st = shadowCoord.st * 0.5 + 0.5;
-    
-    if (shadowCoord.z > -1.0 && shadowCoord.z < 1.0)  {
-        float dist = texture(samplerShadowMap, vec3(shadowCoord.st + offset, layer)).r;
-        if (shadowCoord.w > 0.0 && dist < shadowCoord.z)  {
-            shadow = SHADOW_FACTOR;
-        }
-    }
-    return shadow;
+	float shadow = 1.0;
+	vec4 shadowCoord = P / P.w;
+	shadowCoord.st = shadowCoord.st * 0.5 + 0.5;
+
+	if (shadowCoord.z > -1.0 && shadowCoord.z < 1.0)  {
+		float dist = texture(samplerShadowMap, vec3(shadowCoord.st + offset, layer)).r;
+		if (shadowCoord.w > 0.0 && dist < shadowCoord.z)  {
+			shadow = SHADOW_FACTOR;
+		}
+	}
+
+	//if(shadowCoord.z > 1.0) {// added
+		//shadow = 0.0;
+	//}
+
+	return shadow;
 }
 
 float filterPCF(vec4 sc, float layer) {
@@ -403,10 +413,9 @@ void main() {
 
 
             // todo: replace with light struct member variables
-            //float lightCosInnerAngle = cos(radians(40.0));
-            //float lightCosOuterAngle = cos(radians(45.0));
             float lightCosInnerAngle = cos(radians(light.innerAngle));
-            float lightCosOuterAngle = cos(radians(light.outerAngle));
+            //float lightCosOuterAngle = cos(radians(light.outerAngle));
+            float lightCosOuterAngle = cos(radians(light.innerAngle+1));
             //float lightRange = 100.0;
             float lightRange = light.range;
             
@@ -437,6 +446,10 @@ void main() {
             fragcolor += vec3((diffuse + specular) * spotEffect * heightAttenuation) * light.color.rgb * color.rgb;
         }
 
+        // directional lights:
+        for(int i = 0; i < NUM_DIR_LIGHTS; ++i) {
+        }
+
 
 
 
@@ -444,23 +457,50 @@ void main() {
         // Shadow calculations in a separate pass
         if (USE_SHADOWS > 0) {
             for(int i = 0; i < NUM_SPOT_LIGHTS; ++i) {
-
-                //vec3 worldPos = calculate_world_position(inUV, depth);
-                //vec3 worldPos = fragPos;
-                //vec3 worldPos = samplerPos.rgb;
-                //vec3 worldPos = worldPosFromDepth(inUV, depth);
-
                 vec4 shadowClip = ubo.spotlights[i].viewMatrix * vec4(worldPos, 1.0);
 
                 float shadowFactor;
-                //#ifdef USE_PCF
-                    //shadowFactor = filterPCF(shadowClip, i);
-                //#else
+                if(USE_PCF > 0) {
+                    shadowFactor = filterPCF(shadowClip, i);
+                } else {
                     shadowFactor = textureProj(shadowClip, i, vec2(0.0));
-                //#endif
+                }
 
                 fragcolor *= shadowFactor;
             }
+
+            // for(int i = 0; i < NUM_SPOT_LIGHTS; ++i) {
+            //     vec4 shadowClip = ubo.spotlights[i].viewMatrix * vec4(worldPos, 1.0);
+
+            //     float shadowFactor;
+            //     if(USE_PCF > 0) {
+            //         shadowFactor = filterPCF(shadowClip, i);
+            //     } else {
+            //         shadowFactor = textureProj(shadowClip, i, vec2(0.0));
+            //     }
+
+            //     fragcolor *= shadowFactor;
+            // }
+
+            //for(int i = NUM_SPOT_LIGHTS; i < NUM_DIR_LIGHTS+NUM_SPOT_LIGHTS; ++i) {
+    //         for(int i = 0; i < 2; ++i) {
+    //             vec4 shadowClip = ubo.directionalLights[i].viewMatrix * vec4(worldPos, 1.0);
+
+    //             float shadowFactor;
+				// if(USE_PCF > 0) {
+				// 	shadowFactor = filterPCF(shadowClip, i);
+				// } else {
+				// 	shadowFactor = textureProj(shadowClip, i, vec2(0.0));
+				// }
+
+				// // if ( texture( samplerShadowMap, vec3(shadowClip.xy, 0) ).r <  shadowClip.z){
+				// // shadowFactor = 0.5;
+				// // } else {
+				// // shadowFactor = 1.0;
+				// // }
+
+    //             fragcolor *= shadowFactor;
+    //         }
         }
 
 
