@@ -34,6 +34,7 @@ struct SpotLight {
     float range;
     float zNear;
     float zFar;
+    vec3 padding;
 };
 
 struct DirectionalLight {
@@ -42,13 +43,14 @@ struct DirectionalLight {
     mat4 viewMatrix;
     float zNear;
     float zFar;
+    vec2 padding;
 };
 
 
 
 #define NUM_POINT_LIGHTS 100
-#define NUM_DIR_LIGHTS 1
 #define NUM_SPOT_LIGHTS 2
+#define NUM_DIR_LIGHTS 1
 #define NUM_LIGHTS_TOTAL 3
 
 #define SHADOW_FACTOR 0.1//0.25
@@ -448,12 +450,12 @@ void main() {
             // Spotlight (soft edges)
             vec3 spotDir = normalize(vec3(light.position - light.target));
 
-            float theta = dot(lightDir, normalize(-spotDir));
-            //float epsilon = (/*ubo.spotlights[i].cutOff*/12.5 - /*ubo.spotlights[i].outerCutOff*/0.9);
-            float epsilon = lightCosInnerAngle - lightCosOuterAngle;
-            float intensity = clamp((theta - lightCosOuterAngle) / epsilon, 0.0, 1.0);
-            diffuse  *= intensity;
-            specular *= intensity;
+            // float theta = dot(lightDir, normalize(-spotDir));
+            // //float epsilon = (/*ubo.spotlights[i].cutOff*/12.5 - /*ubo.spotlights[i].outerCutOff*/0.9);
+            // float epsilon = lightCosInnerAngle - lightCosOuterAngle;
+            // float intensity = clamp((theta - lightCosOuterAngle) / epsilon, 0.0, 1.0);
+            //diffuse  *= intensity;
+            //specular *= intensity;
 
 
 
@@ -483,7 +485,7 @@ void main() {
         // Shadow calculations in a separate pass
         if (USE_SHADOWS > 0) {
 
-            for(int i = 0; i < 1; ++i) {
+            for(int i = 0; i < NUM_SPOT_LIGHTS; ++i) {
                 vec4 shadowClip = ubo.spotlights[i].viewMatrix * vec4(worldPos, 1.0);
 
                 float shadowFactor;
@@ -501,7 +503,7 @@ void main() {
 
                 }
 
-                fragcolor *= shadowFactor;
+                //fragcolor *= shadowFactor;
             }
 
             //for(int i = NUM_SPOT_LIGHTS; i < NUM_DIR_LIGHTS+NUM_SPOT_LIGHTS; ++i) {

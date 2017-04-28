@@ -18,7 +18,6 @@ layout (set = 0, binding = 0) uniform UBO
 {
 	mat4 mvp[NUM_SPOT_LIGHTS];
 	mat4 mvp2[NUM_DIR_LIGHTS];
-	
 } ubo;
 
 // matrix data

@@ -31,8 +31,8 @@
 #define SSAO_NOISE_DIM 4
 
 #define NUM_POINT_LIGHTS 100
-#define NUM_DIR_LIGHTS 1
 #define NUM_SPOT_LIGHTS 2
+#define NUM_DIR_LIGHTS 1
 #define NUM_LIGHTS_TOTAL 3
 
 #define SSAO_ON 1
@@ -330,6 +330,7 @@ class VulkanExample : public vkx::vulkanApp {
 		float range = 100.0f;
 		float zNear = 0.1f;
 		float zFar = 64.0f;
+		vec3 padding;
 	};
 
 	struct DirectionalLight {
@@ -338,6 +339,7 @@ class VulkanExample : public vkx::vulkanApp {
 		glm::mat4 viewMatrix;	// view matrix (used in geometry shader and fragment shader)
 		float zNear = 0.1f;
 		float zFar = 64.0f;
+		glm::vec2 padding;
 	};
 
 	struct {
@@ -2131,8 +2133,20 @@ class VulkanExample : public vkx::vulkanApp {
 		//uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 6.0f), glm::vec3(6.0f, 0.0f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
 		//uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 6.0f), glm::vec3(5.0f, 0.0f, 0.5f), glm::vec3(1.0f, 0.0f, 0.0f));
 		uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		uboFSLights.spotlights[1] = initLight(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		uboFSLights.spotlights[1] = initLight(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		//uboFSLights.spotlights[2] = initLight(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+		//uboFSLights.spotlights[3] = initLight(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+		//uboFSLights.spotlights[4] = initLight(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+
+		//uboFSLights.spotlights[0].position = glm::vec4(0.0f, 0.0f, 10.0f, 1.0f);
+		//uboFSLights.spotlights[0].color = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+
+		//uboFSLights.spotlights[1].position = glm::vec4(0.0f, 0.0f, 10.0f, 1.0f);
+		//uboFSLights.spotlights[1].color = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+
+		uboFSLights.spotlights[4000].color = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+
+
 	}
 
 	// Update fragment shader light position uniform block
@@ -2172,7 +2186,10 @@ class VulkanExample : public vkx::vulkanApp {
 
 		//uboFSLights.spotlights[0].target = glm::vec4(cos(globalP*8.0f)*9.0f, sin(globalP*8.0f)*4.0f, 0.0f, 0.0f);
 		uboFSLights.spotlights[0].target = glm::vec4(cos(globalP*4.0f)*10.0f, sin(globalP*4.0f)*10.0f, 0.0f, 0.0f);
-		uboFSLights.spotlights[1].target = glm::vec4(-cos(globalP*4.0f)*10.0f, -sin(globalP*4.0f)*10.0f, 0.0f, 0.0f);
+
+		uboFSLights.spotlights[1].target = glm::vec4(cos(-globalP*8.0f)*10.0f, sin(-globalP*8.0f)*10.0f, 0.0f, 0.0f);
+
+
 		//uboFSLights.spotlights[0].target = glm::vec4(4.0f, 0.0f, 0.0f, 0.0f);
 		//uboFSLights.directionalLights[0].color = glm::vec4(1.0, 0.0, 0.0, 0.0);
 		//uboFSLights.directionalLights[0].position = glm::vec4(0.0, 1.0, 2.0, 0.0);
@@ -2197,10 +2214,10 @@ class VulkanExample : public vkx::vulkanApp {
 		// spot lights:
 		for (uint32_t i = 0; i < NUM_SPOT_LIGHTS; i++) {
 
-			zNear = uboFSLights.spotlights[i].zNear;
-			zFar = uboFSLights.spotlights[i].zFar;
+			zNear = uboFSLights.spotlights[0].zNear;
+			zFar = uboFSLights.spotlights[0].zFar;
 
-			lightFOV = uboFSLights.spotlights[i].innerAngle;
+			lightFOV = uboFSLights.spotlights[0].innerAngle;
 
 			// mvp from light's pov (for shadows)
 			glm::mat4 shadowProj = glm::perspectiveRH(glm::radians(lightFOV), 1.0f, zNear, zFar);
@@ -3182,6 +3199,9 @@ class VulkanExample : public vkx::vulkanApp {
 		ImGui::DragFloat("Spot Light range", &uboFSLights.spotlights[0].range, 0.05f);
 		ImGui::DragFloat("Spot Light Near", &uboFSLights.spotlights[0].zNear, 0.05f);
 		ImGui::DragFloat("Spot Light Far", &uboFSLights.spotlights[0].zFar, 0.05f);
+
+		ImGui::DragFloat3("Spot Light1 Color", &uboFSLights.spotlights[0].color.x, 0.1f);
+		ImGui::DragFloat3("Spot Light2 Color", &uboFSLights.spotlights[1].color.x, 0.1f);
 
 		//ImGui::DragIntRange2("range int (no bounds)", &begin_i, &end_i, 5, 0, 0, "Min: %.0f units", "Max: %.0f units");
 		//ImGui::InputFloat4("mat4[0]", &uboShadowGS.mvp[0][0][0], 3);
