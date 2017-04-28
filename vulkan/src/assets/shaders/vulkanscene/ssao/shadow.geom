@@ -6,9 +6,9 @@
 //#extension GL_ARB_shading_language_include : enable
 //#extension GL_GOOGLE_include_directive : enable
 
-#define NUM_SPOT_LIGHTS 1
+#define NUM_SPOT_LIGHTS 2
 #define NUM_DIR_LIGHTS 1
-#define NUM_LIGHTS_TOTAL 2
+#define NUM_LIGHTS_TOTAL 3
 
 //layout (triangles, invocations = NUM_SPOT_LIGHTS) in;
 layout (triangles, invocations = NUM_LIGHTS_TOTAL) in;
@@ -106,17 +106,15 @@ void main() {
 			gl_Position = tmpPos;
 			EmitVertex();
 		}
-	// 	//EndPrimitive();
 
 	} else {
 		// // directional lights:
-		// for (int i = 0; i < gl_in.length(); i++) {
-		// 	gl_Layer = gl_InvocationID;
-		// 	vec4 tmpPos = ubo.mvp2[gl_InvocationID] * instance.model * gl_in[i].gl_Position;
-		// 	gl_Position = tmpPos;
-		// 	EmitVertex();
-		// }
-		// EndPrimitive();
+		for (int i = 0; i < gl_in.length(); i++) {
+			gl_Layer = gl_InvocationID;
+			vec4 tmpPos = ubo.mvp2[gl_InvocationID] * instance.model * gl_in[i].gl_Position;
+			gl_Position = tmpPos;
+			EmitVertex();
+		}
 	}
 
 

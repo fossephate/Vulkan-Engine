@@ -32,8 +32,8 @@
 
 #define NUM_POINT_LIGHTS 100
 #define NUM_DIR_LIGHTS 1
-#define NUM_SPOT_LIGHTS 1
-#define NUM_LIGHTS_TOTAL 2
+#define NUM_SPOT_LIGHTS 2
+#define NUM_LIGHTS_TOTAL 3
 
 #define SSAO_ON 1
 
@@ -325,7 +325,7 @@ class VulkanExample : public vkx::vulkanApp {
 		glm::vec4 target;		// where the light points
 		glm::vec4 color;		// color of the light
 		glm::mat4 viewMatrix;	// view matrix (used in geometry shader and fragment shader)
-		float innerAngle = 45.0f;
+		float innerAngle = 80.0f;
 		float outerAngle = 50.0f;
 		float range = 100.0f;
 		float zNear = 0.1f;
@@ -2131,7 +2131,7 @@ class VulkanExample : public vkx::vulkanApp {
 		//uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 6.0f), glm::vec3(6.0f, 0.0f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
 		//uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 6.0f), glm::vec3(5.0f, 0.0f, 0.5f), glm::vec3(1.0f, 0.0f, 0.0f));
 		uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		//uboFSLights.spotlights[1] = initLight(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(-2.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		uboFSLights.spotlights[1] = initLight(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		//uboFSLights.spotlights[2] = initLight(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 	}
 
@@ -2171,7 +2171,8 @@ class VulkanExample : public vkx::vulkanApp {
 		}
 
 		//uboFSLights.spotlights[0].target = glm::vec4(cos(globalP*8.0f)*9.0f, sin(globalP*8.0f)*4.0f, 0.0f, 0.0f);
-		//uboFSLights.spotlights[0].target = glm::vec4(cos(globalP*4.0f)*10.0f, sin(globalP*4.0f)*10.0f, 0.0f, 0.0f);
+		uboFSLights.spotlights[0].target = glm::vec4(cos(globalP*4.0f)*10.0f, sin(globalP*4.0f)*10.0f, 0.0f, 0.0f);
+		uboFSLights.spotlights[1].target = glm::vec4(-cos(globalP*4.0f)*10.0f, -sin(globalP*4.0f)*10.0f, 0.0f, 0.0f);
 		//uboFSLights.spotlights[0].target = glm::vec4(4.0f, 0.0f, 0.0f, 0.0f);
 		//uboFSLights.directionalLights[0].color = glm::vec4(1.0, 0.0, 0.0, 0.0);
 		//uboFSLights.directionalLights[0].position = glm::vec4(0.0, 1.0, 2.0, 0.0);
@@ -2181,8 +2182,9 @@ class VulkanExample : public vkx::vulkanApp {
 		//uboFSLights.spotlights[0].target = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
 		
-		//uboFSLights.directionalLights[0].direction = glm::normalize(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f) - glm::vec4(camera.transform.translation, 0.0f));
-		uboFSLights.directionalLights[0].direction = glm::vec4(0.5f, 0.0f, -0.5f, 0.0f);
+		uboFSLights.directionalLights[0].direction = glm::normalize(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f) - glm::vec4(camera.transform.translation, 0.0f));
+		//uboFSLights.directionalLights[0].direction = glm::normalize(glm::vec4(camera.transform.translation, 0.0f) - glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+		//uboFSLights.directionalLights[0].direction = glm::vec4(0.5f, 0.0f, -0.5f, 0.0f);
 
 		/*float zNear = 1.0f;
 		float zFar = 512.0f;*/
@@ -2201,8 +2203,8 @@ class VulkanExample : public vkx::vulkanApp {
 			lightFOV = uboFSLights.spotlights[i].innerAngle;
 
 			// mvp from light's pov (for shadows)
-			//glm::mat4 shadowProj = glm::perspectiveRH(glm::radians(lightFOV), 1.0f, zNear, zFar);
-			glm::mat4 shadowProj = glm::perspectiveRH(glm::radians(lightFOV), 1280.0f/720.0f, zNear, zFar);
+			glm::mat4 shadowProj = glm::perspectiveRH(glm::radians(lightFOV), 1.0f, zNear, zFar);
+			//glm::mat4 shadowProj = glm::perspectiveRH(glm::radians(lightFOV), 1280.0f/720.0f, zNear, zFar);
 			shadowProj[1][1] *= -1;// because glm produces matrix for opengl and this is vulkan
 
 			//glm::mat4 shadowProj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, zNear, zFar);
@@ -2231,7 +2233,9 @@ class VulkanExample : public vkx::vulkanApp {
 
 			// mvp from light's pov (for shadows)
 
-			glm::mat4 shadowProj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, zNear, zFar);
+			float size = 20.0f;
+
+			glm::mat4 shadowProj = glm::ortho(-size, size, -size, size, zNear, zFar);
 			shadowProj[1][1] *= -1;// because glm produces matrix for opengl and this is vulkan
 
 			glm::mat4 shadowView = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(uboFSLights.directionalLights[i].direction), glm::vec3(0.0f, 0.0f, 1.0f));

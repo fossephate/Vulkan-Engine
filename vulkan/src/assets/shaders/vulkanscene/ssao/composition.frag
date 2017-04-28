@@ -9,6 +9,7 @@ layout (set = 3, binding = 3) uniform usampler2D samplerAlbedo;// this is a usam
 layout (set = 3, binding = 4) uniform sampler2D samplerSSAO;
 
 //layout (set = 3, binding = 6) uniform sampler2DShadow samplerShadowMap;
+//layout (set = 3, binding = 6) uniform sampler2DArrayShadow samplerShadowMap;
 layout (set = 3, binding = 6) uniform sampler2DArray samplerShadowMap;
 //layout (set = 3, binding = 6) uniform sampler2D samplerShadowMap;
 
@@ -47,8 +48,8 @@ struct DirectionalLight {
 
 #define NUM_POINT_LIGHTS 100
 #define NUM_DIR_LIGHTS 1
-#define NUM_SPOT_LIGHTS 1
-#define NUM_LIGHTS_TOTAL 2
+#define NUM_SPOT_LIGHTS 2
+#define NUM_LIGHTS_TOTAL 3
 
 #define SHADOW_FACTOR 0.1//0.25
 #define AMBIENT_LIGHT 0.2
@@ -139,6 +140,25 @@ vec3 normal_from_depth(vec2 texCoord, float depth) {
 
 
 
+// float textureProj(vec4 P, float layer, vec2 offset) {
+// 	float shadow = 1.0;
+// 	vec4 shadowCoord = P / P.w;
+// 	shadowCoord.st = shadowCoord.st * 0.5 + 0.5;
+
+// 	if (shadowCoord.z > -1.0 && shadowCoord.z < 1.0)  {
+// 		float dist = texture(samplerShadowMap, vec3(shadowCoord.st + offset, layer)).r;
+// 		if (shadowCoord.w > 0.0 && dist < shadowCoord.z)  {
+// 			shadow = SHADOW_FACTOR;
+// 		}
+// 	}
+
+// 	//if(shadowCoord.z > 1.0) {// added
+// 		//shadow = 0.0;
+// 	//}
+
+// 	return shadow;
+// }
+
 float textureProj(vec4 P, float layer, vec2 offset) {
 	float shadow = 1.0;
 	vec4 shadowCoord = P / P.w;
@@ -151,12 +171,18 @@ float textureProj(vec4 P, float layer, vec2 offset) {
 		}
 	}
 
-	//if(shadowCoord.z > 1.0) {// added
-		//shadow = 0.0;
-	//}
-
 	return shadow;
 }
+
+// check whether a point lies in a view frustrum or not:
+bool in_frustum(mat4 M, vec3 p) {
+    vec4 Pclip = M * vec4(p, 1.);
+    return abs(Pclip.x) < Pclip.w && 
+           abs(Pclip.y) < Pclip.w && 
+           0 < Pclip.z && 
+           Pclip.z < Pclip.w;
+}
+
 
 float filterPCF(vec4 sc, float layer) {
     ivec2 texDim = textureSize(samplerShadowMap, 0).xy;
@@ -423,11 +449,11 @@ void main() {
             vec3 spotDir = normalize(vec3(light.position - light.target));
 
             float theta = dot(lightDir, normalize(-spotDir));
-            float epsilon = (/*ubo.spotlights[i].cutOff*/12.5 - /*ubo.spotlights[i].outerCutOff*/0.9);
-            //float epsilon = lightCosInnerAngle - lightCosOuterAngle;
+            //float epsilon = (/*ubo.spotlights[i].cutOff*/12.5 - /*ubo.spotlights[i].outerCutOff*/0.9);
+            float epsilon = lightCosInnerAngle - lightCosOuterAngle;
             float intensity = clamp((theta - lightCosOuterAngle) / epsilon, 0.0, 1.0);
-            //diffuse  *= intensity;
-            //specular *= intensity;
+            diffuse  *= intensity;
+            specular *= intensity;
 
 
 
@@ -451,56 +477,54 @@ void main() {
         }
 
 
-
+        // fragcolor = vec3(1.0, 1.0, 1.0);
 
 
         // Shadow calculations in a separate pass
         if (USE_SHADOWS > 0) {
-            for(int i = 0; i < NUM_SPOT_LIGHTS; ++i) {
+
+            for(int i = 0; i < 1; ++i) {
                 vec4 shadowClip = ubo.spotlights[i].viewMatrix * vec4(worldPos, 1.0);
 
                 float shadowFactor;
-                if(USE_PCF > 0) {
-                    shadowFactor = filterPCF(shadowClip, i);
+                
+                // if the fragment isn't in the light's view frustrum, it can't be in shadow, either
+                // seems to fix lots of problems
+                if(!in_frustum(ubo.spotlights[i].viewMatrix, worldPos)) {
+                	shadowFactor = 1.0;
                 } else {
-                    shadowFactor = textureProj(shadowClip, i, vec2(0.0));
+	                if(USE_PCF > 0) {
+	                    shadowFactor = filterPCF(shadowClip, i);
+	                } else {
+	                    shadowFactor = textureProj(shadowClip, i, vec2(0.0));
+	                }
+
                 }
 
                 fragcolor *= shadowFactor;
             }
 
-            // for(int i = 0; i < NUM_SPOT_LIGHTS; ++i) {
-            //     vec4 shadowClip = ubo.spotlights[i].viewMatrix * vec4(worldPos, 1.0);
+            //for(int i = NUM_SPOT_LIGHTS; i < NUM_DIR_LIGHTS+NUM_SPOT_LIGHTS; ++i) {
+            // for(int i = 0; i < 2; ++i) {
+            //     vec4 shadowClip = ubo.directionalLights[i].viewMatrix * vec4(worldPos, 1.0);
 
             //     float shadowFactor;
-            //     if(USE_PCF > 0) {
-            //         shadowFactor = filterPCF(shadowClip, i);
-            //     } else {
-            //         shadowFactor = textureProj(shadowClip, i, vec2(0.0));
-            //     }
+                
+            //     // if the fragment isn't in the light's view frustrum, it can't be in shadow, either
+            //     // seems to fix lots of problems
+            //     // if(!in_frustum(ubo.directionalLights[i].viewMatrix, worldPos)) {
+            //     // 	shadowFactor = 1.0;
+            //     // } else {
+	           //      if(USE_PCF > 0) {
+	           //          shadowFactor = filterPCF(shadowClip, i);
+	           //      } else {
+	           //          shadowFactor = textureProj(shadowClip, i, vec2(0.0));
+	           //      }
+
+            //     //}
 
             //     fragcolor *= shadowFactor;
             // }
-
-            //for(int i = NUM_SPOT_LIGHTS; i < NUM_DIR_LIGHTS+NUM_SPOT_LIGHTS; ++i) {
-    //         for(int i = 0; i < 2; ++i) {
-    //             vec4 shadowClip = ubo.directionalLights[i].viewMatrix * vec4(worldPos, 1.0);
-
-    //             float shadowFactor;
-				// if(USE_PCF > 0) {
-				// 	shadowFactor = filterPCF(shadowClip, i);
-				// } else {
-				// 	shadowFactor = textureProj(shadowClip, i, vec2(0.0));
-				// }
-
-				// // if ( texture( samplerShadowMap, vec3(shadowClip.xy, 0) ).r <  shadowClip.z){
-				// // shadowFactor = 0.5;
-				// // } else {
-				// // shadowFactor = 1.0;
-				// // }
-
-    //             fragcolor *= shadowFactor;
-    //         }
         }
 
 
@@ -509,10 +533,10 @@ void main() {
 
 
 
-        if (SSAO_ENABLED == 1) {
-            float ao = texture(samplerSSAO, inUV).r;
-            fragcolor *= ao.rrr;
-        }
+        // if (SSAO_ENABLED == 1) {
+        //     float ao = texture(samplerSSAO, inUV).r;
+        //     fragcolor *= ao.rrr;
+        // }
     }
    
     outFragcolor = vec4(fragcolor, 1.0);

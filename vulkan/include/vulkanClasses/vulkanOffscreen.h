@@ -4,7 +4,7 @@
 #include "vulkanFramebuffer.h"
 
 #define SHADOW_MAP_DIM 2048
-#define NUM_LIGHTS_TOTAL 2
+#define NUM_LIGHTS_TOTAL 3
 
 namespace vkx {
 

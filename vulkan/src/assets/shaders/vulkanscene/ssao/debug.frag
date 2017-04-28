@@ -9,16 +9,18 @@ layout (set = 3, binding = 3) uniform usampler2D samplerAlbedo;
 layout (set = 3, binding = 4) uniform sampler2D samplerSSAO;
 
 //layout (set = 3, binding = 6) uniform sampler2D samplerShadowMap;
+//layout (set = 3, binding = 6) uniform sampler2DShadow samplerShadowMap;
 layout (set = 3, binding = 6) uniform sampler2DArray samplerShadowMap;
+//layout (set = 3, binding = 6) uniform sampler2DArrayShadow samplerShadowMap;
 
 layout (location = 0) in vec3 inUV;// vec3
 
 layout (location = 0) out vec4 outFragColor;
 
-// #define NEAR_PLANE 0.1
-// #define FAR_PLANE 64.0
-#define NEAR_PLANE 1.0
-#define FAR_PLANE 512.0
+#define NEAR_PLANE 0.1
+#define FAR_PLANE 64.0
+// #define NEAR_PLANE 1.0
+// #define FAR_PLANE 512.0
 
 
 float linearDepth(float depth) {
@@ -58,6 +60,9 @@ void main() {
 	vec4 shadow1 = texture(samplerShadowMap, vec3(inUV.st, 1));
 	components[0] = vec3(shadow1.r);
 
+	// float shadow1 = texture(samplerShadowMap, vec3(inUV.st, 1));
+	// components[0] = vec3(shadow1);
+
 	// vec4 shadow2 = texture(samplerShadowMap, vec3(inUV.st, 2));
 	// components[0] = vec3(shadow2.r);
 
@@ -68,6 +73,9 @@ void main() {
 	vec4 shadow = texture(samplerShadowMap, vec3(inUV.st, 0));
 	components[2] = vec3(shadow.r);
 	//components[2] = vec3(linearDepth(shadow.r));
+
+	// float shadow = texture(samplerShadowMap, vec3(inUV.st, 0));
+	// components[2] = vec3(shadow);
 
 
 
