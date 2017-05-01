@@ -110,7 +110,7 @@ void main() {
 		// // directional lights:
 		for (int i = 0; i < gl_in.length(); i++) {
 			gl_Layer = gl_InvocationID;
-			vec4 tmpPos = ubo.mvp2[gl_InvocationID] * instance.model * gl_in[i].gl_Position;
+			vec4 tmpPos = ubo.mvp2[gl_InvocationID-NUM_SPOT_LIGHTS] * instance.model * gl_in[i].gl_Position;
 			gl_Position = tmpPos;
 			EmitVertex();
 		}

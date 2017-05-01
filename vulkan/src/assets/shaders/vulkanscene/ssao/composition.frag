@@ -29,21 +29,29 @@ struct SpotLight {
     vec4 target;
     vec4 color;
     mat4 viewMatrix;
+
     float innerAngle;
     float outerAngle;
-    float range;
     float zNear;
     float zFar;
-    vec3 padding;
+
+    float range;
+    float pad1;
+    float pad2;
+    float pad3;
+
 };
 
 struct DirectionalLight {
     vec4 direction;
+    vec4 pad;
     vec4 color;
     mat4 viewMatrix;
     float zNear;
     float zFar;
-    vec2 padding;
+
+    float pad1;
+    float pad2;
 };
 
 
@@ -302,24 +310,20 @@ void main() {
     // find a better way:
     vec3 viewPos = vec3(ubo.view * vec4(samplerPos.rgb, 1.0));// calculate view space position
     vec3 worldPos = samplerPos.rgb;
-
-
-    vec3 fragPos = viewPos;// view space position
-
     
     
 
 
     
 
-    vec3 normal = texture(samplerNormal, inUV).rgb * 2.0 - 1.0;
+    vec3 normal = texture(samplerNormal, inUV).rgb * 2.0 - 1.0;// world space normal
 
     //vec3 worldNormal = normal_from_depth(inUV, depth);
 
     // unpack
     ivec2 texDim = textureSize(samplerAlbedo, 0);
     //uvec4 albedo = texture(samplerAlbedo, inUV.st, 0);
-    uvec4 albedo = texelFetch(samplerAlbedo, ivec2(inUV.st * texDim ), 0);
+    uvec4 albedo = texelFetch(samplerAlbedo, ivec2(inUV.st * texDim), 0);
 
     vec4 color;
     color.rg = unpackHalf2x16(albedo.r);
@@ -329,9 +333,10 @@ void main() {
 
     vec3 ambient = color.rgb * AMBIENT_LIGHT;
 
-    vec3 fragcolor  = ambient;
+    vec3 fragcolor = ambient;
     
-    if (length(fragPos) == 0.0) {
+    //if (length(fragPos) == 0.0) {
+    if (length(viewPos) == 0.0) {
         fragcolor = color.rgb;
     } else {
 
@@ -412,7 +417,7 @@ void main() {
             // Viewer to fragment
             vec3 V = ubo.viewPos.xyz - worldPos;
             //vec3 V = viewPos - fragPos;
-            V = normalize(V);
+            //V = normalize(V);
 
 
 
@@ -432,7 +437,6 @@ void main() {
 
             //float NdotR = /*pow(*/max(0.0, dot(viewDir, reflectDir))/*, 16.0)*/;// NdotR, pow?
             float NdotR = max(0.0, dot(reflectDir, V));
-            //vec3 specular = /*light.color.rgb */ spec.r * pow(NdotR, 16.0) /** attenuation*/;
             vec3 specular = vec3(pow(NdotR, 16.0) * albedo.a * 2.5);
 
 
@@ -440,12 +444,15 @@ void main() {
 
 
 
-            // todo: replace with light struct member variables
-            float lightCosInnerAngle = cos(radians(light.innerAngle));
+            
+            float lightCosInnerAngle = cos(radians(light.innerAngle-10));
             //float lightCosOuterAngle = cos(radians(light.outerAngle));
-            float lightCosOuterAngle = cos(radians(light.innerAngle+1));
-            //float lightRange = 100.0;
+            float lightCosOuterAngle = cos(radians(light.innerAngle-9));
             float lightRange = light.range;
+
+            // float lightCosInnerAngle = cos(radians(45));
+            // float lightCosOuterAngle = cos(radians(46));
+            // float lightRange = 100.0;
             
             // Spotlight (soft edges)
             vec3 spotDir = normalize(vec3(light.position - light.target));
@@ -456,8 +463,6 @@ void main() {
             // float intensity = clamp((theta - lightCosOuterAngle) / epsilon, 0.0, 1.0);
             //diffuse  *= intensity;
             //specular *= intensity;
-
-
 
 
             // Dual cone spot light with smooth transition between inner and outer angle
@@ -474,8 +479,46 @@ void main() {
             fragcolor += vec3((diffuse + specular) * spotEffect * heightAttenuation) * light.color.rgb * color.rgb;
         }
 
+
+
+
         // directional lights:
         for(int i = 0; i < NUM_DIR_LIGHTS; ++i) {
+
+        	DirectionalLight light = ubo.directionalLights[i];
+
+        	vec3 N = normalize(normal);
+
+        	vec3 viewDir = normalize(-viewPos - worldPos);// changed to -viewPos
+
+		    vec3 lightDir = normalize(-vec3(light.direction));
+		    // Diffuse shading
+		    float diffuse = max(dot(normal, lightDir), 0.0);// angle between normal and light direction
+		    
+
+            // Specular shading
+            vec3 reflectDir = reflect(-lightDir, N);// reflect
+
+
+            vec3 V = normalize(ubo.viewPos.xyz - worldPos);
+            float NdotR = max(0.0, dot(reflectDir, V));
+            vec3 specular = vec3(pow(NdotR, 16.0) * albedo.a * 2.5);
+
+		    // Specular shading
+		    //vec3 reflectDir = reflect(-lightDir, normal);
+		    //float specular = pow(max(dot(viewDir, reflectDir), 0.0), /*material.shininess*/5.0);
+		    
+
+
+		    // Combine results
+		    //vec3 ambient  = light.ambient  /* vec3(texture(material.diffuse, TexCoords))*/;
+		    //vec3 diffuse  = light.diffuse  /* diff * vec3(texture(material.diffuse, TexCoords))*/;
+		    //vec3 specular = light.specular /* spec * vec3(texture(material.specular, TexCoords))*/;
+
+		    fragcolor += vec3((diffuse + specular)) * light.color.rgb * color.rgb;
+
+
+
         }
 
 
@@ -503,30 +546,30 @@ void main() {
 
                 }
 
-                //fragcolor *= shadowFactor;
+                fragcolor *= shadowFactor;
             }
 
             //for(int i = NUM_SPOT_LIGHTS; i < NUM_DIR_LIGHTS+NUM_SPOT_LIGHTS; ++i) {
-            // for(int i = 0; i < 2; ++i) {
-            //     vec4 shadowClip = ubo.directionalLights[i].viewMatrix * vec4(worldPos, 1.0);
+            for(int i = 0; i < 1; ++i) {
+                vec4 shadowClip = ubo.directionalLights[i].viewMatrix * vec4(worldPos, 1.0);
 
-            //     float shadowFactor;
+                float shadowFactor;
                 
-            //     // if the fragment isn't in the light's view frustrum, it can't be in shadow, either
-            //     // seems to fix lots of problems
-            //     // if(!in_frustum(ubo.directionalLights[i].viewMatrix, worldPos)) {
-            //     // 	shadowFactor = 1.0;
-            //     // } else {
-	           //      if(USE_PCF > 0) {
-	           //          shadowFactor = filterPCF(shadowClip, i);
-	           //      } else {
-	           //          shadowFactor = textureProj(shadowClip, i, vec2(0.0));
-	           //      }
+                // if the fragment isn't in the light's view frustrum, it can't be in shadow, either
+                // seems to fix lots of problems
+                if(!in_frustum(ubo.directionalLights[i].viewMatrix, worldPos)) {
+                	shadowFactor = 1.0;
+                } else {
+	                if(USE_PCF > 0) {
+	                    shadowFactor = filterPCF(shadowClip, i+NUM_SPOT_LIGHTS);
+	                } else {
+	                    shadowFactor = textureProj(shadowClip, i+NUM_SPOT_LIGHTS, vec2(0.0));
+	                }
 
-            //     //}
+                }
 
-            //     fragcolor *= shadowFactor;
-            // }
+                fragcolor *= shadowFactor;
+            }
         }
 
 
@@ -535,10 +578,10 @@ void main() {
 
 
 
-        // if (SSAO_ENABLED == 1) {
-        //     float ao = texture(samplerSSAO, inUV).r;
-        //     fragcolor *= ao.rrr;
-        // }
+        if (SSAO_ENABLED == 1) {
+            float ao = texture(samplerSSAO, inUV).r;
+            fragcolor *= ao.rrr;
+        }
     }
    
     outFragcolor = vec4(fragcolor, 1.0);

@@ -325,21 +325,28 @@ class VulkanExample : public vkx::vulkanApp {
 		glm::vec4 target;		// where the light points
 		glm::vec4 color;		// color of the light
 		glm::mat4 viewMatrix;	// view matrix (used in geometry shader and fragment shader)
-		float innerAngle = 80.0f;
+
+		float innerAngle = 30.0f;
 		float outerAngle = 50.0f;
-		float range = 100.0f;
 		float zNear = 0.1f;
 		float zFar = 64.0f;
-		vec3 padding;
+
+		float range = 100.0f;
+		float pad1;
+		float pad2;
+		float pad3;
 	};
 
 	struct DirectionalLight {
-		glm::vec4 direction;	// unit directional vector
+		glm::vec4 direction = glm::vec4(0.3f, 0.4f, -0.5f, 0.0f);	// unit directional vector
+		glm::vec4 pad;
 		glm::vec4 color;		// color of the light
 		glm::mat4 viewMatrix;	// view matrix (used in geometry shader and fragment shader)
-		float zNear = 0.1f;
-		float zFar = 64.0f;
-		glm::vec2 padding;
+		float zNear = -32.0f;
+		float zFar = 32.0f;
+		//glm::vec2 padding;
+		float pad1;
+		float pad2;
 	};
 
 	struct {
@@ -453,12 +460,16 @@ class VulkanExample : public vkx::vulkanApp {
 		rscs.descriptorSets = new vkx::DescriptorSetList(context.device);
 
 
-		//camera.setTranslation({ -0.0f, -16.0f, 3.0f });
-		camera.setTranslation(glm::vec3(-20.0f, 0.0f, 7.0f));
-		glm::quat initialOrientation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		camera.setRotation(initialOrientation);
+		//camera.setTranslation(glm::vec3(-20.0f, 0.0f, 7.0f));
+		//glm::quat initialOrientation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		//camera.setRotation(initialOrientation);
 
-		camera.rotateWorldZ(-PI / 2.0);
+		camera.setTranslation({ -0.0f, -20.0f, 7.0f });
+		//glm::quat initialOrientation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		//camera.setRotation(initialOrientation);
+		camera.rotateWorldX(PI / 2.0);
+
+		//camera.rotateWorldZ(-PI / 2.0);
 
 
 
@@ -2126,17 +2137,8 @@ class VulkanExample : public vkx::vulkanApp {
 	}
 
 	void initLights() {
-		//uboFSLights.spotlights[0] = initLight(glm::vec3(-14.0f, 15.0f, -0.5f), glm::vec3(-2.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.5f));
-		//uboFSLights.spotlights[1] = initLight(glm::vec3(14.0f, 12.0f, -4.0f), glm::vec3(2.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		//uboFSLights.spotlights[2] = initLight(glm::vec3(0.0f, 4.0f, -10.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-
-		//uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 6.0f), glm::vec3(6.0f, 0.0f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
-		//uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 6.0f), glm::vec3(5.0f, 0.0f, 0.5f), glm::vec3(1.0f, 0.0f, 0.0f));
 		uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 		uboFSLights.spotlights[1] = initLight(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		//uboFSLights.spotlights[2] = initLight(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-		//uboFSLights.spotlights[3] = initLight(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-		//uboFSLights.spotlights[4] = initLight(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 
 		//uboFSLights.spotlights[0].position = glm::vec4(0.0f, 0.0f, 10.0f, 1.0f);
 		//uboFSLights.spotlights[0].color = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
@@ -2144,7 +2146,7 @@ class VulkanExample : public vkx::vulkanApp {
 		//uboFSLights.spotlights[1].position = glm::vec4(0.0f, 0.0f, 10.0f, 1.0f);
 		//uboFSLights.spotlights[1].color = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
 
-		uboFSLights.spotlights[4000].color = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+		//uboFSLights.spotlights[4000].color = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
 
 
 	}
@@ -2185,8 +2187,8 @@ class VulkanExample : public vkx::vulkanApp {
 		}
 
 		//uboFSLights.spotlights[0].target = glm::vec4(cos(globalP*8.0f)*9.0f, sin(globalP*8.0f)*4.0f, 0.0f, 0.0f);
+		
 		uboFSLights.spotlights[0].target = glm::vec4(cos(globalP*4.0f)*10.0f, sin(globalP*4.0f)*10.0f, 0.0f, 0.0f);
-
 		uboFSLights.spotlights[1].target = glm::vec4(cos(-globalP*8.0f)*10.0f, sin(-globalP*8.0f)*10.0f, 0.0f, 0.0f);
 
 
@@ -2199,7 +2201,8 @@ class VulkanExample : public vkx::vulkanApp {
 		//uboFSLights.spotlights[0].target = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
 		
-		uboFSLights.directionalLights[0].direction = glm::normalize(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f) - glm::vec4(camera.transform.translation, 0.0f));
+		//uboFSLights.directionalLights[0].direction = glm::normalize(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f) - glm::vec4(camera.transform.translation, 0.0f));
+		uboFSLights.directionalLights[0].color = glm::vec4(1.0f, 1.0f, 1.0f, 0.0f)*0.04f;
 		//uboFSLights.directionalLights[0].direction = glm::normalize(glm::vec4(camera.transform.translation, 0.0f) - glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
 		//uboFSLights.directionalLights[0].direction = glm::vec4(0.5f, 0.0f, -0.5f, 0.0f);
 
@@ -2214,10 +2217,20 @@ class VulkanExample : public vkx::vulkanApp {
 		// spot lights:
 		for (uint32_t i = 0; i < NUM_SPOT_LIGHTS; i++) {
 
-			zNear = uboFSLights.spotlights[0].zNear;
-			zFar = uboFSLights.spotlights[0].zFar;
+			SpotLight &light = uboFSLights.spotlights[i];
 
-			lightFOV = uboFSLights.spotlights[0].innerAngle;
+			zNear = light.zNear;
+			zFar = light.zFar;
+			lightFOV = light.innerAngle;
+
+			//zNear = uboFSLights.spotlights[0].zNear;
+			//zFar = uboFSLights.spotlights[0].zFar;
+			//lightFOV = uboFSLights.spotlights[0].innerAngle;
+
+			//zNear = 0.1f;
+			//zFar = 64.0f;
+			//lightFOV = 45.0f;
+			
 
 			// mvp from light's pov (for shadows)
 			glm::mat4 shadowProj = glm::perspectiveRH(glm::radians(lightFOV), 1.0f, zNear, zFar);
@@ -2226,7 +2239,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 			//glm::mat4 shadowProj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, zNear, zFar);
 			
-			glm::mat4 shadowView = glm::lookAt(glm::vec3(uboFSLights.spotlights[i].position), glm::vec3(uboFSLights.spotlights[i].target), glm::vec3(0.0f, 0.0f, 1.0f));
+			glm::mat4 shadowView = glm::lookAt(glm::vec3(light.position), glm::vec3(light.target), glm::vec3(0.0f, 0.0f, 1.0f));
 
 
 
@@ -2236,26 +2249,35 @@ class VulkanExample : public vkx::vulkanApp {
 
 			glm::mat4 shadowModel = glm::mat4();
 
+			
+
 			uboShadowGS.mvp[i] = shadowProj * shadowView * shadowModel;
-			uboFSLights.spotlights[i].viewMatrix = uboShadowGS.mvp[i];
+			light.viewMatrix = uboShadowGS.mvp[i];
 		}
+
+
 
 		// directional lights:
 		for (uint32_t i = 0; i < NUM_DIR_LIGHTS; i++) {
 
-			//zNear = uboFSLights.directionalLights[i].zNear;
-			//zFar = uboFSLights.directionalLights[i].zFar;
-			zNear = uboFSLights.spotlights[i].zNear;
-			zFar = uboFSLights.spotlights[i].zFar;
+			DirectionalLight &light = uboFSLights.directionalLights[i];
+
+			zNear = light.zNear;
+			zFar = light.zFar;
+			//zNear = uboFSLights.spotlights[0].zNear;
+			//zFar = uboFSLights.spotlights[0].zFar;
+
+			//zNear = 0.1f;
+			//zFar = 64.0f;
 
 			// mvp from light's pov (for shadows)
 
-			float size = 20.0f;
+			float size = 10.0f;
 
 			glm::mat4 shadowProj = glm::ortho(-size, size, -size, size, zNear, zFar);
 			shadowProj[1][1] *= -1;// because glm produces matrix for opengl and this is vulkan
 
-			glm::mat4 shadowView = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(uboFSLights.directionalLights[i].direction), glm::vec3(0.0f, 0.0f, 1.0f));
+			glm::mat4 shadowView = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(light.direction), glm::vec3(0.0f, 0.0f, 1.0f));
 
 			//glm::mat4 shadowProj = camera.matrices.projection;
 			//glm::mat4 shadowView = camera.matrices.view;
@@ -2264,7 +2286,7 @@ class VulkanExample : public vkx::vulkanApp {
 			glm::mat4 shadowModel = glm::mat4();
 
 			uboShadowGS.mvp2[i] = shadowProj * shadowView * shadowModel;
-			uboFSLights.directionalLights[i].viewMatrix = uboShadowGS.mvp2[i];
+			light.viewMatrix = uboShadowGS.mvp2[i];
 		}
 
 		updateUniformBufferShadow();
@@ -3196,12 +3218,15 @@ class VulkanExample : public vkx::vulkanApp {
 		ImGui::DragFloat3("Spot Light Position", &uboFSLights.spotlights[0].position.x, 0.1f);
 		ImGui::DragFloat3("Spot Light Target", &uboFSLights.spotlights[0].target.x, 0.1f);
 		//ImGui::DragFloat("Spot Light FOV2", &uboFSLights.spotlights[0].outerAngle, 0.05f);
-		ImGui::DragFloat("Spot Light range", &uboFSLights.spotlights[0].range, 0.05f);
+		ImGui::DragFloat("Spot Light Range", &uboFSLights.spotlights[0].range, 0.05f);
 		ImGui::DragFloat("Spot Light Near", &uboFSLights.spotlights[0].zNear, 0.05f);
 		ImGui::DragFloat("Spot Light Far", &uboFSLights.spotlights[0].zFar, 0.05f);
 
 		ImGui::DragFloat3("Spot Light1 Color", &uboFSLights.spotlights[0].color.x, 0.1f);
 		ImGui::DragFloat3("Spot Light2 Color", &uboFSLights.spotlights[1].color.x, 0.1f);
+
+		ImGui::DragFloat3("Directional Light Dir", &uboFSLights.directionalLights[0].direction.x, 0.1f);
+		
 
 		//ImGui::DragIntRange2("range int (no bounds)", &begin_i, &end_i, 5, 0, 0, "Min: %.0f units", "Max: %.0f units");
 		//ImGui::InputFloat4("mat4[0]", &uboShadowGS.mvp[0][0][0], 3);

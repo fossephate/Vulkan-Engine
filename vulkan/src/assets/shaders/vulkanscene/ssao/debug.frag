@@ -57,8 +57,8 @@ void main() {
 	// float depth = texture(samplerPosition, inUV.st).a;
 	// components[0] = vec3(linearDepth(depth));
 
-	vec4 shadow1 = texture(samplerShadowMap, vec3(inUV.st, 1));
-	components[0] = vec3(shadow1.r);
+	// vec4 shadow1 = texture(samplerShadowMap, vec3(inUV.st, 1));
+	// components[0] = vec3(shadow1.r);
 
 	// float shadow1 = texture(samplerShadowMap, vec3(inUV.st, 1));
 	// components[0] = vec3(shadow1);
@@ -84,8 +84,8 @@ void main() {
 	//components[2] = vec3(linearDepth(shadow.r));
 
 
-	//components[2] = vec3(ssao);
-	//components[2] = texture(samplerAlbedo, inUV.st).rgb;
+	// components[2] = vec3(ssao);
+	// components[2] = texture(samplerAlbedo, inUV.st).rgb;
 
 	//components[0] = color.rgb;
 
