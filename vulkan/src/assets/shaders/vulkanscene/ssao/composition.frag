@@ -44,7 +44,6 @@ struct SpotLight {
 
 struct DirectionalLight {
     vec4 direction;
-    vec4 pad;
     vec4 color;
     mat4 viewMatrix;
     float zNear;

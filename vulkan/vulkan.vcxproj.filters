@@ -72,10 +72,10 @@
     <ClCompile Include="include\external\imgui\imgui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\vulkanscene2.cpp">
+    <ClCompile Include="src\vulkanClasses\vulkanAndroid.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\vulkanClasses\vulkanAndroid.cpp">
+    <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
