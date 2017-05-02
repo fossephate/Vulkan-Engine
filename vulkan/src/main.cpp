@@ -448,8 +448,6 @@ class VulkanExample : public vkx::vulkanApp {
 		//camera.setRotation(initialOrientation);
 
 		camera.setTranslation({ -0.0f, -20.0f, 7.0f });
-		//glm::quat initialOrientation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		//camera.setRotation(initialOrientation);
 		camera.rotateWorldX(PI / 2.0);
 
 
@@ -646,12 +644,12 @@ class VulkanExample : public vkx::vulkanApp {
 		// Describes memory layout and shader positions
 		vertices.attributeDescriptions = std::vector<vk::VertexInputAttributeDescription>{
 			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 0, vk::Format::eR32G32B32Sfloat, 0),						// Location 0 : Position
-			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 1, vk::Format::eR32G32Sfloat, sizeof(float) * 3),			// Location 1 : (UV) Texture coordinates
-			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 2, vk::Format::eR32G32B32Sfloat, sizeof(float) * 5),		// Location 2 : Color
-			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 3, vk::Format::eR32G32B32Sfloat, sizeof(float) * 8),		// Location 3 : Normal
-			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 4, vk::Format::eR32G32B32Sfloat, sizeof(float) * 11),		// Location 4 : Tangent
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 1, vk::Format::eR32G32Sfloat,		sizeof(float) * 3),			// Location 1 : (UV) Texture coordinates
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 2, vk::Format::eR32G32B32Sfloat,	sizeof(float) * 5),		// Location 2 : Color
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 3, vk::Format::eR32G32B32Sfloat,	sizeof(float) * 8),		// Location 3 : Normal
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 4, vk::Format::eR32G32B32Sfloat,	sizeof(float) * 11),		// Location 4 : Tangent
 			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 5, vk::Format::eR32G32B32A32Sfloat, sizeof(float) * 14),	// Location 5 : Bone weights
-			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 6, vk::Format::eR32G32B32A32Sint, sizeof(float) * 18),		// Location 6 : Bone IDs
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 6, vk::Format::eR32G32B32A32Sint,	sizeof(float) * 18),		// Location 6 : Bone IDs
 		};
 
 
@@ -660,81 +658,6 @@ class VulkanExample : public vkx::vulkanApp {
 
 		vertices.inputState.vertexAttributeDescriptionCount = vertices.attributeDescriptions.size();
 		vertices.inputState.pVertexAttributeDescriptions = vertices.attributeDescriptions.data();
-
-
-		{
-			// mesh vertex layout
-
-			//// Binding description
-			//meshVertices.bindingDescriptions.resize(1);
-			//meshVertices.bindingDescriptions[0] =
-			//	vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, vkx::vertexSize(skinnedMeshVertexLayout), vk::VertexInputRate::eVertex);
-
-			//// Attribute descriptions
-			//// Describes memory layout and shader positions
-			//meshVertices.attributeDescriptions.resize(6);
-			//// Location 0 : Position
-			//meshVertices.attributeDescriptions[0] =
-			//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 0, vk::Format::eR32G32B32Sfloat, 0);
-			//// Location 1 : (UV) Texture coordinates
-			//meshVertices.attributeDescriptions[1] =
-			//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 1, vk::Format::eR32G32Sfloat, sizeof(float) * 3);
-			//// Location 2 : Color
-			//meshVertices.attributeDescriptions[2] =
-			//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 2, vk::Format::eR32G32B32Sfloat, sizeof(float) * 5);
-			//// Location 3 : Normal
-			//meshVertices.attributeDescriptions[3] =
-			//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 3, vk::Format::eR32G32B32Sfloat, sizeof(float) * 8);
-
-
-
-			//meshVertices.inputState.vertexBindingDescriptionCount = vertices.bindingDescriptions.size();
-			//meshVertices.inputState.pVertexBindingDescriptions = vertices.bindingDescriptions.data();
-
-			//meshVertices.inputState.vertexAttributeDescriptionCount = vertices.attributeDescriptions.size();
-			//meshVertices.inputState.pVertexAttributeDescriptions = vertices.attributeDescriptions.data();
-
-
-			//// skinned mesh vertex layout
-
-			//// Binding description
-			//skinnedMeshVertices.bindingDescriptions.resize(1);
-			//skinnedMeshVertices.bindingDescriptions[0] =
-			//	vkx::vertexInputBindingDescription(VERTEX_BUFFER_BIND_ID, vkx::vertexSize(deferredVertexLayout), vk::VertexInputRate::eVertex);
-
-			//// Attribute descriptions
-			//// Describes memory layout and shader positions
-			//skinnedMeshVertices.attributeDescriptions.resize(4);
-			//// Location 0 : Position
-			//skinnedMeshVertices.attributeDescriptions[0] =
-			//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 0, vk::Format::eR32G32B32Sfloat, 0);
-			//// Location 1 : (UV) Texture coordinates
-			//skinnedMeshVertices.attributeDescriptions[1] =
-			//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 1, vk::Format::eR32G32Sfloat, sizeof(float) * 3);
-			//// Location 2 : Color
-			//skinnedMeshVertices.attributeDescriptions[2] =
-			//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 2, vk::Format::eR32G32B32Sfloat, sizeof(float) * 5);
-			//// Location 3 : Normal
-			//skinnedMeshVertices.attributeDescriptions[3] =
-			//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 3, vk::Format::eR32G32B32Sfloat, sizeof(float) * 8);
-			//// Location 4 : Bone weights
-			//skinnedMeshVertices.attributeDescriptions[4] =
-			//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 4, vk::Format::eR32G32B32A32Sfloat, sizeof(float) * 11);
-			//// Location 5 : Bone IDs
-			//skinnedMeshVertices.attributeDescriptions[5] =
-			//	vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 5, vk::Format::eR32G32B32A32Sint, sizeof(float) * 15);
-
-
-
-			//skinnedMeshVertices.inputState.vertexBindingDescriptionCount = verticesDeferred.bindingDescriptions.size();
-			//skinnedMeshVertices.inputState.pVertexBindingDescriptions = verticesDeferred.bindingDescriptions.data();
-
-			//skinnedMeshVertices.inputState.vertexAttributeDescriptionCount = verticesDeferred.attributeDescriptions.size();
-			//skinnedMeshVertices.inputState.pVertexAttributeDescriptions = verticesDeferred.attributeDescriptions.data();
-		}
-
-
-
 	}
 
 
@@ -743,6 +666,11 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 	void prepareDescriptorPools() {
+
+
+		// todo: I don't need this many descriptor pools
+		// like at all
+		// fix this:
 
 		// scene data
 		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes0 = {
@@ -815,48 +743,6 @@ class VulkanExample : public vkx::vulkanApp {
 		};
 		rscs.descriptorPools->add("deferred.deferred", descriptorPoolSizesDeferred, 4);
 
-
-
-		//std::vector<vk::DescriptorPoolSize> descriptorPoolSizesDeferred2 =
-		//{
-		//	vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 16),
-		//	vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 16)
-		//};
-		//vk::DescriptorPoolCreateInfo descriptorPoolCreateInfoDeferred2 =
-		//	vkx::descriptorPoolCreateInfo(descriptorPoolSizesDeferred2.size(), descriptorPoolSizesDeferred2.data(), /*2*//*max descriptor sets:*/4);
-		//rscs.descriptorPools->add("deferred.deferred2", descriptorPoolCreateInfoDeferred2);
-
-
-
-		//{
-		//	/* IMGUI */
-		//	/* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ */
-
-		//	std::vector<vk::DescriptorPoolSize> descriptorPoolSizesImGUI =
-		//	{
-		//		vkx::descriptorPoolSize(vk::DescriptorType::eSampler, 1000),
-		//		vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 1000),
-		//		vkx::descriptorPoolSize(vk::DescriptorType::eSampledImage, 1000),
-		//		vkx::descriptorPoolSize(vk::DescriptorType::eStorageImage, 1000),
-		//		vkx::descriptorPoolSize(vk::DescriptorType::eUniformTexelBuffer, 1000),
-		//		vkx::descriptorPoolSize(vk::DescriptorType::eStorageTexelBuffer, 1000),
-		//		vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 1000),
-		//		vkx::descriptorPoolSize(vk::DescriptorType::eStorageBuffer, 1000),
-		//		vkx::descriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1000),
-		//		vkx::descriptorPoolSize(vk::DescriptorType::eStorageBufferDynamic, 1000),
-		//		vkx::descriptorPoolSize(vk::DescriptorType::eInputAttachment, 1000),
-		//	};
-
-		//	// create DescriptorPoolCreateInfo manually:
-		//	vk::DescriptorPoolCreateInfo descriptorPoolCreateInfoImGUI;
-		//	descriptorPoolCreateInfoImGUI.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
-		//	descriptorPoolCreateInfoImGUI.maxSets = 1000 * 11;
-		//	descriptorPoolCreateInfoImGUI.poolSizeCount = 11;
-		//	descriptorPoolCreateInfoImGUI.pPoolSizes = descriptorPoolSizesImGUI.data();
-
-		//	rscs.descriptorPools->add("imgui", descriptorPoolCreateInfoImGUI);
-		//}
-
 	}
 
 
@@ -873,35 +759,37 @@ class VulkanExample : public vkx::vulkanApp {
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBuffer,
 				vk::ShaderStageFlagBits::eVertex,
-				0),// binding 0
-
-				   // Set 0: Binding 1: Vertex shader uniform buffer// bone data
+				0),
+				   
+			// Set 0: Binding 1: Vertex shader uniform buffer// bone data
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBuffer,
 				vk::ShaderStageFlagBits::eVertex,
-				1),// binding 1
+				1),
 		};
 		rscs.descriptorSetLayouts->add("forward.scene", descriptorSetLayoutBindings0);
 
 		// descriptor set layout 1
 		// matrix data
 		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings1 = {
+
 			// Set 1: Binding 0 : Vertex shader dynamic uniform buffer
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBufferDynamic,
 				vk::ShaderStageFlagBits::eVertex,
-				0),// binding 0
+				0),
 		};
 		rscs.descriptorSetLayouts->add("forward.matrix", descriptorSetLayoutBindings1);
 
 		// descriptor set layout 2
 		// material data
 		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings2 = {
+
 			// Set 2: Binding 0 : Vertex shader dynamic uniform buffer
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBufferDynamic,
 				vk::ShaderStageFlagBits::eVertex,
-				0),// binding 0
+				0),
 		};
 		rscs.descriptorSetLayouts->add("forward.material", descriptorSetLayoutBindings2);
 
@@ -913,22 +801,22 @@ class VulkanExample : public vkx::vulkanApp {
 		// descriptor set layout 3
 		// combined image sampler
 		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings3 = {
+
 			// Set 3: Binding 0 : Fragment shader color map image sampler
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
-				0),// binding 0
-
-				   // Set 3: Binding 1: Fragment shader specular
+				0),
+			// Set 3: Binding 1: Fragment shader specular
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
-				1),// binding 1
-				   // Set 3: Binding 2: Fragment shader bump
+				1),
+			// Set 3: Binding 2: Fragment shader bump
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
-				2),// binding 2
+				2),
 		};
 		rscs.descriptorSetLayouts->add("forward.textures", descriptorSetLayoutBindings3);
 		this->assetManager.materialDescriptorSetLayout = rscs.descriptorSetLayouts->getPtr("forward.textures");
@@ -959,11 +847,8 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-		// use all descriptor set layouts
+		// use descriptor set layouts
 		// to form pipeline layout
-
-		// todo: if possible find a better way to do this
-		// index / use ordered map and get ptr? ordered by name so probably wouldn't work as intended
 
 		std::vector<vk::DescriptorSetLayout> descriptorSetLayouts{
 			rscs.descriptorSetLayouts->get("forward.scene"),
@@ -998,7 +883,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-		/* DEFERRED / OFFSCREEN PASSES */
+		/* DEFERRED / OFFSCREEN */
 
 
 
@@ -1016,13 +901,13 @@ class VulkanExample : public vkx::vulkanApp {
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBuffer,
 				vk::ShaderStageFlagBits::eVertex,
-				0),// binding 0
+				0),
 
-				   // Set 0: Binding 1: Vertex shader uniform buffer// bone data
+			// Set 0: Binding 1: Vertex shader uniform buffer// bone data
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBuffer,
 				vk::ShaderStageFlagBits::eVertex,
-				1),// binding 1
+				1),
 		};
 		rscs.descriptorSetLayouts->add("offscreen.scene", descriptorSetLayoutBindings5);
 
@@ -1034,7 +919,7 @@ class VulkanExample : public vkx::vulkanApp {
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBufferDynamic,
 				vk::ShaderStageFlagBits::eVertex,
-				0),// binding 0
+				0),
 		};
 		rscs.descriptorSetLayouts->add("offscreen.matrix", descriptorSetLayoutBindings6);
 
@@ -1060,21 +945,22 @@ class VulkanExample : public vkx::vulkanApp {
 		// descriptor set layout 3
 		// combined image sampler
 		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings7 = {
+
 			// Set 2: Binding 0: Fragment shader color map image sampler
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
-				0),// binding 0
-				   // Set 2: Binding 1: Fragment shader specular
+				0),
+			// Set 2: Binding 1: Fragment shader specular
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
-				1),// binding 1
-				   // Set 2: Binding 2: Fragment shader bump
+				1),
+			// Set 2: Binding 2: Fragment shader bump
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
-				2),// binding 2
+				2),
 		};
 		rscs.descriptorSetLayouts->add("offscreen.textures", descriptorSetLayoutBindings7);
 
@@ -1091,6 +977,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// Deferred shading layout
 		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindingsDeferred = {
+
 			// Set 3: Binding 0: Vertex shader uniform buffer
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBuffer,
@@ -1152,14 +1039,10 @@ class VulkanExample : public vkx::vulkanApp {
 
 		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfoDeferred = vkx::pipelineLayoutCreateInfo(descriptorSetLayoutsDeferred.data(), descriptorSetLayoutsDeferred.size());
 
-		// todo:
-		// deferred render pass, I should combine this with the above pipeline layout?
+
 
 		rscs.pipelineLayouts->add("deferred", pPipelineLayoutCreateInfoDeferred);
-
-
 		// Offscreen (scene) rendering pipeline layout
-		// important! used for offscreen render pass
 		rscs.pipelineLayouts->add("offscreen", pPipelineLayoutCreateInfoDeferred);
 
 

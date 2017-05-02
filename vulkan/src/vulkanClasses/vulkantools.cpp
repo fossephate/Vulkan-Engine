@@ -430,6 +430,12 @@ namespace vkx {
 		return shaderModule;
 	}
 
+
+
+
+
+	// init:
+
 	vk::CommandBufferAllocateInfo commandBufferAllocateInfo(vk::CommandPool commandPool, vk::CommandBufferLevel level, uint32_t bufferCount) {
 		vk::CommandBufferAllocateInfo commandBufferAllocateInfo;
 		commandBufferAllocateInfo.commandPool = commandPool;
