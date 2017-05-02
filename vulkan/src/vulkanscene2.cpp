@@ -2191,6 +2191,9 @@ class VulkanExample : public vkx::vulkanApp {
 		uboFSLights.spotlights[0].target = glm::vec4(cos(globalP*4.0f)*10.0f, sin(globalP*4.0f)*10.0f, 0.0f, 0.0f);
 		uboFSLights.spotlights[1].target = glm::vec4(cos(-globalP*8.0f)*10.0f, sin(-globalP*8.0f)*10.0f, 0.0f, 0.0f);
 
+		//uboFSLights.spotlights[0].target = glm::vec4(cos(globalP*4.0f)*10.0f + sin(globalP*6.0f)*5.0f, sin(globalP*4.0f)*10.0f + cos(globalP*6.0f)*5.0f, 0.0f, 0.0f);
+		
+
 
 		//uboFSLights.spotlights[0].target = glm::vec4(4.0f, 0.0f, 0.0f, 0.0f);
 		//uboFSLights.directionalLights[0].color = glm::vec4(1.0, 0.0, 0.0, 0.0);
@@ -2235,8 +2238,6 @@ class VulkanExample : public vkx::vulkanApp {
 			// mvp from light's pov (for shadows)
 			glm::mat4 shadowProj = glm::perspectiveRH(glm::radians(lightFOV), 1.0f, zNear, zFar);
 			shadowProj[1][1] *= -1;// because glm produces matrix for opengl and this is vulkan
-
-			//glm::mat4 shadowProj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, zNear, zFar);
 			
 			glm::mat4 shadowView = glm::lookAt(glm::vec3(light.position), glm::vec3(light.target), glm::vec3(0.0f, 0.0f, 1.0f));
 
@@ -2263,11 +2264,6 @@ class VulkanExample : public vkx::vulkanApp {
 
 			zNear = light.zNear;
 			zFar = light.zFar;
-			//zNear = uboFSLights.spotlights[0].zNear;
-			//zFar = uboFSLights.spotlights[0].zFar;
-
-			//zNear = 0.1f;
-			//zFar = 64.0f;
 
 			// mvp from light's pov (for shadows)
 

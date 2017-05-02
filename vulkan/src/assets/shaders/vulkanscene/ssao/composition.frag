@@ -61,16 +61,18 @@ struct DirectionalLight {
 #define NUM_DIR_LIGHTS 1
 #define NUM_LIGHTS_TOTAL 3
 
-#define SHADOW_FACTOR 0.1//0.25
+#define SHADOW_FACTOR 0.7//0.25
 #define AMBIENT_LIGHT 0.2
+#define SPOT_LIGHT_FOV_OFFSET 15
 //#define USE_PCF
 
-const int SSAO_ENABLED = 1;
-//const float AMBIENT_FACTOR = 0.1;
+// #define SSAO_ENABLED 1;
+// #define USE_SHADOWS 1;
+// #define USE_PCF 1;
 
+const int SSAO_ENABLED = 1;
 const int USE_SHADOWS = 1;
 const int USE_PCF = 0;
-
 
 
 
@@ -194,6 +196,24 @@ bool in_frustum(mat4 M, vec3 p) {
 }
 
 
+
+bool in_spotlight(SpotLight light, vec3 worldPos) {
+
+	vec3 lightVec = (light.position.xyz - worldPos);// world space light to fragment
+
+	vec3 lightDir = normalize(lightVec);// direction
+
+	vec3 spotDir = normalize(vec3(light.position.xyz - light.target.xyz));
+
+	float cosDir = dot(lightDir, spotDir);// theta
+
+	if(cosDir > cos(radians(light.innerAngle-SPOT_LIGHT_FOV_OFFSET))) {
+		return true;
+	}
+	return false;
+}
+
+
 float filterPCF(vec4 sc, float layer) {
     ivec2 texDim = textureSize(samplerShadowMap, 0).xy;
     float scale = 1.5;
@@ -302,6 +322,8 @@ vec3 normalFromDepth3(vec3 viewPos) {
 
 void main() {
     // Get G-Buffer values
+
+
     vec4 samplerPos = texture(samplerPosition, inUV).rgba;
     float depth = samplerPos.a;
 
@@ -310,10 +332,6 @@ void main() {
     // find a better way:
     vec3 viewPos = vec3(ubo.view * vec4(samplerPos.rgb, 1.0));// calculate view space position
     vec3 worldPos = samplerPos.rgb;
-    
-    
-
-
     
 
     vec3 normal = texture(samplerNormal, inUV).rgb * 2.0 - 1.0;// world space normal
@@ -386,8 +404,8 @@ void main() {
             //float NdotR = max(0.0, dot(R, V));
             //vec3 specular = light.color.rgb * spec.r * pow(NdotR, 16.0) * (attenuation * 1.5);
 
-            float NdotR = /*pow(*/max(0.0, dot(viewDir, reflectDir))/*, 16.0)*/;// NdotR, pow?
-            vec3 specular = vec3(spec.r * pow(NdotR, 16.0));
+            float NdotR = pow(max(0.0, dot(viewDir, reflectDir)), 16.0);// NdotR, pow?
+            vec3 specular = vec3(spec.r * NdotR);
 
             fragcolor += (diffuse + specular) * color.rgb * light.color.rgb * attenuation;
         }
@@ -417,7 +435,7 @@ void main() {
             // Viewer to fragment
             vec3 V = ubo.viewPos.xyz - worldPos;
             //vec3 V = viewPos - fragPos;
-            //V = normalize(V);
+            V = normalize(V);
 
 
 
@@ -445,9 +463,9 @@ void main() {
 
 
             
-            float lightCosInnerAngle = cos(radians(light.innerAngle-10));
+            float lightCosInnerAngle = cos(radians(light.innerAngle-SPOT_LIGHT_FOV_OFFSET));
             //float lightCosOuterAngle = cos(radians(light.outerAngle));
-            float lightCosOuterAngle = cos(radians(light.innerAngle-9));
+            float lightCosOuterAngle = cos(radians(light.innerAngle-SPOT_LIGHT_FOV_OFFSET));
             float lightRange = light.range;
 
             // float lightCosInnerAngle = cos(radians(45));
@@ -461,22 +479,15 @@ void main() {
             // //float epsilon = (/*ubo.spotlights[i].cutOff*/12.5 - /*ubo.spotlights[i].outerCutOff*/0.9);
             // float epsilon = lightCosInnerAngle - lightCosOuterAngle;
             // float intensity = clamp((theta - lightCosOuterAngle) / epsilon, 0.0, 1.0);
-            //diffuse  *= intensity;
-            //specular *= intensity;
 
 
             // Dual cone spot light with smooth transition between inner and outer angle
-            float cosDir = dot(lightDir, spotDir);
+            float cosDir = dot(lightDir, spotDir);// theta
             float spotEffect = smoothstep(lightCosOuterAngle, lightCosInnerAngle, cosDir);
             float heightAttenuation = smoothstep(lightRange, 0.0, dist);
 
-
-            //diffuse  *= attenuation;
-            //specular *= attenuation;
-
-
-
             fragcolor += vec3((diffuse + specular) * spotEffect * heightAttenuation) * light.color.rgb * color.rgb;
+        	
         }
 
 
@@ -528,14 +539,16 @@ void main() {
         // Shadow calculations in a separate pass
         if (USE_SHADOWS > 0) {
 
+
             for(int i = 0; i < NUM_SPOT_LIGHTS; ++i) {
                 vec4 shadowClip = ubo.spotlights[i].viewMatrix * vec4(worldPos, 1.0);
 
                 float shadowFactor;
                 
-                // if the fragment isn't in the light's view frustrum, it can't be in shadow, either
+                // if the fragment isn't in the shadow map's view frustrum, it can't be in shadow
+                // if the fragment isn't in the spotlight's cone, it can't be in shadow
                 // seems to fix lots of problems
-                if(!in_frustum(ubo.spotlights[i].viewMatrix, worldPos)) {
+         		if(!in_frustum(ubo.spotlights[i].viewMatrix, worldPos) || !in_spotlight(ubo.spotlights[i], worldPos)) {       	
                 	shadowFactor = 1.0;
                 } else {
 	                if(USE_PCF > 0) {
@@ -578,7 +591,7 @@ void main() {
 
 
 
-        if (SSAO_ENABLED == 1) {
+        if (SSAO_ENABLED > 0) {
             float ao = texture(samplerSSAO, inUV).r;
             fragcolor *= ao.rrr;
         }
