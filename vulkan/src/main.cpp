@@ -741,7 +741,7 @@ class VulkanExample : public vkx::vulkanApp {
 			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 16),
 			vkx::descriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 16)
 		};
-		rscs.descriptorPools->add("deferred.deferred", descriptorPoolSizesDeferred, 4);
+		rscs.descriptorPools->add("deferred", descriptorPoolSizesDeferred, 4);
 
 	}
 
@@ -1018,8 +1018,62 @@ class VulkanExample : public vkx::vulkanApp {
 				vk::ShaderStageFlagBits::eFragment,
 				6),
 		};
-		rscs.descriptorSetLayouts->add("deferred.deferred", descriptorSetLayoutBindingsDeferred);
+		rscs.descriptorSetLayouts->add("deferred", descriptorSetLayoutBindingsDeferred);
 
+
+
+
+
+
+
+		//std::vector<vk::DescriptorSetLayout> descriptorSetLayoutsDeferred{
+		//	rscs.descriptorSetLayouts->get("offscreen.scene"),
+		//	rscs.descriptorSetLayouts->get("offscreen.matrix"),
+		//	rscs.descriptorSetLayouts->get("offscreen.textures"),
+		//	rscs.descriptorSetLayouts->get("deferred"),
+		//};
+
+		//// use all descriptor set layouts
+		//// to form pipeline layout
+
+		//vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfoDeferred = vkx::pipelineLayoutCreateInfo(descriptorSetLayoutsDeferred.data(), descriptorSetLayoutsDeferred.size());
+
+
+
+		//
+		//// Offscreen (scene) rendering pipeline layout
+		//rscs.pipelineLayouts->add("offscreen", pPipelineLayoutCreateInfoDeferred);
+
+		//rscs.pipelineLayouts->add("deferred", pPipelineLayoutCreateInfoDeferred);
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
+
+
+
+
+		std::vector<vk::DescriptorSetLayout> descriptorSetLayoutsOffscreen{
+			rscs.descriptorSetLayouts->get("offscreen.scene"),
+			rscs.descriptorSetLayouts->get("offscreen.matrix"),
+			rscs.descriptorSetLayouts->get("offscreen.textures"),
+		};
+
+		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfoOffscreen = vkx::pipelineLayoutCreateInfo(descriptorSetLayoutsOffscreen.data(), descriptorSetLayoutsOffscreen.size());
+
+
+		// Offscreen (scene) rendering pipeline layout
+		rscs.pipelineLayouts->add("offscreen", pPipelineLayoutCreateInfoOffscreen);
 
 
 
@@ -1027,30 +1081,11 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 		std::vector<vk::DescriptorSetLayout> descriptorSetLayoutsDeferred{
-			rscs.descriptorSetLayouts->get("offscreen.scene"),
-			rscs.descriptorSetLayouts->get("offscreen.matrix"),
-			rscs.descriptorSetLayouts->get("offscreen.textures"),
-			rscs.descriptorSetLayouts->get("deferred.deferred"),
-			//rscs.descriptorSetLayouts->get("geometry.shadow"),// todo: remove
+			rscs.descriptorSetLayouts->get("deferred"),
 		};
-
-		// use all descriptor set layouts
-		// to form pipeline layout
-
 		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfoDeferred = vkx::pipelineLayoutCreateInfo(descriptorSetLayoutsDeferred.data(), descriptorSetLayoutsDeferred.size());
 
-
-
 		rscs.pipelineLayouts->add("deferred", pPipelineLayoutCreateInfoDeferred);
-		// Offscreen (scene) rendering pipeline layout
-		rscs.pipelineLayouts->add("offscreen", pPipelineLayoutCreateInfoDeferred);
-
-
-
-
-
-
-
 
 
 
@@ -1068,36 +1103,36 @@ class VulkanExample : public vkx::vulkanApp {
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
-				0),// binding 0
+				0),
 
-				   // Set 0: Binding 1: // FS Normals
+			// Set 0: Binding 1: // FS Normals
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
-				1),// binding 1
+				1),
 
-				   // Set 0: Binding 2: // FS SSAO Noise
+			// Set 0: Binding 2: // FS SSAO Noise
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
-				2),// binding 2
+				2),
 
-				   // Set 0: Binding 3: // FS SSAO Kernel UBO
+			// Set 0: Binding 3: // FS SSAO Kernel UBO
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBuffer,
 				vk::ShaderStageFlagBits::eFragment,
-				3),// binding 3
+				3),
 
-				   // Set 0: Binding 4: // FS Params UBO
+			// Set 0: Binding 4: // FS Params UBO
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eUniformBuffer,
 				vk::ShaderStageFlagBits::eFragment,
-				4),// binding 4
+				4),
 		};
 		rscs.descriptorSetLayouts->add("offscreen.ssao.generate", descriptorSetLayoutBindings9);
 
 
-		// use all descriptor set layouts
+		// use descriptor set layouts
 		// to form pipeline layout
 
 		std::vector<vk::DescriptorSetLayout> descriptorSetLayoutsSSAO{
@@ -1122,7 +1157,7 @@ class VulkanExample : public vkx::vulkanApp {
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
-				0),// binding 0
+				0),
 		};
 		rscs.descriptorSetLayouts->add("offscreen.ssao.blur", descriptorSetLayoutBindings10);
 
@@ -1140,6 +1175,10 @@ class VulkanExample : public vkx::vulkanApp {
 		// create pipelineLayout from descriptorSetLayouts
 		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfoSSAOBlur = vkx::pipelineLayoutCreateInfo(descriptorSetLayoutsSSAOBlur.data(), descriptorSetLayoutsSSAOBlur.size());
 		rscs.pipelineLayouts->add("offscreen.ssaoBlur", pPipelineLayoutCreateInfoSSAOBlur);
+
+
+
+
 
 
 
@@ -1270,8 +1309,8 @@ class VulkanExample : public vkx::vulkanApp {
 		// descriptor set 3
 		// offscreen textures data
 		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo8 =
-			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred.deferred"), &rscs.descriptorSetLayouts->get("deferred.deferred"), 1);
-		rscs.descriptorSets->add("deferred.deferred", descriptorSetAllocateInfo8);
+			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred"), &rscs.descriptorSetLayouts->get("deferred"), 1);
+		rscs.descriptorSets->add("deferred", descriptorSetAllocateInfo8);
 
 
 
@@ -1308,46 +1347,46 @@ class VulkanExample : public vkx::vulkanApp {
 
 			// set 3: Binding 0: Vertex shader uniform buffer
 			vkx::writeDescriptorSet(
-				rscs.descriptorSets->get("deferred.deferred"),
+				rscs.descriptorSets->get("deferred"),
 				vk::DescriptorType::eUniformBuffer,
 				0,
 				&uniformDataDeferred.vsFullScreen.descriptor),
 			// set 3: Binding 1: Position texture target
 			vkx::writeDescriptorSet(
-				rscs.descriptorSets->get("deferred.deferred"),
+				rscs.descriptorSets->get("deferred"),
 				vk::DescriptorType::eCombinedImageSampler,
 				1,
 				&texDescriptorPosition),
 			// set 3: Binding 2: Normals texture target
 			vkx::writeDescriptorSet(
-				rscs.descriptorSets->get("deferred.deferred"),
+				rscs.descriptorSets->get("deferred"),
 				vk::DescriptorType::eCombinedImageSampler,
 				2,
 				&texDescriptorNormal),
 			// set 3: Binding 3: Albedo texture target
 			vkx::writeDescriptorSet(
-				rscs.descriptorSets->get("deferred.deferred"),
+				rscs.descriptorSets->get("deferred"),
 				vk::DescriptorType::eCombinedImageSampler,
 				3,
 				&texDescriptorAlbedo),
 
 			// set 3: Binding 4: SSAO Blurred
 			vkx::writeDescriptorSet(
-				rscs.descriptorSets->get("deferred.deferred"),
+				rscs.descriptorSets->get("deferred"),
 				vk::DescriptorType::eCombinedImageSampler,
 				4,
 				&texDescriptorSSAOBlurred),
 
 			// set 3: Binding 5: Fragment shader uniform buffer// lights
 			vkx::writeDescriptorSet(
-				rscs.descriptorSets->get("deferred.deferred"),
+				rscs.descriptorSets->get("deferred"),
 				vk::DescriptorType::eUniformBuffer,
 				5,
 				&uniformDataDeferred.fsLights.descriptor),
 
 			// set 3: Binding 6: Shadow Map
 			vkx::writeDescriptorSet(
-				rscs.descriptorSets->get("deferred.deferred"),
+				rscs.descriptorSets->get("deferred"),
 				vk::DescriptorType::eCombinedImageSampler,
 				6,
 				&texDescriptorShadowMap),
@@ -1414,7 +1453,7 @@ class VulkanExample : public vkx::vulkanApp {
 		{
 			// descriptor set
 			vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo9 =
-				vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred.deferred"), &rscs.descriptorSetLayouts->get("offscreen.ssao.generate"), 1);
+				vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred"), &rscs.descriptorSetLayouts->get("offscreen.ssao.generate"), 1);
 			rscs.descriptorSets->add("offscreen.ssao.generate", descriptorSetAllocateInfo9);
 
 
@@ -1469,7 +1508,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// descriptor set 
 		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo10 =
-			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred.deferred"), &rscs.descriptorSetLayouts->get("offscreen.ssao.blur"), 1);
+			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred"), &rscs.descriptorSetLayouts->get("offscreen.ssao.blur"), 1);
 		rscs.descriptorSets->add("offscreen.ssao.blur", descriptorSetAllocateInfo10);
 
 		vk::DescriptorImageInfo texDescriptorSSAOBlur =
@@ -1499,7 +1538,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// descriptor set 0
 		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfoShadow =
-			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred.deferred"), &rscs.descriptorSetLayouts->get("shadow.scene"), 1);
+			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("deferred"), &rscs.descriptorSetLayouts->get("shadow.scene"), 1);
 		rscs.descriptorSets->add("shadow.scene", descriptorSetAllocateInfoShadow);// todo: actually make a descriptor pool for this set
 
 
@@ -3100,8 +3139,9 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 			// renders quad
-			uint32_t setNum = 3;// important!
-			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred"), setNum, rscs.descriptorSets->get("deferred.deferred"), nullptr);
+			//uint32_t setNum = 3;// important!
+			uint32_t setNum = 0;// important!
+			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred"), setNum, rscs.descriptorSets->get("deferred"), nullptr);
 			if (debugDisplay) {
 				if (settings.SSAO) {
 					cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("deferred.debug.ssao"));

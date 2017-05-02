@@ -3,14 +3,14 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 
-layout (set = 3, binding = 1) uniform sampler2D samplerPosition;
-layout (set = 3, binding = 2) uniform sampler2D samplerNormal;
-layout (set = 3, binding = 3) uniform usampler2D samplerAlbedo;
-layout (set = 3, binding = 4) uniform sampler2D samplerSSAO;
+layout (set = 0, binding = 1) uniform sampler2D samplerPosition;
+layout (set = 0, binding = 2) uniform sampler2D samplerNormal;
+layout (set = 0, binding = 3) uniform usampler2D samplerAlbedo;
+layout (set = 0, binding = 4) uniform sampler2D samplerSSAO;
 
 //layout (set = 3, binding = 6) uniform sampler2D samplerShadowMap;
 //layout (set = 3, binding = 6) uniform sampler2DShadow samplerShadowMap;
-layout (set = 3, binding = 6) uniform sampler2DArray samplerShadowMap;
+layout (set = 0, binding = 6) uniform sampler2DArray samplerShadowMap;
 //layout (set = 3, binding = 6) uniform sampler2DArrayShadow samplerShadowMap;
 
 layout (location = 0) in vec3 inUV;// vec3
