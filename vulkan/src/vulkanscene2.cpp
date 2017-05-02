@@ -2234,7 +2234,6 @@ class VulkanExample : public vkx::vulkanApp {
 
 			// mvp from light's pov (for shadows)
 			glm::mat4 shadowProj = glm::perspectiveRH(glm::radians(lightFOV), 1.0f, zNear, zFar);
-			//glm::mat4 shadowProj = glm::perspectiveRH(glm::radians(lightFOV), 1280.0f/720.0f, zNear, zFar);
 			shadowProj[1][1] *= -1;// because glm produces matrix for opengl and this is vulkan
 
 			//glm::mat4 shadowProj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, zNear, zFar);
@@ -2967,13 +2966,13 @@ class VulkanExample : public vkx::vulkanApp {
 			// uses matrix indices directly after skinnedMeshes' indices
 			for (int i = 0; i < modelsDeferred.size(); ++i) {
 				// added a buffer of 5 so that there is time to update command buffers
-				modelsDeferred[i]->matrixIndex = models.size() + skinnedMeshes.size() + i + 5;// todo: figure this out
+				modelsDeferred[i]->matrixIndex = models.size() + skinnedMeshes.size() + i + 2;// todo: figure this out
 			}
 
 			// uses matrix indices directly after modelsDeferred' indices
 			for (int i = 0; i < skinnedMeshesDeferred.size(); ++i) {
 				// added a buffer of 5 so that there is time to update command buffers
-				skinnedMeshesDeferred[i]->matrixIndex = models.size() + skinnedMeshes.size() + modelsDeferred.size() + i + 5;// todo: figure this out
+				skinnedMeshesDeferred[i]->matrixIndex = models.size() + skinnedMeshes.size() + modelsDeferred.size() + i + 2;// todo: figure this out
 			}
 
 			// set bone indices
