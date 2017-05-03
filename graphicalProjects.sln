@@ -1,10 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26403.7
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opengl4", "opengl4\opengl4.vcxproj", "{AC9CD84C-58AD-4561-9D9D-57F809027F5C}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vulkan", "vulkan\vulkan.vcxproj", "{373EB2F7-130F-4269-B461-700E4BCD1E67}"
 EndProject
 Global
@@ -15,14 +13,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{AC9CD84C-58AD-4561-9D9D-57F809027F5C}.Debug|x64.ActiveCfg = Debug|x64
-		{AC9CD84C-58AD-4561-9D9D-57F809027F5C}.Debug|x64.Build.0 = Debug|x64
-		{AC9CD84C-58AD-4561-9D9D-57F809027F5C}.Debug|x86.ActiveCfg = Release|x64
-		{AC9CD84C-58AD-4561-9D9D-57F809027F5C}.Debug|x86.Build.0 = Release|x64
-		{AC9CD84C-58AD-4561-9D9D-57F809027F5C}.Release|x64.ActiveCfg = Release|x64
-		{AC9CD84C-58AD-4561-9D9D-57F809027F5C}.Release|x64.Build.0 = Release|x64
-		{AC9CD84C-58AD-4561-9D9D-57F809027F5C}.Release|x86.ActiveCfg = Release|x64
-		{AC9CD84C-58AD-4561-9D9D-57F809027F5C}.Release|x86.Build.0 = Release|x64
 		{373EB2F7-130F-4269-B461-700E4BCD1E67}.Debug|x64.ActiveCfg = Debug|x64
 		{373EB2F7-130F-4269-B461-700E4BCD1E67}.Debug|x64.Build.0 = Debug|x64
 		{373EB2F7-130F-4269-B461-700E4BCD1E67}.Debug|x86.ActiveCfg = Release|x64

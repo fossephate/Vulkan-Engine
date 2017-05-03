@@ -26,7 +26,6 @@
     <ClCompile Include="src\bulletClasses\PhysicsObject.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\vulkanClasses\camera.cpp" />
-    <ClCompile Include="src\vulkanClasses\shapes.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanAndroid.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanApp.cpp" />
     <ClCompile Include="src\vulkanClasses\vulkanContext.cpp" />
