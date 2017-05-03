@@ -45,7 +45,7 @@ namespace vkx {
 		makes sure that the task is run asynchronously on a new thread. */
 		//this->myFuture = std::async(std::launch::async, [] {
 		//});
-		bool useAsync = false;
+		bool useAsync = true;
 		if (useAsync) {
 			this->myFuture = std::async(std::launch::async, &Model::asyncCreateMeshes, this, layout, scale, binding);
 		} else {

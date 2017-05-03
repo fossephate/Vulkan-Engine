@@ -329,6 +329,8 @@ class VulkanExample : public vkx::vulkanApp {
 		//glm::vec2 padding;
 		float pad1;
 		float pad2;
+		float pad3;
+		float pad4;
 	};
 
 	struct {
@@ -644,12 +646,12 @@ class VulkanExample : public vkx::vulkanApp {
 		// Describes memory layout and shader positions
 		vertices.attributeDescriptions = std::vector<vk::VertexInputAttributeDescription>{
 			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 0, vk::Format::eR32G32B32Sfloat, 0),						// Location 0 : Position
-			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 1, vk::Format::eR32G32Sfloat,		sizeof(float) * 3),			// Location 1 : (UV) Texture coordinates
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 1, vk::Format::eR32G32Sfloat,		sizeof(float) * 3),		// Location 1 : (UV) Texture coordinates
 			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 2, vk::Format::eR32G32B32Sfloat,	sizeof(float) * 5),		// Location 2 : Color
 			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 3, vk::Format::eR32G32B32Sfloat,	sizeof(float) * 8),		// Location 3 : Normal
-			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 4, vk::Format::eR32G32B32Sfloat,	sizeof(float) * 11),		// Location 4 : Tangent
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 4, vk::Format::eR32G32B32Sfloat,	sizeof(float) * 11),	// Location 4 : Tangent
 			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 5, vk::Format::eR32G32B32A32Sfloat, sizeof(float) * 14),	// Location 5 : Bone weights
-			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 6, vk::Format::eR32G32B32A32Sint,	sizeof(float) * 18),		// Location 6 : Bone IDs
+			vkx::vertexInputAttributeDescription(VERTEX_BUFFER_BIND_ID, 6, vk::Format::eR32G32B32A32Sint,	sizeof(float) * 18),	// Location 6 : Bone IDs
 		};
 
 
@@ -832,7 +834,7 @@ class VulkanExample : public vkx::vulkanApp {
 		//	vkx::descriptorSetLayoutBinding(
 		//		vk::DescriptorType::eUniformBuffer,
 		//		vk::ShaderStageFlagBits::eVertex,
-		//		0),// binding 0
+		//		0),
 		//};
 
 		//vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo4 =
@@ -2354,11 +2356,12 @@ class VulkanExample : public vkx::vulkanApp {
 
 		// deferred
 
-		if (false) {
+		if (!false) {
 			auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			sponzaModel->load(getAssetPath() + "models/sponza.dae");
 			sponzaModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 			sponzaModel->rotateWorldX(PI / 2.0);
+			//sponzaModel->rotateWorldX(glm::radians(90.0f));
 			modelsDeferred.push_back(sponzaModel);
 		}
 
