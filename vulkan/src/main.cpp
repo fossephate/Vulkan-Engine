@@ -1026,25 +1026,25 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-		//std::vector<vk::DescriptorSetLayout> descriptorSetLayoutsDeferred{
-		//	rscs.descriptorSetLayouts->get("offscreen.scene"),
-		//	rscs.descriptorSetLayouts->get("offscreen.matrix"),
-		//	rscs.descriptorSetLayouts->get("offscreen.textures"),
-		//	rscs.descriptorSetLayouts->get("deferred"),
-		//};
+		std::vector<vk::DescriptorSetLayout> descriptorSetLayoutsDeferred{
+			rscs.descriptorSetLayouts->get("offscreen.scene"),
+			rscs.descriptorSetLayouts->get("offscreen.matrix"),
+			rscs.descriptorSetLayouts->get("offscreen.textures"),
+			rscs.descriptorSetLayouts->get("deferred"),
+		};
 
-		//// use all descriptor set layouts
-		//// to form pipeline layout
+		// use all descriptor set layouts
+		// to form pipeline layout
 
-		//vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfoDeferred = vkx::pipelineLayoutCreateInfo(descriptorSetLayoutsDeferred.data(), descriptorSetLayoutsDeferred.size());
+		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfoDeferred = vkx::pipelineLayoutCreateInfo(descriptorSetLayoutsDeferred.data(), descriptorSetLayoutsDeferred.size());
 
 
 
-		//
-		//// Offscreen (scene) rendering pipeline layout
-		//rscs.pipelineLayouts->add("offscreen", pPipelineLayoutCreateInfoDeferred);
+		
+		// Offscreen (scene) rendering pipeline layout
+		rscs.pipelineLayouts->add("offscreen", pPipelineLayoutCreateInfoDeferred);
 
-		//rscs.pipelineLayouts->add("deferred", pPipelineLayoutCreateInfoDeferred);
+		rscs.pipelineLayouts->add("deferred", pPipelineLayoutCreateInfoDeferred);
 
 
 
@@ -1063,29 +1063,30 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-		std::vector<vk::DescriptorSetLayout> descriptorSetLayoutsOffscreen{
-			rscs.descriptorSetLayouts->get("offscreen.scene"),
-			rscs.descriptorSetLayouts->get("offscreen.matrix"),
-			rscs.descriptorSetLayouts->get("offscreen.textures"),
-		};
+		//std::vector<vk::DescriptorSetLayout> descriptorSetLayoutsOffscreen{
+		//	rscs.descriptorSetLayouts->get("offscreen.scene"),
+		//	rscs.descriptorSetLayouts->get("offscreen.matrix"),
+		//	rscs.descriptorSetLayouts->get("offscreen.textures"),
+		//	rscs.descriptorSetLayouts->get("deferred"),// todo: remove
+		//};
 
-		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfoOffscreen = vkx::pipelineLayoutCreateInfo(descriptorSetLayoutsOffscreen.data(), descriptorSetLayoutsOffscreen.size());
-
-
-		// Offscreen (scene) rendering pipeline layout
-		rscs.pipelineLayouts->add("offscreen", pPipelineLayoutCreateInfoOffscreen);
+		//vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfoOffscreen = vkx::pipelineLayoutCreateInfo(descriptorSetLayoutsOffscreen.data(), descriptorSetLayoutsOffscreen.size());
 
 
-
+		//// Offscreen (scene) rendering pipeline layout
+		//rscs.pipelineLayouts->add("offscreen", pPipelineLayoutCreateInfoOffscreen);
 
 
 
-		std::vector<vk::DescriptorSetLayout> descriptorSetLayoutsDeferred{
-			rscs.descriptorSetLayouts->get("deferred"),
-		};
-		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfoDeferred = vkx::pipelineLayoutCreateInfo(descriptorSetLayoutsDeferred.data(), descriptorSetLayoutsDeferred.size());
 
-		rscs.pipelineLayouts->add("deferred", pPipelineLayoutCreateInfoDeferred);
+
+
+		//std::vector<vk::DescriptorSetLayout> descriptorSetLayoutsDeferred{
+		//	rscs.descriptorSetLayouts->get("deferred"),
+		//};
+		//vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfoDeferred = vkx::pipelineLayoutCreateInfo(descriptorSetLayoutsDeferred.data(), descriptorSetLayoutsDeferred.size());
+
+		//rscs.pipelineLayouts->add("deferred", pPipelineLayoutCreateInfoDeferred);
 
 
 
@@ -1162,11 +1163,8 @@ class VulkanExample : public vkx::vulkanApp {
 		rscs.descriptorSetLayouts->add("offscreen.ssao.blur", descriptorSetLayoutBindings10);
 
 
-		// use all descriptor set layouts
+		// use descriptor set layouts
 		// to form pipeline layout
-
-		// todo: if possible find a better way to do this
-		// index / use ordered map and get ptr? ordered by name so probably wouldn't work as intended
 
 		std::vector<vk::DescriptorSetLayout> descriptorSetLayoutsSSAOBlur{
 			rscs.descriptorSetLayouts->get("offscreen.ssao.blur"),// descriptor set layout
@@ -1208,7 +1206,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 		std::vector<vk::DescriptorSetLayout> descriptorSetLayoutsShadow{
-			rscs.descriptorSetLayouts->get("shadow.scene"),// descriptor set layout
+			rscs.descriptorSetLayouts->get("shadow.scene"),	// descriptor set layout
 			rscs.descriptorSetLayouts->get("shadow.matrix"),// descriptor set layout
 		};
 
@@ -1424,20 +1422,20 @@ class VulkanExample : public vkx::vulkanApp {
 				&uniformData.bonesVS.descriptor),// bind to forward descriptor since it's the same
 
 
-												 // Set 1: Binding 0: Vertex shader uniform buffer
+			// Set 1: Binding 0: Vertex shader uniform buffer
 			vkx::writeDescriptorSet(
 				rscs.descriptorSets->get("offscreen.matrix"),
 				vk::DescriptorType::eUniformBufferDynamic,
 				0,
 				&uniformData.matrixVS.descriptor),// bind to forward descriptor since it's the same
 
-												  //// Set 2: Binding 0: Scene color map
-												  // replaced with materials write descriptor sets
-												  //vkx::writeDescriptorSet(
-												  //	rscs.descriptorSets->get("offscreen.textures"),
-												  //	vk::DescriptorType::eCombinedImageSampler,
-												  //	0,
-												  //	&textures.colorMap.descriptor),
+			//// Set 2: Binding 0: Scene color map
+			// replaced with materials write descriptor sets
+			//vkx::writeDescriptorSet(
+			//	rscs.descriptorSets->get("offscreen.textures"),
+			//	vk::DescriptorType::eCombinedImageSampler,
+			//	0,
+			//	&textures.colorMap.descriptor),
 
 
 
@@ -1623,8 +1621,8 @@ class VulkanExample : public vkx::vulkanApp {
 		std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStages;
 
 
-		vk::GraphicsPipelineCreateInfo pipelineCreateInfo;// = vkx::pipelineCreateInfo(rscs.pipelineLayouts->get("forward.basic"), renderPass);
-														  // set pipeline layout
+		vk::GraphicsPipelineCreateInfo pipelineCreateInfo;
+		// set pipeline layout
 		pipelineCreateInfo.layout = rscs.pipelineLayouts->get("forward.basic");
 		// set render pass
 		pipelineCreateInfo.renderPass = renderPass;
@@ -3139,8 +3137,8 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 			// renders quad
-			//uint32_t setNum = 3;// important!
-			uint32_t setNum = 0;// important!
+			uint32_t setNum = 3;// important!
+			//uint32_t setNum = 0;// important!
 			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("deferred"), setNum, rscs.descriptorSets->get("deferred"), nullptr);
 			if (debugDisplay) {
 				if (settings.SSAO) {

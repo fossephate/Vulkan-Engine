@@ -6,7 +6,7 @@
 layout (location = 0) in vec3 inPos;
 layout (location = 1) in vec2 inUV;
 
-layout (set = 0, binding = 0) uniform UBO 
+layout (set = 3, binding = 0) uniform UBO 
 {
 	mat4 model;// this is used in debug.vert
 	mat4 projection;// consider hardcoding in? probably not worth it
