@@ -70,6 +70,14 @@ namespace vkx {
 	class MeshLoader;
 	class AssetManager;
 
+
+	struct MaterialProperties;
+	struct Material;
+	struct BoneInfo;
+	struct VertexBoneData;
+
+
+
 	// vertex layout enums
 	typedef enum VertexComponent {
 		VERTEX_COMPONENT_POSITION = 0x0,
@@ -84,17 +92,26 @@ namespace vkx {
 		//VERTEX_COMPONENT_BONE_WEIGHT = 0x9,// added 1/20/17
 	} VertexComponent;
 
+	//std::vector<vkx::VertexComponent> defaultLayout =
+	//{
+	//	vkx::VertexComponent::VERTEX_COMPONENT_POSITION,
+	//	vkx::VertexComponent::VERTEX_COMPONENT_UV,
+	//	vkx::VertexComponent::VERTEX_COMPONENT_COLOR,
+	//	vkx::VertexComponent::VERTEX_COMPONENT_NORMAL,
+	//	vkx::VertexComponent::VERTEX_COMPONENT_TANGENT,
+	//	vkx::VertexComponent::VERTEX_COMPONENT_DUMMY_VEC4,
+	//	vkx::VertexComponent::VERTEX_COMPONENT_DUMMY_VEC4
+	//};
 
-	struct MaterialProperties;
-	struct Material;
-	struct BoneInfo;
-	struct VertexBoneData;
 
+	
 	struct MeshBuffer {
 
 		// vulkan buffers
 		vkx::CreateBufferResult vertices;
 		vkx::CreateBufferResult indices;
+
+		uint32_t vertexBufferBinding = 0;// 5/4/17
 
 		std::vector<VertexComponent> vertexLayout;// 4/26/17
 
@@ -148,7 +165,7 @@ namespace vkx {
 		glm::vec3 color;
 		glm::vec3 normal;
 		glm::vec3 tangent;// added 3/1/17
-						  // Max. four bones per vertex
+		// Max. four bones per vertex
 		float boneWeights[4];
 		uint32_t boneIDs[4];
 	};
@@ -163,25 +180,6 @@ namespace vkx {
 		std::vector<Vertex> Vertices;
 		std::vector<uint32_t> Indices;
 	};
-
-
-	//struct SceneHolder {
-	//	aiScene* pScene;
-	//	std::vector<vkx::MeshEntry> m_Entries;
-	//};
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -317,22 +315,11 @@ namespace vkx {
 			//	uint32_t count;
 			//} indexBuffer;
 
-			
-
-			//vk::PipelineVertexInputStateCreateInfo vi;
-			//std::vector<vk::VertexInputBindingDescription> bindingDescriptions;
-			//std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
-			//vk::Pipeline pipeline;
-
 			Assimp::Importer Importer;
 
 			// pointer to assetManager and context
 			vkx::AssetManager *assetManager = nullptr;
 			vkx::Context *context = nullptr;
-
-			// copy of device
-			//vk::Device device;
-			//vk::Queue queue;
 
 			TextureLoader *textureLoader = nullptr;
 			//const aiScene *pScene = nullptr;

@@ -139,22 +139,19 @@ namespace vkx {
 				std::string ls = "Info: Diffuse: \"" + std::string(texturefile.C_Str()) + "\"\n";
 				printf(ls.c_str());
 
-				// if the texture has already been loaded previously
-				// use it instead of loading it again
-				if (this->assetManager->textures.present(fileName)) {
-					// get from memory
-					material.diffuse = assetManager->textures.get(fileName);
-				} else {
+				// if the texture hasn't been loaded already, load it
+				if (!this->assetManager->textures.present(fileName)) {
 					// load from file
-					vkx::Texture tex = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc2UnormBlock);// this is the texture format! :O
+					vkx::Texture tex = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc2UnormBlock);
 					this->assetManager->textures.add(fileName, tex);
-					material.diffuse = tex;
 				}
+				material.diffuse = assetManager->textures.getSharedPtr(fileName);
 			} else {
 				std::string fileName = std::string(texturefile.C_Str());
 				printf("Error: Material has no diffuse, using dummy texture!\n");
-				// todo : separate pipeline and layout
-				material.diffuse = textureLoader->loadTexture(assetPath + "dummy/dummy.dds", vk::Format::eBc2UnormBlock);
+				
+				//material.diffuse = textureLoader->loadTexture(assetPath + "dummy/dummy.dds", vk::Format::eBc2UnormBlock);
+				material.diffuse = assetManager->textures.getOrLoad(assetPath + "dummy/dummy.dds", textureLoader);
 			}
 
 
@@ -168,27 +165,22 @@ namespace vkx {
 				std::string fileName = std::string(texturefile.C_Str());
 				std::replace(fileName.begin(), fileName.end(), '\\', '/');
 
-				
-
 				std::string ls = "Info: Specular: \"" + std::string(texturefile.C_Str()) + "\"\n";
 				printf(ls.c_str());
 
-				// if the texture has already been loaded previously
-				// use it instead of loading it again
-				if (this->assetManager->textures.present(fileName)) {
-					// get from memory
-					material.specular = assetManager->textures.get(fileName);
-				} else {
+				// if the texture hasn't been loaded already, load it
+				if (!this->assetManager->textures.present(fileName)) {
 					// load from file
-					vkx::Texture tex = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc2UnormBlock);// this is the texture format! :O
+					vkx::Texture tex = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc2UnormBlock);
 					this->assetManager->textures.add(fileName, tex);
-					material.specular = tex;
 				}
+				material.specular = assetManager->textures.getSharedPtr(fileName);
 			} else {
 				std::string fileName = std::string(texturefile.C_Str());
 				printf("Error: Material has no specular, using dummy texture!\n");
-				// todo : separate pipeline and layout
-				material.specular = textureLoader->loadTexture(assetPath + "dummy/dummy_specular.dds", vk::Format::eBc2UnormBlock);
+
+				//material.specular = textureLoader->loadTexture(assetPath + "dummy/dummy_specular.dds", vk::Format::eBc2UnormBlock);
+				material.specular = assetManager->textures.getOrLoad(assetPath + "dummy/dummy_specular.dds", textureLoader);
 			}
 
 
@@ -205,29 +197,24 @@ namespace vkx {
 				std::string ls = "Info: Bump: \"" + std::string(texturefile.C_Str()) + "\"\n";
 				printf(ls.c_str());
 
-				
-
-				// if the texture has already been loaded previously
-				// use it instead of loading it again
-				if (this->assetManager->textures.present(fileName)) {
-					// get from memory
-					material.bump = assetManager->textures.get(fileName);
-				} else {
+				// if the texture hasn't been loaded already, load it
+				if (!this->assetManager->textures.present(fileName)) {
 					// load from file
-					vkx::Texture tex = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc2UnormBlock);// this is the texture format! :O
+					vkx::Texture tex = textureLoader->loadTexture(assetPath + fileName, vk::Format::eBc2UnormBlock);
 					this->assetManager->textures.add(fileName, tex);
-					material.bump = tex;
 				}
+				material.bump = assetManager->textures.getSharedPtr(fileName);
 			} else {
 				std::string fileName = std::string(texturefile.C_Str());
 				printf("Error: Material has no bump, using dummy texture!\n");
-				// todo : separate pipeline and layout
-				material.bump = textureLoader->loadTexture(assetPath + "dummy/dummy_ddn.dds", vk::Format::eBc2UnormBlock);
+
+				//material.bump = textureLoader->loadTexture(assetPath + "dummy/dummy_ddn.dds", vk::Format::eBc2UnormBlock);
+				material.bump = assetManager->textures.getOrLoad(assetPath + "dummy/dummy_ddn.dds", textureLoader);
 			}
 
 			// Mask
 			if (pScene->mMaterials[i]->GetTextureCount(aiTextureType_OPACITY) > 0) {
-				printf("Info: Material has opacity, enabling alpha test.\n");
+				printf("Info: Material has opacity, enabling alpha.\n");
 				material.hasAlpha = true;
 			}
 
@@ -258,19 +245,19 @@ namespace vkx {
 					material.descriptorSet,
 					vk::DescriptorType::eCombinedImageSampler,
 					0,
-					&material.diffuse.descriptor),
+					&material.diffuse->descriptor),
 				// binding 1: specular
 				vkx::writeDescriptorSet(
 					material.descriptorSet,
 					vk::DescriptorType::eCombinedImageSampler,
 					1,
-					&material.specular.descriptor),
+					&material.specular->descriptor),
 				// binding 2: normal
 				vkx::writeDescriptorSet(
 					material.descriptorSet,
 					vk::DescriptorType::eCombinedImageSampler,
 					2,
-					&material.bump.descriptor)
+					&material.bump->descriptor)
 			};
 
 
@@ -301,12 +288,6 @@ namespace vkx {
 			// pointer to corresponding mesh
 			const aiMesh *pMesh = pScene->mMeshes[index];
 
-
-
-
-
-
-
 			// set material name for this mesh
 			//int materialIndex = this->assetManager->loadedMaterials.size() - pScene->mNumMaterials + pMesh->mMaterialIndex;
 			//m_Entries[index].MaterialIndex = materialIndex;
@@ -321,9 +302,6 @@ namespace vkx {
 			aiColor3D pColor(0.f, 0.f, 0.f);
 			pScene->mMaterials[pMesh->mMaterialIndex]->Get(AI_MATKEY_COLOR_DIFFUSE, pColor);
 
-
-
-
 			aiVector3D Zero3D(0.0f, 0.0f, 0.0f);
 
 			// get vertices
@@ -331,12 +309,7 @@ namespace vkx {
 			for (unsigned int i = 0; i < pMesh->mNumVertices; i++) {
 				aiVector3D* pPos = &(pMesh->mVertices[i]);
 				aiVector3D* pNormal = &(pMesh->mNormals[i]);
-				//aiVector3D *pTexCoord;
-				//if (paiMesh->HasTextureCoords(0)) {
-				//	pTexCoord = &(paiMesh->mTextureCoords[0][i]);
-				//} else {
-				//	pTexCoord = &Zero3D;
-				//}
+
 				aiVector3D *pTexCoord = (pMesh->HasTextureCoords(0)) ? &(pMesh->mTextureCoords[0][i]) : &Zero3D;
 
 				aiVector3D* pTangent = (pMesh->HasTangentsAndBitangents()) ? &(pMesh->mTangents[i]) : &Zero3D;
@@ -490,15 +463,364 @@ namespace vkx {
 
 
 
+	struct ComponentInfo {
+		int offset;
+		int length;
+		glm::vec2 Vertex::* vec2p;
+		glm::vec3 Vertex::* vec3p;
+		glm::vec4 Vertex::* vec4p;
+		VertexComponent vertexComponent;
+	};
+
+	std::vector<vkx::VertexComponent> defaultLayout =
+	{
+		vkx::VertexComponent::VERTEX_COMPONENT_POSITION,
+		vkx::VertexComponent::VERTEX_COMPONENT_UV,
+		vkx::VertexComponent::VERTEX_COMPONENT_COLOR,
+		vkx::VertexComponent::VERTEX_COMPONENT_NORMAL,
+		vkx::VertexComponent::VERTEX_COMPONENT_TANGENT,
+		vkx::VertexComponent::VERTEX_COMPONENT_DUMMY_VEC4,
+		vkx::VertexComponent::VERTEX_COMPONENT_DUMMY_VEC4
+	};
+
+	// this needs to be fixed:
+	struct defaultVert {
+		glm::vec3 pos;
+		glm::vec2 uv;
+		glm::vec3 color;
+		glm::vec3 normal;
+		glm::vec3 tangent;
+		glm::vec4 dummy1;
+		glm::vec4 dummy2;
+	};
+
+
+	//void vkx::MeshLoader::createMeshBuffers(const std::vector<VertexComponent> &layout, float scale) {
+
+	//	auto tStart = std::chrono::high_resolution_clock::now();
+
+
+	//	// todo: fix:
+	//	//if (this->assetManager->meshBuffers.present(filename)) {
+	//	//	// assumes correct vertex layout
+	//	//	this->meshBuffers = this->assetManager->meshBuffers.get(filename);
+	//	//	return;
+	//	//}
+
+	//	// for each mesh
+	//	for (int m = 0; m < m_Entries.size(); m++) {
+
+
+
+
+	//		std::vector<float> vertexBuffer;
+	//		int numOfFloats = m_Entries[m].Vertices.size() * (vkx::vertexSize(layout) / sizeof(float));
+	//		vertexBuffer.reserve(numOfFloats);
+
+
+	//		if (layout == defaultLayout) {
+
+	//			for (int i = 0; i < m_Entries[m].Vertices.size(); i++) {
+	//				// pos
+	//				vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.x * scale);
+	//				vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.y * scale);
+	//				vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.z * scale);
+	//				// uv
+	//				vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tex.x);
+	//				vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tex.y);
+	//				// color
+	//				vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.r);
+	//				vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.g);
+	//				vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.b);
+	//				// normal
+	//				vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.x);
+	//				vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.y);
+	//				vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.z);
+	//				// tangent
+	//				vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.x);
+	//				vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.y);
+	//				vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.z);
+
+	//				// dummy vec4
+	//				vertexBuffer.push_back(0.0f);
+	//				vertexBuffer.push_back(0.0f);
+	//				vertexBuffer.push_back(0.0f);
+	//				vertexBuffer.push_back(0.0f);
+
+	//				// dummy vec4
+	//				vertexBuffer.push_back(0.0f);
+	//				vertexBuffer.push_back(0.0f);
+	//				vertexBuffer.push_back(0.0f);
+	//				vertexBuffer.push_back(0.0f);
+
+	//			}
+
+	//		} else {
+
+
+
+
+
+
+
+
+
+
+	//			//std::vector<int Vertex::*> componentMap;
+	//			//std::vector<int> componentMap;
+	//			std::vector<ComponentInfo> componentMap;
+
+
+	//			//auto a = offsetof(Vertex, m_pos);
+	//			//int Foo::* pm = &Foo::b;
+
+	//			for (auto &layoutDetail : layout) {
+	//				ComponentInfo c;
+	//				switch (layoutDetail) {
+	//					// Position
+	//					case VERTEX_COMPONENT_POSITION:
+	//						//int Vertex::* pm = &Vertex::m_pos;
+	//						//componentMap.push_back(offsetof(Vertex, m_pos));
+	//						c.offset = offsetof(Vertex, m_pos);
+	//						c.length = 3;
+	//						c.vec3p = &Vertex::m_pos;
+	//						componentMap.push_back(c);
+	//						break;
+	//						// Normal
+	//					case VERTEX_COMPONENT_NORMAL:
+	//						//componentMap.push_back(offsetof(Vertex, m_normal));
+	//						c.offset = offsetof(Vertex, m_normal);
+	//						c.length = 3;
+	//						c.vec3p = &Vertex::m_normal;
+	//						componentMap.push_back(c);
+	//						break;
+	//						// Texture Coordinates
+	//					case VERTEX_COMPONENT_UV:
+	//						//componentMap.push_back(offsetof(Vertex, m_tex));
+	//						c.offset = offsetof(Vertex, m_tex);
+	//						c.length = 2;
+	//						c.vec2p = &Vertex::m_tex;
+	//						componentMap.push_back(c);
+	//						break;
+	//						// Color
+	//					case VERTEX_COMPONENT_COLOR:
+	//						//componentMap.push_back(offsetof(Vertex, m_color));
+	//						c.offset = offsetof(Vertex, m_color);
+	//						c.length = 3;
+	//						c.vec3p = &Vertex::m_color;
+	//						componentMap.push_back(c);
+	//						break;
+	//						// Tangent
+	//					case VERTEX_COMPONENT_TANGENT:
+	//						//componentMap.push_back(offsetof(Vertex, m_tangent));
+	//						c.offset = offsetof(Vertex, m_tangent);
+	//						c.length = 3;
+	//						c.vec3p = &Vertex::m_tangent;
+	//						componentMap.push_back(c);
+	//						break;
+	//						// Bitangent
+	//					case VERTEX_COMPONENT_BITANGENT:
+	//						//componentMap.push_back(offsetof(Vertex, m_binormal));
+	//						c.offset = offsetof(Vertex, m_binormal);
+	//						c.length = 3;
+	//						c.vec3p = &Vertex::m_binormal;
+	//						componentMap.push_back(c);
+	//						break;
+	//						// Dummy layout components for padding
+	//					case VERTEX_COMPONENT_DUMMY_FLOAT:
+	//						//componentMap.push_back(-1);
+	//						c.offset = -1;
+	//						c.length = 1;
+	//						c.vertexComponent = VERTEX_COMPONENT_DUMMY_FLOAT;
+	//						componentMap.push_back(c);
+	//						break;
+	//					case VERTEX_COMPONENT_DUMMY_VEC4:
+	//						//componentMap.push_back(-4);
+	//						c.offset = -4;
+	//						c.length = 4;
+	//						c.vertexComponent = VERTEX_COMPONENT_DUMMY_VEC4;
+	//						componentMap.push_back(c);
+	//						break;
+	//				}
+	//			}
+
+	//			// for each vertex
+	//			for (int i = 0; i < m_Entries[m].Vertices.size(); i++) {
+	//				// Push vertex data depending on layout
+
+
+
+	//				for (auto &info : componentMap) {
+
+	//					if (info.vertexComponent == VERTEX_COMPONENT_DUMMY_VEC4) {
+	//						vertexBuffer.push_back(0.0f);
+	//						vertexBuffer.push_back(0.0f);
+	//						vertexBuffer.push_back(0.0f);
+	//						vertexBuffer.push_back(0.0f);
+	//					} else if (info.vertexComponent == VERTEX_COMPONENT_DUMMY_FLOAT) {
+	//						vertexBuffer.push_back(0.0f);
+	//					} else {
+
+	//						Vertex *vert = &m_Entries[m].Vertices[i];
+
+	//						if (info.length == 2) {
+	//							glm::vec2 comp = *reinterpret_cast<glm::vec2 *>(reinterpret_cast<char *>(vert) + info.offset);
+	//							vertexBuffer.push_back(comp.x);
+	//							vertexBuffer.push_back(comp.y);
+	//						} else if (info.length == 3) {
+	//							glm::vec3 comp = *reinterpret_cast<glm::vec3 *>(reinterpret_cast<char *>(vert) + info.offset);
+	//							vertexBuffer.push_back(comp.x);
+	//							vertexBuffer.push_back(comp.y);
+	//							vertexBuffer.push_back(comp.z);
+	//						} else if (info.length == 4) {
+	//							glm::vec4 comp = *reinterpret_cast<glm::vec4 *>(reinterpret_cast<char *>(vert) + info.offset);
+	//							vertexBuffer.push_back(comp.x);
+	//							vertexBuffer.push_back(comp.y);
+	//							vertexBuffer.push_back(comp.z);
+	//							vertexBuffer.push_back(comp.w);
+	//						}
+
+
+	//						//int value = *reinterpret_cast<int *>(reinterpret_cast<char *>(&o1) +offsetof(TestMem, a));
+	//						//int value = *reinterpret_cast<int *>(reinterpret_cast<char *>(vert) + offset);
+
+	//					}
+
+	//				}
+
+
+	//				//for (auto &layoutDetail : layout) {
+	//				//	switch (layoutDetail) {
+	//				//		// Position
+	//				//		case VERTEX_COMPONENT_POSITION:
+	//				//			vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.x * scale);
+	//				//			vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.y * scale);
+	//				//			vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.z * scale);
+	//				//			break;
+	//				//		// Normal
+	//				//		case VERTEX_COMPONENT_NORMAL:
+	//				//			vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.x);
+	//				//			vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.y);// y was negative// important
+	//				//			vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.z);
+	//				//			break;
+	//				//		// Texture Coordinates
+	//				//		case VERTEX_COMPONENT_UV:
+	//				//			vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tex.s);
+	//				//			vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tex.t);
+	//				//			break;
+	//				//		// Color
+	//				//		case VERTEX_COMPONENT_COLOR:
+	//				//			vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.r);
+	//				//			vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.g);
+	//				//			vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.b);
+	//				//			break;
+	//				//		// Tangent
+	//				//		case VERTEX_COMPONENT_TANGENT:
+	//				//			vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.x);
+	//				//			vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.y);
+	//				//			vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.z);
+	//				//			break;
+	//				//		// Bitangent
+	//				//		case VERTEX_COMPONENT_BITANGENT:
+	//				//			vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.x);
+	//				//			vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.y);
+	//				//			vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.z);
+	//				//			break;
+	//				//		// Dummy layout components for padding
+	//				//		case VERTEX_COMPONENT_DUMMY_FLOAT:
+	//				//			vertexBuffer.push_back(0.0f);
+	//				//			break;
+	//				//		case VERTEX_COMPONENT_DUMMY_VEC4:
+	//				//			vertexBuffer.push_back(0.0f);
+	//				//			vertexBuffer.push_back(0.0f);
+	//				//			vertexBuffer.push_back(0.0f);
+	//				//			vertexBuffer.push_back(0.0f);
+	//				//			break;
+	//				//	}
+	//				//}
+	//			}
+
+	//		}
+
+
+
+
+	//		//std::shared_ptr<MeshBuffer> meshesDeferred;
+	//		auto meshBuffer = std::make_shared<MeshBuffer>();
+
+	//		
+
+	//		//MeshBuffer meshBuffer;
+	//		meshBuffer->vertexLayout = layout;
+
+	//		meshBuffer->vertices.size = vertexBuffer.size() * sizeof(float);
+
+	//		dim.min *= scale;
+	//		dim.max *= scale;
+	//		dim.size *= scale;
+
+	//		std::vector<uint32_t> indexBuffer;
+	//		uint32_t indexBase = (uint32_t)indexBuffer.size();
+	//		for (uint32_t i = 0; i < m_Entries[m].Indices.size(); i++) {
+	//			indexBuffer.push_back(m_Entries[m].Indices[i] + indexBase);
+	//		}
+
+	//		meshBuffer->indexCount = (uint32_t)indexBuffer.size();
+	//		// Use staging buffer to move vertex and index buffer to device local memory
+	//		// Vertex buffer
+	//		meshBuffer->vertices = this->context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
+	//		// Index buffer
+	//		meshBuffer->indices = this->context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);
+	//		meshBuffer->dim = dim.size;
+
+	//		meshBuffer->materialIndex = m_Entries[m].materialIndex;
+	//		meshBuffer->materialName = m_Entries[m].materialName;
+
+
+	//		meshBuffers.push_back(meshBuffer);
+	//	}
+
+
+
+	//	//this->meshes.resize(this->meshBuffers.size());
+
+	//	//for (int i = 0; i < meshBuffers.size(); ++i) {
+	//	//	vkx::Mesh m(meshBuffers[i])
+	//	//}
+
+	//	// if these mesh buffers haven't been stored, store them
+	//	if (!this->assetManager->meshBuffers.present(this->filename)) {
+	//		this->assetManager->meshBuffers.add(filename, meshBuffers);
+	//	}
+
+
+
+
+	//	auto tEnd = std::chrono::high_resolution_clock::now();
+
+	//	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(tEnd - tStart).count();
+	//	printf("Load Time: %d\n", duration);
+
+	//}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	void vkx::MeshLoader::createMeshBuffers(const std::vector<VertexComponent> &layout, float scale) {
-
-
-		//for (int i = 0; i < 10000; i++) {
-		//	printf("\rIn progress %d", i / 100);
-		//	fflush(stdout);
-		//}
-		//printf("\n");
 
 		auto tStart = std::chrono::high_resolution_clock::now();
 
@@ -510,74 +832,188 @@ namespace vkx {
 		//	return;
 		//}
 
-
+		// for each mesh
 		for (int m = 0; m < m_Entries.size(); m++) {
 
 
-			std::vector<float> vertexBuffer;
 
-			for (int i = 0; i < m_Entries[m].Vertices.size(); i++) {
-				// Push vertex data depending on layout
+			std::vector<defaultVert> verticesTest;
+			verticesTest.resize(m_Entries[m].Vertices.size());
+			std::vector<float> vertexBuffer;
+			int numOfFloats = m_Entries[m].Vertices.size() * (vkx::vertexSize(layout) / sizeof(float));
+			vertexBuffer.reserve(numOfFloats);
+
+
+			if (layout == defaultLayout) {
+
+				for (int i = 0; i < m_Entries[m].Vertices.size(); i++) {
+					// pos
+					verticesTest[i].pos = glm::make_vec3(&m_Entries[m].Vertices[i].m_pos.x);
+					// uv
+					verticesTest[i].uv = glm::make_vec2(&m_Entries[m].Vertices[i].m_tex.x);
+					// color
+					verticesTest[i].color = glm::make_vec3(&m_Entries[m].Vertices[i].m_color.x);
+					// normal
+					verticesTest[i].normal = glm::make_vec3(&m_Entries[m].Vertices[i].m_normal.x);
+					// tangent
+					verticesTest[i].tangent = glm::make_vec3(&m_Entries[m].Vertices[i].m_tangent.x);
+
+					//// dummy vec4
+					//vertexBuffer.push_back(0.0f);
+					//vertexBuffer.push_back(0.0f);
+					//vertexBuffer.push_back(0.0f);
+					//vertexBuffer.push_back(0.0f);
+
+					//// dummy vec4
+					//vertexBuffer.push_back(0.0f);
+					//vertexBuffer.push_back(0.0f);
+					//vertexBuffer.push_back(0.0f);
+					//vertexBuffer.push_back(0.0f);
+
+				}
+
+			} else {
+				//std::vector<int Vertex::*> componentMap;
+				//std::vector<int> componentMap;
+				std::vector<ComponentInfo> componentMap;
+
+
+				//auto a = offsetof(Vertex, m_pos);
+				//int Foo::* pm = &Foo::b;
+
 				for (auto &layoutDetail : layout) {
+					ComponentInfo c;
 					switch (layoutDetail) {
 						// Position
 						case VERTEX_COMPONENT_POSITION:
-							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.x * scale);
-							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.y * scale);
-							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_pos.z * scale);
+							//int Vertex::* pm = &Vertex::m_pos;
+							//componentMap.push_back(offsetof(Vertex, m_pos));
+							c.offset = offsetof(Vertex, m_pos);
+							c.length = 3;
+							c.vec3p = &Vertex::m_pos;
+							componentMap.push_back(c);
 							break;
-						// Normal
+							// Normal
 						case VERTEX_COMPONENT_NORMAL:
-							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.x);
-							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.y);// y was negative// important
-							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_normal.z);
+							//componentMap.push_back(offsetof(Vertex, m_normal));
+							c.offset = offsetof(Vertex, m_normal);
+							c.length = 3;
+							c.vec3p = &Vertex::m_normal;
+							componentMap.push_back(c);
 							break;
-						// Texture Coordinates
+							// Texture Coordinates
 						case VERTEX_COMPONENT_UV:
-							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tex.s);
-							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tex.t);
+							//componentMap.push_back(offsetof(Vertex, m_tex));
+							c.offset = offsetof(Vertex, m_tex);
+							c.length = 2;
+							c.vec2p = &Vertex::m_tex;
+							componentMap.push_back(c);
 							break;
-						// Color
+							// Color
 						case VERTEX_COMPONENT_COLOR:
-							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.r);
-							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.g);
-							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_color.b);
+							//componentMap.push_back(offsetof(Vertex, m_color));
+							c.offset = offsetof(Vertex, m_color);
+							c.length = 3;
+							c.vec3p = &Vertex::m_color;
+							componentMap.push_back(c);
 							break;
-						// Tangent
+							// Tangent
 						case VERTEX_COMPONENT_TANGENT:
-							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.x);
-							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.y);
-							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_tangent.z);
+							//componentMap.push_back(offsetof(Vertex, m_tangent));
+							c.offset = offsetof(Vertex, m_tangent);
+							c.length = 3;
+							c.vec3p = &Vertex::m_tangent;
+							componentMap.push_back(c);
 							break;
-						// Bitangent
+							// Bitangent
 						case VERTEX_COMPONENT_BITANGENT:
-							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.x);
-							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.y);
-							vertexBuffer.push_back(m_Entries[m].Vertices[i].m_binormal.z);
+							//componentMap.push_back(offsetof(Vertex, m_binormal));
+							c.offset = offsetof(Vertex, m_binormal);
+							c.length = 3;
+							c.vec3p = &Vertex::m_binormal;
+							componentMap.push_back(c);
 							break;
-						// Dummy layout components for padding
+							// Dummy layout components for padding
 						case VERTEX_COMPONENT_DUMMY_FLOAT:
-							vertexBuffer.push_back(0.0f);
+							//componentMap.push_back(-1);
+							c.offset = -1;
+							c.length = 1;
+							c.vertexComponent = VERTEX_COMPONENT_DUMMY_FLOAT;
+							componentMap.push_back(c);
 							break;
 						case VERTEX_COMPONENT_DUMMY_VEC4:
-							vertexBuffer.push_back(0.0f);
-							vertexBuffer.push_back(0.0f);
-							vertexBuffer.push_back(0.0f);
-							vertexBuffer.push_back(0.0f);
+							//componentMap.push_back(-4);
+							c.offset = -4;
+							c.length = 4;
+							c.vertexComponent = VERTEX_COMPONENT_DUMMY_VEC4;
+							componentMap.push_back(c);
 							break;
 					}
 				}
+
+				// for each vertex
+				for (int i = 0; i < m_Entries[m].Vertices.size(); i++) {
+					// Push vertex data depending on layout
+
+
+
+					for (auto &info : componentMap) {
+
+						if (info.vertexComponent == VERTEX_COMPONENT_DUMMY_VEC4) {
+							vertexBuffer.push_back(0.0f);
+							vertexBuffer.push_back(0.0f);
+							vertexBuffer.push_back(0.0f);
+							vertexBuffer.push_back(0.0f);
+						} else if (info.vertexComponent == VERTEX_COMPONENT_DUMMY_FLOAT) {
+							vertexBuffer.push_back(0.0f);
+						} else {
+
+							Vertex *vert = &m_Entries[m].Vertices[i];
+
+							if (info.length == 2) {
+								glm::vec2 comp = *reinterpret_cast<glm::vec2 *>(reinterpret_cast<char *>(vert) + info.offset);
+								vertexBuffer.push_back(comp.x);
+								vertexBuffer.push_back(comp.y);
+							} else if (info.length == 3) {
+								glm::vec3 comp = *reinterpret_cast<glm::vec3 *>(reinterpret_cast<char *>(vert) + info.offset);
+								vertexBuffer.push_back(comp.x);
+								vertexBuffer.push_back(comp.y);
+								vertexBuffer.push_back(comp.z);
+							} else if (info.length == 4) {
+								glm::vec4 comp = *reinterpret_cast<glm::vec4 *>(reinterpret_cast<char *>(vert) + info.offset);
+								vertexBuffer.push_back(comp.x);
+								vertexBuffer.push_back(comp.y);
+								vertexBuffer.push_back(comp.z);
+								vertexBuffer.push_back(comp.w);
+							}
+
+
+							//int value = *reinterpret_cast<int *>(reinterpret_cast<char *>(&o1) +offsetof(TestMem, a));
+							//int value = *reinterpret_cast<int *>(reinterpret_cast<char *>(vert) + offset);
+
+						}
+
+					}
+				}
+
 			}
+
+
+
 
 			//std::shared_ptr<MeshBuffer> meshesDeferred;
 			auto meshBuffer = std::make_shared<MeshBuffer>();
 
-			
+
 
 			//MeshBuffer meshBuffer;
 			meshBuffer->vertexLayout = layout;
 
-			meshBuffer->vertices.size = vertexBuffer.size() * sizeof(float);
+			if (layout == defaultLayout) {
+				meshBuffer->vertices.size = verticesTest.size() * sizeof(defaultVert);
+			} else {
+				meshBuffer->vertices.size = vertexBuffer.size() * sizeof(float);
+			}
 
 			dim.min *= scale;
 			dim.max *= scale;
@@ -592,7 +1028,12 @@ namespace vkx {
 			meshBuffer->indexCount = (uint32_t)indexBuffer.size();
 			// Use staging buffer to move vertex and index buffer to device local memory
 			// Vertex buffer
-			meshBuffer->vertices = this->context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
+			if (layout == defaultLayout) {
+				meshBuffer->vertices = this->context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, verticesTest);
+			} else {
+				meshBuffer->vertices = this->context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eVertexBuffer, vertexBuffer);
+			}
+			
 			// Index buffer
 			meshBuffer->indices = this->context->stageToDeviceBuffer(vk::BufferUsageFlagBits::eIndexBuffer, indexBuffer);
 			meshBuffer->dim = dim.size;

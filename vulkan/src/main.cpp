@@ -136,27 +136,6 @@ btConvexHullShape* createConvexHullFromMesh(vkx::MeshLoader *meshLoader) {
 };
 
 
-//// todo: move this somewhere else
-//btConvexHullShape* createConvexHullFromMeshEntry(vkx::MeshLoader *meshLoader) {
-//	btConvexHullShape *convexHullShape = new btConvexHullShape();
-//
-//	for (int i = 0; i < meshLoader->m_Entries.size(); ++i) {
-//		for (int j = 0; j < meshLoader->m_Entries[i].Indices.size(); ++j) {
-//			uint32_t index = meshLoader->m_Entries[i].Indices[j];
-//			glm::vec3 point = meshLoader->m_Entries[i].Vertices[index].m_pos;
-//			btVector3 p = btVector3(point.x, point.y, point.z);
-//			convexHullShape->addPoint(p);
-//		}
-//	}
-//
-//	convexHullShape->optimizeConvexHull();
-//	convexHullShape->initializePolyhedralFeatures();
-//
-//	return convexHullShape;
-//};
-
-
-
 
 
 
@@ -327,10 +306,12 @@ class VulkanExample : public vkx::vulkanApp {
 		float zNear = -32.0f;
 		float zFar = 32.0f;
 		//glm::vec2 padding;
-		float pad1;
-		float pad2;
-		float pad3;
-		float pad4;
+		//float pad1;
+		//float pad2;
+		//float pad3;
+		//float pad4;
+		glm::vec4 padding;
+		glm::vec2 pad;
 	};
 
 	struct {
@@ -2094,17 +2075,13 @@ class VulkanExample : public vkx::vulkanApp {
 		uboFSLights.spotlights[0].target = glm::vec4(cos(globalP*4.0f)*10.0f, sin(globalP*4.0f)*10.0f, 0.0f, 0.0f);
 		uboFSLights.spotlights[1].target = glm::vec4(cos(-globalP*8.0f)*10.0f, sin(-globalP*8.0f)*10.0f, 0.0f, 0.0f);
 
-		//uboFSLights.spotlights[0].target = glm::vec4(cos(globalP*4.0f)*10.0f + sin(globalP*6.0f)*5.0f, sin(globalP*4.0f)*10.0f + cos(globalP*6.0f)*5.0f, 0.0f, 0.0f);
+		// r = 8sin(2t)
+		// x = rcos(t)
+		// y = rsin(t)
+		// x = 8sin(2*globalP)*cos(globalP)
+		// y = 8sin(2*globalP)*sin(globalP)
 
-
-
-		//uboFSLights.spotlights[0].target = glm::vec4(4.0f, 0.0f, 0.0f, 0.0f);
-		//uboFSLights.directionalLights[0].color = glm::vec4(1.0, 0.0, 0.0, 0.0);
-		//uboFSLights.directionalLights[0].position = glm::vec4(0.0, 1.0, 2.0, 0.0);
-		//uboFSLights.directionalLights[0].direction = glm::vec4(0.0, 0.0, -1.0, 0.0);
-
-		//uboFSLights.spotlights[0].position = vec4(camera.transform.translation, 1.0);
-		//uboFSLights.spotlights[0].target = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+		uboFSLights.spotlights[1].target = glm::vec4(8*sin(4 * globalP)*cos(globalP), 8*sin(4 * globalP)*sin(globalP), 0.0f, 0.0f);
 
 
 		//uboFSLights.directionalLights[0].direction = glm::normalize(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f) - glm::vec4(camera.transform.translation, 0.0f));
@@ -2400,13 +2377,13 @@ class VulkanExample : public vkx::vulkanApp {
 		//modelsDeferred.push_back(planeModel2);
 
 
-		for (int i = 0; i < 10; ++i) {
-			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
-			testModel->load(getAssetPath() + "models/monkey.fbx");
-			testModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
+		//for (int i = 0; i < 10; ++i) {
+		//	auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
+		//	testModel->load(getAssetPath() + "models/monkey.fbx");
+		//	testModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
 
-			modelsDeferred.push_back(testModel);
-		}
+		//	modelsDeferred.push_back(testModel);
+		//}
 
 
 		for (int i = 0; i < 1; ++i) {
@@ -2895,7 +2872,7 @@ class VulkanExample : public vkx::vulkanApp {
 			matrixNodes[skinnedMesh->matrixIndex].boneIndex = skinnedMesh->boneIndex;
 
 			// optimization needed here:
-			skinnedMesh->update(runningTime*skinnedMesh->animationSpeed);// update animation / interpolated
+			skinnedMesh->update(globalP*skinnedMesh->animationSpeed);// update animation / interpolated
 
 
 			uint32_t boneOffset = skinnedMesh->boneIndex*MAX_BONES;
@@ -2920,8 +2897,8 @@ class VulkanExample : public vkx::vulkanApp {
 			matrixNodes[skinnedMesh->matrixIndex].model = skinnedMesh->transfMatrix;
 			matrixNodes[skinnedMesh->matrixIndex].boneIndex = skinnedMesh->boneIndex;
 
-			// performance optimization needed here:
-			skinnedMesh->update(runningTime*skinnedMesh->animationSpeed);// update animation / interpolated
+			// optimization needed here:
+			skinnedMesh->update(globalP*skinnedMesh->animationSpeed);// update animation / interpolated
 
 
 			uint32_t boneOffset = skinnedMesh->boneIndex*MAX_BONES;
@@ -3321,13 +3298,13 @@ class VulkanExample : public vkx::vulkanApp {
 					continue;
 				}
 
-				// for each of the model's meshes
-				for (auto &mesh : model->meshes) {
+				// for each of the model's meshBuffers
+				for (auto &meshBuffer : model->meshBuffers) {
 
 
 					// bind vertex & index buffers
-					offscreenCmdBuffer.bindVertexBuffers(mesh.vertexBufferBinding, mesh.meshBuffer->vertices.buffer, vk::DeviceSize());
-					offscreenCmdBuffer.bindIndexBuffer(mesh.meshBuffer->indices.buffer, 0, vk::IndexType::eUint32);
+					offscreenCmdBuffer.bindVertexBuffers(meshBuffer->vertexBufferBinding, meshBuffer->vertices.buffer, vk::DeviceSize());
+					offscreenCmdBuffer.bindIndexBuffer(meshBuffer->indices.buffer, 0, vk::IndexType::eUint32);
 
 					// descriptor set #
 					uint32_t setNum;
@@ -3352,7 +3329,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 					// draw:
-					offscreenCmdBuffer.drawIndexed(mesh.meshBuffer->indexCount, 1, 0, 0, 0);
+					offscreenCmdBuffer.drawIndexed(meshBuffer->indexCount, 1, 0, 0, 0);
 				}
 
 			}
@@ -3447,12 +3424,12 @@ class VulkanExample : public vkx::vulkanApp {
 				}
 
 				// for each of the model's meshes
-				for (auto &mesh : model->meshes) {
+				for (auto &meshBuffer : model->meshBuffers) {
 
 
 					// bind vertex & index buffers
-					offscreenCmdBuffer.bindVertexBuffers(mesh.vertexBufferBinding, mesh.meshBuffer->vertices.buffer, vk::DeviceSize());
-					offscreenCmdBuffer.bindIndexBuffer(mesh.meshBuffer->indices.buffer, 0, vk::IndexType::eUint32);
+					offscreenCmdBuffer.bindVertexBuffers(meshBuffer->vertexBufferBinding, meshBuffer->vertices.buffer, vk::DeviceSize());
+					offscreenCmdBuffer.bindIndexBuffer(meshBuffer->indices.buffer, 0, vk::IndexType::eUint32);
 
 					// descriptor set #
 					uint32_t setNum;
@@ -3469,11 +3446,11 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 					// if we just bound this texture don't bind it again (this could be further optimized by ordering by textures used)
-					if (lastMaterialName != mesh.meshBuffer->materialName) {
+					if (lastMaterialName != meshBuffer->materialName) {
 
-						lastMaterialName = mesh.meshBuffer->materialName;
+						lastMaterialName = meshBuffer->materialName;
 
-						vkx::Material m = this->assetManager.materials.get(mesh.meshBuffer->materialName);
+						vkx::Material m = this->assetManager.materials.get(meshBuffer->materialName);
 						//uint32_t materialIndex = this->assetManager.materials.get(mesh.meshBuffer.materialName).index;
 
 
@@ -3492,7 +3469,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 					// draw:
-					offscreenCmdBuffer.drawIndexed(mesh.meshBuffer->indexCount, 1, 0, 0, 0);
+					offscreenCmdBuffer.drawIndexed(meshBuffer->indexCount, 1, 0, 0, 0);
 				}
 
 			}

@@ -23,16 +23,20 @@ namespace vkx {
 
 
 	void Model::asyncCreateMeshes(const std::vector<VertexComponent> &layout, float scale, uint32_t binding) {
+		
+		// load according to layout and scale
 		this->meshLoader->createMeshBuffers(layout, scale);
 
-		std::vector<std::shared_ptr<MeshBuffer>> &meshBuffers = this->meshLoader->meshBuffers;
-	
-		for (int i = 0; i < meshBuffers.size(); ++i) {
-			vkx::Mesh m(meshBuffers[i]);
-			this->meshes.push_back(m);
-		}
+		this->meshBuffers = this->meshLoader->meshBuffers;
 
-		this->vertexBufferBinding = binding;// important
+		//std::vector<std::shared_ptr<MeshBuffer>> &meshBuffers = this->meshLoader->meshBuffers;
+		//for (int i = 0; i < meshBuffers.size(); ++i) {
+		//	vkx::Mesh m(meshBuffers[i]);
+		//	this->meshes.push_back(m);
+		//}
+
+
+		this->vertexBufferBinding = binding;
 
 		this->buffersReady = true;
 	}
@@ -86,8 +90,8 @@ namespace vkx {
 
 
 	void Model::destroy() {
-		for (auto &mesh : this->meshes) {
-			mesh.destroy();
+		for (auto &meshBuffer : this->meshBuffers) {
+			meshBuffer->destroy();
 		}
 		// todo:
 		// more to delete:

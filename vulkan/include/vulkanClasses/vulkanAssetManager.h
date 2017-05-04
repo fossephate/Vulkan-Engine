@@ -49,8 +49,9 @@ namespace vkx {
 
 	// Stores info on the materials used in the scene
 	struct Material {
-		// name
+		// name of the material
 		std::string name;
+
 		// index
 		uint32_t index;
 
@@ -59,11 +60,15 @@ namespace vkx {
 
 
 		// Diffuse, specular, and bump channels
-		vkx::Texture diffuse;
-		vkx::Texture specular;
-		vkx::Texture bump;
+		//vkx::Texture diffuse;
+		//vkx::Texture specular;
+		//vkx::Texture bump;
+		std::shared_ptr<vkx::Texture> diffuse;
+		std::shared_ptr<vkx::Texture> specular;
+		std::shared_ptr<vkx::Texture> bump;
 
-		bool hasDiffuse = true;// forced
+
+		bool hasDiffuse = false;
 		bool hasAlpha = false;
 		bool hasBump = false;
 		bool hasSpecular = false;
@@ -75,9 +80,9 @@ namespace vkx {
 		vk::DescriptorSet descriptorSet;
 
 		void destroy() {
-			diffuse.destroy();
-			specular.destroy();
-			bump.destroy();
+			diffuse->destroy();
+			specular->destroy();
+			bump->destroy();
 		}
 	};
 
@@ -466,6 +471,25 @@ namespace vkx {
 				return resources[name];
 			}
 
+			std::shared_ptr<vkx::Texture> getSharedPtr(std::string name) {
+				auto texture = std::make_shared<vkx::Texture>(resources[name]);
+
+				return texture;
+			}
+
+			std::shared_ptr<vkx::Texture> getOrLoad(std::string name, vkx::TextureLoader *textureLoader) {
+				if (present(name)) {
+					auto texture = std::make_shared<vkx::Texture>(resources[name]);
+					return texture;
+				} else {
+					vkx::Texture tex = textureLoader->loadTexture(name, vk::Format::eBc2UnormBlock);
+					add(name, tex);
+					auto texture = std::make_shared<vkx::Texture>(resources[name]);
+					return texture;
+				}
+
+			}
+
 			void add(std::string name, vkx::Texture texture) {
 				resources[name] = texture;
 			}
@@ -589,7 +613,7 @@ namespace vkx {
 
 			void destroy() {
 				//textures.destroy();
-				materials.destroy();
+				//materials.destroy();
 				//scenes.~SceneList();
 			}
 

@@ -21,6 +21,7 @@
 namespace vkx {
 
 	struct Texture {
+
 		vk::Device device = nullptr;
 		vk::Image image = nullptr;
 		vk::DeviceMemory memory = nullptr;

@@ -60,10 +60,9 @@ struct DirectionalLight {
 #define NUM_DIR_LIGHTS 1
 #define NUM_LIGHTS_TOTAL 3
 
-#define SHADOW_FACTOR 0.7//0.25
+#define SHADOW_FACTOR 0.4//0.25//0.7
 #define AMBIENT_LIGHT 0.2
 #define SPOT_LIGHT_FOV_OFFSET 15
-//#define USE_PCF
 
 // #define SSAO_ENABLED 1;
 // #define USE_SHADOWS 1;
