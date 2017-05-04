@@ -1011,7 +1011,7 @@ void vulkanApp::renderLoop() {
 
 
 		// get the application's runtime duration in ms
-		runningTime = std::chrono::duration_cast<std::chrono::milliseconds>(tNow - tApplicationStart).count();
+		runningTimeMS = std::chrono::duration_cast<std::chrono::milliseconds>(tNow - tApplicationStart).count();
 
 
 		

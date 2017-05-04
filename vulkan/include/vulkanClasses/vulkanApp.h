@@ -291,8 +291,8 @@ namespace vkx
 			float frameTimer{ 1.0f };
 			float deltaTime{ 0 };
 
-			// Running time since start of program
-			float runningTime = 0;
+			// Running time since start of program in milliseconds
+			float runningTimeMS = 0;
 
 			// Frame counter to display fps
 			uint32_t frameCounter{ 0 };

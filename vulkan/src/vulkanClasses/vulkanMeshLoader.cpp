@@ -848,7 +848,7 @@ namespace vkx {
 
 				for (int i = 0; i < m_Entries[m].Vertices.size(); i++) {
 					// pos
-					verticesTest[i].pos = glm::make_vec3(&m_Entries[m].Vertices[i].m_pos.x);
+					verticesTest[i].pos = glm::make_vec3(&m_Entries[m].Vertices[i].m_pos.x) * scale;
 					// uv
 					verticesTest[i].uv = glm::make_vec2(&m_Entries[m].Vertices[i].m_tex.x);
 					// color

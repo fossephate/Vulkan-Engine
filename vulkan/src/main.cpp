@@ -118,12 +118,12 @@ float rnd(float min, float max) {
 
 
 // todo: move this somewhere else
-btConvexHullShape* createConvexHullFromMesh(vkx::MeshLoader *meshLoader) {
+btConvexHullShape* createConvexHullFromMesh(vkx::MeshLoader *meshLoader, float scale = 1.0f) {
 	btConvexHullShape *convexHullShape = new btConvexHullShape();
 	for (int i = 0; i < meshLoader->m_Entries.size(); ++i) {
 		for (int j = 0; j < meshLoader->m_Entries[i].Indices.size(); ++j) {
 			uint32_t index = meshLoader->m_Entries[i].Indices[j];
-			glm::vec3 point = meshLoader->m_Entries[i].Vertices[index].m_pos;
+			glm::vec3 point = meshLoader->m_Entries[i].Vertices[index].m_pos*scale;
 			btVector3 p = btVector3(point.x, point.y, point.z);
 			convexHullShape->addPoint(p);
 		}
@@ -300,11 +300,13 @@ class VulkanExample : public vkx::vulkanApp {
 	};
 
 	struct DirectionalLight {
-		glm::vec4 direction = glm::vec4(0.3f, 0.4f, -0.5f, 0.0f);	// unit directional vector
+		//glm::vec4 direction = glm::vec4(0.3f, 0.4f, -0.5f, 0.0f);	// unit directional vector
+		glm::vec4 direction = glm::vec4(0.3f, 0.0f, -10.0f, 0.0f);	// unit directional vector
 		glm::vec4 color;		// color of the light
 		glm::mat4 viewMatrix;	// view matrix (used in geometry shader and fragment shader)
 		float zNear = -32.0f;
 		float zFar = 32.0f;
+		float size = 10.0f;// size of the orthographic projection
 		//glm::vec2 padding;
 		//float pad1;
 		//float pad2;
@@ -312,6 +314,7 @@ class VulkanExample : public vkx::vulkanApp {
 		//float pad4;
 		glm::vec4 padding;
 		glm::vec2 pad;
+		float p1;
 	};
 
 	struct {
@@ -430,7 +433,7 @@ class VulkanExample : public vkx::vulkanApp {
 		//glm::quat initialOrientation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 		//camera.setRotation(initialOrientation);
 
-		camera.setTranslation({ -0.0f, -20.0f, 7.0f });
+		camera.setTranslation({ 0.0f, -5.0f, 3.0f });
 		camera.rotateWorldX(PI / 2.0);
 
 
@@ -2096,6 +2099,7 @@ class VulkanExample : public vkx::vulkanApp {
 		float zNear = 0.1f;
 		float zFar = 64.0f;
 		float lightFOV = 45.0f;
+		float size = 10.0f;
 
 		// spot lights:
 		for (uint32_t i = 0; i < NUM_SPOT_LIGHTS; i++) {
@@ -2144,10 +2148,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 			zNear = light.zNear;
 			zFar = light.zFar;
-
-			// mvp from light's pov (for shadows)
-
-			float size = 10.0f;
+			size = light.size;
 
 			glm::mat4 shadowProj = glm::ortho(-size, size, -size, size, zNear, zFar);
 			shadowProj[1][1] *= -1;// because glm produces matrix for opengl and this is vulkan
@@ -2336,8 +2337,9 @@ class VulkanExample : public vkx::vulkanApp {
 		if (!false) {
 			auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			sponzaModel->load(getAssetPath() + "models/sponza.dae");
-			sponzaModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+			sponzaModel->createMeshes(SSAOVertexLayout, 0.3f, VERTEX_BUFFER_BIND_ID);
 			sponzaModel->rotateWorldX(PI / 2.0);
+			sponzaModel->rotateWorldZ(PI / 2.0);
 			//sponzaModel->rotateWorldX(glm::radians(90.0f));
 			modelsDeferred.push_back(sponzaModel);
 		}
@@ -2386,25 +2388,25 @@ class VulkanExample : public vkx::vulkanApp {
 		//}
 
 
-		for (int i = 0; i < 1; ++i) {
+		//for (int i = 0; i < 1; ++i) {
 
-			auto testSkinnedMesh = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
-			testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");// breaks size?
-			testSkinnedMesh->createSkinnedMeshBuffer(SSAOVertexLayout, 0.0005f);
-			//todo: figure out why there must be atleast one deferred skinned mesh here
-			//inorder to not cause problems
-			//fixed?
-			skinnedMeshesDeferred.push_back(testSkinnedMesh);
-		}
-
-
+		//	auto testSkinnedMesh = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
+		//	testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");// breaks size?
+		//	testSkinnedMesh->createSkinnedMeshBuffer(SSAOVertexLayout, 0.0005f);
+		//	//todo: figure out why there must be atleast one deferred skinned mesh here
+		//	//inorder to not cause problems
+		//	//fixed?
+		//	skinnedMeshesDeferred.push_back(testSkinnedMesh);
+		//}
 
 
 
-		auto wallModel1 = std::make_shared<vkx::Model>(&context, &assetManager);
-		wallModel1->load(getAssetPath() + "models/plane.fbx");
-		wallModel1->createMeshes(SSAOVertexLayout, 10.0f, VERTEX_BUFFER_BIND_ID);
-		modelsDeferred.push_back(wallModel1);
+
+
+		auto floorModel = std::make_shared<vkx::Model>(&context, &assetManager);
+		floorModel->load(getAssetPath() + "models/plane.fbx");
+		floorModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		modelsDeferred.push_back(floorModel);
 
 
 
@@ -2445,7 +2447,7 @@ class VulkanExample : public vkx::vulkanApp {
 		updateOffscreen = false;
 
 
-		camera.movementSpeed = 0.005f;
+		camera.movementSpeed = 0.0018f;
 
 		camera.movementSpeed = camera.movementSpeed*deltaTime*1000.0;
 
@@ -2570,7 +2572,7 @@ class VulkanExample : public vkx::vulkanApp {
 		if (keyStates.space) {
 			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			testModel->load(getAssetPath() + "models/monkey.fbx");
-			testModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+			testModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
 			//testModel->loadAndCreateMeshes(getAssetPath() + "models/monkey.fbx", SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 			modelsDeferred.push_back(testModel);
 
@@ -2589,7 +2591,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			testModel->load(getAssetPath() + "models/myCube.dae");
-			testModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+			testModel->createMeshes(SSAOVertexLayout, 0.45f, VERTEX_BUFFER_BIND_ID);
 
 			//testModel->loadAndCreateMeshes(getAssetPath() + "models/myCube.dae", SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
@@ -2597,7 +2599,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 			auto physicsBall = std::make_shared<vkx::PhysicsObject>(&physicsManager, testModel);
-			btConvexHullShape *convexHullShape = createConvexHullFromMesh(testModel->meshLoader);
+			btConvexHullShape *convexHullShape = createConvexHullFromMesh(testModel->meshLoader, 0.45f);
 			physicsBall->createRigidBody(convexHullShape, 1.0f);
 			physicsBall->rigidBody->activate();
 			physicsBall->rigidBody->translate(btVector3(rnd(-10, 10), rnd(-10, 10), 10.));
@@ -2679,6 +2681,11 @@ class VulkanExample : public vkx::vulkanApp {
 		}
 
 
+		// just to load async models:
+		if (runningTimeMS > 4000.0f && runningTimeMS < 4100.0f) {
+			updateDraw = true;
+			updateOffscreen = true;
+		}
 
 
 		if (keyStates.onKeyDown(&mouse.rightMouseButton.state)) {
@@ -3069,13 +3076,15 @@ class VulkanExample : public vkx::vulkanApp {
 		ImGui::DragFloat3("Spot Light Target", &uboFSLights.spotlights[0].target.x, 0.1f);
 		//ImGui::DragFloat("Spot Light FOV2", &uboFSLights.spotlights[0].outerAngle, 0.05f);
 		ImGui::DragFloat("Spot Light Range", &uboFSLights.spotlights[0].range, 0.05f);
-		ImGui::DragFloat("Spot Light Near", &uboFSLights.spotlights[0].zNear, 0.05f);
-		ImGui::DragFloat("Spot Light Far", &uboFSLights.spotlights[0].zFar, 0.05f);
 
 		ImGui::DragFloat3("Spot Light1 Color", &uboFSLights.spotlights[0].color.x, 0.1f);
 		ImGui::DragFloat3("Spot Light2 Color", &uboFSLights.spotlights[1].color.x, 0.1f);
 
-		ImGui::DragFloat3("Directional Light Dir", &uboFSLights.directionalLights[0].direction.x, 0.1f);
+		ImGui::DragFloat3("Directional Light Dir", &uboFSLights.directionalLights[0].direction.x, 0.05f);
+
+		ImGui::DragFloat("Directional Light Near", &uboFSLights.directionalLights[0].zNear, 0.05f);
+		ImGui::DragFloat("Directional Light Far", &uboFSLights.directionalLights[0].zFar, 0.05f);
+		ImGui::DragFloat("Directional Light size", &uboFSLights.directionalLights[0].size, 0.05f);
 
 
 		//ImGui::DragIntRange2("range int (no bounds)", &begin_i, &end_i, 5, 0, 0, "Min: %.0f units", "Max: %.0f units");

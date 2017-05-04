@@ -15,9 +15,9 @@ layout (location = 1) out vec4 outNormal;
 layout (location = 2) out uvec4 outAlbedo;// this is a uvec
 
 
-/*layout (constant_id = 0) */const float NEAR_PLANE = 1.0f;
-/*layout (constant_id = 1) */const float FAR_PLANE = 512.0f;
-/*layout (constant_id = 2) */const int ENABLE_DISCARD = 0;
+const float NEAR_PLANE = 1.0f;
+const float FAR_PLANE = 512.0f;
+const int ENABLE_DISCARD = 0;
 
 
 // diffuse texture (from material)

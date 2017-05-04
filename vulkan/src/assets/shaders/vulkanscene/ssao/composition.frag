@@ -319,17 +319,19 @@ vec3 normalFromDepth3(vec3 viewPos) {
 
 
 void main() {
+
     // Get G-Buffer values
 
+    vec4 samplerPosDepth = texture(samplerPosition, inUV).rgba;
+    float depth = samplerPosDepth.a;
 
-    vec4 samplerPos = texture(samplerPosition, inUV).rgba;
-    float depth = samplerPos.a;
 
-
-    //vec3 fragPos = samplerPos.rgb;
+    //vec3 fragPos = samplerPosDepth.rgb;
     // find a better way:
-    vec3 viewPos = vec3(ubo.view * vec4(samplerPos.rgb, 1.0));// calculate view space position
-    vec3 worldPos = samplerPos.rgb;
+    vec3 worldPos = samplerPosDepth.rgb;
+    //vec3 viewPos = vec3(ubo.view * vec4(samplerPosDepth.rgb, 1.0));// calculate view space position
+    vec3 viewPos = vec3(ubo.view * vec4(worldPos, 1.0));// calculate view space position
+    
     
 
     vec3 normal = texture(samplerNormal, inUV).rgb * 2.0 - 1.0;// world space normal
@@ -453,7 +455,7 @@ void main() {
 
             //float NdotR = /*pow(*/max(0.0, dot(viewDir, reflectDir))/*, 16.0)*/;// NdotR, pow?
             float NdotR = max(0.0, dot(reflectDir, V));
-            vec3 specular = vec3(pow(NdotR, 16.0) * albedo.a * 2.5);
+            vec3 specular = vec3(pow(NdotR, 16.0) * /*albedo.a **/ 2.5);
 
 
 
@@ -511,7 +513,7 @@ void main() {
 
             vec3 V = normalize(ubo.viewPos.xyz - worldPos);
             float NdotR = max(0.0, dot(reflectDir, V));
-            vec3 specular = vec3(pow(NdotR, 16.0) * albedo.a * 2.5);
+            vec3 specular = vec3(pow(NdotR, 16.0) * /*albedo.a */ 2.5);
 
 		    // Specular shading
 		    //vec3 reflectDir = reflect(-lightDir, normal);
@@ -601,6 +603,8 @@ void main() {
     //vec3 test = normalFromDepth2(samplerPosition, inUV);
     //vec3 test = vec3(depth/512.0);
     //vec3 test = vec3(texture(samplerShadowMap, vec3(inUV.st, 0)).r);
+
+    //vec3 test = vec3(albedo.a);
 
     // vec3 test = normalize(cross(dFdx(viewPos), dFdy(viewPos)));
     // test.x = -test.x;
