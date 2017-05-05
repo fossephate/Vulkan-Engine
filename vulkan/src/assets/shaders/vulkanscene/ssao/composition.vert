@@ -12,11 +12,16 @@ layout (set = 3, binding = 0) uniform UBO
 {
 	mat4 model;// this is used in debug.vert
 	mat4 projection;// consider hardcoding in? probably not worth it
+	vec4 camPos;// added
 } ubo;
 
 layout (location = 0) out vec2 outUV;
 
+layout (location = 1) out vec3 outCamVec;
+
 void main() {
 	outUV = inUV;
 	gl_Position = ubo.projection * ubo.model * vec4(inPos.xyz, 1.0);
+
+	outCamVec = gl_Position.xyz - ubo.camPos.xyz;
 }

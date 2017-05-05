@@ -265,6 +265,7 @@ class VulkanExample : public vkx::vulkanApp {
 	struct {
 		glm::mat4 model;
 		glm::mat4 projection;
+		glm::vec4 camPos;
 	} uboVS;
 
 	struct {
@@ -1994,6 +1995,8 @@ class VulkanExample : public vkx::vulkanApp {
 			uboVS.projection = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, -1.0f, 1.0f);
 		}
 		uboVS.model = glm::mat4();
+		uboVS.camPos = glm::vec4(camera.transform.translation, 1.0);// added
+
 		uniformDataDeferred.vsFullScreen.copy(uboVS);
 	}
 

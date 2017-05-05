@@ -90,6 +90,8 @@ layout (set = 3, binding = 5) uniform UBO
 } ubo;
 
 layout (location = 0) in vec2 inUV;
+layout (location = 1) in vec3 inCamPos;// added
+
 layout (location = 0) out vec4 outFragcolor;
 
 
@@ -313,6 +315,7 @@ vec3 worldPosFromDepth(vec2 texCoord) {
     float depth = texture(samplerDepth, texCoord.xy).r;
 
     //return vec3(depth);
+    return inCamPos;
 
     //vec4 clipSpacePosition = vec4(texCoord * 2.0 - 1.0, z, 1.0);
     vec4 clipSpacePosition;
