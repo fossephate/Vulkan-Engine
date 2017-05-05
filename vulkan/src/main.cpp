@@ -341,8 +341,8 @@ class VulkanExample : public vkx::vulkanApp {
 	// The matrices are indexed using geometry shader instancing
 	// The instancePos is used to place the models using instanced draws
 	struct {
-		glm::mat4 mvp[NUM_SPOT_LIGHTS];
-		glm::mat4 mvp2[NUM_DIR_LIGHTS];
+		glm::mat4 spotlightMVP[NUM_SPOT_LIGHTS];
+		glm::mat4 dirlightMVP[NUM_DIR_LIGHTS];
 	} uboShadowGS;
 
 	struct {
@@ -1000,6 +1000,12 @@ class VulkanExample : public vkx::vulkanApp {
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
 				6),
+
+			// Set 3: Binding 7: Depth, to replace position
+			vkx::descriptorSetLayoutBinding(
+				vk::DescriptorType::eCombinedImageSampler,
+				vk::ShaderStageFlagBits::eFragment,
+				7),
 		};
 		rscs.descriptorSetLayouts->add("deferred", descriptorSetLayoutBindingsDeferred);
 
@@ -1285,7 +1291,6 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 		// vk::Image descriptor for the offscreen texture targets
-		// not vk::ImageLayout::eGeneral, eShaderReadOnlyOptimal is important
 		vk::DescriptorImageInfo texDescriptorPosition =
 			vkx::descriptorImageInfo(offscreen.framebuffers[0].attachments[0].sampler, offscreen.framebuffers[0].attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 
@@ -1299,13 +1304,15 @@ class VulkanExample : public vkx::vulkanApp {
 		vk::DescriptorImageInfo texDescriptorSSAOBlurred =
 			vkx::descriptorImageInfo(offscreen.framebuffers[0].attachments[0].sampler, offscreen.framebuffers[2].attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-		// todo: fix
-		//vk::DescriptorImageInfo texDescriptorDepthStencil =
-		//	vkx::descriptorImageInfo(offscreen.framebuffers[0].attachments[0].sampler, offscreen.framebuffers[0].depthAttachment.view, vk::ImageLayout::eShaderReadOnlyOptimal);
-
 		vk::DescriptorImageInfo texDescriptorShadowMap =
 			vkx::descriptorImageInfo(offscreen.framebuffers[3].attachments[0].sampler, offscreen.framebuffers[3].attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 		//vkx::descriptorImageInfo(offscreen.framebuffers[0].attachments[0].sampler, offscreen.framebuffers[3].attachments[0].view, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+		// depth attachment:
+		vk::DescriptorImageInfo texDescriptorDepthStencil =
+			vkx::descriptorImageInfo(offscreen.framebuffers[0].attachments[0].sampler, offscreen.framebuffers[0].attachments[3].view, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+
 
 		// Offscreen texture targets:
 		std::vector<vk::WriteDescriptorSet> writeDescriptorSets2 = {
@@ -1356,6 +1363,13 @@ class VulkanExample : public vkx::vulkanApp {
 				vk::DescriptorType::eCombinedImageSampler,
 				6,
 				&texDescriptorShadowMap),
+
+			// set 3: Binding 7 depth
+			vkx::writeDescriptorSet(
+				rscs.descriptorSets->get("deferred"),
+				vk::DescriptorType::eCombinedImageSampler,
+				7,
+				&texDescriptorDepthStencil),
 
 
 		};
@@ -1605,6 +1619,7 @@ class VulkanExample : public vkx::vulkanApp {
 		pipelineCreateInfo.pDynamicState = &dynamicState;
 		pipelineCreateInfo.stageCount = shaderStages.size();
 		pipelineCreateInfo.pStages = shaderStages.data();
+		
 
 
 		// meshes:
@@ -1697,6 +1712,8 @@ class VulkanExample : public vkx::vulkanApp {
 
 		colorBlendState.attachmentCount = blendAttachmentStates.size();
 		colorBlendState.pAttachments = blendAttachmentStates.data();
+
+		rasterizationState.cullMode = vk::CullModeFlagBits::eBack;// added
 
 		// Offscreen pipeline
 		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/deferred/mrtMesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
@@ -1795,12 +1812,9 @@ class VulkanExample : public vkx::vulkanApp {
 			// The shadow mapping pipeline uses geometry shader instancing (invocations layout modifier) to output 
 			// shadow maps for multiple lights sources into the different shadow map layers in one single render pass
 			std::array<vk::PipelineShaderStageCreateInfo, 3> shadowStages;
-			//std::array<vk::PipelineShaderStageCreateInfo, 2> shadowStages;
 			shadowStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/shadow.vert.spv", vk::ShaderStageFlagBits::eVertex);
 			shadowStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/shadow.frag.spv", vk::ShaderStageFlagBits::eFragment);
 			shadowStages[2] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/shadow.geom.spv", vk::ShaderStageFlagBits::eGeometry);
-			//shadowStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/fullscreen.vert.spv", vk::ShaderStageFlagBits::eVertex);
-			//shadowStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/shadow.frag.spv", vk::ShaderStageFlagBits::eFragment);
 
 			pipelineCreateInfo.pStages = shadowStages.data();
 			pipelineCreateInfo.stageCount = static_cast<uint32_t>(shadowStages.size());
@@ -1969,8 +1983,6 @@ class VulkanExample : public vkx::vulkanApp {
 		updateUniformBufferSSAOKernel();
 
 		// shadow mapping:
-
-
 		updateUniformBufferShadow();
 
 	}
@@ -2076,6 +2088,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		uboFSLights.directionalLights[0].pad1 = globalP;
 
+
 		/*float zNear = 1.0f;
 		float zFar = 512.0f;*/
 		//float zNear = 0.1f;
@@ -2090,37 +2103,17 @@ class VulkanExample : public vkx::vulkanApp {
 
 			SpotLight &light = uboFSLights.spotlights[i];
 
-			zNear = light.zNear;
-			zFar = light.zFar;
-			lightFOV = light.innerAngle;
-
-			//zNear = uboFSLights.spotlights[0].zNear;
-			//zFar = uboFSLights.spotlights[0].zFar;
-			//lightFOV = uboFSLights.spotlights[0].innerAngle;
-
-			//zNear = 0.1f;
-			//zFar = 64.0f;
-			//lightFOV = 45.0f;
-
 
 			// mvp from light's pov (for shadows)
-			glm::mat4 shadowProj = glm::perspectiveRH(glm::radians(lightFOV), 1.0f, zNear, zFar);
+			glm::mat4 shadowProj = glm::perspectiveRH(glm::radians(light.innerAngle), 1.0f, light.zNear, light.zFar);
 			shadowProj[1][1] *= -1;// because glm produces matrix for opengl and this is vulkan
 
 			glm::mat4 shadowView = glm::lookAt(glm::vec3(light.position), glm::vec3(light.target), glm::vec3(0.0f, 0.0f, 1.0f));
 
-
-
-			//glm::mat4 shadowProj = camera.matrices.projection;
-			//glm::mat4 shadowView = camera.matrices.view;
-
-
 			glm::mat4 shadowModel = glm::mat4();
 
-
-
-			uboShadowGS.mvp[i] = shadowProj * shadowView * shadowModel;
-			light.viewMatrix = uboShadowGS.mvp[i];
+			uboShadowGS.spotlightMVP[i] = shadowProj * shadowView * shadowModel;
+			light.viewMatrix = uboShadowGS.spotlightMVP[i];
 		}
 
 
@@ -2130,11 +2123,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 			DirectionalLight &light = uboFSLights.directionalLights[i];
 
-			zNear = light.zNear;
-			zFar = light.zFar;
-			size = light.size;
-
-			glm::mat4 shadowProj = glm::ortho(-size, size, -size, size, zNear, zFar);
+			glm::mat4 shadowProj = glm::ortho(-light.size, light.size, -light.size, light.size, light.zNear, light.zFar);
 			shadowProj[1][1] *= -1;// because glm produces matrix for opengl and this is vulkan
 
 			glm::mat4 shadowView = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(light.direction), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -2145,20 +2134,23 @@ class VulkanExample : public vkx::vulkanApp {
 
 			glm::mat4 shadowModel = glm::mat4();
 
-			uboShadowGS.mvp2[i] = shadowProj * shadowView * shadowModel;
-			light.viewMatrix = uboShadowGS.mvp2[i];
+			uboShadowGS.dirlightMVP[i] = shadowProj * shadowView * shadowModel;
+			light.viewMatrix = uboShadowGS.dirlightMVP[i];
 		}
 
+		// test:
+		//uboFSLights.spotlights[0].viewMatrix = camera.matrices.projection * camera.matrices.view;
+		//uboShadowGS.spotlightMVP[0] = camera.matrices.projection * camera.matrices.view;
+
 		updateUniformBufferShadow();
-
-
-
 
 		// Current view position
 		uboFSLights.viewPos = glm::vec4(camera.transform.translation, 0.0f) * glm::vec4(-1.0f);
 
 		uboFSLights.view = camera.matrices.view;
-		uboFSLights.model = glm::mat4();
+		//uboFSLights.model = glm::mat4();
+		// just for testing:
+		uboFSLights.model = glm::inverse(uboVS.projection);
 
 
 		//uboFSLights.inverseViewProjection = glm::inverse(camera.matrices.view * camera.matrices.projection);// new
@@ -2167,8 +2159,6 @@ class VulkanExample : public vkx::vulkanApp {
 
 		uniformDataDeferred.fsLights.copy(uboFSLights);
 	}
-
-
 
 	void updateUniformBufferSSAOParams() {
 		uboSSAOParams.projection = camera.matrices.projection;

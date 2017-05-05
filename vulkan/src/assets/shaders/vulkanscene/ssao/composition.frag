@@ -12,6 +12,8 @@ layout (set = 3, binding = 4) uniform sampler2D samplerSSAO;
 //layout (set = 3, binding = 6) uniform sampler2DArrayShadow samplerShadowMap;
 layout (set = 3, binding = 6) uniform sampler2DArray samplerShadowMap;
 //layout (set = 3, binding = 6) uniform sampler2D samplerShadowMap;
+layout (set = 3, binding = 7) uniform sampler2D samplerDepth;
+
 
 struct PointLight {
     vec4 position;
@@ -302,45 +304,27 @@ vec3 calculate_world_position(vec2 texture_coordinate, float depth_from_depth_bu
     return(position.xyz / position.w);
 }
 
-
-
-vec3 worldPosFromDepth2(vec2 texcoord, float depth) {
-	// get screen-space position
-	vec4 pos;
-	pos.xy = texcoord /** 2.0 - 1.0*/;
-	pos.z = depth;
-	pos.w = 1.0;
-
-	return vec3(pos);
-
-	// get world-space position
-	mat4 invViewProj = inverse(ubo.projection * ubo.view);
-
-	pos = invViewProj * pos; // or pos * mat, depends on the matrix-representation
-	//pos = invViewProj * pos; // or pos * mat, depends on the matrix-representation
-	pos /= pos.w;
-
-	vec3 worldPos = pos.xyz;
-	//return worldPos;
-}
-
 // this is supposed to get the world position from the depth buffer
-vec3 worldPosFromDepth(vec2 texCoord, float depth) {
-    //float z = depth * 2.0 - 1.0;
+vec3 worldPosFromDepth(vec2 texCoord) {
 
+    //ubo.directionalLights[0].
+    //float depth = texture(samplerShadowMap, vec3(texCoord.xy, 0)).r;
+    //float depth = -texture(samplerDepth, texCoord.xy).r*sin(ubo.directionalLights[0].pad2*20)*100;
+    float depth = texture(samplerDepth, texCoord.xy).r;
+
+    //return vec3(depth);
 
     //vec4 clipSpacePosition = vec4(texCoord * 2.0 - 1.0, z, 1.0);
     vec4 clipSpacePosition;
     clipSpacePosition.xy = texCoord * 2.0 - 1.0;
-	clipSpacePosition.z = depth * 2.0 - 1.0;
+	clipSpacePosition.z = depth /** 2.0 - 1.0*/;
 	clipSpacePosition.w = 1.0;
 
 	//return vec3(clipSpacePosition);
 
 	mat4 invView = inverse(ubo.view);
 	mat4 invProj = inverse(ubo.projection);
-	//mat4 invViewProj = inverse(ubo.projection * ubo.view);
-	mat4 invViewProj = invView * invProj;
+	mat4 invViewProj = inverse(ubo.projection * ubo.view);
 
 
     vec4 viewSpacePosition = invProj * clipSpacePosition;
@@ -351,8 +335,16 @@ vec3 worldPosFromDepth(vec2 texCoord, float depth) {
     //vec4 worldSpacePosition = viewMatrixInv * viewSpacePosition;
     vec4 worldSpacePosition = invView * viewSpacePosition;
 
-    //return worldSpacePosition.xyz;
-    return viewSpacePosition.xyz;
+    vec3 final = viewSpacePosition.xyz;
+    //vec3 final = worldSpacePosition.xyz;
+
+    final.x = abs(final.x);
+    final.y = abs(final.y);
+    final.z = abs(final.z);
+
+    
+    return final;
+
 }
 
 
@@ -369,7 +361,7 @@ void main() {
     //vec3 fragPos = samplerPosDepth.rgb;
     // find a better way:
     vec3 worldPos = samplerPosDepth.rgb;
-    //vec3 worldPos2 = worldPosFromDepth(inUV, depth);
+    vec3 worldPos2 = worldPosFromDepth(inUV);
 
     //vec3 viewPos = vec3(ubo.view * vec4(samplerPosDepth.rgb, 1.0));// calculate view space position
     vec3 viewPos = vec3(ubo.view * vec4(worldPos, 1.0));// calculate view space position
@@ -560,22 +552,12 @@ void main() {
 		    // Specular shading
 		    //vec3 reflectDir = reflect(-lightDir, normal);
 		    //float specular = pow(max(dot(viewDir, reflectDir), 0.0), /*material.shininess*/5.0);
-		    
-
-
-		    // Combine results
-		    //vec3 ambient  = light.ambient  /* vec3(texture(material.diffuse, TexCoords))*/;
-		    //vec3 diffuse  = light.diffuse  /* diff * vec3(texture(material.diffuse, TexCoords))*/;
-		    //vec3 specular = light.specular /* spec * vec3(texture(material.specular, TexCoords))*/;
 
 		    fragcolor += vec3((diffuse + specular)) * light.color.rgb * color.rgb;
 
 
 
         }
-
-
-        // fragcolor = vec3(1.0, 1.0, 1.0);
 
 
         // Shadow calculations in a separate pass
@@ -627,12 +609,6 @@ void main() {
             }
         }
 
-
-
-
-
-
-
         if (SSAO_ENABLED > 0) {
             float ao = texture(samplerSSAO, inUV).r;
             fragcolor *= ao.rrr;
@@ -641,20 +617,8 @@ void main() {
    
     outFragcolor = vec4(fragcolor, 1.0);
 
-    //vec3 test = normalFromDepth(samplerPosition, inUV);
-    //vec3 test = normalFromDepth2(samplerPosition, inUV);
-    //vec3 test = vec3(depth/512.0);
-    //vec3 test = vec3(texture(samplerShadowMap, vec3(inUV.st, 0)).r);
-
-    //vec3 test = worldPos2;
-
-    // vec3 test = normalize(cross(dFdx(viewPos), dFdy(viewPos)));
-    // test.x = -test.x;
-    // test.y = -test.y;
-    // test.z = -test.z;
-    //outFragcolor = vec4(test, 1.0);
-
-	
+    vec3 test = worldPos2;
+    outFragcolor = vec4(test, 1.0);
 }
 
 

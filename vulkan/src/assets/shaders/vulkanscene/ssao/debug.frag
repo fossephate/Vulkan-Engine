@@ -12,6 +12,7 @@ layout (set = 3, binding = 4) uniform sampler2D samplerSSAO;
 //layout (set = 3, binding = 6) uniform sampler2DShadow samplerShadowMap;
 layout (set = 3, binding = 6) uniform sampler2DArray samplerShadowMap;
 //layout (set = 3, binding = 6) uniform sampler2DArrayShadow samplerShadowMap;
+layout (set = 3, binding = 7) uniform sampler2D samplerDepth;
 
 layout (location = 0) in vec3 inUV;// vec3
 
@@ -32,7 +33,7 @@ float linearDepth(float depth) {
 void main() {
 	vec3 components[3];
 
-	components[2] = texture(samplerPosDepth, inUV.st).rgb;
+	//components[2] = texture(samplerPosDepth, inUV.st).rgb;
 	//components[0] = vec3(texture(samplerPosition, inUV.st).r);
 	//components[0] = vec3(texture(samplerPosition, inUV.st).a);
 
@@ -67,6 +68,9 @@ void main() {
 	// components[0] = vec3(shadow2.r);
 
 	//components[2] = color.rgb;
+
+	float depth = texture(samplerDepth, inUV.st).r;
+	components[2] = vec3(depth);
 
 	//vec4 shadow = texture(samplerShadowMap, inUV.st);
 	// inUV.w = number of light source

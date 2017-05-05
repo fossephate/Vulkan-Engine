@@ -16,8 +16,8 @@ layout (triangle_strip, max_vertices = 3) out;
 
 layout (set = 0, binding = 0) uniform UBO 
 {
-	mat4 mvp[NUM_SPOT_LIGHTS];
-	mat4 mvp2[NUM_DIR_LIGHTS];
+	mat4 spotlightMVP[NUM_SPOT_LIGHTS];
+	mat4 dirlightMVP[NUM_DIR_LIGHTS];
 } ubo;
 
 // matrix data
@@ -101,7 +101,7 @@ void main() {
 		// spot lights:
 		for (int i = 0; i < gl_in.length(); i++) {
 			gl_Layer = gl_InvocationID;
-			vec4 tmpPos = ubo.mvp[gl_InvocationID] * instance.model * gl_in[i].gl_Position;
+			vec4 tmpPos = ubo.spotlightMVP[gl_InvocationID] * instance.model * gl_in[i].gl_Position;
 			gl_Position = tmpPos;
 			EmitVertex();
 		}
@@ -110,7 +110,7 @@ void main() {
 		// // directional lights:
 		for (int i = 0; i < gl_in.length(); i++) {
 			gl_Layer = gl_InvocationID;
-			vec4 tmpPos = ubo.mvp2[gl_InvocationID-NUM_SPOT_LIGHTS] * instance.model * gl_in[i].gl_Position;
+			vec4 tmpPos = ubo.dirlightMVP[gl_InvocationID-NUM_SPOT_LIGHTS] * instance.model * gl_in[i].gl_Position;
 			gl_Position = tmpPos;
 			EmitVertex();
 		}

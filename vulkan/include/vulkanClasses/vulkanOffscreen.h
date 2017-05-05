@@ -254,103 +254,106 @@ namespace vkx {
 
 			// Find a suitable depth format
 			vk::Format depthFormat = vkx::getSupportedDepthFormat(context.physicalDevice);
-			deferredFramebuffer.depthAttachment = deferredFramebuffer.createAttachment(depthFormat, vk::ImageUsageFlagBits::eDepthStencilAttachment, this->size.x, this->size.y);
+			/*deferredFramebuffer.depthAttachment = */deferredFramebuffer.createAttachment(depthFormat, vk::ImageUsageFlagBits::eDepthStencilAttachment, this->size.x, this->size.y);
 
 			//VulkanExampleBase::flushCommandBuffer(layoutCmd, queue, true);
 
-			//deferredFramebuffer.createRenderPass();
+			// todo: fix:
+			deferredFramebuffer.createRenderPass();
 
-			// G-Buffer creation
-			{
-				std::array<vk::AttachmentDescription, 4> attachmentDescs = {};
+			//// G-Buffer creation
+			//{
+			//	std::array<vk::AttachmentDescription, 4> attachmentDescs = {};
 
-				// Init attachment properties
-				for (uint32_t i = 0; i < static_cast<uint32_t>(attachmentDescs.size()); i++) {
-					attachmentDescs[i].samples = vk::SampleCountFlagBits::e1;
-					attachmentDescs[i].loadOp = vk::AttachmentLoadOp::eClear;
-					attachmentDescs[i].storeOp = vk::AttachmentStoreOp::eStore;
-					attachmentDescs[i].stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-					attachmentDescs[i].stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-					// all but 3rd are eShaderReadOnlyOptimal, 3rd is eDepthStencilAttachmentOptimal 
-					attachmentDescs[i].finalLayout = (i == 3) ? vk::ImageLayout::eDepthStencilAttachmentOptimal : vk::ImageLayout::eShaderReadOnlyOptimal;
-				}
-
-
-
+			//	// Init attachment properties
+			//	for (uint32_t i = 0; i < static_cast<uint32_t>(attachmentDescs.size()); i++) {
+			//		attachmentDescs[i].samples = vk::SampleCountFlagBits::e1;
+			//		attachmentDescs[i].loadOp = vk::AttachmentLoadOp::eClear;
+			//		attachmentDescs[i].storeOp = vk::AttachmentStoreOp::eStore;
+			//		attachmentDescs[i].stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+			//		attachmentDescs[i].stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+			//		// all but 3rd are eShaderReadOnlyOptimal, 3rd is eDepthStencilAttachmentOptimal 
+			//		attachmentDescs[i].finalLayout = (i == 3) ? vk::ImageLayout::eDepthStencilAttachmentOptimal : vk::ImageLayout::eShaderReadOnlyOptimal;
+			//	}
 
 
 
-				// Formats
-				attachmentDescs[0].format = deferredFramebuffer.attachments[0].format;
-				attachmentDescs[1].format = deferredFramebuffer.attachments[1].format;
-				attachmentDescs[2].format = deferredFramebuffer.attachments[2].format;
-				attachmentDescs[3].format = deferredFramebuffer.depthAttachment.format;
-
-				// color attachment references
-				std::vector<vk::AttachmentReference> colorReferences;
-				colorReferences.push_back({ 0, vk::ImageLayout::eColorAttachmentOptimal });
-				colorReferences.push_back({ 1, vk::ImageLayout::eColorAttachmentOptimal });
-				colorReferences.push_back({ 2, vk::ImageLayout::eColorAttachmentOptimal });
-
-				// depth reference
-				vk::AttachmentReference depthReference;
-				depthReference.attachment = 3;
-				depthReference.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-
-				vk::SubpassDescription subpass;
-				subpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
-				subpass.pColorAttachments = colorReferences.data();
-				subpass.colorAttachmentCount = static_cast<uint32_t>(colorReferences.size());
-				subpass.pDepthStencilAttachment = &depthReference;
 
 
-				// Use subpass dependencies for attachment layout transitions
-				std::vector<vk::SubpassDependency> dependencies;
-				dependencies.resize(2);
 
-				dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-				dependencies[0].dstSubpass = 0;
-				dependencies[0].srcStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
-				dependencies[0].dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-				dependencies[0].srcAccessMask = vk::AccessFlagBits::eMemoryRead;
-				dependencies[0].dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite;
-				dependencies[0].dependencyFlags = vk::DependencyFlagBits::eByRegion;
+			//	// Formats
+			//	attachmentDescs[0].format = deferredFramebuffer.attachments[0].format;
+			//	attachmentDescs[1].format = deferredFramebuffer.attachments[1].format;
+			//	attachmentDescs[2].format = deferredFramebuffer.attachments[2].format;
+			//	//attachmentDescs[3].format = deferredFramebuffer.depthAttachment.format;
+			//	attachmentDescs[2].format = deferredFramebuffer.attachments[3].format;
 
-				dependencies[1].srcSubpass = 0;
-				dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-				dependencies[1].srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-				dependencies[1].dstStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
-				dependencies[1].srcAccessMask = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite;
-				dependencies[1].dstAccessMask = vk::AccessFlagBits::eMemoryRead;
-				dependencies[1].dependencyFlags = vk::DependencyFlagBits::eByRegion;
+			//	// color attachment references
+			//	std::vector<vk::AttachmentReference> colorReferences;
+			//	colorReferences.push_back({ 0, vk::ImageLayout::eColorAttachmentOptimal });
+			//	colorReferences.push_back({ 1, vk::ImageLayout::eColorAttachmentOptimal });
+			//	colorReferences.push_back({ 2, vk::ImageLayout::eColorAttachmentOptimal });
 
-				// create offscreen render pass subpass?
-				vk::RenderPassCreateInfo renderPassInfo;
-				renderPassInfo.pAttachments = attachmentDescs.data();
-				renderPassInfo.attachmentCount = static_cast<uint32_t>(attachmentDescs.size());
-				renderPassInfo.subpassCount = 1;
-				renderPassInfo.pSubpasses = &subpass;
-				renderPassInfo.dependencyCount = 2;
-				renderPassInfo.pDependencies = dependencies.data();
-				deferredFramebuffer.renderPass = context.device.createRenderPass(renderPassInfo, nullptr);
+			//	// depth reference
+			//	vk::AttachmentReference depthReference;
+			//	depthReference.attachment = 3;
+			//	depthReference.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 
-				std::vector<vk::ImageView> attachments;
-				attachments.resize(3);
-				for (size_t i = 0; i < 3; ++i) {
-					attachments[i] = deferredFramebuffer.attachments[i].view;// color attachments
-				}
-				attachments.push_back(deferredFramebuffer.depthAttachment.view);// depth attachment
+			//	vk::SubpassDescription subpass;
+			//	subpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
+			//	subpass.pColorAttachments = colorReferences.data();
+			//	subpass.colorAttachmentCount = static_cast<uint32_t>(colorReferences.size());
+			//	subpass.pDepthStencilAttachment = &depthReference;
 
-				vk::FramebufferCreateInfo fbufCreateInfo;
-				fbufCreateInfo.renderPass = deferredFramebuffer.renderPass;
-				fbufCreateInfo.pAttachments = attachments.data();
-				fbufCreateInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-				fbufCreateInfo.width = this->size.x;
-				fbufCreateInfo.height = this->size.y;
-				fbufCreateInfo.layers = 1;
-				// create framebuffer
-				deferredFramebuffer.framebuffer = context.device.createFramebuffer(fbufCreateInfo, nullptr);
-			}
+
+			//	// Use subpass dependencies for attachment layout transitions
+			//	std::vector<vk::SubpassDependency> dependencies;
+			//	dependencies.resize(2);
+
+			//	dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+			//	dependencies[0].dstSubpass = 0;
+			//	dependencies[0].srcStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
+			//	dependencies[0].dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+			//	dependencies[0].srcAccessMask = vk::AccessFlagBits::eMemoryRead;
+			//	dependencies[0].dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite;
+			//	dependencies[0].dependencyFlags = vk::DependencyFlagBits::eByRegion;
+
+			//	dependencies[1].srcSubpass = 0;
+			//	dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+			//	dependencies[1].srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+			//	dependencies[1].dstStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
+			//	dependencies[1].srcAccessMask = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite;
+			//	dependencies[1].dstAccessMask = vk::AccessFlagBits::eMemoryRead;
+			//	dependencies[1].dependencyFlags = vk::DependencyFlagBits::eByRegion;
+
+			//	// create offscreen render pass subpass?
+			//	vk::RenderPassCreateInfo renderPassInfo;
+			//	renderPassInfo.pAttachments = attachmentDescs.data();
+			//	renderPassInfo.attachmentCount = static_cast<uint32_t>(attachmentDescs.size());
+			//	renderPassInfo.subpassCount = 1;
+			//	renderPassInfo.pSubpasses = &subpass;
+			//	renderPassInfo.dependencyCount = 2;
+			//	renderPassInfo.pDependencies = dependencies.data();
+			//	deferredFramebuffer.renderPass = context.device.createRenderPass(renderPassInfo, nullptr);
+
+			//	std::vector<vk::ImageView> attachments;
+			//	attachments.resize(3);
+			//	for (size_t i = 0; i < 3; ++i) {
+			//		attachments[i] = deferredFramebuffer.attachments[i].view;// color attachments
+			//	}
+			//	//attachments.push_back(deferredFramebuffer.depthAttachment.view);// depth attachment
+			//	attachments.push_back(deferredFramebuffer.attachments[3].view);// depth attachment
+
+			//	vk::FramebufferCreateInfo fbufCreateInfo;
+			//	fbufCreateInfo.renderPass = deferredFramebuffer.renderPass;
+			//	fbufCreateInfo.pAttachments = attachments.data();
+			//	fbufCreateInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+			//	fbufCreateInfo.width = this->size.x;
+			//	fbufCreateInfo.height = this->size.y;
+			//	fbufCreateInfo.layers = 1;
+			//	// create framebuffer
+			//	deferredFramebuffer.framebuffer = context.device.createFramebuffer(fbufCreateInfo, nullptr);
+			//}
 
 
 
@@ -362,13 +365,8 @@ namespace vkx {
 
 
 
-
-
-
-
 		// add SSAO frame buffer
 		void addSSAOGenerateFramebuffer() {
-
 
 			vkx::Framebuffer SSAOGenerateFramebuffer;
 			SSAOGenerateFramebuffer.device = context.device;
@@ -376,13 +374,8 @@ namespace vkx {
 			SSAOGenerateFramebuffer.width = this->size.x;
 			SSAOGenerateFramebuffer.height = this->size.y;
 
-
-
 			SSAOGenerateFramebuffer.createAttachment(vk::Format::eR8Unorm, vk::ImageUsageFlagBits::eColorAttachment, this->size.x, this->size.y);
-
-
 			SSAOGenerateFramebuffer.createRenderPass();
-
 			framebuffers.push_back(SSAOGenerateFramebuffer);
 		}
 
@@ -396,11 +389,8 @@ namespace vkx {
 			SSAOBlurFramebuffer.width = this->size.x;
 			SSAOBlurFramebuffer.height = this->size.y;
 
-
 			SSAOBlurFramebuffer.createAttachment(vk::Format::eR8Unorm, vk::ImageUsageFlagBits::eColorAttachment, this->size.x, this->size.y);
-
 			SSAOBlurFramebuffer.createRenderPass();
-
 
 			framebuffers.push_back(SSAOBlurFramebuffer);
 		}
@@ -411,9 +401,6 @@ namespace vkx {
 
 
 		void addShadowPassFramebuffer() {
-
-
-
 			//int SHADOW_MAP_DIM = 2048;
 
 			vkx::Framebuffer shadowFramebuffer;
