@@ -335,6 +335,7 @@ void vulkanApp::windowResized(const glm::uvec2 &newSize) {
 		//updateTextOverlay();
 	}
 
+	// todo: remove this
 	setupRenderPassBeginInfo();
 
 	// Can be overriden in derived class

@@ -137,12 +137,6 @@
     <ClInclude Include="include\vulkanClasses\vulkanSkinnedMesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\bulletClasses\PhysicsObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\bulletClasses\PhysicsManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\external\imgui\imconfig.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -171,6 +165,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\vulkanClasses\vulkanInit.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\bulletClasses\PhysicsManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\bulletClasses\PhysicsObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

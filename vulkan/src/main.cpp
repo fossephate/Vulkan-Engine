@@ -306,7 +306,7 @@ class VulkanExample : public vkx::vulkanApp {
 		glm::mat4 viewMatrix;	// view matrix (used in geometry shader and fragment shader)
 		float zNear = -32.0f;
 		float zFar = 32.0f;
-		float size = 10.0f;// size of the orthographic projection
+		float size = 70.0f;// size of the orthographic projection
 		//glm::vec2 padding;
 		//float pad1;
 		//float pad2;
@@ -2288,7 +2288,7 @@ class VulkanExample : public vkx::vulkanApp {
 		models.push_back(planeModel);
 
 		auto physicsPlane = std::make_shared<vkx::PhysicsObject>(&physicsManager, planeModel);
-		btCollisionShape* boxShape = new btBoxShape(btVector3(btScalar(200.), btScalar(200.), btScalar(0.1)));
+		btCollisionShape* boxShape = new btBoxShape(btVector3(btScalar(200.), btScalar(200.), btScalar(0.01)));
 		physicsPlane->createRigidBody(boxShape, 0.0f);
 		//btTransform t;
 		//t.setOrigin(btVector3(0., 0., 0.));
@@ -2379,34 +2379,34 @@ class VulkanExample : public vkx::vulkanApp {
 		//modelsDeferred.push_back(planeModel2);
 
 
-		//for (int i = 0; i < 10; ++i) {
-		//	auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
-		//	testModel->load(getAssetPath() + "models/monkey.fbx");
-		//	testModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
+		for (int i = 0; i < 2; ++i) {
+			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
+			testModel->load(getAssetPath() + "models/monkey.fbx");
+			testModel->createMeshes(SSAOVertexLayout, 0.0f, VERTEX_BUFFER_BIND_ID);
 
-		//	modelsDeferred.push_back(testModel);
-		//}
-
-
-		//for (int i = 0; i < 1; ++i) {
-
-		//	auto testSkinnedMesh = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
-		//	testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");// breaks size?
-		//	testSkinnedMesh->createSkinnedMeshBuffer(SSAOVertexLayout, 0.0005f);
-		//	//todo: figure out why there must be atleast one deferred skinned mesh here
-		//	//inorder to not cause problems
-		//	//fixed?
-		//	skinnedMeshesDeferred.push_back(testSkinnedMesh);
-		//}
+			modelsDeferred.push_back(testModel);
+		}
 
 
+		for (int i = 0; i < 1; ++i) {
+
+			auto testSkinnedMesh = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
+			testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");// breaks size?
+			testSkinnedMesh->createSkinnedMeshBuffer(SSAOVertexLayout, 0.0005f);
+			//todo: figure out why there must be atleast one deferred skinned mesh here
+			//inorder to not cause problems
+			//fixed?
+			skinnedMeshesDeferred.push_back(testSkinnedMesh);
+		}
 
 
 
-		auto floorModel = std::make_shared<vkx::Model>(&context, &assetManager);
-		floorModel->load(getAssetPath() + "models/plane.fbx");
-		floorModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
-		modelsDeferred.push_back(floorModel);
+
+
+		//auto floorModel = std::make_shared<vkx::Model>(&context, &assetManager);
+		//floorModel->load(getAssetPath() + "models/plane.fbx");
+		//floorModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+		//modelsDeferred.push_back(floorModel);
 
 
 
@@ -3666,6 +3666,9 @@ class VulkanExample : public vkx::vulkanApp {
 	void windowResized() {
 		camera.updateViewMatrix();
 		updateUniformBufferSSAOParams();
+
+		//offscreen.destroy();
+		//offscreen.prepare();
 	}
 
 
@@ -3774,13 +3777,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 		//offscreen.size = glm::uvec2(TEX_DIM);
-		offscreen.size = glm::uvec2(1280, 720);
-		//offscreen.colorFormats = std::vector<vk::Format>{ {
-		//		vk::Format::eR16G16B16A16Sfloat,
-		//		vk::Format::eR16G16B16A16Sfloat,
-		//		vk::Format::eR8G8B8A8Unorm
-		//}};
-		//offscreen.addDeferredFramebuffer();
+		offscreen.size = glm::uvec2(settings.windowSize.width, settings.windowSize.height);
 
 		vulkanApp::prepare();
 		offscreen.prepare();

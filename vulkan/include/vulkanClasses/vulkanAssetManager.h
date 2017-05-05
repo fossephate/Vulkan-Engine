@@ -531,6 +531,38 @@ namespace vkx {
 	//};
 
 
+	struct MaterialList {
+
+		std::map<std::string, Material> resources;
+
+		void destroy() {
+			for (auto &material : resources) {
+				material.second.destroy();
+			}
+		}
+
+		const Material get(std::string name) {
+			return resources[name];
+		}
+
+		void add(std::string name, Material material) {
+			resources[name] = material;
+			this->sync();
+		}
+
+		bool present(std::string name) {
+			return resources.find(name) != resources.end();
+		}
+
+		void sync() {
+			uint32_t counter = 0;
+			for (auto &iterator : resources) {
+				iterator.second.index = counter;
+				counter++;
+			}
+		}
+	};
+
 
 
 
@@ -556,46 +588,6 @@ namespace vkx {
 
 			vk::DescriptorSetLayout* materialDescriptorSetLayoutDeferred{ nullptr };
 			vk::DescriptorPool* materialDescriptorPoolDeferred{ nullptr };
-
-
-
-
-
-
-			struct MaterialList {
-
-				std::map<std::string, Material> resources;
-
-				void destroy() {
-					for (auto &material : resources) {
-						material.second.destroy();
-					}
-				}
-
-				const Material get(std::string name) {
-					return resources[name];
-				}
-
-				void add(std::string name, Material material) {
-					resources[name] = material;
-					this->sync();
-				}
-
-				bool present(std::string name) {
-					return resources.find(name) != resources.end();
-				}
-
-				void sync() {
-					uint32_t counter = 0;
-					for (auto &iterator : resources) {
-						iterator.second.index = counter;
-						counter++;
-					}
-				}
-
-
-
-			};
 
 
 
