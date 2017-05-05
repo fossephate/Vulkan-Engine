@@ -35,6 +35,7 @@ float linearDepth(float depth) {
 
 void main() {
 	outPosition = vec4(inPos, linearDepth(gl_FragCoord.z));
+	//outPosition = vec4(inPos, gl_FragCoord.z);
 
 	vec4 color = texture(samplerColor, inUV);
 

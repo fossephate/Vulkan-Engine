@@ -1031,21 +1031,6 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-
-
-
-
-
-
-
-
-
-
-		
-
-
-
-
 		//std::vector<vk::DescriptorSetLayout> descriptorSetLayoutsOffscreen{
 		//	rscs.descriptorSetLayouts->get("offscreen.scene"),
 		//	rscs.descriptorSetLayouts->get("offscreen.matrix"),
@@ -3054,6 +3039,7 @@ class VulkanExample : public vkx::vulkanApp {
 		ImGui::Checkbox("Update Draw Command Buffers", &updateDraw);
 		ImGui::Checkbox("Update Offscreen Command Buffers", &updateOffscreen);
 		ImGui::Checkbox("SSAO", &settings.SSAO);
+		ImGui::Checkbox("Shadows", &settings.shadows);
 		ImGui::Checkbox("Add Boxes", &keyStates.b);
 		ImGui::SliderFloat("FPS Cap", &settings.fpsCap, 5.0f, 500.0f);
 
@@ -3251,107 +3237,105 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-		// shadow pass:
-		{
-
-			// Clear values for all attachments written in the fragment shader
-			std::array<vk::ClearValue, 1> clearValues;
-			clearValues[0].depthStencil = { 1.0f, 0 };
-
-			vk::RenderPassBeginInfo renderPassBeginInfo;
-			renderPassBeginInfo.renderPass = offscreen.framebuffers[3].renderPass;
-			renderPassBeginInfo.framebuffer = offscreen.framebuffers[3].framebuffer;
-			renderPassBeginInfo.renderArea.extent.width = offscreen.framebuffers[3].width;
-			renderPassBeginInfo.renderArea.extent.height = offscreen.framebuffers[3].height;
-			renderPassBeginInfo.clearValueCount = clearValues.size();
-			renderPassBeginInfo.pClearValues = clearValues.data();
-
-
-			// begin offscreen render pass
-			offscreenCmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
-
-			// set viewport and scissor
-			vk::Viewport viewport = vkx::viewport(glm::uvec2(offscreen.framebuffers[3].width, offscreen.framebuffers[3].height));
-			offscreenCmdBuffer.setViewport(0, viewport);
-			vk::Rect2D scissor = vkx::rect2D(glm::uvec2(offscreen.framebuffers[3].width, offscreen.framebuffers[3].height));
-			offscreenCmdBuffer.setScissor(0, scissor);
-
-
-			// Set depth bias (aka "Polygon offset")
-			offscreenCmdBuffer.setDepthBias(settings.depthBiasConstant, 0.0f, settings.depthBiasSlope);
 
 
 
+		if (settings.shadows) {
+			// shadow pass:
+			{
+
+				// Clear values for all attachments written in the fragment shader
+				std::array<vk::ClearValue, 1> clearValues;
+				clearValues[0].depthStencil = { 1.0f, 0 };
+
+				vk::RenderPassBeginInfo renderPassBeginInfo;
+				renderPassBeginInfo.renderPass = offscreen.framebuffers[3].renderPass;
+				renderPassBeginInfo.framebuffer = offscreen.framebuffers[3].framebuffer;
+				renderPassBeginInfo.renderArea.extent.width = offscreen.framebuffers[3].width;
+				renderPassBeginInfo.renderArea.extent.height = offscreen.framebuffers[3].height;
+				renderPassBeginInfo.clearValueCount = clearValues.size();
+				renderPassBeginInfo.pClearValues = clearValues.data();
+
+
+				// begin offscreen render pass
+				offscreenCmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
+
+				// set viewport and scissor
+				vk::Viewport viewport = vkx::viewport(glm::uvec2(offscreen.framebuffers[3].width, offscreen.framebuffers[3].height));
+				offscreenCmdBuffer.setViewport(0, viewport);
+				vk::Rect2D scissor = vkx::rect2D(glm::uvec2(offscreen.framebuffers[3].width, offscreen.framebuffers[3].height));
+				offscreenCmdBuffer.setScissor(0, scissor);
+
+
+				// Set depth bias (aka "Polygon offset")
+				offscreenCmdBuffer.setDepthBias(settings.depthBiasConstant, 0.0f, settings.depthBiasSlope);
 
 
 
 
 
-			//if (settings.SSAO) {
-			//	offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("offscreen.meshes.ssao"));
-			//} else {
-			//	offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("offscreen.meshes"));
-			//}
 
-			offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("shadow"));
 
-			// for each model
-			// model = group of meshes
-			// todo: add skinned / animated model support
-			for (auto &model : modelsDeferred) {
 
-				// todo: fix
-				//model->checkIfReady();
-				if (!model->buffersReady) {
-					continue;
+				//if (settings.SSAO) {
+				//	offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("offscreen.meshes.ssao"));
+				//} else {
+				//	offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("offscreen.meshes"));
+				//}
+
+				offscreenCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, rscs.pipelines->get("shadow"));
+
+				// for each model
+				// model = group of meshes
+				// todo: add skinned / animated model support
+				for (auto &model : modelsDeferred) {
+
+					// todo: fix
+					//model->checkIfReady();
+					if (!model->buffersReady) {
+						continue;
+					}
+
+					// for each of the model's meshBuffers
+					for (auto &meshBuffer : model->meshBuffers) {
+
+
+						// bind vertex & index buffers
+						offscreenCmdBuffer.bindVertexBuffers(meshBuffer->vertexBufferBinding, meshBuffer->vertices.buffer, vk::DeviceSize());
+						offscreenCmdBuffer.bindIndexBuffer(meshBuffer->indices.buffer, 0, vk::IndexType::eUint32);
+
+						// descriptor set #
+						uint32_t setNum;
+
+						// bind scene descriptor set
+						//setIndex = 0;
+						//offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("offscreen"), setIndex, rscs.descriptorSets->get("offscreen.scene"), nullptr);
+
+						// bind shadow descriptor set?
+						// for vs uniform buffer?
+						// bind deferred descriptor set
+						// layout: offscreen, set index = 0
+						setNum = 0;
+						offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("offscreen.shadow"), setNum, rscs.descriptorSets->get("shadow.scene"), nullptr);
+
+
+						// dynamic uniform buffer to position objects
+						uint32_t offset1 = model->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
+						setNum = 1;
+						offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("offscreen.shadow"), setNum, 1, &rscs.descriptorSets->get("shadow.matrix"), 1, &offset1);
+
+
+
+						// draw:
+						offscreenCmdBuffer.drawIndexed(meshBuffer->indexCount, 1, 0, 0, 0);
+					}
+
 				}
 
-				// for each of the model's meshBuffers
-				for (auto &meshBuffer : model->meshBuffers) {
 
 
-					// bind vertex & index buffers
-					offscreenCmdBuffer.bindVertexBuffers(meshBuffer->vertexBufferBinding, meshBuffer->vertices.buffer, vk::DeviceSize());
-					offscreenCmdBuffer.bindIndexBuffer(meshBuffer->indices.buffer, 0, vk::IndexType::eUint32);
-
-					// descriptor set #
-					uint32_t setNum;
-
-					// bind scene descriptor set
-					//setIndex = 0;
-					//offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("offscreen"), setIndex, rscs.descriptorSets->get("offscreen.scene"), nullptr);
-
-					// bind shadow descriptor set?
-					// for vs uniform buffer?
-					// bind deferred descriptor set
-					// layout: offscreen, set index = 0
-					setNum = 0;
-					offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("offscreen.shadow"), setNum, rscs.descriptorSets->get("shadow.scene"), nullptr);
-
-
-					// dynamic uniform buffer to position objects
-					uint32_t offset1 = model->matrixIndex * static_cast<uint32_t>(alignedMatrixSize);
-					setNum = 1;
-					offscreenCmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, rscs.pipelineLayouts->get("offscreen.shadow"), setNum, 1, &rscs.descriptorSets->get("shadow.matrix"), 1, &offset1);
-
-
-
-					// draw:
-					offscreenCmdBuffer.drawIndexed(meshBuffer->indexCount, 1, 0, 0, 0);
-				}
-
+				offscreenCmdBuffer.endRenderPass();
 			}
-
-
-
-			offscreenCmdBuffer.endRenderPass();
-
-
-
-
-
-
-
 		}
 
 
@@ -3711,21 +3695,6 @@ class VulkanExample : public vkx::vulkanApp {
 		};
 
 		std::vector<Vertex> vertexBuffer;
-
-		//float x = 0.0f;
-		//float y = 0.0f;
-		//for (uint32_t i = 0; i < 3; i++) {
-		//	// Last component of normal is used for debug display sampler index
-		//	vertexBuffer.push_back({ { x + 1.0f, y + 1.0f, 0.0f },{ 1.0f, 1.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, (float)i } });
-		//	vertexBuffer.push_back({ { x,      y + 1.0f, 0.0f },{ 0.0f, 1.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, (float)i } });
-		//	vertexBuffer.push_back({ { x,      y,      0.0f },{ 0.0f, 0.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, (float)i } });
-		//	vertexBuffer.push_back({ { x + 1.0f, y,      0.0f },{ 1.0f, 0.0f },{ 1.0f, 1.0f, 1.0f },{ 0.0f, 0.0f, (float)i } });
-		//	x += 1.0f;
-		//	if (x > 1.0f) {
-		//		x = 0.0f;
-		//		y += 1.0f;
-		//	}
-		//}
 
 		// Last component of normal is used for debug display sampler index
 

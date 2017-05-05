@@ -3,7 +3,7 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 
-layout (set = 3, binding = 1) uniform sampler2D samplerPosition;
+layout (set = 3, binding = 1) uniform sampler2D samplerPosDepth;
 layout (set = 3, binding = 2) uniform sampler2D samplerNormal;
 layout (set = 3, binding = 3) uniform usampler2D samplerAlbedo;
 layout (set = 3, binding = 4) uniform sampler2D samplerSSAO;
@@ -32,7 +32,7 @@ float linearDepth(float depth) {
 void main() {
 	vec3 components[3];
 
-	//components[0] = texture(samplerPosition, inUV.st).rgb;
+	components[2] = texture(samplerPosDepth, inUV.st).rgb;
 	//components[0] = vec3(texture(samplerPosition, inUV.st).r);
 	//components[0] = vec3(texture(samplerPosition, inUV.st).a);
 
@@ -66,7 +66,7 @@ void main() {
 	// vec4 shadow2 = texture(samplerShadowMap, vec3(inUV.st, 2));
 	// components[0] = vec3(shadow2.r);
 
-	components[2] = color.rgb;
+	//components[2] = color.rgb;
 
 	//vec4 shadow = texture(samplerShadowMap, inUV.st);
 	// inUV.w = number of light source

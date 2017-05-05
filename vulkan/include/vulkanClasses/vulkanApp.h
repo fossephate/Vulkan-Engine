@@ -230,6 +230,8 @@ namespace vkx
 
 				// whether to use Screen Space Ambient Occlusion
 				bool SSAO = true;
+				// enable shadow mapping
+				bool shadows = true;
 
 				// shadow mapping:
 				float depthBiasConstant = 1.25f;
