@@ -307,14 +307,11 @@ class VulkanExample : public vkx::vulkanApp {
 		float zNear = -32.0f;
 		float zFar = 32.0f;
 		float size = 70.0f;// size of the orthographic projection
-		//glm::vec2 padding;
-		//float pad1;
-		//float pad2;
-		//float pad3;
-		//float pad4;
-		glm::vec4 padding;
-		glm::vec2 pad;
-		float p1;
+
+		float pad1;
+		float pad2;
+		float pad3;
+		float pad4;
 	};
 
 	struct {
@@ -2091,6 +2088,8 @@ class VulkanExample : public vkx::vulkanApp {
 		uboFSLights.directionalLights[0].color = glm::vec4(1.0f, 1.0f, 1.0f, 0.0f)*0.04f;
 		//uboFSLights.directionalLights[0].direction = glm::normalize(glm::vec4(camera.transform.translation, 0.0f) - glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
 		//uboFSLights.directionalLights[0].direction = glm::vec4(0.5f, 0.0f, -0.5f, 0.0f);
+
+		uboFSLights.directionalLights[0].pad1 = globalP;
 
 		/*float zNear = 1.0f;
 		float zFar = 512.0f;*/
