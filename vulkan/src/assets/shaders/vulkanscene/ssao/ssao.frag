@@ -3,7 +3,8 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 
-layout (set = 0, binding = 0) uniform sampler2D samplerPositionDepth;
+//layout (set = 0, binding = 0) uniform sampler2D samplerPositionDepth;
+layout (set = 0, binding = 0) uniform sampler2D samplerDepth;
 layout (set = 0, binding = 1) uniform sampler2D samplerNormal;
 layout (set = 0, binding = 2) uniform sampler2D ssaoNoise;
 
@@ -53,36 +54,7 @@ float rand(vec2 co){
 // }
 
 
-// // reconstruct world position from depth buffer:
-// // this is slow, find a better solution
-// vec3 calculate_world_position(vec2 texture_coordinate, float depth_from_depth_buffer) {
-//     vec4 clip_space_position = vec4(texture_coordinate * 2.0 - vec2(1.0), 2.0 * depth_from_depth_buffer - 1.0, 1.0);
 
-//     //vec4 position = inverse_projection_matrix * clip_space_position; // Use this for view space
-//     //vec4 position = inverse_view_projection_matrix * clip_space_position; // Use this for world space
-//     // definitely don't do this:
-//     //vec4 position = ubo.inverseViewProjection * clip_space_position; // Use this for world space
-//     vec4 position = inverse(ubo.projection*ubo.view) * clip_space_position; // Use this for world space
-
-//     return(position.xyz / position.w);
-// }
-
-// // this is supposed to get the world position from the depth buffer
-// vec3 worldPosFromDepth(vec2 texCoord, float depth) {
-//     float z = depth * 2.0 - 1.0;
-
-//     vec4 clipSpacePosition = vec4(texCoord * 2.0 - 1.0, z, 1.0);
-//     //vec4 viewSpacePosition = projMatrixInv * clipSpacePosition;
-//     vec4 viewSpacePosition = inverse(ubo.projection) * clipSpacePosition;
-
-//     // Perspective division
-//     viewSpacePosition /= viewSpacePosition.w;
-
-//     //vec4 worldSpacePosition = viewMatrixInv * viewSpacePosition;
-//     vec4 worldSpacePosition = inverse(ubo.view) * viewSpacePosition;
-
-//     return worldSpacePosition.xyz;
-// }
 
 
 // mat3 computeTBNMatrixFromDepth(in sampler2D depthTex, in vec2 uv) {
@@ -100,8 +72,8 @@ float rand(vec2 co){
 
 
 
-#define NEAR_PLANE 0.1
-#define FAR_PLANE 64.0
+#define NEAR_PLANE 1.0
+#define FAR_PLANE 512.0
 
 
 float linearDepth(float depth) {
@@ -183,6 +155,42 @@ vec3 normalFromDepth3(vec3 viewPos) {
 
 
 
+// get world position from depth buffer
+vec3 worldPosFromDepth(vec2 texCoord, float depth) {
+
+    vec4 clipSpacePosition;
+    clipSpacePosition.xy = texCoord * 2.0 - 1.0;
+	clipSpacePosition.z = depth;
+	clipSpacePosition.w = 1.0;
+
+	mat4 invViewProj = inverse(ubo.projection * ubo.view);
+
+
+    vec4 worldSpacePosition = invViewProj * clipSpacePosition;
+
+    // Perspective division
+    worldSpacePosition /= worldSpacePosition.w;
+
+    return worldSpacePosition.xyz;
+}
+
+vec3 viewPosFromDepth(vec2 texCoord, float depth) {
+
+    vec4 clipSpacePosition;
+    clipSpacePosition.xy = texCoord * 2.0 - 1.0;
+    clipSpacePosition.z = depth;
+    clipSpacePosition.w = 1.0;
+
+    mat4 invProj = inverse(ubo.projection);
+    
+    vec4 viewSpacePosition = invProj * clipSpacePosition;
+
+    // Perspective division
+    viewSpacePosition /= viewSpacePosition.w;
+    return viewSpacePosition.xyz;
+}
+
+
 
 
 void main() {
@@ -192,17 +200,14 @@ void main() {
 
 	// Get G-Buffer values
 
-	vec4 samplerPos = texture(samplerPositionDepth, inUV).rgba;
+	//vec4 samplerPosDepth = texture(samplerPositionDepth, inUV).rgba;
 
-	
+	float depth = texture(samplerDepth, inUV.st).r;
 
-	
-	vec3 viewPos = vec3(ubo.view * vec4(samplerPos.rgb, 1.0));// calculate view space position
+	vec3 worldPos = worldPosFromDepth(inUV.st, depth);
+	vec3 viewPos = vec3(ubo.view * vec4(worldPos, 1.0));// calculate view space position
+
 	//vec3 worldPos = samplerPos.rgb;
-
-	vec3 fragPos = viewPos;// view space position
-	//vec3 fragPos = samplerPos.rgb;
-
 
 
 
@@ -229,7 +234,8 @@ void main() {
 
 
 	// Get a random vector using a noise lookup
-	ivec2 texDim = textureSize(samplerPositionDepth, 0);
+	//ivec2 texDim = textureSize(samplerPositionDepth, 0);
+	ivec2 texDim = textureSize(samplerDepth, 0);
 	ivec2 noiseDim = textureSize(ssaoNoise, 0);
 
 
@@ -260,19 +266,20 @@ void main() {
 		//sampleDir = vec3(0.0, 0.0, 1.0);
 
 		// calculate sample point.
-		vec3 samplePos = fragPos + (sampleDir * SSAO_RADIUS);
+		vec3 samplePos = viewPos + (sampleDir * SSAO_RADIUS);
 
 		
 		// project
-		//vec4 samplePointNDC = ubo.projection * samplePos;// project on the near clipping plane
-		vec4 samplePointNDC = ubo.projection * vec4(samplePos.xyz, 1.0);
+
+		vec4 samplePointNDC = ubo.projection * vec4(samplePos.xyz, 1.0);// project on the near clipping plane
 		samplePointNDC /= samplePointNDC.w;// perform perspective divide
 
 		// Create texture coordinate out of it.
 		vec2 samplePointTexCoord = samplePointNDC.xy * 0.5 + vec2(0.5);
 
 		//float sampleDepth = -texture(samplerPositionDepth, offset.xy).w;
-		float sampleDepth = -texture(samplerPositionDepth, samplePointTexCoord.xy).a;
+		//float sampleDepth = -texture(samplerPositionDepth, samplePointTexCoord.xy).a;
+		float sampleDepth = -texture(samplerDepth, samplePointTexCoord.xy).r;
 
 		// float delta = samplePointNDC.z - zSceneNDC;
 		// // If scene fragment is before (smaller in z) sample point, increase occlusion.
@@ -290,7 +297,7 @@ void main() {
 		#define RANGE_CHECK 1
 		#ifdef RANGE_CHECK
 			// Range check
-			float rangeCheck = smoothstep(0.0f, 1.0f, SSAO_RADIUS / abs(fragPos.z - sampleDepth));
+			float rangeCheck = smoothstep(0.0f, 1.0f, SSAO_RADIUS / abs(viewPos.z - sampleDepth));
 			occlusion += (sampleDepth >= samplePos.z ? 1.0f : 0.0f) * rangeCheck;
 		#else
 			occlusion += (sampleDepth >= samplePos.z ? 1.0f : 0.0f);

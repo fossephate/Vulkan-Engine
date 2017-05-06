@@ -265,7 +265,6 @@ class VulkanExample : public vkx::vulkanApp {
 	struct {
 		glm::mat4 model;
 		glm::mat4 projection;
-		//glm::vec4 camPos;
 	} uboVS;
 
 	struct {
@@ -316,13 +315,16 @@ class VulkanExample : public vkx::vulkanApp {
 	};
 
 	struct {
-		PointLight pointlights[NUM_POINT_LIGHTS];
-		SpotLight spotlights[NUM_SPOT_LIGHTS];
-		DirectionalLight directionalLights[NUM_DIR_LIGHTS];
+
 		glm::vec4 viewPos;
 		glm::mat4 model;
 		glm::mat4 view;
 		glm::mat4 projection;
+		//glm::vec4 pad[];
+		
+		PointLight pointlights[NUM_POINT_LIGHTS];
+		SpotLight spotlights[NUM_SPOT_LIGHTS];
+		DirectionalLight directionalLights[NUM_DIR_LIGHTS];
 	} uboFSLights;
 
 	// ssao
@@ -1326,11 +1328,13 @@ class VulkanExample : public vkx::vulkanApp {
 				0,
 				&uniformDataDeferred.vsFullScreen.descriptor),
 			// set 3: Binding 1: Position texture target
+			// replaced with depth
 			vkx::writeDescriptorSet(
 				rscs.descriptorSets->get("deferred"),
 				vk::DescriptorType::eCombinedImageSampler,
 				1,
-				&texDescriptorPosition),
+				//&texDescriptorPosition),
+				&texDescriptorDepthStencil),
 			// set 3: Binding 2: Normals texture target
 			vkx::writeDescriptorSet(
 				rscs.descriptorSets->get("deferred"),
@@ -1448,11 +1452,13 @@ class VulkanExample : public vkx::vulkanApp {
 			std::vector<vk::WriteDescriptorSet> ssaoGenerateWriteDescriptorSets =
 			{
 				// Set 0: Binding 0: Fragment shader image sampler// FS Position+Depth
+				// replaced with just depth
 				vkx::writeDescriptorSet(
 					rscs.descriptorSets->get("offscreen.ssao.generate"),
 					vk::DescriptorType::eCombinedImageSampler,
 					0,
-					&texDescriptorPosDepth),
+					//&texDescriptorPosDepth),
+					&texDescriptorDepthStencil),
 				// Set 0: Binding 1: Fragment shader image sampler// FS Normals
 				vkx::writeDescriptorSet(
 					rscs.descriptorSets->get("offscreen.ssao.generate"),
@@ -2067,7 +2073,6 @@ class VulkanExample : public vkx::vulkanApp {
 				// increment counter
 				n++;
 			}
-
 		}
 
 		//uboFSLights.spotlights[0].target = glm::vec4(cos(globalP*8.0f)*9.0f, sin(globalP*8.0f)*4.0f, 0.0f, 0.0f);
@@ -2148,16 +2153,19 @@ class VulkanExample : public vkx::vulkanApp {
 		updateUniformBufferShadow();
 
 		// Current view position
-		uboFSLights.viewPos = glm::vec4(camera.transform.translation, 0.0f) * glm::vec4(-1.0f);
+		//uboFSLights.viewPos = glm::vec4(camera.transform.translation, 0.0f) * glm::vec4(-1.0f);
 
 		uboFSLights.view = camera.matrices.view;
-		//uboFSLights.model = glm::mat4();
+		uboFSLights.model = glm::mat4();
+		
 		// just for testing:
-		uboFSLights.model = glm::inverse(uboVS.projection);
+		//uboFSLights.model = glm::inverse(uboVS.projection);
 
 
 		//uboFSLights.inverseViewProjection = glm::inverse(camera.matrices.view * camera.matrices.projection);// new
 		uboFSLights.projection = camera.matrices.projection;// new
+
+		//uboFSLights.lookAt = vec4(0.0f, 0.0f, -1.0f, 1.0f) * camera.transform.orientation;
 
 
 		uniformDataDeferred.fsLights.copy(uboFSLights);
@@ -2431,10 +2439,12 @@ class VulkanExample : public vkx::vulkanApp {
 
 		if (keyStates.onKeyDown(&keyStates.o)) {
 			GUIOpen = !GUIOpen;
+			
 		}
 
 		if (keyStates.onKeyDown(&keyStates.j)) {
 			testBool = !testBool;
+			printf("Size of UBOFS: %d\n", sizeof(uboFSLights));
 		}
 
 		//if (GUIOpen) {

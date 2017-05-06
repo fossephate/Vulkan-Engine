@@ -10,7 +10,7 @@ layout (location = 3) in vec3 inPos;
 layout (location = 4) in vec3 inTangent;
 
 
-layout (location = 0) out vec4 outPosition;
+layout (location = 0) out vec4 outPositionDepth;
 layout (location = 1) out vec4 outNormal;
 layout (location = 2) out uvec4 outAlbedo;// this is a uvec
 
@@ -34,8 +34,8 @@ float linearDepth(float depth) {
 
 
 void main() {
-	outPosition = vec4(inPos, linearDepth(gl_FragCoord.z));
-	//outPosition = vec4(inPos, gl_FragCoord.z);
+	//outPositionDepth = vec4(inPos, linearDepth(gl_FragCoord.z));
+	//outPositionDepth = vec4(inPos, gl_FragCoord.z);
 
 	vec4 color = texture(samplerColor, inUV);
 

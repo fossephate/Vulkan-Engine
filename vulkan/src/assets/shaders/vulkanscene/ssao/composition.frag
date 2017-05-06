@@ -3,7 +3,8 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 
-layout (set = 3, binding = 1) uniform sampler2D samplerPosition;
+//layout (set = 3, binding = 1) uniform sampler2D samplerPositionDepth;
+layout (set = 3, binding = 1) uniform sampler2D samplerDepth;
 layout (set = 3, binding = 2) uniform sampler2D samplerNormal;
 layout (set = 3, binding = 3) uniform usampler2D samplerAlbedo;// this is a usampler(on ssao)
 layout (set = 3, binding = 4) uniform sampler2D samplerSSAO;
@@ -12,7 +13,7 @@ layout (set = 3, binding = 4) uniform sampler2D samplerSSAO;
 //layout (set = 3, binding = 6) uniform sampler2DArrayShadow samplerShadowMap;
 layout (set = 3, binding = 6) uniform sampler2DArray samplerShadowMap;
 //layout (set = 3, binding = 6) uniform sampler2D samplerShadowMap;
-layout (set = 3, binding = 7) uniform sampler2D samplerDepth;
+//layout (set = 3, binding = 7) uniform sampler2D samplerDepth;
 
 
 struct PointLight {
@@ -79,14 +80,16 @@ const int USE_PCF = 0;
 // todo: make this another set(1) rather than binding = 4
 layout (set = 3, binding = 5) uniform UBO 
 {
-    PointLight pointlights[NUM_POINT_LIGHTS];
-    SpotLight spotlights[NUM_SPOT_LIGHTS];
-    DirectionalLight directionalLights[NUM_DIR_LIGHTS];
     vec4 viewPos;
     mat4 model;// added
     mat4 view;// added
-    //mat4 inverseViewProjection;// added 4/19/17
     mat4 projection;
+    
+    PointLight pointlights[NUM_POINT_LIGHTS];
+    SpotLight spotlights[NUM_SPOT_LIGHTS];
+    DirectionalLight directionalLights[NUM_DIR_LIGHTS];
+    
+
 } ubo;
 
 layout (location = 0) in vec2 inUV;
@@ -107,8 +110,8 @@ vec3 normal_from_depth(vec2 texCoord, float depth) {
   vec2 offset1 = vec2(0.0,0.001);
   vec2 offset2 = vec2(0.001,0.0);
   
-  float depth1 = texture(samplerPosition, texCoord + offset1).a;
-  float depth2 = texture(samplerPosition, texCoord + offset2).a;
+  float depth1 = texture(samplerDepth, texCoord + offset1).r;
+  float depth2 = texture(samplerDepth, texCoord + offset2).r;
   
   vec3 p1 = vec3(offset1, depth1 - depth);
   vec3 p2 = vec3(offset2, depth2 - depth);
@@ -306,48 +309,39 @@ vec3 calculate_world_position(vec2 texture_coordinate, float depth_from_depth_bu
     return(position.xyz / position.w);
 }
 
-// this is supposed to get the world position from the depth buffer
-vec3 worldPosFromDepth(vec2 texCoord) {
+// get world position from depth buffer
+vec3 worldPosFromDepth(vec2 texCoord, float depth) {
 
-    //ubo.directionalLights[0].
-    //float depth = texture(samplerShadowMap, vec3(texCoord.xy, 0)).r;
-    //float depth = -texture(samplerDepth, texCoord.xy).r*sin(ubo.directionalLights[0].pad2*20)*100;
-    float depth = texture(samplerDepth, texCoord.xy).r;
-
-    //return vec3(depth);
-    //return inCamPos;
-
-    //vec4 clipSpacePosition = vec4(texCoord * 2.0 - 1.0, z, 1.0);
     vec4 clipSpacePosition;
     clipSpacePosition.xy = texCoord * 2.0 - 1.0;
-	clipSpacePosition.z = depth /** 2.0 - 1.0*/;
+	clipSpacePosition.z = depth;
 	clipSpacePosition.w = 1.0;
 
-	//return vec3(clipSpacePosition);
-
-	mat4 invView = inverse(ubo.view);
-	mat4 invProj = inverse(ubo.projection);
 	mat4 invViewProj = inverse(ubo.projection * ubo.view);
 
+
+    vec4 worldSpacePosition = invViewProj * clipSpacePosition;
+
+    // Perspective division
+    worldSpacePosition /= worldSpacePosition.w;
+
+    return worldSpacePosition.xyz;
+}
+
+vec3 viewPosFromDepth(vec2 texCoord, float depth) {
+
+    vec4 clipSpacePosition;
+    clipSpacePosition.xy = texCoord * 2.0 - 1.0;
+    clipSpacePosition.z = depth;
+    clipSpacePosition.w = 1.0;
+
+    mat4 invProj = inverse(ubo.projection);
 
     vec4 viewSpacePosition = invProj * clipSpacePosition;
 
     // Perspective division
     viewSpacePosition /= viewSpacePosition.w;
-
-    //vec4 worldSpacePosition = viewMatrixInv * viewSpacePosition;
-    vec4 worldSpacePosition = invView * viewSpacePosition;
-
-    vec3 final = viewSpacePosition.xyz;
-    //vec3 final = worldSpacePosition.xyz;
-
-    final.x = abs(final.x);
-    final.y = abs(final.y);
-    final.z = abs(final.z);
-
-    
-    return final;
-
+    return viewSpacePosition.xyz;
 }
 
 
@@ -357,14 +351,12 @@ void main() {
 
     // Get G-Buffer values
 
-    vec4 samplerPosDepth = texture(samplerPosition, inUV).rgba;
-    float depth = samplerPosDepth.a;
+    //vec4 samplerPosDepth = texture(samplerPosition, inUV).rgba;
+    //float depth = samplerPosDepth.a;
 
+    float depth = texture(samplerDepth, inUV.st).r;
 
-    //vec3 fragPos = samplerPosDepth.rgb;
-    // find a better way:
-    vec3 worldPos = samplerPosDepth.rgb;
-    //vec3 worldPos2 = worldPosFromDepth(inUV);
+    vec3 worldPos = worldPosFromDepth(inUV.st, depth);
 
     //vec3 viewPos = vec3(ubo.view * vec4(samplerPosDepth.rgb, 1.0));// calculate view space position
     vec3 viewPos = vec3(ubo.view * vec4(worldPos, 1.0));// calculate view space position
@@ -413,11 +405,6 @@ void main() {
             //float attenuation = ubo.pointlights[i].radius / (pow(dist, 2.0) + 1.0);
             //float attenuation = 1.0f / (light.radius + light.linearFalloff * dist + light.quadraticFalloff * (dist * dist));
             float attenuation = 1.0 / (light.radius + (light.linearFalloff * dist) + (light.quadraticFalloff * (dist * dist)));
-
-            
-            
-
-
 
             vec3 N = normalize(normal);// normalized normal
 
@@ -619,9 +606,6 @@ void main() {
     }
    
     outFragcolor = vec4(fragcolor, 1.0);
-
-    // vec3 test = worldPos2;
-    // outFragcolor = vec4(test, 1.0);
 }
 
 
