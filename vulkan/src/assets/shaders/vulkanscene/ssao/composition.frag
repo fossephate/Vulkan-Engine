@@ -11,7 +11,7 @@ layout (set = 3, binding = 4) uniform sampler2D samplerSSAO;
 
 //layout (set = 3, binding = 6) uniform sampler2DShadow samplerShadowMap;
 //layout (set = 3, binding = 6) uniform sampler2DArrayShadow samplerShadowMap;
-layout (set = 3, binding = 6) uniform sampler2DArray samplerShadowMap;
+layout (set = 3, binding = 5) uniform sampler2DArray samplerShadowMap;
 //layout (set = 3, binding = 6) uniform sampler2D samplerShadowMap;
 //layout (set = 3, binding = 7) uniform sampler2D samplerDepth;
 
@@ -74,16 +74,18 @@ struct DirectionalLight {
 const int SSAO_ENABLED = 1;
 const int USE_SHADOWS = 1;
 const int USE_PCF = 0;
+const float PI = 3.14159265359;
 
 
 
 // todo: make this another set(1) rather than binding = 4
-layout (set = 3, binding = 5) uniform UBO 
+layout (set = 3, binding = 6) uniform UBO 
 {
     vec4 viewPos;
     mat4 model;// added
     mat4 view;// added
     mat4 projection;
+    mat4 invViewProj;
     
     PointLight pointlights[NUM_POINT_LIGHTS];
     SpotLight spotlights[NUM_SPOT_LIGHTS];
@@ -317,10 +319,7 @@ vec3 worldPosFromDepth(vec2 texCoord, float depth) {
 	clipSpacePosition.z = depth;
 	clipSpacePosition.w = 1.0;
 
-	mat4 invViewProj = inverse(ubo.projection * ubo.view);
-
-
-    vec4 worldSpacePosition = invViewProj * clipSpacePosition;
+    vec4 worldSpacePosition = ubo.invViewProj * clipSpacePosition;
 
     // Perspective division
     worldSpacePosition /= worldSpacePosition.w;
@@ -355,15 +354,13 @@ void main() {
     //float depth = samplerPosDepth.a;
 
     float depth = texture(samplerDepth, inUV.st).r;
-
     vec3 worldPos = worldPosFromDepth(inUV.st, depth);
-
-    //vec3 viewPos = vec3(ubo.view * vec4(samplerPosDepth.rgb, 1.0));// calculate view space position
     vec3 viewPos = vec3(ubo.view * vec4(worldPos, 1.0));// calculate view space position
     
     
 
     vec3 normal = texture(samplerNormal, inUV).rgb * 2.0 - 1.0;// world space normal
+    //vec3 normal = texture(samplerDepth, inUV).gba * 2.0 - 1.0;// world space normal
 
     //vec3 worldNormal = normal_from_depth(inUV, depth);
 

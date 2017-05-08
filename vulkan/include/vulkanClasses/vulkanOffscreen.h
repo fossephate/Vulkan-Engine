@@ -250,12 +250,14 @@ namespace vkx {
 			deferredFramebuffer.createAttachment(vk::Format::eR32G32B32A32Uint, vk::ImageUsageFlagBits::eColorAttachment, this->size.x, this->size.y);
 
 
+
 			// Offscreen depth attachment:
 
 			// Find a suitable depth format
 			
-			vk::Format depthFormat = vkx::getSupportedDepthFormat(context.physicalDevice);
+			//vk::Format depthFormat = vkx::getSupportedDepthFormat(context.physicalDevice);
 			//vk::Format depthFormat = vk::Format::eD32SfloatS8Uint;
+			vk::Format depthFormat = vk::Format::eD32Sfloat;
 			deferredFramebuffer.createAttachment(depthFormat, vk::ImageUsageFlagBits::eDepthStencilAttachment, this->size.x, this->size.y);
 
 			//VulkanExampleBase::flushCommandBuffer(layoutCmd, queue, true);

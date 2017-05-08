@@ -320,6 +320,7 @@ class VulkanExample : public vkx::vulkanApp {
 		glm::mat4 model;
 		glm::mat4 view;
 		glm::mat4 projection;
+		glm::mat4 invViewProj;
 		//glm::vec4 pad[];
 		
 		PointLight pointlights[NUM_POINT_LIGHTS];
@@ -992,23 +993,17 @@ class VulkanExample : public vkx::vulkanApp {
 				vk::ShaderStageFlagBits::eFragment,
 				4),
 
-			// Set 3: Binding 5: Fragment shader uniform buffer
+			// Set 3: Binding 5: Shadow Map
 			vkx::descriptorSetLayoutBinding(
-				vk::DescriptorType::eUniformBuffer,
+				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
 				5),
 
-			// Set 3: Binding 6: Shadow Map
+			// Set 3: Binding 6: Fragment shader uniform buffer
 			vkx::descriptorSetLayoutBinding(
-				vk::DescriptorType::eCombinedImageSampler,
+				vk::DescriptorType::eUniformBuffer,
 				vk::ShaderStageFlagBits::eFragment,
 				6),
-
-			// Set 3: Binding 7: Depth, to replace position
-			vkx::descriptorSetLayoutBinding(
-				vk::DescriptorType::eCombinedImageSampler,
-				vk::ShaderStageFlagBits::eFragment,
-				7),
 		};
 		rscs.descriptorSetLayouts->add("deferred", descriptorSetLayoutBindingsDeferred);
 
@@ -1077,7 +1072,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings9 = {
-			// Set 0: Binding 0 : // FS Position+Depth
+			// Set 0: Binding 0 : // FS Depth
 			vkx::descriptorSetLayoutBinding(
 				vk::DescriptorType::eCombinedImageSampler,
 				vk::ShaderStageFlagBits::eFragment,
@@ -1224,28 +1219,28 @@ class VulkanExample : public vkx::vulkanApp {
 		std::vector<vk::WriteDescriptorSet> writeDescriptorSets = {
 			// Set 0: Binding 0: scene uniform buffer
 			vkx::writeDescriptorSet(
-				rscs.descriptorSets->get("forward.scene"),// descriptor set 0
+				rscs.descriptorSets->get("forward.scene"),
 				vk::DescriptorType::eUniformBuffer,
 				0,// binding 0
 				&uniformData.sceneVS.descriptor),
 
 			// Set 0: Binding 1: bones uniform buffer
 			vkx::writeDescriptorSet(
-				rscs.descriptorSets->get("forward.scene"),// descriptor set 0
+				rscs.descriptorSets->get("forward.scene"),
 				vk::DescriptorType::eUniformBuffer,
 				1,// binding 1
 				&uniformData.bonesVS.descriptor),
 
 			// Set 1: Binding 0: vertex shader matrix dynamic buffer
 			vkx::writeDescriptorSet(
-				rscs.descriptorSets->get("forward.matrix"),// descriptor set 1
+				rscs.descriptorSets->get("forward.matrix"),
 				vk::DescriptorType::eUniformBufferDynamic,
 				0,// binding 0
 				&uniformData.matrixVS.descriptor),
 
 			// Set 2: Binding 0: fragment shader material dynamic buffer
 			vkx::writeDescriptorSet(
-				rscs.descriptorSets->get("forward.material"),// descriptor set 2
+				rscs.descriptorSets->get("forward.material"),
 				vk::DescriptorType::eUniformBufferDynamic,
 				0,// binding 0
 				&uniformData.materialVS.descriptor),
@@ -1355,19 +1350,21 @@ class VulkanExample : public vkx::vulkanApp {
 				4,
 				&texDescriptorSSAOBlurred),
 
-			// set 3: Binding 5: Fragment shader uniform buffer// lights
-			vkx::writeDescriptorSet(
-				rscs.descriptorSets->get("deferred"),
-				vk::DescriptorType::eUniformBuffer,
-				5,
-				&uniformDataDeferred.fsLights.descriptor),
-
-			// set 3: Binding 6: Shadow Map
+			// set 3: Binding 5: Shadow Map
 			vkx::writeDescriptorSet(
 				rscs.descriptorSets->get("deferred"),
 				vk::DescriptorType::eCombinedImageSampler,
-				6,
+				5,
 				&texDescriptorShadowMap),
+
+			// set 3: Binding 6: Fragment shader uniform buffer// lights
+			vkx::writeDescriptorSet(
+				rscs.descriptorSets->get("deferred"),
+				vk::DescriptorType::eUniformBuffer,
+				6,
+				&uniformDataDeferred.fsLights.descriptor),
+
+
 
 
 		};
@@ -1522,8 +1519,8 @@ class VulkanExample : public vkx::vulkanApp {
 		rscs.descriptorSets->add("shadow.scene", descriptorSetAllocateInfoShadow);// todo: actually make a descriptor pool for this set
 
 
-																				  // descriptor set 1
-																				  // matrix data
+		// descriptor set 1
+		// matrix data
 		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfoShadowMatrix =
 			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("offscreen.matrix"), &rscs.descriptorSetLayouts->get("shadow.matrix"), 1);
 		rscs.descriptorSets->add("shadow.matrix", descriptorSetAllocateInfoShadowMatrix);
@@ -1802,7 +1799,7 @@ class VulkanExample : public vkx::vulkanApp {
 		// change vertex input state back to what it was:
 		pipelineCreateInfo.pVertexInputState = &vertices.inputState;// important
 
-																	// seperate pipeline layout:
+		// seperate pipeline layout:
 		pipelineCreateInfo.layout = rscs.pipelineLayouts->get("offscreen.shadow");
 
 
@@ -2155,10 +2152,10 @@ class VulkanExample : public vkx::vulkanApp {
 		//uboFSLights.model = glm::inverse(uboVS.projection);
 
 
-		//uboFSLights.inverseViewProjection = glm::inverse(camera.matrices.view * camera.matrices.projection);// new
+		
 		uboFSLights.projection = camera.matrices.projection;// new
 
-		//uboFSLights.lookAt = vec4(0.0f, 0.0f, -1.0f, 1.0f) * camera.transform.orientation;
+		uboFSLights.invViewProj = glm::inverse(camera.matrices.projection * camera.matrices.view);// new
 
 
 		uniformDataDeferred.fsLights.copy(uboFSLights);

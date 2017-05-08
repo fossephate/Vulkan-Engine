@@ -60,9 +60,6 @@ namespace vkx {
 
 
 		// Diffuse, specular, and bump channels
-		//vkx::Texture diffuse;
-		//vkx::Texture specular;
-		//vkx::Texture bump;
 		std::shared_ptr<vkx::Texture> diffuse;
 		std::shared_ptr<vkx::Texture> specular;
 		std::shared_ptr<vkx::Texture> bump;

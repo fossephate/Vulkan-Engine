@@ -8,14 +8,14 @@ layout (set = 0, binding = 0) uniform sampler2D samplerDepth;
 layout (set = 0, binding = 1) uniform sampler2D samplerNormal;
 layout (set = 0, binding = 2) uniform sampler2D ssaoNoise;
 
-/*layout (constant_id = 0) */const int SSAO_KERNEL_SIZE = 64;// changed from 32
+/*layout (constant_id = 0) */const int SSAO_KERNEL_SIZE = 32;// changed from 32
 /*layout (constant_id = 1) */const float SSAO_RADIUS = 1.2;//2.0
 /*layout (constant_id = 2) */const float SSAO_POWER = 2.5;//1.5;
 
 // This constant removes artifacts caused by neighbour fragments with minimal depth difference.
-#define CAP_MIN_DISTANCE 0.0001
+#define CAP_MIN_DISTANCE 0.0001//0.0001
 // This constant avoids the influence of fragments, which are too far away.
-#define CAP_MAX_DISTANCE 0.005
+#define CAP_MAX_DISTANCE 0.005//0.005
 
 
 layout (set = 0, binding = 3) uniform UBOSSAOKernel

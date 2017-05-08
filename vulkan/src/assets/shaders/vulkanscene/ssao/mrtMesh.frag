@@ -34,9 +34,8 @@ float linearDepth(float depth) {
 
 
 void main() {
-	//outPositionDepth = vec4(inPos, linearDepth(gl_FragCoord.z));
-	//outPositionDepth = vec4(inPos, gl_FragCoord.z);
-	outPositionDepth = vec4(gl_FragCoord.z, 0.0, 0.0, 0.0);
+
+	vec4 outNormal2;
 
 	vec4 color = texture(samplerColor, inUV);
 
@@ -51,10 +50,10 @@ void main() {
 		mat3 TBN = mat3(T, B, N);
 		vec3 nm = texture(samplerNormal, inUV).xyz * 2.0 - vec3(1.0);
 		nm = TBN * normalize(nm);
-		outNormal = vec4(nm * 0.5 + 0.5, 0.0);
+		outNormal2 = vec4(nm * 0.5 + 0.5, 0.0);
 		
 	} else {
-		outNormal = vec4(normalize(inNormal) * 0.5 + 0.5, 1.0);
+		outNormal2 = vec4(normalize(inNormal) * 0.5 + 0.5, 1.0);
 		if (color.a < 0.5) {
 			discard;
 		}
@@ -67,6 +66,15 @@ void main() {
 	outAlbedo.r = packHalf2x16(color.rg);
 	outAlbedo.g = packHalf2x16(color.ba);
 	outAlbedo.b = packHalf2x16(vec2(specular, 0.0));
+
+
+	outNormal = outNormal2;
+
+	//outPositionDepth = vec4(inPos, linearDepth(gl_FragCoord.z));
+	//outPositionDepth = vec4(inPos, gl_FragCoord.z);
+	// pack normals with depth:
+	//outPositionDepth = vec4(gl_FragCoord.z, outNormal2.x, outNormal2.y, outNormal2.z);
+	outPositionDepth = vec4(gl_FragCoord.z, 0.0, 0.0, 0.0);
 
 // test:
 
