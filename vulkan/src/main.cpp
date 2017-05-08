@@ -1334,7 +1334,7 @@ class VulkanExample : public vkx::vulkanApp {
 				vk::DescriptorType::eCombinedImageSampler,
 				1,
 				//&texDescriptorPosition),
-				&texDescriptorDepthStencil),
+				&texDescriptorPosition),
 			// set 3: Binding 2: Normals texture target
 			vkx::writeDescriptorSet(
 				rscs.descriptorSets->get("deferred"),
@@ -1368,13 +1368,6 @@ class VulkanExample : public vkx::vulkanApp {
 				vk::DescriptorType::eCombinedImageSampler,
 				6,
 				&texDescriptorShadowMap),
-
-			// set 3: Binding 7 depth
-			vkx::writeDescriptorSet(
-				rscs.descriptorSets->get("deferred"),
-				vk::DescriptorType::eCombinedImageSampler,
-				7,
-				&texDescriptorDepthStencil),
 
 
 		};
@@ -1458,7 +1451,7 @@ class VulkanExample : public vkx::vulkanApp {
 					vk::DescriptorType::eCombinedImageSampler,
 					0,
 					//&texDescriptorPosDepth),
-					&texDescriptorDepthStencil),
+					&texDescriptorPosition),
 				// Set 0: Binding 1: Fragment shader image sampler// FS Normals
 				vkx::writeDescriptorSet(
 					rscs.descriptorSets->get("offscreen.ssao.generate"),

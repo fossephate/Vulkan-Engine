@@ -210,8 +210,6 @@ void main() {
 	//vec3 worldPos = samplerPos.rgb;
 
 
-
-
 	//normal = vec3(normal.x, -normal.z, normal.y);
 	//normal = vec3(0.0, 0.0, 0.0);
 
@@ -279,7 +277,7 @@ void main() {
 
 		//float sampleDepth = -texture(samplerPositionDepth, offset.xy).w;
 		//float sampleDepth = -texture(samplerPositionDepth, samplePointTexCoord.xy).a;
-		float sampleDepth = -texture(samplerDepth, samplePointTexCoord.xy).r;
+		float sampleDepth = -linearDepth(texture(samplerDepth, samplePointTexCoord.xy).r);
 
 		// float delta = samplePointNDC.z - zSceneNDC;
 		// // If scene fragment is before (smaller in z) sample point, increase occlusion.
