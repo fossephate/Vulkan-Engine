@@ -346,6 +346,7 @@ vec3 viewPosFromDepth(vec2 texCoord, float depth) {
 
 
 
+
 void main() {
 
     // Get G-Buffer values
@@ -358,6 +359,7 @@ void main() {
     vec3 viewPos = vec3(ubo.view * vec4(worldPos, 1.0));// calculate view space position
     
     
+
 
     vec3 normal = texture(samplerNormal, inUV).rgb * 2.0 - 1.0;// world space normal
     //vec3 normal = texture(samplerDepth, inUV).gba * 2.0 - 1.0;// world space normal
@@ -430,7 +432,6 @@ void main() {
 
             fragcolor += (diffuse + specular) * color.rgb * light.color.rgb * attenuation;
         }
-
 
 
 

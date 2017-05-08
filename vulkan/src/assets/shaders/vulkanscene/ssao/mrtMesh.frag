@@ -73,8 +73,13 @@ void main() {
 	//outPositionDepth = vec4(inPos, linearDepth(gl_FragCoord.z));
 	//outPositionDepth = vec4(inPos, gl_FragCoord.z);
 	// pack normals with depth:
-	//outPositionDepth = vec4(gl_FragCoord.z, outNormal2.x, outNormal2.y, outNormal2.z);
+	//outPositionDepth = vec4(gl_FragCoord.z, outNormal2.xyz);
 	outPositionDepth = vec4(gl_FragCoord.z, 0.0, 0.0, 0.0);
+	//outPositionDepth = vec4(outNormal2.xyz, gl_FragCoord.z);
+	//outPositionDepth = vec4(gl_FragCoord.z, 0.0, 0.0, 0.0);
+	// outPositionDepth.r = gl_FragCoord.z;
+	//outPositionDepth.b = packHalf2x16(outNormal2.gb);
+	//outPositionDepth.a = packHalf2x16(outNormal2.ba);
 
 // test:
 
