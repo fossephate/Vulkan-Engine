@@ -2143,7 +2143,7 @@ class VulkanExample : public vkx::vulkanApp {
 		updateUniformBufferShadow();
 
 		// Current view position
-		//uboFSLights.viewPos = glm::vec4(camera.transform.translation, 0.0f) * glm::vec4(-1.0f);
+		uboFSLights.viewPos = glm::vec4(camera.transform.translation, 0.0f) * glm::vec4(-1.0f);
 
 		uboFSLights.view = camera.matrices.view;
 		uboFSLights.model = glm::mat4();
