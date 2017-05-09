@@ -142,6 +142,10 @@ btConvexHullShape* createConvexHullFromMesh(vkx::MeshLoader *meshLoader, float s
 
 
 
+
+
+
+
 // Wrapper functions for aligned memory allocation
 // There is currently no standard for this in C++ that works across all platforms and vendors, so we abstract this
 void* alignedAlloc(size_t size, size_t alignment) {
@@ -2250,6 +2254,42 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
+	// temporary:
+	void createDomino(glm::vec3 pos, float angle) {
+		auto dominoModel = std::make_shared<vkx::Model>(&context, &assetManager);
+		dominoModel->load(getAssetPath() + "models/domino3.fbx");
+		dominoModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
+
+		modelsDeferred.push_back(dominoModel);
+
+
+		auto physicsDomino = std::make_shared<vkx::PhysicsObject>(&physicsManager, dominoModel);
+
+		btCollisionShape* dominoShape = new btBoxShape(btVector3(1.0/2, 0.3/2, 1.9/2));
+		physicsDomino->createRigidBody(dominoShape, 2.5f);
+
+
+
+		btTransform tr;
+		tr.setIdentity();
+		tr.setOrigin(btVector3(pos.x, pos.y, pos.z));
+
+		btQuaternion quat;
+		quat.setEulerZYX(angle, 0.0, 0.0); //or quat.setEulerZYX depending on the ordering you want
+		tr.setRotation(quat);
+
+		physicsDomino->rigidBody->setCenterOfMassTransform(tr);
+
+
+		//physicsDomino->rigidBody->activate();
+		//physicsDomino->rigidBody->translate(btVector3(rnd(-10, 10), rnd(-10, 10), 10.));
+		physicsObjects.push_back(physicsDomino);
+
+		updateOffscreen = true;
+	}
+
+
+
 
 
 	void start() {
@@ -2263,8 +2303,9 @@ class VulkanExample : public vkx::vulkanApp {
 		models.push_back(planeModel);
 
 		auto physicsPlane = std::make_shared<vkx::PhysicsObject>(&physicsManager, planeModel);
-		btCollisionShape* boxShape = new btBoxShape(btVector3(btScalar(200.), btScalar(200.), btScalar(0.01)));
-		physicsPlane->createRigidBody(boxShape, 0.0f);
+		//btCollisionShape* boxShape = new btBoxShape(btVector3(btScalar(200.), btScalar(200.), btScalar(0.01)));
+		btCollisionShape* planeShape = new btStaticPlaneShape(btVector3(0.0, 0.0, 1.0), 0.0);
+		physicsPlane->createRigidBody(planeShape, 0.0f);
 		//btTransform t;
 		//t.setOrigin(btVector3(0., 0., 0.));
 		//physicsPlane->rigidBody->setWorldTransform(t);
@@ -2392,6 +2433,19 @@ class VulkanExample : public vkx::vulkanApp {
 		//t1.setOrigin(btVector3(0., 0., 4.));
 		//physicsWall1->rigidBody->setWorldTransform(t1);
 		//physicsObjects.push_back(physicsWall1);
+
+		for (int i = 0; i < 30; ++i) {
+
+			float t = i*0.5;
+
+			float x = sin(t) * 2;
+			float y = (i*1.2)-5.0;
+			float z = 0.3;
+
+			float angle = /*glm::radians(90.0)*/-cos(t);
+
+			createDomino(glm::vec3(x, y, z), angle);
+		}
 
 
 
@@ -2561,6 +2615,29 @@ class VulkanExample : public vkx::vulkanApp {
 			physicsObjects.push_back(physicsBall);
 
 			updateOffscreen = true;
+		}
+
+		if (keyStates.i) {
+			//auto dominoModel = std::make_shared<vkx::Model>(&context, &assetManager);
+			//dominoModel->load(getAssetPath() + "models/myCube.dae");
+			//dominoModel->createMeshes(SSAOVertexLayout, 0.45f, VERTEX_BUFFER_BIND_ID);
+
+			//modelsDeferred.push_back(dominoModel);
+
+
+			//auto physicsDomino = std::make_shared<vkx::PhysicsObject>(&physicsManager, dominoModel);
+
+			//btCollisionShape* dominoShape = new btBoxShape(btVector3(0.5, 0.1, 1.0));
+			//physicsDomino->createRigidBody(dominoShape, 1.0f);
+
+
+			//physicsDomino->rigidBody->activate();
+			//physicsDomino->rigidBody->translate(btVector3(rnd(-10, 10), rnd(-10, 10), 10.));
+			//physicsObjects.push_back(physicsDomino);
+
+			//updateOffscreen = true;
+
+			createDomino(glm::vec3(rnd(-10, 10), rnd(-10, 10), 3.), rnd(0.0, 90.0));
 		}
 
 
