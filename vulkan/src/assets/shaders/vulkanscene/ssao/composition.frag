@@ -67,13 +67,16 @@ struct DirectionalLight {
 #define AMBIENT_LIGHT 0.2
 #define SPOT_LIGHT_FOV_OFFSET 15
 
+#define NEAR_PLANE 1.0
+#define FAR_PLANE 512.0
+
 // #define SSAO_ENABLED 1;
 // #define USE_SHADOWS 1;
 // #define USE_PCF 1;
 
 const int SSAO_ENABLED = 1;
 const int USE_SHADOWS = 1;
-const int USE_PCF = 0;
+const int USE_PCF = 1;
 const float PI = 3.14159265359;
 
 
@@ -194,7 +197,7 @@ bool in_spotlight(SpotLight light, vec3 worldPos) {
 
 float filterPCF(vec4 sc, float layer) {
     ivec2 texDim = textureSize(samplerShadowMap, 0).xy;
-    float scale = 1.5;
+    float scale = 1.5;//1.5
     float dx = scale * 1.0 / float(texDim.x);
     float dy = scale * 1.0 / float(texDim.y);
 
@@ -212,8 +215,7 @@ float filterPCF(vec4 sc, float layer) {
     return shadowFactor / count;
 }
 
-#define NEAR_PLANE 1.0
-#define FAR_PLANE 512.0
+
 
 
 float linearDepth(float depth) {

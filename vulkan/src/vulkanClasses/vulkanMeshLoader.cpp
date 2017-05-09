@@ -260,10 +260,6 @@ namespace vkx {
 					&material.bump->descriptor)
 			};
 
-
-
-			///*context.*/device.updateDescriptorSets(writeDescriptorSets, {});
-
 			context->device.updateDescriptorSets(writeDescriptorSets, {});
 
 			this->assetManager->materials.add(material.name, material);
@@ -826,11 +822,11 @@ namespace vkx {
 
 
 		// todo: fix:
-		//if (this->assetManager->meshBuffers.present(filename)) {
-		//	// assumes correct vertex layout
-		//	this->meshBuffers = this->assetManager->meshBuffers.get(filename);
-		//	return;
-		//}
+		if (this->assetManager->meshBuffers.present(filename)) {
+			// assumes correct vertex layout
+			this->meshBuffers = this->assetManager->meshBuffers.get(filename);
+			return;
+		}
 
 		// for each mesh
 		for (int m = 0; m < m_Entries.size(); m++) {
@@ -857,18 +853,6 @@ namespace vkx {
 					verticesTest[i].normal = glm::make_vec3(&m_Entries[m].Vertices[i].m_normal.x);
 					// tangent
 					verticesTest[i].tangent = glm::make_vec3(&m_Entries[m].Vertices[i].m_tangent.x);
-
-					//// dummy vec4
-					//vertexBuffer.push_back(0.0f);
-					//vertexBuffer.push_back(0.0f);
-					//vertexBuffer.push_back(0.0f);
-					//vertexBuffer.push_back(0.0f);
-
-					//// dummy vec4
-					//vertexBuffer.push_back(0.0f);
-					//vertexBuffer.push_back(0.0f);
-					//vertexBuffer.push_back(0.0f);
-					//vertexBuffer.push_back(0.0f);
 
 				}
 
@@ -986,10 +970,6 @@ namespace vkx {
 								vertexBuffer.push_back(comp.z);
 								vertexBuffer.push_back(comp.w);
 							}
-
-
-							//int value = *reinterpret_cast<int *>(reinterpret_cast<char *>(&o1) +offsetof(TestMem, a));
-							//int value = *reinterpret_cast<int *>(reinterpret_cast<char *>(vert) + offset);
 
 						}
 

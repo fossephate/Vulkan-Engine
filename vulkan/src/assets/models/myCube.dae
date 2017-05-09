@@ -192,7 +192,7 @@
     </effect>
   </library_effects>
   <library_materials>
-    <material id="Material-material" name="Material">
+    <material id="Material-material" name="bricks">
       <instance_effect url="#Material-effect"/>
     </material>
   </library_materials>

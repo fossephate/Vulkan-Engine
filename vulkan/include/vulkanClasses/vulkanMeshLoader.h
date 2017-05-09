@@ -128,10 +128,10 @@ namespace vkx {
 			indices.destroy();
 		}
 
-		//~MeshBuffer() {
-		//	vertices.destroy();
-		//	indices.destroy();
-		//}
+		~MeshBuffer() {
+			vertices.destroy();
+			indices.destroy();
+		}
 	};
 
 

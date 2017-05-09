@@ -310,7 +310,7 @@ class VulkanExample : public vkx::vulkanApp {
 		glm::mat4 viewMatrix;	// view matrix (used in geometry shader and fragment shader)
 		float zNear = -32.0f;
 		float zFar = 32.0f;
-		float size = 70.0f;// size of the orthographic projection
+		float size = 15.0f;// size of the orthographic projection
 
 		float pad1;
 		float pad2;
@@ -438,13 +438,13 @@ class VulkanExample : public vkx::vulkanApp {
 		//glm::quat initialOrientation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 		//camera.setRotation(initialOrientation);
 
-		camera.setTranslation({ 0.0f, -5.0f, 3.0f });
+		camera.setTranslation({ 0.0f, -2.0f, 1.6f });
 		camera.rotateWorldX(PI / 2.0);
 
 
 
-		camera.setProjection(80.0f, (float)settings.windowSize.width / (float)settings.windowSize.height, 1.0f, 512.0f);
-
+		//camera.setProjection(80.0f, (float)settings.windowSize.width / (float)settings.windowSize.height, 1.0f, 512.0f);
+		camera.setProjection(80.0f, (float)settings.windowSize.width / (float)settings.windowSize.height, 0.1f, 256.0f);
 
 
 		matrixNodes.resize(1000);
@@ -1823,6 +1823,7 @@ class VulkanExample : public vkx::vulkanApp {
 			// Shadow pass doesn't use any color attachments
 			colorBlendState.attachmentCount = 0;
 			colorBlendState.pAttachments = nullptr;
+
 			// Cull front faces
 			rasterizationState.cullMode = vk::CullModeFlagBits::eFront;
 			//rasterizationState.cullMode = vk::CullModeFlagBits::eNone;
@@ -2021,8 +2022,8 @@ class VulkanExample : public vkx::vulkanApp {
 	}
 
 	void initLights() {
-		uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		uboFSLights.spotlights[1] = initLight(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		uboFSLights.spotlights[0] = initLight(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		uboFSLights.spotlights[1] = initLight(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
 		//uboFSLights.spotlights[0].position = glm::vec4(0.0f, 0.0f, 10.0f, 1.0f);
 		//uboFSLights.spotlights[0].color = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
@@ -2071,8 +2072,8 @@ class VulkanExample : public vkx::vulkanApp {
 
 		//uboFSLights.spotlights[0].target = glm::vec4(cos(globalP*8.0f)*9.0f, sin(globalP*8.0f)*4.0f, 0.0f, 0.0f);
 
-		uboFSLights.spotlights[0].target = glm::vec4(cos(globalP*4.0f)*10.0f, sin(globalP*4.0f)*10.0f, 0.0f, 0.0f);
-		uboFSLights.spotlights[1].target = glm::vec4(cos(-globalP*8.0f)*10.0f, sin(-globalP*8.0f)*10.0f, 0.0f, 0.0f);
+		uboFSLights.spotlights[0].target = glm::vec4(cos(globalP*4.0f)*1.0f, sin(globalP*4.0f)*1.0f, 0.0f, 0.0f);
+		uboFSLights.spotlights[1].target = glm::vec4(cos(-globalP*8.0f)*1.0f, sin(-globalP*8.0f)*1.0f, 0.0f, 0.0f);
 
 		// r = 8sin(2t)
 		// x = rcos(t)
@@ -2080,7 +2081,7 @@ class VulkanExample : public vkx::vulkanApp {
 		// x = 8sin(2*globalP)*cos(globalP)
 		// y = 8sin(2*globalP)*sin(globalP)
 
-		uboFSLights.spotlights[1].target = glm::vec4(8*sin(4 * globalP)*cos(globalP), 8*sin(4 * globalP)*sin(globalP), 0.0f, 0.0f);
+		uboFSLights.spotlights[1].target = glm::vec4(1*sin(4 * globalP)*cos(globalP), 1*sin(4 * globalP)*sin(globalP), 0.0f, 0.0f);
 
 
 		//uboFSLights.directionalLights[0].direction = glm::normalize(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f) - glm::vec4(camera.transform.translation, 0.0f));
@@ -2258,14 +2259,14 @@ class VulkanExample : public vkx::vulkanApp {
 	void createDomino(glm::vec3 pos, float angle) {
 		auto dominoModel = std::make_shared<vkx::Model>(&context, &assetManager);
 		dominoModel->load(getAssetPath() + "models/domino3.fbx");
-		dominoModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
+		dominoModel->createMeshes(SSAOVertexLayout, 0.125f, VERTEX_BUFFER_BIND_ID);
 
 		modelsDeferred.push_back(dominoModel);
 
 
 		auto physicsDomino = std::make_shared<vkx::PhysicsObject>(&physicsManager, dominoModel);
 
-		btCollisionShape* dominoShape = new btBoxShape(btVector3(1.0/2, 0.3/2, 1.9/2));
+		btCollisionShape* dominoShape = new btBoxShape(btVector3(1.0/8, 0.3/8, 1.9/8));
 		physicsDomino->createRigidBody(dominoShape, 2.5f);
 
 
@@ -2353,7 +2354,7 @@ class VulkanExample : public vkx::vulkanApp {
 		if (!false) {
 			auto sponzaModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			sponzaModel->load(getAssetPath() + "models/sponza.dae");
-			sponzaModel->createMeshes(SSAOVertexLayout, 0.3f, VERTEX_BUFFER_BIND_ID);
+			sponzaModel->createMeshes(SSAOVertexLayout, 0.08f, VERTEX_BUFFER_BIND_ID);//0.3
 			sponzaModel->rotateWorldX(PI / 2.0);
 			sponzaModel->rotateWorldZ(PI / 2.0);
 			//sponzaModel->rotateWorldX(glm::radians(90.0f));
@@ -2369,7 +2370,7 @@ class VulkanExample : public vkx::vulkanApp {
 		}
 
 
-		//auto boxModel = std::make_shared<vkx::Model>(&context, &assetManager);
+		//autoModel = std::make_shared<vkx::Model>(&context, &assetManager);
 		//boxModel->load(getAssetPath() + "models/boxVhacd.fbx");
 		//boxModel->createMeshes(meshVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 		////boxModel->rotateWorldX(PI / 2.0);
@@ -2408,7 +2409,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 			auto testSkinnedMesh = std::make_shared<vkx::SkinnedMesh>(&context, &assetManager);
 			testSkinnedMesh->load(getAssetPath() + "models/goblin.dae");// breaks size?
-			testSkinnedMesh->createSkinnedMeshBuffer(SSAOVertexLayout, 0.0005f);
+			testSkinnedMesh->createSkinnedMeshBuffer(SSAOVertexLayout, 0.000005f);
 			//todo: figure out why there must be atleast one deferred skinned mesh here
 			//inorder to not cause problems
 			//fixed?
@@ -2426,6 +2427,13 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
+		//auto skyboxModel = std::make_shared<vkx::Model>(&context, &assetManager);
+		//skyboxModel->load(getAssetPath() + "models/myCube.dae");
+		//skyboxModel->createMeshes(SSAOVertexLayout, 10.0f, VERTEX_BUFFER_BIND_ID);
+		//modelsDeferred.push_back(skyboxModel);
+
+
+
 		//auto physicsWall1 = std::make_shared<vkx::PhysicsObject>(&physicsManager, wallModel1);
 		//btCollisionShape *wallShape1 = new btBoxShape(btVector3(btScalar(1.0), btScalar(1.), btScalar(0.1)));
 		//physicsWall1->createRigidBody(wallShape1, 0.0f);
@@ -2436,13 +2444,16 @@ class VulkanExample : public vkx::vulkanApp {
 
 		for (int i = 0; i < 30; ++i) {
 
-			float t = i*0.5;
+			float xFreq = 0.4;
+			float Xamplitude = 0.5;
 
-			float x = sin(t) * 2;
-			float y = (i*1.2)-5.0;
+			float dSpacing = 0.3;
+
+			float x = sin(i*xFreq) * Xamplitude;
+			float y = (i*dSpacing)-2.0;
 			float z = 0.3;
 
-			float angle = /*glm::radians(90.0)*/-cos(t);
+			float angle = /*glm::radians(90.0)*/-cos(i*xFreq);
 
 			createDomino(glm::vec3(x, y, z), angle);
 		}
@@ -2476,7 +2487,7 @@ class VulkanExample : public vkx::vulkanApp {
 		updateOffscreen = false;
 
 
-		camera.movementSpeed = 0.0018f;
+		camera.movementSpeed = 0.0012f;
 
 		camera.movementSpeed = camera.movementSpeed*deltaTime*1000.0;
 
@@ -2601,17 +2612,20 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 		if (keyStates.space) {
+
+			float scale = 0.1f;
+
 			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			testModel->load(getAssetPath() + "models/monkey.fbx");
-			testModel->createMeshes(SSAOVertexLayout, 0.5f, VERTEX_BUFFER_BIND_ID);
+			testModel->createMeshes(SSAOVertexLayout, scale, VERTEX_BUFFER_BIND_ID);
 			//testModel->loadAndCreateMeshes(getAssetPath() + "models/monkey.fbx", SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 			modelsDeferred.push_back(testModel);
 
 			auto physicsBall = std::make_shared<vkx::PhysicsObject>(&physicsManager, testModel);
-			btConvexHullShape *convexHullShape = createConvexHullFromMesh(testModel->meshLoader);
+			btConvexHullShape *convexHullShape = createConvexHullFromMesh(testModel->meshLoader, scale);
 			physicsBall->createRigidBody(convexHullShape, 1.0f);
 			physicsBall->rigidBody->activate();
-			physicsBall->rigidBody->translate(btVector3(0., 0., 10.));
+			physicsBall->rigidBody->translate(btVector3(0., 0., 3.));
 			physicsObjects.push_back(physicsBall);
 
 			updateOffscreen = true;
@@ -2637,15 +2651,17 @@ class VulkanExample : public vkx::vulkanApp {
 
 			//updateOffscreen = true;
 
-			createDomino(glm::vec3(rnd(-10, 10), rnd(-10, 10), 3.), rnd(0.0, 90.0));
+			createDomino(glm::vec3(rnd(-10, 10), rnd(-2, 2), 3.), rnd(0.0, 90.0));
 		}
 
 
 		if (keyStates.b) {
 
+			float scale = 0.1f;
+
 			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			testModel->load(getAssetPath() + "models/myCube.dae");
-			testModel->createMeshes(SSAOVertexLayout, 0.45f, VERTEX_BUFFER_BIND_ID);
+			testModel->createMeshes(SSAOVertexLayout, scale, VERTEX_BUFFER_BIND_ID);
 
 			//testModel->loadAndCreateMeshes(getAssetPath() + "models/myCube.dae", SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
 
@@ -2653,10 +2669,10 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 			auto physicsBall = std::make_shared<vkx::PhysicsObject>(&physicsManager, testModel);
-			btConvexHullShape *convexHullShape = createConvexHullFromMesh(testModel->meshLoader, 0.45f);
+			btConvexHullShape *convexHullShape = createConvexHullFromMesh(testModel->meshLoader, scale);
 			physicsBall->createRigidBody(convexHullShape, 1.0f);
 			physicsBall->rigidBody->activate();
-			physicsBall->rigidBody->translate(btVector3(rnd(-10, 10), rnd(-10, 10), 10.));
+			physicsBall->rigidBody->translate(btVector3(rnd(-2, 2), rnd(-2, 2), 3.));
 			physicsObjects.push_back(physicsBall);
 
 			//updateMaterialBuffer();
@@ -2667,18 +2683,20 @@ class VulkanExample : public vkx::vulkanApp {
 
 		if (keyStates.f) {
 
+			float scale = 0.1f;
+
 			auto testModel = std::make_shared<vkx::Model>(&context, &assetManager);
 			testModel->load(getAssetPath() + "models/sphere.dae");
-			testModel->createMeshes(SSAOVertexLayout, 1.0f, VERTEX_BUFFER_BIND_ID);
+			testModel->createMeshes(SSAOVertexLayout, scale, VERTEX_BUFFER_BIND_ID);
 			modelsDeferred.push_back(testModel);
 
 
 
 			auto physicsBall = std::make_shared<vkx::PhysicsObject>(&physicsManager, testModel);
-			btConvexHullShape *convexHullShape = createConvexHullFromMesh(testModel->meshLoader);
+			btConvexHullShape *convexHullShape = createConvexHullFromMesh(testModel->meshLoader, scale);
 			physicsBall->createRigidBody(convexHullShape, 1.0f);
 			physicsBall->rigidBody->activate();
-			physicsBall->rigidBody->translate(btVector3(0., 0., 10.));
+			physicsBall->rigidBody->translate(btVector3(0., 0., 3.));
 			physicsObjects.push_back(physicsBall);
 
 
@@ -2692,7 +2710,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		if (keyStates.m) {
 			if (modelsDeferred.size() > 3) {
-				modelsDeferred[modelsDeferred.size() - 1]->destroy();
+				//modelsDeferred[modelsDeferred.size() - 1]->destroy();
 				modelsDeferred.pop_back();
 				updateDraw = true;// probably not necessary here
 				updateOffscreen = true;
@@ -3125,7 +3143,7 @@ class VulkanExample : public vkx::vulkanApp {
 		//ImGui::DragFloat4("pos", &uboShadowGS.pos[1].x, 0.1f);
 		//ImGui::DragFloat4("pos", &uboShadowGS.pos[2].x, 0.1f);
 		ImGui::DragFloat("Depth Bias Slope", &settings.depthBiasSlope, 0.01f);
-		ImGui::DragFloat("Depth Bias Constant", &settings.depthBiasConstant, 0.1f);
+		ImGui::DragFloat("Depth Bias Constant", &settings.depthBiasConstant, 100.0f);
 		ImGui::DragFloat("Spot Light FOV", &uboFSLights.spotlights[0].innerAngle, 0.05f);
 		ImGui::DragFloat3("Spot Light Position", &uboFSLights.spotlights[0].position.x, 0.1f);
 		ImGui::DragFloat3("Spot Light Target", &uboFSLights.spotlights[0].target.x, 0.1f);

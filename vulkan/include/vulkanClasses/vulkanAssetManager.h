@@ -601,7 +601,7 @@ namespace vkx {
 			MeshBuffersList meshBuffers;
 
 			void destroy() {
-				//textures.destroy();
+				textures.destroy();
 				//materials.destroy();
 				//scenes.~SceneList();
 			}

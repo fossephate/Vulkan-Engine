@@ -3,7 +3,7 @@
 #include "vulkanContext.h"
 #include "vulkanFramebuffer.h"
 
-#define SHADOW_MAP_DIM 2048
+#define SHADOW_MAP_DIM 2048// 2048
 #define NUM_LIGHTS_TOTAL 3
 
 namespace vkx {
@@ -255,9 +255,9 @@ namespace vkx {
 
 			// Find a suitable depth format
 			
-			//vk::Format depthFormat = vkx::getSupportedDepthFormat(context.physicalDevice);
+			vk::Format depthFormat = vkx::getSupportedDepthFormat(context.physicalDevice);
 			//vk::Format depthFormat = vk::Format::eD32SfloatS8Uint;
-			vk::Format depthFormat = vk::Format::eD32Sfloat;
+			//vk::Format depthFormat = vk::Format::eD32Sfloat;
 			deferredFramebuffer.createAttachment(depthFormat, vk::ImageUsageFlagBits::eDepthStencilAttachment, this->size.x, this->size.y);
 
 			//VulkanExampleBase::flushCommandBuffer(layoutCmd, queue, true);
