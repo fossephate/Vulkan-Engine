@@ -76,8 +76,11 @@ void main() {
 	// inUV.w = number of light source
 	//vec4 shadow = texture(samplerShadowMap, inUV.st);
 	//vec4 shadow = texture(samplerShadowMap, vec3(inUV));
-	vec4 shadow = texture(samplerShadowMap, vec3(inUV.st, 2));
+	vec4 shadow = texture(samplerShadowMap, vec3(inUV.st, 3));
 	components[2] = vec3(shadow.r);
+
+	vec4 shadow2 = texture(samplerShadowMap, vec3(inUV.st, 2));
+	components[0] = vec3(shadow2.r);
 
 	//components[2] = vec3(linearDepth(shadow.r));
 

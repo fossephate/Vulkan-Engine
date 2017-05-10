@@ -4,7 +4,7 @@
 #include "vulkanFramebuffer.h"
 
 #define SHADOW_MAP_DIM 2048// 2048
-#define NUM_LIGHTS_TOTAL 3
+#define NUM_LIGHTS_TOTAL 4
 
 namespace vkx {
 
@@ -417,7 +417,8 @@ namespace vkx {
 
 			vk::ImageUsageFlags usage = vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled;
 
-			vk::Format shadowMapFormat = vk::Format::eD32SfloatS8Uint;
+			//vk::Format shadowMapFormat = vk::Format::eD32SfloatS8Uint;
+			vk::Format shadowMapFormat = vk::Format::eD32Sfloat;
 
 			//shadowFramebuffer.createAttachment(vk::Format::eR8Unorm, vk::ImageUsageFlagBits::eColorAttachment, this->size.x, this->size.y, 1);
 			// depth stencil attachment:

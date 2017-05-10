@@ -42,26 +42,38 @@ struct SpotLight {
     float pad1;
     float pad2;
     float pad3;
-
 };
 
 struct DirectionalLight {
     vec4 direction;
     vec4 color;
     mat4 viewMatrix;
+
     float zNear;
     float zFar;
 
     float pad1;
     float pad2;
+	float pad3;
+	float pad4;
+};
+
+struct CSMLight {
+    vec4 direction;
+    vec4 color;
+    mat4 viewMatrix;
+
+    float zNear;
+    float zFar;
 };
 
 
 
-#define NUM_POINT_LIGHTS 100
+#define NUM_POINT_LIGHTS 70
 #define NUM_SPOT_LIGHTS 2
 #define NUM_DIR_LIGHTS 1
-#define NUM_LIGHTS_TOTAL 3
+#define NUM_CSM_LIGHTS 1
+#define NUM_LIGHTS_TOTAL 4
 
 #define SHADOW_FACTOR 0.4//0.25//0.7
 #define AMBIENT_LIGHT 0.2
@@ -76,7 +88,7 @@ struct DirectionalLight {
 
 const int SSAO_ENABLED = 1;
 const int USE_SHADOWS = 1;
-const int USE_PCF = 1;
+const int USE_PCF = 0;
 const float PI = 3.14159265359;
 
 
@@ -85,14 +97,15 @@ const float PI = 3.14159265359;
 layout (set = 3, binding = 6) uniform UBO 
 {
     vec4 viewPos;
-    mat4 model;// added
-    mat4 view;// added
+    mat4 model;
+    mat4 view;
     mat4 projection;
     mat4 invViewProj;
     
     PointLight pointlights[NUM_POINT_LIGHTS];
     SpotLight spotlights[NUM_SPOT_LIGHTS];
     DirectionalLight directionalLights[NUM_DIR_LIGHTS];
+    CSMLight csmlights[NUM_CSM_LIGHTS];
     
 
 } ubo;
@@ -701,8 +714,8 @@ void main() {
                 fragcolor *= shadowFactor;
             }
 
-            //for(int i = NUM_SPOT_LIGHTS; i < NUM_DIR_LIGHTS+NUM_SPOT_LIGHTS; ++i) {
-            for(int i = 0; i < 1; ++i) {
+            // directional lights:
+            for(int i = 0; i < NUM_DIR_LIGHTS; ++i) {
                 vec4 shadowClip = ubo.directionalLights[i].viewMatrix * vec4(worldPos, 1.0);
 
                 float shadowFactor;
@@ -719,6 +732,30 @@ void main() {
 	                }
 
                 }
+
+                fragcolor *= shadowFactor;
+            }
+
+
+
+            // csm lights:
+            for(int i = 0; i < NUM_CSM_LIGHTS; ++i) {
+                vec4 shadowClip = ubo.csmlights[i].viewMatrix * vec4(worldPos, 1.0);
+
+                float shadowFactor = 1.0;
+                
+                // if the fragment isn't in the light's view frustrum, it can't be in shadow, either
+                // seems to fix lots of problems
+                //if(!in_frustum(ubo.csmlights[i].viewMatrix, worldPos)) {
+                	//shadowFactor = 1.0;
+                //} else {
+	                if(USE_PCF > 0) {
+	                    shadowFactor = filterPCF(shadowClip, i+NUM_SPOT_LIGHTS+NUM_DIR_LIGHTS);
+	                } else {
+	                    shadowFactor = textureProj(shadowClip, i+NUM_SPOT_LIGHTS+NUM_DIR_LIGHTS, vec2(0.0));
+	                }
+
+                //}
 
                 fragcolor *= shadowFactor;
             }

@@ -27,6 +27,7 @@
 #include <iostream>
 #include <chrono>
 #include <memory>
+#include <limits>
 
 
 #define GLM_FORCE_RADIANS

@@ -27,10 +27,11 @@
 #define SSAO_RADIUS 2.0f
 #define SSAO_NOISE_DIM 4
 
-#define NUM_POINT_LIGHTS 100
+#define NUM_POINT_LIGHTS 70// 100
 #define NUM_SPOT_LIGHTS 2
 #define NUM_DIR_LIGHTS 1
-#define NUM_LIGHTS_TOTAL 3
+#define NUM_CSM_LIGHTS 1
+#define NUM_LIGHTS_TOTAL 4
 
 #define SSAO_ON 1
 
@@ -280,6 +281,7 @@ class VulkanExample : public vkx::vulkanApp {
 	struct PointLight {
 		glm::vec4 position;
 		glm::vec4 color;
+
 		float radius;
 		float quadraticFalloff;
 		float linearFalloff;
@@ -304,7 +306,6 @@ class VulkanExample : public vkx::vulkanApp {
 	};
 
 	struct DirectionalLight {
-		//glm::vec4 direction = glm::vec4(0.3f, 0.4f, -0.5f, 0.0f);	// unit directional vector
 		glm::vec4 direction = glm::vec4(0.3f, 0.0f, -10.0f, 0.0f);	// unit directional vector
 		glm::vec4 color;		// color of the light
 		glm::mat4 viewMatrix;	// view matrix (used in geometry shader and fragment shader)
@@ -316,6 +317,21 @@ class VulkanExample : public vkx::vulkanApp {
 		float pad2;
 		float pad3;
 		float pad4;
+
+		//float pad5;
+		//float pad6;
+		//float pad7;
+		//float pad8;
+	};
+
+
+	struct CSMLight {
+		glm::vec4 direction = glm::vec4(0.3f, 0.0f, -10.0f, 0.0f);	// unit directional vector
+		glm::vec4 color;		// color of the light
+		glm::mat4 viewMatrix;	// view matrix (used in geometry shader and fragment shader)
+		float zNear = -32.0f;
+		float zFar = 32.0f;
+		float size = 15.0f;// size of the orthographic projection
 	};
 
 	struct {
@@ -330,6 +346,7 @@ class VulkanExample : public vkx::vulkanApp {
 		PointLight pointlights[NUM_POINT_LIGHTS];
 		SpotLight spotlights[NUM_SPOT_LIGHTS];
 		DirectionalLight directionalLights[NUM_DIR_LIGHTS];
+		CSMLight csmlights[NUM_CSM_LIGHTS];
 	} uboFSLights;
 
 	// ssao
@@ -351,6 +368,7 @@ class VulkanExample : public vkx::vulkanApp {
 	struct {
 		glm::mat4 spotlightMVP[NUM_SPOT_LIGHTS];
 		glm::mat4 dirlightMVP[NUM_DIR_LIGHTS];
+		glm::mat4 csmlightMVP[NUM_CSM_LIGHTS];
 	} uboShadowGS;
 
 	struct {
@@ -2092,10 +2110,11 @@ class VulkanExample : public vkx::vulkanApp {
 		uboFSLights.directionalLights[0].pad1 = globalP;
 
 
-		/*float zNear = 1.0f;
-		float zFar = 512.0f;*/
-		//float zNear = 0.1f;
-		//float zFar = 64.0f;
+		// csm lights:
+		uboFSLights.csmlights[0].color = glm::vec4(1.0f, 1.0f, 1.0f, 0.0f)*0.04f;
+
+
+
 		float zNear = 0.1f;
 		float zFar = 64.0f;
 		float lightFOV = 45.0f;
@@ -2140,6 +2159,221 @@ class VulkanExample : public vkx::vulkanApp {
 			uboShadowGS.dirlightMVP[i] = shadowProj * shadowView * shadowModel;
 			light.viewMatrix = uboShadowGS.dirlightMVP[i];
 		}
+
+
+		// csm lights:
+		for (uint32_t i = 0; i < NUM_CSM_LIGHTS; i++) {
+
+			CSMLight &light = uboFSLights.csmlights[i];
+
+			glm::mat4 shadowProj = glm::ortho(-light.size, light.size, -light.size, light.size, light.zNear, light.zFar);
+			shadowProj[1][1] *= -1;// because glm produces matrix for opengl and this is vulkan
+
+			glm::mat4 shadowView = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(light.direction), glm::vec3(0.0f, 0.0f, 1.0f));
+
+			//glm::mat4 shadowProj = camera.matrices.projection;
+			//glm::mat4 shadowView = camera.matrices.view;
+
+
+			glm::mat4 shadowModel = glm::mat4();
+
+			uboShadowGS.csmlightMVP[i] = shadowProj * shadowView * shadowModel;
+			light.viewMatrix = uboShadowGS.csmlightMVP[i];
+		}
+
+
+
+
+
+
+
+		//{
+
+
+		//	// Get the inverse of the view transform
+		//	//p.SetCamera(m_pGameCamera->GetPos(), m_pGameCamera->GetTarget(), m_pGameCamera->GetUp());
+		//	//glm::mat4 Cam = p.GetViewTrans();
+		//	//glm::mat4 CamInv = Cam.Inverse();
+		//	glm::mat4 CamInv = glm::inverse(camera.matrices.view);
+
+		//	// Get the light space tranform
+		//	//p.SetCamera(glm::vec3(0.0f, 0.0f, 0.0f), m_dirLight.Direction, glm::vec3(0.0f, 1.0f, 0.0f));
+		//	//glm::mat4 LightM = p.GetViewTrans();
+
+		//	glm::mat4 LightM = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(light.direction), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		//	float ar = m_persProjInfo.Height / m_persProjInfo.Width;
+		//	float tanHalfHFOV = tanf(glm::radians(m_persProjInfo.FOV / 2.0f));
+		//	float tanHalfVFOV = tanf(glm::radians((m_persProjInfo.FOV * ar) / 2.0f));
+
+		//	for (int i = 0; i < NUM_CASCADES; i++) {
+		//		float xn = m_cascadeEnd[i] * tanHalfHFOV;
+		//		float xf = m_cascadeEnd[i + 1] * tanHalfHFOV;
+		//		float yn = m_cascadeEnd[i] * tanHalfVFOV;
+		//		float yf = m_cascadeEnd[i + 1] * tanHalfVFOV;
+
+		//		glm::vec4 frustumCorners[NUM_FRUSTUM_CORNERS] = {
+		//			// near face
+		//			glm::vec4(xn, yn, m_cascadeEnd[i], 1.0),
+		//			glm::vec4(-xn, yn, m_cascadeEnd[i], 1.0),
+		//			glm::vec4(xn, -yn, m_cascadeEnd[i], 1.0),
+		//			glm::vec4(-xn, -yn, m_cascadeEnd[i], 1.0),
+
+		//			// far face
+		//			glm::vec4(xf, yf, m_cascadeEnd[i + 1], 1.0),
+		//			glm::vec4(-xf, yf, m_cascadeEnd[i + 1], 1.0),
+		//			glm::vec4(xf, -yf, m_cascadeEnd[i + 1], 1.0),
+		//			glm::vec4(-xf, -yf, m_cascadeEnd[i + 1], 1.0)
+		//		};
+
+
+
+
+		//		glm::vec4 frustumCornersL[NUM_FRUSTUM_CORNERS];
+
+		//		float minX = std::numeric_limits::max();
+		//		float maxX = std::numeric_limits::min();
+		//		float minY = std::numeric_limits::max();
+		//		float maxY = std::numeric_limits::min();
+		//		float minZ = std::numeric_limits::max();
+		//		float maxZ = std::numeric_limits::min();
+
+		//		for (int j = 0; j < NUM_FRUSTUM_CORNERS; j++) {
+
+		//			// Transform the frustum coordinate from view to world space
+		//			glm::vec4 vW = CamInv * frustumCorners[j];
+
+		//			// Transform the frustum coordinate from world to light space
+		//			frustumCornersL[j] = LightM * vW;
+
+		//			minX = min(minX, frustumCornersL[j].x);
+		//			maxX = max(maxX, frustumCornersL[j].x);
+		//			minY = min(minY, frustumCornersL[j].y);
+		//			maxY = max(maxY, frustumCornersL[j].y);
+		//			minZ = min(minZ, frustumCornersL[j].z);
+		//			maxZ = max(maxZ, frustumCornersL[j].z);
+		//		}
+
+
+
+
+		//		m_shadowOrthoProjInfo[i].r = maxX;
+		//		m_shadowOrthoProjInfo[i].l = minX;
+		//		m_shadowOrthoProjInfo[i].b = minY;
+		//		m_shadowOrthoProjInfo[i].t = maxY;
+		//		m_shadowOrthoProjInfo[i].f = maxZ;
+		//		m_shadowOrthoProjInfo[i].n = minZ;
+		//	}
+		//}
+
+
+
+		{
+
+
+
+
+			// Shorten the view frustum according to the shadow view distance
+			Matrix cameraMatrix;
+			mainCamera.GetWorldMatrix(out cameraMatrix);
+
+			for (int i = 0; i < 4; i++)
+				splitFrustumCornersVS[i] = frustumCornersVS[i + 4] * (minZ / mainCamera.FarClip);
+
+			for (int i = 4; i < 8; i++)
+				splitFrustumCornersVS[i] = frustumCornersVS[i] * (maxZ / mainCamera.FarClip);
+
+			Vector3.Transform(splitFrustumCornersVS, ref cameraMatrix, frustumCornersWS);
+
+			// Position the shadow-caster camera so that it's looking at the centroid,
+			// and backed up in the direction of the sunlight
+			Matrix viewMatrix = Matrix.CreateLookAt(Vector3.Zero - (light.Direction * 100), Vector3.Zero, new Vector3(0, 1, 0));
+
+			// Determine the position of the frustum corners in light space
+			Vector3.Transform(frustumCornersWS, ref viewMatrix, frustumCornersLS);
+
+			
+
+			// Calculate an orthographic projection by sizing a bounding box
+			// to the frustum coordinates in light space
+			Vector3 mins = frustumCornersLS[0];
+			Vector3 maxes = frustumCornersLS[0];
+			for (int i = 0; i < 8; i++)
+			{
+				if (frustumCornersLS[i].X > maxes.X)
+					maxes.X = frustumCornersLS[i].X;
+				else if (frustumCornersLS[i].X < mins.X)
+					mins.X = frustumCornersLS[i].X;
+				if (frustumCornersLS[i].Y > maxes.Y)
+					maxes.Y = frustumCornersLS[i].Y;
+				else if (frustumCornersLS[i].Y < mins.Y)
+					mins.Y = frustumCornersLS[i].Y;
+				if (frustumCornersLS[i].Z > maxes.Z)
+					maxes.Z = frustumCornersLS[i].Z;
+				else if (frustumCornersLS[i].Z < mins.Z)
+					mins.Z = frustumCornersLS[i].Z;
+			}
+
+			// We snap the camera to 1 pixel increments so that moving the camera does not cause the shadows to jitter.
+			// This is a matter of integer dividing by the world space size of a texel
+			float diagonalLength = (frustumCornersWS[0] - frustumCornersWS[6]).Length();
+			diagonalLength += 2;    //Without this, the shadow map isn't big enough in the world.
+			float worldsUnitsPerTexel = diagonalLength / (float)ShadowMapSize;
+
+			Vector3 vBorderOffset = (new Vector3(diagonalLength, diagonalLength, diagonalLength) - (maxes - mins)) * 0.5f;
+			maxes += vBorderOffset;
+			mins -= vBorderOffset;
+
+			mins /= worldsUnitsPerTexel;
+			mins.X = (float)Math.Floor(mins.X);
+			mins.Y = (float)Math.Floor(mins.Y);
+			mins.Z = (float)Math.Floor(mins.Z);
+			mins *= worldsUnitsPerTexel;
+
+			maxes /= worldsUnitsPerTexel;
+			maxes.X = (float)Math.Floor(maxes.X);
+			maxes.Y = (float)Math.Floor(maxes.Y);
+			maxes.Z = (float)Math.Floor(maxes.Z);
+			maxes *= worldsUnitsPerTexel;
+
+			// Create an orthographic camera for use as a shadow caster
+			const float nearClipOffset = 100.0f;
+			OrthographicCamera lightCamera = new OrthographicCamera(mins.X, maxes.X, mins.Y, maxes.Y, -maxes.Z - nearClipOffset, -mins.Z);
+			lightCamera.SetViewMatrix(ref viewMatrix);
+
+			return lightCamera;
+
+
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 		// test:
 		//uboFSLights.spotlights[0].viewMatrix = camera.matrices.projection * camera.matrices.view;
@@ -3158,6 +3392,8 @@ class VulkanExample : public vkx::vulkanApp {
 		ImGui::DragFloat("Directional Light Near", &uboFSLights.directionalLights[0].zNear, 0.05f);
 		ImGui::DragFloat("Directional Light Far", &uboFSLights.directionalLights[0].zFar, 0.05f);
 		ImGui::DragFloat("Directional Light size", &uboFSLights.directionalLights[0].size, 0.05f);
+
+		ImGui::DragFloat3("CSM Light Dir", &uboFSLights.csmlights[0].direction.x, 0.05f);
 
 
 		//ImGui::DragIntRange2("range int (no bounds)", &begin_i, &end_i, 5, 0, 0, "Min: %.0f units", "Max: %.0f units");
