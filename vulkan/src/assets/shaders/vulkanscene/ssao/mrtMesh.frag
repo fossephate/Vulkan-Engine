@@ -15,8 +15,8 @@ layout (location = 1) out vec4 outNormal;
 layout (location = 2) out uvec4 outAlbedo;// this is a uvec
 
 
-const float NEAR_PLANE = 1.0f;
-const float FAR_PLANE = 512.0f;
+const float NEAR_PLANE = 0.1;
+const float FAR_PLANE = 256.0;
 const int ENABLE_DISCARD = 0;
 
 

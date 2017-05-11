@@ -72,8 +72,8 @@ float rand(vec2 co){
 
 
 
-#define NEAR_PLANE 1.0
-#define FAR_PLANE 512.0
+#define NEAR_PLANE 0.1
+#define FAR_PLANE 256.0
 
 
 float linearDepth(float depth) {
