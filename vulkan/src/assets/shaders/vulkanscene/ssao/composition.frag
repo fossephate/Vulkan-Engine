@@ -763,16 +763,16 @@ void main() {
                 
                 // if the fragment isn't in the light's view frustrum, it can't be in shadow, either
                 // seems to fix lots of problems
-                if(!in_frustum(ubo.directionalLights[i].viewMatrix, worldPos)) {
-                	shadowFactor = 1.0;
-                } else {
+                //if(!in_frustum(ubo.directionalLights[i].viewMatrix, worldPos)) {
+                	//shadowFactor = 1.0;
+                //} else {
 	                if(USE_PCF > 0) {
 	                    shadowFactor = filterPCF(shadowClip, i+offset);
 	                } else {
 	                    shadowFactor = textureProj(shadowClip, i+offset, vec2(0.0));
 	                }
 
-                }
+                //}
 
                 fragcolor *= shadowFactor;
             }
