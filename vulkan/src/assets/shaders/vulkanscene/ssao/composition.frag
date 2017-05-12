@@ -167,7 +167,7 @@ vec3 normal_from_depth(vec2 texCoord, float depth) {
 
 float textureProj(vec4 P, float layer, vec2 offset) {
 	float shadow = 1.0;
-	vec4 shadowCoord = P / P.w;
+	vec4 shadowCoord = P / P.w;// this might be a problem for ortho csm
 	shadowCoord.st = shadowCoord.st * 0.5 + 0.5;
 
 	if (shadowCoord.z > -1.0 && shadowCoord.z < 1.0)  {
@@ -747,10 +747,16 @@ void main() {
                 float shadowFactor = 1.0;
                 int offset = NUM_SPOT_LIGHTS+NUM_DIR_LIGHTS;
 
-                if(linearDepth(depth) > 5.0) {
+                if(linearDepth(depth) > 4.0) {
+                	//fragcolor += vec3(0.4, 0.0, 0.0);
+                	offset += 1;
+                }
+                if(linearDepth(depth) > 20.0) {
                 	//fragcolor += vec3(0.4, 0.0, 0.0);
                 	//offset += 1;
+                	continue;
                 }
+                //offset += 1;
                 
                 // if the fragment isn't in the light's view frustrum, it can't be in shadow, either
                 // seems to fix lots of problems

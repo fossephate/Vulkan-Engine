@@ -2158,8 +2158,8 @@ class VulkanExample : public vkx::vulkanApp {
 		//glm::mat4 proj = glm::ortho(-size, size, -size, size, -30.0f, 30.0f);
 
 		//glm::mat4 proj = glm::ortho(minX, maxX, minY, maxY, minZ, maxZ);
-		glm::mat4 proj = glm::ortho(minX, maxX, minY, maxY, -maxZ, -minZ);
-		//glm::mat4 proj = glm::ortho(minX, maxX, minY, maxY, -30.0f, 30.0f);
+		//glm::mat4 proj = glm::ortho(minX, maxX, minY, maxY, -maxZ, -minZ);
+		glm::mat4 proj = glm::ortho(minX, maxX, minY, maxY, -30.0f, 30.0f);
 
 		return proj;
 
@@ -2280,13 +2280,13 @@ class VulkanExample : public vkx::vulkanApp {
 		float mainFar = 256.0f;
 
 		splitDepths[0] = mainNear;
-		//splitDepths[1] = 25.0f;// 25
-		//splitDepths[2] = 90.0f;// 90
+		splitDepths[1] = 4.0f;// 25
+		splitDepths[2] = 20.0f;// 90
 		splitDepths[3] = mainFar;
-		const float splitConstant = 0.95f;
-		for (int i = 1; i < numOfSplits-1; i++) {
-			splitDepths[i] = splitConstant * mainNear * (float)pow(mainFar / mainNear, i / numOfSplits) + (1.0f - splitConstant) * ((mainNear + (i / numOfSplits)) * (mainFar - mainNear));
-		}
+		//const float splitConstant = 0.95f;
+		//for (int i = 1; i < numOfSplits; i++) {
+		//	splitDepths[i] = splitConstant * mainNear * (float)pow(mainFar / mainNear, i / numOfSplits) + (1.0f - splitConstant) * ((mainNear + (i / numOfSplits)) * (mainFar - mainNear));
+		//}
 
 
 		// csm lights:
@@ -2296,7 +2296,7 @@ class VulkanExample : public vkx::vulkanApp {
 			DirectionalLight &light = uboFSLights.directionalLights[i];
 
 			//glm::mat4 shadowProj = glm::ortho(-light.size, light.size, -light.size, light.size, light.zNear, light.zFar);
-			glm::mat4 shadowProj = calculateFrustum(/*light*/glm::vec3(light.direction), splitDepths[i], splitDepths[i+1], mainNear, mainFar);
+			glm::mat4 shadowProj = calculateFrustum(glm::vec3(light.direction), splitDepths[i], splitDepths[i+1], mainNear, mainFar);
 			shadowProj[1][1] *= -1;// because glm produces matrix for opengl and this is vulkan
 
 			glm::mat4 shadowView = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(light.direction), glm::vec3(0.0f, 0.0f, 1.0f));

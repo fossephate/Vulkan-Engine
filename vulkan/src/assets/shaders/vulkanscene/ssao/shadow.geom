@@ -8,8 +8,8 @@
 
 #define NUM_SPOT_LIGHTS 2
 #define NUM_DIR_LIGHTS 1
-#define NUM_CSM_LIGHTS 1
-#define NUM_LIGHTS_TOTAL 4
+#define NUM_CSM_LIGHTS 3
+#define NUM_LIGHTS_TOTAL 7
 
 //layout (triangles, invocations = NUM_SPOT_LIGHTS) in;
 layout (triangles, invocations = NUM_LIGHTS_TOTAL) in;
