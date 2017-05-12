@@ -239,6 +239,10 @@ namespace vkx
 				float depthBiasSlope = 1.75f;
 
 
+				//struct PhysicsSettings {
+				//	float 
+				//} physics;
+
 
 			} settings;
 

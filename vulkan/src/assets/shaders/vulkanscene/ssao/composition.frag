@@ -54,8 +54,15 @@ struct DirectionalLight {
     float size;
 
     float pad1;
-    // float pad2;
-	// float pad3;
+
+    // todo: better solution may be possible:
+    float cascadeNear;
+    float cascadeFar;
+
+    float pad2;
+	float pad3;
+
+
 	// float pad4;
 
 	// float pad5;
@@ -84,7 +91,7 @@ struct DirectionalLight {
 
 const int SSAO_ENABLED = 1;
 const int USE_SHADOWS = 1;
-const int USE_PCF = 0;
+const int USE_PCF = 1;
 const float PI = 3.14159265359;
 
 
@@ -733,68 +740,44 @@ void main() {
             //     fragcolor *= shadowFactor;
             // }
 
-            float endClipSpaces[4];
-            endClipSpaces[0] = 0.1;
-            endClipSpaces[1] = 4.0;
-            endClipSpaces[2] = 20.0;
-            endClipSpaces[3] = 256.0;
+            // float endClipSpaces[4];
+            // endClipSpaces[0] = 0.1;
+            // endClipSpaces[1] = 4.0;
+            // endClipSpaces[2] = 20.0;
+            // endClipSpaces[3] = 256.0;
 
             for(int i = 0; i < NUM_DIR_LIGHTS; ++i) {
+
+
                 vec4 shadowClip = ubo.directionalLights[i].viewMatrix * vec4(worldPos, 1.0);
 
                 float shadowFactor = 1.0;
 
                 int offset = NUM_SPOT_LIGHTS;
 
-                // for(int j = 0; j < 3; ++j) {
-                // 	if(linearDepth < endClipSpaces[j]) {
-                // 		offset += j;
-
-                // 		if(i != j-1) {
-                // 			break;
-                // 		}
-
-		              //   if(USE_PCF > 0) {
-		              //       shadowFactor = filterPCF(shadowClip, i+offset);
-		              //   } else {
-		              //       shadowFactor = textureProj(shadowClip, i+offset, vec2(0.0));
-		              //   }
-		              //   break;
-
-                // 	}
-                // }
-
-                if(linearDepth > 0.1 && linearDepth < 4.0 && i == 0) {
-                	offset = offset;
-                } else if (linearDepth > 4.0 && linearDepth < 20.0 && i == 1) {
-                	offset = offset;
-                } else {
+                if((linearDepth < ubo.directionalLights[i].cascadeNear) || (linearDepth > ubo.directionalLights[i].cascadeFar)) {
                 	continue;
                 }
 
-                // if(i > 1) {
+                // if(linearDepth < ubo.directionalLights[i].cascadeNear) {
                 // 	continue;
                 // }
 
-                // if(linearDepth > 20.0) {
-                // 	continue;
-                // }
-
-                // if(linearDepth > 4.0 && i == 0) {
-                // 	continue;
-                // 	//fragcolor += vec3(0.4, 0.0, 0.0);
-                // 	//shadowClip = ubo.directionalLights[i+1].viewMatrix * vec4(worldPos, 1.0);
-                // 	//offset += 1;
-                // }
-                // if(linearDepth > 4.0 && i == 1) {
-                	
+                // if(linearDepth > 0.1 && linearDepth < 4.0) {
                 // 	fragcolor += vec3(0.2, 0.0, 0.0);
-                // 	//shadowClip = ubo.directionalLights[i-1].viewMatrix * vec4(worldPos, 1.0);
-                // 	//offset += 1;
+                // } else if (linearDepth > 4.0 && linearDepth < 20.0) {
+                // 	fragcolor += vec3(0.0, 0.2, 0.0);
+                // } else if (linearDepth > 4.0 && linearDepth < 20.0) {
+
                 // }
 
-
-                //offset += 1;
+                if(i == 0) {
+                	fragcolor += vec3(0.2, 0.0, 0.0);
+                } else if(i == 1) {
+                	fragcolor += vec3(0.0, 0.2, 0.0);
+                } else if(i == 2) {
+                	fragcolor += vec3(0.0, 0.0, 0.5);
+                }
                 
                 // if the fragment isn't in the light's view frustrum, it can't be in shadow, either
                 // seems to fix lots of problems
@@ -883,7 +866,7 @@ void main() {
 
 
 
-// // Generally all the code comes from https://github.com/achlubek/venginenative/ which you can star if you like it!
+// // // Generally all the code comes from https://github.com/achlubek/venginenative/ which you can star if you like it!
  
 // #define time iGlobalTime
 // //#define mouse (iMouse.xy / iResolution.xy)
@@ -894,7 +877,7 @@ void main() {
 // #define CLOUDS_STEPS 0
 // #define ENABLE_SSS 1
 
-// float iGlobalTime = 1.0;
+// float iGlobalTime = ubo.directionalLights[0].pad1;
 // const vec2 iResolution = vec2(1280, 720);
 // vec2 mouse = vec2(0.0, 0.0);
 
