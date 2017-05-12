@@ -296,8 +296,8 @@ class VulkanExample : public vkx::vulkanApp {
 		glm::vec4 color;		// color of the light
 		glm::mat4 viewMatrix;	// view matrix (used in geometry shader and fragment shader)
 
-		float innerAngle = 30.0f;
-		float outerAngle = 50.0f;
+		float innerAngle = 40.0f;
+		float outerAngle = 60.0f;
 		float zNear = 0.1f;
 		float zFar = 64.0f;
 
@@ -2059,8 +2059,8 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 	glm::mat4 calculateFrustum(glm::vec3 lightDir, float zMin, float zMax, float mainNear, float mainFar) {
-		float projWidth = 1280.0f;
-		float projHeight = 720.0f;
+		float projWidth = settings.windowSize.width;
+		float projHeight = settings.windowSize.height;
 		float projFov = 80.0f;
 
 		//float mainNear = 0.1f;
@@ -2228,13 +2228,6 @@ class VulkanExample : public vkx::vulkanApp {
 		// csm lights:
 		//uboFSLights.csmlights[0].color = glm::vec4(1.0f, 1.0f, 1.0f, 0.0f)*0.04f;
 
-
-
-		float zNear = 0.1f;
-		float zFar = 64.0f;
-		float lightFOV = 45.0f;
-		float size = 10.0f;
-
 		// spot lights:
 		for (uint32_t i = 0; i < NUM_SPOT_LIGHTS; i++) {
 
@@ -2284,7 +2277,7 @@ class VulkanExample : public vkx::vulkanApp {
 		float mainFar = 256.0f;
 
 		splitDepths[0] = mainNear;
-		splitDepths[1] = 4.0f;
+		splitDepths[1] = 5.0f;
 		splitDepths[2] = 20.0f;
 		splitDepths[3] = mainFar;
 		//const float splitConstant = 0.95f;

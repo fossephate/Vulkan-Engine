@@ -740,12 +740,6 @@ void main() {
             //     fragcolor *= shadowFactor;
             // }
 
-            // float endClipSpaces[4];
-            // endClipSpaces[0] = 0.1;
-            // endClipSpaces[1] = 4.0;
-            // endClipSpaces[2] = 20.0;
-            // endClipSpaces[3] = 256.0;
-
             for(int i = 0; i < NUM_DIR_LIGHTS; ++i) {
 
 
@@ -759,79 +753,29 @@ void main() {
                 	continue;
                 }
 
-                // if(linearDepth < ubo.directionalLights[i].cascadeNear) {
-                // 	continue;
-                // }
-
-                // if(linearDepth > 0.1 && linearDepth < 4.0) {
+                // if(i == 0) {
                 // 	fragcolor += vec3(0.2, 0.0, 0.0);
-                // } else if (linearDepth > 4.0 && linearDepth < 20.0) {
+                // } else if(i == 1) {
                 // 	fragcolor += vec3(0.0, 0.2, 0.0);
-                // } else if (linearDepth > 4.0 && linearDepth < 20.0) {
-
+                // } else if(i == 2) {
+                // 	fragcolor += vec3(0.0, 0.0, 0.5);
                 // }
-
-                if(i == 0) {
-                	fragcolor += vec3(0.2, 0.0, 0.0);
-                } else if(i == 1) {
-                	fragcolor += vec3(0.0, 0.2, 0.0);
-                } else if(i == 2) {
-                	fragcolor += vec3(0.0, 0.0, 0.5);
-                }
                 
                 // if the fragment isn't in the light's view frustrum, it can't be in shadow, either
                 // seems to fix lots of problems
-                //if(!in_frustum(ubo.directionalLights[i].viewMatrix, worldPos)) {
-                	//shadowFactor = 1.0;
-                //} else {
+                if(!in_frustum(ubo.directionalLights[i].viewMatrix, worldPos)) {
+                	shadowFactor = 1.0;
+                } else {
 	                if(USE_PCF > 0) {
 	                    shadowFactor = filterPCF(shadowClip, i+offset);
 	                } else {
 	                    shadowFactor = textureProj(shadowClip, i+offset, vec2(0.0));
 	                }
 
-                //}
+                }
 
                 fragcolor *= shadowFactor;
             }
-
-
-
-            // csm lights:
-            //for(int i = 0; i < NUM_CSM_LIGHTS; ++i) {
-            // for(int i = 0; i < 1; ++i) {
-            //     //vec4 shadowClip = ubo.csmlights[i].viewMatrix * vec4(worldPos, 1.0);
-            //     vec4 shadowClip = ubo.directionalLights[i].viewMatrix * vec4(worldPos, 1.0);
-
-            //     float shadowFactor = 1.0;
-            //     int offset = NUM_SPOT_LIGHTS+NUM_DIR_LIGHTS;
-
-            //     if(linearizeDepth(depth) > 4.0) {
-            //     	//fragcolor += vec3(0.4, 0.0, 0.0);
-            //     	offset += 1;
-            //     }
-            //     if(linearizeDepth(depth) > 20.0) {
-            //     	//fragcolor += vec3(0.4, 0.0, 0.0);
-            //     	//offset += 1;
-            //     	continue;
-            //     }
-            //     //offset += 1;
-                
-            //     // if the fragment isn't in the light's view frustrum, it can't be in shadow, either
-            //     // seems to fix lots of problems
-            //     //if(!in_frustum(ubo.csmlights[i].viewMatrix, worldPos)) {
-            //     	//shadowFactor = 1.0;
-            //     //} else {
-	           //      if(USE_PCF > 0) {
-	           //          shadowFactor = filterPCF(shadowClip, i+offset);
-	           //      } else {
-	           //          shadowFactor = textureProj(shadowClip, i+offset, vec2(0.0));
-	           //      }
-
-            //     //}
-
-            //     fragcolor *= shadowFactor;
-            // }
 
 
 
