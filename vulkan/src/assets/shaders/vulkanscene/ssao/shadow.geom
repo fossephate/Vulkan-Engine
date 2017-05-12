@@ -7,8 +7,8 @@
 //#extension GL_GOOGLE_include_directive : enable
 
 #define NUM_SPOT_LIGHTS 2
-#define NUM_DIR_LIGHTS 1
-#define NUM_CSM_LIGHTS 3
+#define NUM_DIR_LIGHTS 3
+//#define NUM_CSM_LIGHTS 3
 #define NUM_LIGHTS_TOTAL 7
 
 //layout (triangles, invocations = NUM_SPOT_LIGHTS) in;
@@ -19,7 +19,6 @@ layout (set = 0, binding = 0) uniform UBO
 {
 	mat4 spotlightMVP[NUM_SPOT_LIGHTS];
 	mat4 dirlightMVP[NUM_DIR_LIGHTS];
-	mat4 csmlightMVP[NUM_CSM_LIGHTS];
 } ubo;
 
 // matrix data
@@ -116,15 +115,16 @@ void main() {
 			gl_Position = tmpPos;
 			EmitVertex();
 		}
-	} else {
-		// csm lights:
-		for (int i = 0; i < gl_in.length(); i++) {
-			gl_Layer = gl_InvocationID;
-			vec4 tmpPos = ubo.csmlightMVP[gl_InvocationID-NUM_SPOT_LIGHTS-NUM_DIR_LIGHTS] * instance.model * gl_in[i].gl_Position;
-			gl_Position = tmpPos;
-			EmitVertex();
-		}
 	}
+	// } else {
+	// 	// csm lights:
+	// 	for (int i = 0; i < gl_in.length(); i++) {
+	// 		gl_Layer = gl_InvocationID;
+	// 		vec4 tmpPos = ubo.csmlightMVP[gl_InvocationID-NUM_SPOT_LIGHTS-NUM_DIR_LIGHTS] * instance.model * gl_in[i].gl_Position;
+	// 		gl_Position = tmpPos;
+	// 		EmitVertex();
+	// 	}
+	// }
 
 	EndPrimitive();
 

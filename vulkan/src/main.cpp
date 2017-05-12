@@ -29,9 +29,8 @@
 
 #define NUM_POINT_LIGHTS 70// 100
 #define NUM_SPOT_LIGHTS 2
-#define NUM_DIR_LIGHTS 1
-#define NUM_CSM_LIGHTS 3
-#define NUM_LIGHTS_TOTAL 4
+#define NUM_DIR_LIGHTS 3
+#define NUM_LIGHTS_TOTAL 5
 
 #define SSAO_ON 1
 
@@ -232,6 +231,9 @@ class VulkanExample : public vkx::vulkanApp {
 		glm::mat4 bones[MAX_BONES*MAX_SKINNED_MESHES];
 	} uboBoneData;
 
+	struct TestingVariables {
+		std::vector<std::shared_ptr<vkx::Model>> modelsDeferred;
+	} temporary;
 
 
 	unsigned int alignedMatrixSize;
@@ -314,9 +316,9 @@ class VulkanExample : public vkx::vulkanApp {
 		float size = 15.0f;// size of the orthographic projection
 
 		float pad1;
-		float pad2;
-		float pad3;
-		float pad4;
+		//float pad2;
+		//float pad3;
+		//float pad4;
 
 		//float pad5;
 		//float pad6;
@@ -325,14 +327,14 @@ class VulkanExample : public vkx::vulkanApp {
 	};
 
 
-	struct CSMLight {
-		glm::vec4 direction = glm::vec4(0.3f, 0.0f, -10.0f, 0.0f);	// unit directional vector
-		glm::vec4 color;		// color of the light
-		glm::mat4 viewMatrix;	// view matrix (used in geometry shader and fragment shader)
-		float zNear = -32.0f;
-		float zFar = 32.0f;
-		float size = 15.0f;// size of the orthographic projection
-	};
+	//struct CSMLight {
+	//	glm::vec4 direction = glm::vec4(0.3f, 0.0f, -10.0f, 0.0f);	// unit directional vector
+	//	glm::vec4 color;		// color of the light
+	//	glm::mat4 viewMatrix;	// view matrix (used in geometry shader and fragment shader)
+	//	float zNear = -32.0f;
+	//	float zFar = 32.0f;
+	//	float size = 15.0f;// size of the orthographic projection
+	//};
 
 	struct {
 
@@ -346,7 +348,6 @@ class VulkanExample : public vkx::vulkanApp {
 		PointLight pointlights[NUM_POINT_LIGHTS];
 		SpotLight spotlights[NUM_SPOT_LIGHTS];
 		DirectionalLight directionalLights[NUM_DIR_LIGHTS];
-		CSMLight csmlights[NUM_CSM_LIGHTS];
 	} uboFSLights;
 
 	// ssao
@@ -364,11 +365,9 @@ class VulkanExample : public vkx::vulkanApp {
 
 	// This UBO stores the shadow matrices for all of the light sources
 	// The matrices are indexed using geometry shader instancing
-	// The instancePos is used to place the models using instanced draws
 	struct {
 		glm::mat4 spotlightMVP[NUM_SPOT_LIGHTS];
 		glm::mat4 dirlightMVP[NUM_DIR_LIGHTS];
-		glm::mat4 csmlightMVP[NUM_CSM_LIGHTS];
 	} uboShadowGS;
 
 	struct {
@@ -2222,7 +2221,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 		// csm lights:
-		uboFSLights.csmlights[0].color = glm::vec4(1.0f, 1.0f, 1.0f, 0.0f)*0.04f;
+		//uboFSLights.csmlights[0].color = glm::vec4(1.0f, 1.0f, 1.0f, 0.0f)*0.04f;
 
 
 
@@ -2251,25 +2250,25 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-		// directional lights:
-		for (uint32_t i = 0; i < NUM_DIR_LIGHTS; i++) {
+		//// directional lights:
+		//for (uint32_t i = 0; i < NUM_DIR_LIGHTS; i++) {
 
-			DirectionalLight &light = uboFSLights.directionalLights[i];
+		//	DirectionalLight &light = uboFSLights.directionalLights[i];
 
-			glm::mat4 shadowProj = glm::ortho(-light.size, light.size, -light.size, light.size, light.zNear, light.zFar);
-			shadowProj[1][1] *= -1;// because glm produces matrix for opengl and this is vulkan
+		//	glm::mat4 shadowProj = glm::ortho(-light.size, light.size, -light.size, light.size, light.zNear, light.zFar);
+		//	shadowProj[1][1] *= -1;// because glm produces matrix for opengl and this is vulkan
 
-			glm::mat4 shadowView = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(light.direction), glm::vec3(0.0f, 0.0f, 1.0f));
+		//	glm::mat4 shadowView = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(light.direction), glm::vec3(0.0f, 0.0f, 1.0f));
 
-			//glm::mat4 shadowProj = camera.matrices.projection;
-			//glm::mat4 shadowView = camera.matrices.view;
+		//	//glm::mat4 shadowProj = camera.matrices.projection;
+		//	//glm::mat4 shadowView = camera.matrices.view;
 
 
-			glm::mat4 shadowModel = glm::mat4();
+		//	glm::mat4 shadowModel = glm::mat4();
 
-			uboShadowGS.dirlightMVP[i] = shadowProj * shadowView * shadowModel;
-			light.viewMatrix = uboShadowGS.dirlightMVP[i];
-		}
+		//	uboShadowGS.dirlightMVP[i] = shadowProj * shadowView * shadowModel;
+		//	light.viewMatrix = uboShadowGS.dirlightMVP[i];
+		//}
 
 
 
@@ -2289,26 +2288,31 @@ class VulkanExample : public vkx::vulkanApp {
 		//}
 
 
-		// csm lights:
-		for (uint32_t i = 0; i < NUM_CSM_LIGHTS; i++) {
+		// directional lights:
+		for (uint32_t i = 0; i < NUM_DIR_LIGHTS; i++) {
 
-			//CSMLight &light = uboFSLights.csmlights[i];
 			DirectionalLight &light = uboFSLights.directionalLights[i];
 
 			//glm::mat4 shadowProj = glm::ortho(-light.size, light.size, -light.size, light.size, light.zNear, light.zFar);
 			glm::mat4 shadowProj = calculateFrustum(glm::vec3(light.direction), splitDepths[i], splitDepths[i+1], mainNear, mainFar);
+			//glm::mat4 shadowProj;
+			//if (i == 1) {
+			//	shadowProj = calculateFrustum(glm::vec3(light.direction), mainNear, 4.0f, mainNear, mainFar);
+			//} else {
+			//	shadowProj = calculateFrustum(glm::vec3(light.direction), splitDepths[i], splitDepths[i + 1], mainNear, mainFar);
+			//}
 			shadowProj[1][1] *= -1;// because glm produces matrix for opengl and this is vulkan
 
 			glm::mat4 shadowView = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(light.direction), glm::vec3(0.0f, 0.0f, 1.0f));
 
-			//glm::mat4 shadowProj = camera.matrices.projection;
-			//glm::mat4 shadowView = camera.matrices.view;
-
 
 			glm::mat4 shadowModel = glm::mat4();
 
-			uboShadowGS.csmlightMVP[i] = shadowProj * shadowView * shadowModel;
-			light.viewMatrix = uboShadowGS.csmlightMVP[i];
+			//uboShadowGS.csmlightMVP[i] = shadowProj * shadowView * shadowModel;
+			//light.viewMatrix = uboShadowGS.csmlightMVP[i];
+
+			uboShadowGS.dirlightMVP[i] = shadowProj * shadowView * shadowModel;
+			light.viewMatrix = uboShadowGS.dirlightMVP[i];
 		}
 
 
@@ -2615,6 +2619,15 @@ class VulkanExample : public vkx::vulkanApp {
 			skinnedMeshesDeferred.push_back(testSkinnedMesh);
 		}
 
+
+		//for (int i = 0; i < 10; ++i) {
+		//	auto boxModel = std::make_shared<vkx::Model>(&context, &assetManager);
+		//	boxModel->load(getAssetPath() + "models/myCube.dae");
+		//	boxModel->createMeshes(SSAOVertexLayout, 0.1f, VERTEX_BUFFER_BIND_ID);
+		//	//boxModel->rotateWorldX(PI / 2.0);
+		//	modelsDeferred.push_back(boxModel);
+		//	temporary.modelsDeferred.push_back(boxModel);
+		//}
 
 
 
@@ -3353,12 +3366,13 @@ class VulkanExample : public vkx::vulkanApp {
 		ImGui::DragFloat3("Spot Light2 Color", &uboFSLights.spotlights[1].color.x, 0.1f);
 
 		ImGui::DragFloat3("Directional Light Dir", &uboFSLights.directionalLights[0].direction.x, 0.05f);
+		ImGui::DragFloat3("Directional Light Dir2", &uboFSLights.directionalLights[1].direction.x, 0.05f);
 
 		ImGui::DragFloat("Directional Light Near", &uboFSLights.directionalLights[0].zNear, 0.05f);
 		ImGui::DragFloat("Directional Light Far", &uboFSLights.directionalLights[0].zFar, 0.05f);
 		ImGui::DragFloat("Directional Light size", &uboFSLights.directionalLights[0].size, 0.05f);
 
-		ImGui::DragFloat3("CSM Light Dir", &uboFSLights.csmlights[0].direction.x, 0.05f);
+		//ImGui::DragFloat3("CSM Light Dir", &uboFSLights.csmlights[0].direction.x, 0.05f);
 
 
 		//ImGui::DragIntRange2("range int (no bounds)", &begin_i, &end_i, 5, 0, 0, "Min: %.0f units", "Max: %.0f units");
