@@ -233,6 +233,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 	struct TestingVariables {
 		std::vector<std::shared_ptr<vkx::Model>> modelsDeferred;
+		float splitDepths[4] = { 0.1f, 5.0f, 20.0f, 256.0f };
 	} temporary;
 
 
@@ -1464,8 +1465,8 @@ class VulkanExample : public vkx::vulkanApp {
 				vkx::descriptorImageInfo(offscreen.framebuffers[0].attachments[0].sampler, offscreen.framebuffers[0].attachments[1].view, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 
-			std::vector<vk::WriteDescriptorSet> ssaoGenerateWriteDescriptorSets =
-			{
+			std::vector<vk::WriteDescriptorSet> ssaoGenerateWriteDescriptorSets = {
+
 				// Set 0: Binding 0: Fragment shader image sampler// FS Position+Depth
 				// replaced with just depth
 				vkx::writeDescriptorSet(
@@ -2271,15 +2272,12 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 		float numOfSplits = 3;
-		float splitDepths[4];
+		
 
 		float mainNear = 0.1f;
 		float mainFar = 256.0f;
 
-		splitDepths[0] = mainNear;
-		splitDepths[1] = 5.0f;
-		splitDepths[2] = 20.0f;
-		splitDepths[3] = mainFar;
+
 		//const float splitConstant = 0.95f;
 		//for (int i = 1; i < numOfSplits; i++) {
 		//	splitDepths[i] = splitConstant * mainNear * (float)pow(mainFar / mainNear, i / numOfSplits) + (1.0f - splitConstant) * ((mainNear + (i / numOfSplits)) * (mainFar - mainNear));
@@ -2292,7 +2290,7 @@ class VulkanExample : public vkx::vulkanApp {
 			DirectionalLight &light = uboFSLights.directionalLights[i];
 
 			//glm::mat4 shadowProj = glm::ortho(-light.size, light.size, -light.size, light.size, light.zNear, light.zFar);
-			glm::mat4 shadowProj = calculateFrustum(glm::vec3(light.direction), splitDepths[i], splitDepths[i+1], mainNear, mainFar);
+			glm::mat4 shadowProj = calculateFrustum(glm::vec3(light.direction), temporary.splitDepths[i], temporary.splitDepths[i+1], mainNear, mainFar);
 			shadowProj[1][1] *= -1;// because glm produces matrix for opengl and this is vulkan
 
 			glm::mat4 shadowView = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(light.direction), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -2306,8 +2304,8 @@ class VulkanExample : public vkx::vulkanApp {
 			uboShadowGS.dirlightMVP[i] = shadowProj * shadowView * shadowModel;
 			light.viewMatrix = uboShadowGS.dirlightMVP[i];
 
-			light.cascadeNear = splitDepths[i];
-			light.cascadeFar = splitDepths[i + 1];
+			light.cascadeNear = temporary.splitDepths[i];
+			light.cascadeFar = temporary.splitDepths[i + 1];
 
 		}
 
@@ -3369,6 +3367,8 @@ class VulkanExample : public vkx::vulkanApp {
 		ImGui::DragFloat("Directional Light Near", &uboFSLights.directionalLights[0].zNear, 0.05f);
 		ImGui::DragFloat("Directional Light Far", &uboFSLights.directionalLights[0].zFar, 0.05f);
 		ImGui::DragFloat("Directional Light size", &uboFSLights.directionalLights[0].size, 0.05f);
+
+		ImGui::DragFloat4("Split Depths", &temporary.splitDepths[0], 0.1f);
 
 		//ImGui::DragFloat3("CSM Light Dir", &uboFSLights.csmlights[0].direction.x, 0.05f);
 
