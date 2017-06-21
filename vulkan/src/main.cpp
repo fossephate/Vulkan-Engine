@@ -685,23 +685,23 @@ class VulkanExample : public vkx::vulkanApp {
 		// like at all
 		// fix this:
 
-		// scene data
-		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes0 = {
-			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 2),// mostly static data
-		};
-		rscs.descriptorPools->add("forward.scene", descriptorPoolSizes0, 1);
+		//// scene data
+		//std::vector<vk::DescriptorPoolSize> descriptorPoolSizes0 = {
+		//	vkx::descriptorPoolSize(vk::DescriptorType::eUniformBuffer, 2),// mostly static data
+		//};
+		//rscs.descriptorPools->add("forward.scene", descriptorPoolSizes0, 1);
 
-		// matrix data
-		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes1 = {
-			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1),// non-static data
-		};
-		rscs.descriptorPools->add("forward.matrix", descriptorPoolSizes1, 1);
+		//// matrix data
+		//std::vector<vk::DescriptorPoolSize> descriptorPoolSizes1 = {
+		//	vkx::descriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1),// non-static data
+		//};
+		//rscs.descriptorPools->add("forward.matrix", descriptorPoolSizes1, 1);
 
-		// material data
-		std::vector<vk::DescriptorPoolSize> descriptorPoolSizes2 = {
-			vkx::descriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1),
-		};
-		rscs.descriptorPools->add("forward.material", descriptorPoolSizes2, 1);
+		//// material data
+		//std::vector<vk::DescriptorPoolSize> descriptorPoolSizes2 = {
+		//	vkx::descriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1),
+		//};
+		//rscs.descriptorPools->add("forward.material", descriptorPoolSizes2, 1);
 
 
 
@@ -765,34 +765,34 @@ class VulkanExample : public vkx::vulkanApp {
 	void prepareDescriptorSetLayouts() {
 
 
-		// descriptor set layout 0
-		// scene data
-		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings0 = {
-			// Set 0: Binding 0 : Vertex shader uniform buffer
-			vkx::descriptorSetLayoutBinding(
-				vk::DescriptorType::eUniformBuffer,
-				vk::ShaderStageFlagBits::eVertex,
-				0),
-				   
-			// Set 0: Binding 1: Vertex shader uniform buffer// bone data
-			vkx::descriptorSetLayoutBinding(
-				vk::DescriptorType::eUniformBuffer,
-				vk::ShaderStageFlagBits::eVertex,
-				1),
-		};
-		rscs.descriptorSetLayouts->add("forward.scene", descriptorSetLayoutBindings0);
+		//// descriptor set layout 0
+		//// scene data
+		//std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings0 = {
+		//	// Set 0: Binding 0 : Vertex shader uniform buffer
+		//	vkx::descriptorSetLayoutBinding(
+		//		vk::DescriptorType::eUniformBuffer,
+		//		vk::ShaderStageFlagBits::eVertex,
+		//		0),
+		//		   
+		//	// Set 0: Binding 1: Vertex shader uniform buffer// bone data
+		//	vkx::descriptorSetLayoutBinding(
+		//		vk::DescriptorType::eUniformBuffer,
+		//		vk::ShaderStageFlagBits::eVertex,
+		//		1),
+		//};
+		//rscs.descriptorSetLayouts->add("forward.scene", descriptorSetLayoutBindings0);
 
-		// descriptor set layout 1
-		// matrix data
-		std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings1 = {
+		//// descriptor set layout 1
+		//// matrix data
+		//std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings1 = {
 
-			// Set 1: Binding 0 : Vertex shader dynamic uniform buffer
-			vkx::descriptorSetLayoutBinding(
-				vk::DescriptorType::eUniformBufferDynamic,
-				vk::ShaderStageFlagBits::eVertex,
-				0),
-		};
-		rscs.descriptorSetLayouts->add("forward.matrix", descriptorSetLayoutBindings1);
+		//	// Set 1: Binding 0 : Vertex shader dynamic uniform buffer
+		//	vkx::descriptorSetLayoutBinding(
+		//		vk::DescriptorType::eUniformBufferDynamic,
+		//		vk::ShaderStageFlagBits::eVertex,
+		//		0),
+		//};
+		//rscs.descriptorSetLayouts->add("forward.matrix", descriptorSetLayoutBindings1);
 
 		// descriptor set layout 2
 		// material data
@@ -837,42 +837,42 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-		//// descriptor set layout 4
-		//// bone data
-		//std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings4 =
-		//{
-		//	// Set 4: Binding 0 : Vertex shader uniform buffer
-		//	vkx::descriptorSetLayoutBinding(
-		//		vk::DescriptorType::eUniformBuffer,
-		//		vk::ShaderStageFlagBits::eVertex,
-		//		0),
+		////// descriptor set layout 4
+		////// bone data
+		////std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings4 =
+		////{
+		////	// Set 4: Binding 0 : Vertex shader uniform buffer
+		////	vkx::descriptorSetLayoutBinding(
+		////		vk::DescriptorType::eUniformBuffer,
+		////		vk::ShaderStageFlagBits::eVertex,
+		////		0),
+		////};
+
+		////vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo4 =
+		////	vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings4.data(), descriptorSetLayoutBindings4.size());
+		////rscs.descriptorSetLayouts->add("forward.bones", descriptorSetLayoutCreateInfo4);
+
+
+
+
+
+
+
+
+
+		//// use descriptor set layouts
+		//// to form pipeline layout
+
+		//std::vector<vk::DescriptorSetLayout> descriptorSetLayouts{
+		//	rscs.descriptorSetLayouts->get("forward.scene"),
+		//	rscs.descriptorSetLayouts->get("forward.matrix"),
+		//	rscs.descriptorSetLayouts->get("forward.material"),
+		//	rscs.descriptorSetLayouts->get("forward.textures"),
 		//};
 
-		//vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo4 =
-		//	vkx::descriptorSetLayoutCreateInfo(descriptorSetLayoutBindings4.data(), descriptorSetLayoutBindings4.size());
-		//rscs.descriptorSetLayouts->add("forward.bones", descriptorSetLayoutCreateInfo4);
-
-
-
-
-
-
-
-
-
-		// use descriptor set layouts
-		// to form pipeline layout
-
-		std::vector<vk::DescriptorSetLayout> descriptorSetLayouts{
-			rscs.descriptorSetLayouts->get("forward.scene"),
-			rscs.descriptorSetLayouts->get("forward.matrix"),
-			rscs.descriptorSetLayouts->get("forward.material"),
-			rscs.descriptorSetLayouts->get("forward.textures"),
-		};
-
-		// create pipelineLayout from descriptorSetLayouts
-		vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfo = vkx::pipelineLayoutCreateInfo(descriptorSetLayouts.data(), descriptorSetLayouts.size());
-		rscs.pipelineLayouts->add("forward.basic", pPipelineLayoutCreateInfo);
+		//// create pipelineLayout from descriptorSetLayouts
+		//vk::PipelineLayoutCreateInfo pPipelineLayoutCreateInfo = vkx::pipelineLayoutCreateInfo(descriptorSetLayouts.data(), descriptorSetLayouts.size());
+		//rscs.pipelineLayouts->add("forward.basic", pPipelineLayoutCreateInfo);
 
 
 
@@ -1219,64 +1219,6 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 		// create descriptor sets with descriptor pools and set layouts
-
-
-		// descriptor set 0
-		// scene data
-		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo0 =
-			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("forward.scene"), &rscs.descriptorSetLayouts->get("forward.scene"), 1);
-		rscs.descriptorSets->add("forward.scene", descriptorSetAllocateInfo0);
-
-		// descriptor set 1
-		// matrix data
-		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo1 =
-			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("forward.matrix"), &rscs.descriptorSetLayouts->get("forward.matrix"), 1);
-		rscs.descriptorSets->add("forward.matrix", descriptorSetAllocateInfo1);
-
-		// descriptor set 2
-		// material data
-		vk::DescriptorSetAllocateInfo descriptorSetAllocateInfo2 =
-			vkx::descriptorSetAllocateInfo(rscs.descriptorPools->get("forward.material"), &rscs.descriptorSetLayouts->get("forward.material"), 1);
-		rscs.descriptorSets->add("forward.material", descriptorSetAllocateInfo2);
-
-
-
-
-		std::vector<vk::WriteDescriptorSet> writeDescriptorSets = {
-			// Set 0: Binding 0: scene uniform buffer
-			vkx::writeDescriptorSet(
-				rscs.descriptorSets->get("forward.scene"),
-				vk::DescriptorType::eUniformBuffer,
-				0,// binding 0
-				&uniformData.sceneVS.descriptor),
-
-			// Set 0: Binding 1: bones uniform buffer
-			vkx::writeDescriptorSet(
-				rscs.descriptorSets->get("forward.scene"),
-				vk::DescriptorType::eUniformBuffer,
-				1,// binding 1
-				&uniformData.bonesVS.descriptor),
-
-			// Set 1: Binding 0: vertex shader matrix dynamic buffer
-			vkx::writeDescriptorSet(
-				rscs.descriptorSets->get("forward.matrix"),
-				vk::DescriptorType::eUniformBufferDynamic,
-				0,// binding 0
-				&uniformData.matrixVS.descriptor),
-
-			// Set 2: Binding 0: fragment shader material dynamic buffer
-			vkx::writeDescriptorSet(
-				rscs.descriptorSets->get("forward.material"),
-				vk::DescriptorType::eUniformBufferDynamic,
-				0,// binding 0
-				&uniformData.materialVS.descriptor),
-
-			// set 4 is set later (textures)
-
-		};
-
-
-		context.device.updateDescriptorSets(writeDescriptorSets, nullptr);
 
 
 
@@ -1628,7 +1570,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 		vk::GraphicsPipelineCreateInfo pipelineCreateInfo;
 		// set pipeline layout
-		pipelineCreateInfo.layout = rscs.pipelineLayouts->get("forward.basic");
+		//pipelineCreateInfo.layout = rscs.pipelineLayouts->get("forward.basic");
 		// set render pass
 		pipelineCreateInfo.renderPass = renderPass;
 
@@ -1645,19 +1587,19 @@ class VulkanExample : public vkx::vulkanApp {
 		
 
 
-		// meshes:
-		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/mesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
-		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/mesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		vk::Pipeline meshPipeline = context.device.createGraphicsPipeline(context.pipelineCache, pipelineCreateInfo, nullptr);
-		rscs.pipelines->add("forward.meshes", meshPipeline);
+		//// meshes:
+		//shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/mesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		//shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/mesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
+		//vk::Pipeline meshPipeline = context.device.createGraphicsPipeline(context.pipelineCache, pipelineCreateInfo, nullptr);
+		//rscs.pipelines->add("forward.meshes", meshPipeline);
 
 
 
-		// skinned meshes:
-		shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/skinnedMesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
-		shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/skinnedMesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
-		vk::Pipeline skinnedMeshPipeline = context.device.createGraphicsPipeline(context.pipelineCache, pipelineCreateInfo, nullptr);
-		rscs.pipelines->add("forward.skinnedMeshes", skinnedMeshPipeline);
+		//// skinned meshes:
+		//shaderStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/skinnedMesh.vert.spv", vk::ShaderStageFlagBits::eVertex);
+		//shaderStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/forward/skinnedMesh.frag.spv", vk::ShaderStageFlagBits::eFragment);
+		//vk::Pipeline skinnedMeshPipeline = context.device.createGraphicsPipeline(context.pipelineCache, pipelineCreateInfo, nullptr);
+		//rscs.pipelines->add("forward.skinnedMeshes", skinnedMeshPipeline);
 
 
 

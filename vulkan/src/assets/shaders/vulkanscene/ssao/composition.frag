@@ -147,26 +147,6 @@ vec3 normal_from_depth(vec2 texCoord, float depth) {
 
 
 
-
-// float textureProj(vec4 P, float layer, vec2 offset) {
-// 	float shadow = 1.0;
-// 	vec4 shadowCoord = P / P.w;
-// 	shadowCoord.st = shadowCoord.st * 0.5 + 0.5;
-
-// 	if (shadowCoord.z > -1.0 && shadowCoord.z < 1.0)  {
-// 		float dist = texture(samplerShadowMap, vec3(shadowCoord.st + offset, layer)).r;
-// 		if (shadowCoord.w > 0.0 && dist < shadowCoord.z)  {
-// 			shadow = SHADOW_FACTOR;
-// 		}
-// 	}
-
-// 	//if(shadowCoord.z > 1.0) {// added
-// 		//shadow = 0.0;
-// 	//}
-
-// 	return shadow;
-// }
-
 float textureProj(vec4 P, float layer, vec2 offset) {
 	float shadow = 1.0;
 	vec4 shadowCoord = P / P.w;
