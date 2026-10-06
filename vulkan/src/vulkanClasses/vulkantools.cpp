@@ -11,6 +11,11 @@
 #include <iostream>
 #include <fstream>
 
+#if defined(__APPLE__)
+#include <mach-o/dyld.h>
+#include <limits.h>
+#endif
+
 namespace vkx {
 
 	vk::Bool32 checkGlobalExtensionPresent(const char* extensionName) {
@@ -817,6 +822,27 @@ namespace vkx {
 			std::replace(file.begin(), file.end(), '\\', '/');
 
 			path = file + "/assets/";
+
+		});
+
+		#elif defined(__APPLE__)
+
+		std::call_once(once, [] {
+
+			// resolve the assets folder relative to the executable
+			char buffer[PATH_MAX];
+			uint32_t size = sizeof(buffer);
+			if (_NSGetExecutablePath(buffer, &size) == 0) {
+				char resolved[PATH_MAX];
+				if (realpath(buffer, resolved)) {
+					std::string file(resolved);
+					std::string::size_type pos = file.find_last_of('/');
+					path = file.substr(0, pos) + "/assets/";
+				}
+			}
+			if (path.empty()) {
+				path = "assets/";
+			}
 
 		});
 

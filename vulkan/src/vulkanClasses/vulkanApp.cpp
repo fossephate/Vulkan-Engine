@@ -102,6 +102,8 @@ void vulkanApp::run() {
 	#if defined(_WIN32)
 		setupWindow();
 		setupConsole("Debug");
+	#elif defined(__APPLE__)
+		setupWindow();
 	#elif defined(__linux__)
 		setupWindow();
 	#elif defined(__ANDROID__)
@@ -190,6 +192,9 @@ void vulkanApp::setupWindow() {
 		/*size.width*/settings.windowSize.width,// width
 		/*size.height*/settings.windowSize.height,// height
 		SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE
+	#if defined(__APPLE__)
+		| SDL_WINDOW_VULKAN
+	#endif
 	);
 
 	SDL_VERSION(&windowInfo.version); // initialize info structure with SDL version info

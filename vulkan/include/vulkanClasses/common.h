@@ -41,13 +41,16 @@
 #else
 #ifdef _WIN32
 #define GLFW_EXPOSE_NATIVE_WIN32 1
-#else
-#define GLFW_EXPOSE_NATIVE_X11 1
-#define GLFW_EXPOSE_NATIVE_GLX 1
-#endif
 // Cross platform window creation
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
+#elif !defined(__APPLE__)
+#define GLFW_EXPOSE_NATIVE_X11 1
+#define GLFW_EXPOSE_NATIVE_GLX 1
+#include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
+#endif
+// macOS: GLFW is unused in this codebase (SDL2 does the windowing) — skip it
 #endif
 
 #include <glm/glm.hpp>

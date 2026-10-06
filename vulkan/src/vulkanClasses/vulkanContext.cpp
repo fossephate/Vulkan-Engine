@@ -51,6 +51,29 @@ void vkx::Context::createContext(bool enableValidation) {
 		enabledExtensions.push_back(VK_KHR_DISPLAY_EXTENSION_NAME);
 		#elif defined(VK_USE_PLATFORM_WAYLAND_KHR)
 		enabledExtensions.push_back(VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME);
+		#elif defined(__APPLE__)
+		// MoltenVK: pick whichever surface extension the loader/driver exposes,
+		// and enable portability enumeration so the loader lists MoltenVK at all.
+		bool hasPortabilityEnumeration = false;
+		{
+			std::vector<vk::ExtensionProperties> supported = vk::enumerateInstanceExtensionProperties();
+			auto hasExtension = [&supported](const char* name) {
+				for (const auto& e : supported) {
+					if (strcmp(e.extensionName, name) == 0) { return true; }
+				}
+				return false;
+			};
+			if (hasExtension("VK_EXT_metal_surface")) {
+				enabledExtensions.push_back("VK_EXT_metal_surface");
+			}
+			if (hasExtension("VK_MVK_macos_surface")) {
+				enabledExtensions.push_back("VK_MVK_macos_surface");
+			}
+			if (hasExtension("VK_KHR_portability_enumeration")) {
+				enabledExtensions.push_back("VK_KHR_portability_enumeration");
+				hasPortabilityEnumeration = true;
+			}
+		}
 		#elif defined(__linux__)
 		enabledExtensions.push_back(VK_KHR_XCB_SURFACE_EXTENSION_NAME);
 		#endif
@@ -58,12 +81,17 @@ void vkx::Context::createContext(bool enableValidation) {
 
 		vk::InstanceCreateInfo instanceCreateInfo;
 		instanceCreateInfo.pApplicationInfo = &appInfo;
+		#if defined(__APPLE__)
+		if (hasPortabilityEnumeration) {
+			// VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR (not in these old headers)
+			instanceCreateInfo.flags = static_cast<vk::InstanceCreateFlagBits>(0x00000001);
+		}
+		#endif
 		if (enabledExtensions.size() > 0) {
-			//if (enableValidation) {
-			//	enabledExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
-			//}
 			instanceCreateInfo.enabledExtensionCount = (uint32_t)enabledExtensions.size();
 			instanceCreateInfo.ppEnabledExtensionNames = enabledExtensions.data();
+		}
+		if (enableValidation) {
 			instanceCreateInfo.enabledLayerCount = (uint32_t)debug::validationLayerNames.size();
 			instanceCreateInfo.ppEnabledLayerNames = debug::validationLayerNames.data();
 		}
@@ -104,6 +132,17 @@ void vkx::Context::createContext(bool enableValidation) {
 		queueCreateInfo.queueCount = 1;
 		queueCreateInfo.pQueuePriorities = queuePriorities.data();
 		std::vector<const char*> enabledExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+		#if defined(__APPLE__)
+		// Spec requires enabling portability_subset when the device advertises it (MoltenVK does)
+		if (vkx::checkDeviceExtensionPresent(physicalDevice, "VK_KHR_portability_subset")) {
+			enabledExtensions.push_back("VK_KHR_portability_subset");
+		}
+		#endif
+		// Lets the shadow pass write gl_Layer from the vertex shader (no geometry
+		// shaders on MoltenVK/Metal; supported by all modern desktop drivers too)
+		if (vkx::checkDeviceExtensionPresent(physicalDevice, "VK_EXT_shader_viewport_index_layer")) {
+			enabledExtensions.push_back("VK_EXT_shader_viewport_index_layer");
+		}
 		vk::DeviceCreateInfo deviceCreateInfo;
 		deviceCreateInfo.queueCreateInfoCount = 1;
 		deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
@@ -397,7 +436,11 @@ void vkx::Context::copyToMemory(const vk::DeviceMemory & memory, const void * da
 
 CreateBufferResult vkx::Context::stageToDeviceBuffer(const vk::BufferUsageFlags & usage, size_t size, const void * data) const {
 	CreateBufferResult staging = createBuffer(vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible, size, data);
-	CreateBufferResult result = createBuffer(usage | vk::BufferUsageFlagBits::eTransferDst, vk::MemoryPropertyFlagBits::eDeviceLocal, size);
+	// Cast matters: with a plain size_t argument (unsigned long on macOS, distinct
+	// from vk::DeviceSize) overload resolution picks the createBuffer<T>(usage,
+	// flags, const T& data) template, which uploads the size value as buffer data
+	// into device-local memory and crashes trying to map it.
+	CreateBufferResult result = createBuffer(usage | vk::BufferUsageFlagBits::eTransferDst, vk::MemoryPropertyFlagBits::eDeviceLocal, (vk::DeviceSize)size);
 	withPrimaryCommandBuffer([&](vk::CommandBuffer copyCmd) {
 		copyCmd.copyBuffer(staging.buffer, result.buffer, vk::BufferCopy(0, 0, size));
 	});

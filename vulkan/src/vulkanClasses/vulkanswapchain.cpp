@@ -49,7 +49,7 @@ namespace vkx {
 	*/
 	// define params for this function based on os and settings
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(__APPLE__)
 	void vkx::VulkanSwapChain::createSurface(SDL_Window * SDLWindow, SDL_SysWMinfo windowInfo)
 #elif defined(__linux__)
 	void vkx::VulkanSwapChain::initSurface(xcb_connection_t * connection, xcb_window_t window)
@@ -69,6 +69,16 @@ namespace vkx {
 		surfaceCreateInfo.hwnd = (HWND)SDLhandle;
 
 		surface = context.instance.createWin32SurfaceKHR(surfaceCreateInfo);
+
+
+		/* MACOS (MoltenVK via SDL) */
+#elif defined(__APPLE__)
+
+		VkSurfaceKHR rawSurface = VK_NULL_HANDLE;
+		if (!SDL_Vulkan_CreateSurface(SDLWindow, (VkInstance)context.instance, &rawSurface)) {
+			throw std::runtime_error(std::string("SDL_Vulkan_CreateSurface failed: ") + SDL_GetError());
+		}
+		surface = vk::SurfaceKHR(rawSurface);
 
 
 		/* LINUX */

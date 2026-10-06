@@ -19,7 +19,7 @@ namespace vkx {
 				// This is a meta layer that enables all of the standard
 				// validation layers in the correct order :
 				// threading, parameter_validation, device_limits, object_tracker, image, core_validation, swapchain, and unique_objects
-				"VK_LAYER_LUNARG_standard_validation"
+				"VK_LAYER_KHRONOS_validation"
 			} };
 
 		PFN_vkCreateDebugReportCallbackEXT CreateDebugReportCallback = VK_NULL_HANDLE;

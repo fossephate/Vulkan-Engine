@@ -129,7 +129,9 @@ namespace vkx {
 	class ResourceList {
 		public:
 			std::unordered_map<std::string, T> resources;
-			const T get(std::string name) {
+			// Returns a reference (stable for node-based maps): call sites take the
+			// address of the result and use it after the full expression ends.
+			const T& get(std::string name) {
 				return resources[name];
 			}
 			T *getPtr(std::string name) {
@@ -144,7 +146,7 @@ namespace vkx {
 	class OrderedResourceList {
 		public:
 			std::map<std::string, T> resources;
-			const T get(std::string name) {
+			const T& get(std::string name) {
 				return resources[name];
 			}
 			T *getPtr(std::string name) {
@@ -162,7 +164,7 @@ namespace vkx {
 			vk::Device &device;
 			std::map<std::string, T> resources;
 			OrderedVulkanResourceList(vk::Device &dev) : device(dev) {};
-			const T get(std::string name) {
+			const T& get(std::string name) {
 				if (!present(name)) {
 					throw;
 				}
@@ -188,7 +190,7 @@ namespace vkx {
 			vk::Device &device;
 			std::unordered_map<std::string, T> resources;
 			VulkanResourceList(vk::Device &dev) : device(dev) {};
-			const T get(std::string name) {
+			const T& get(std::string name) {
 				if (!present(name)) {
 					throw;
 				}
@@ -464,7 +466,7 @@ namespace vkx {
 				}
 			}
 
-			const vkx::Texture get(std::string name) {
+			const vkx::Texture& get(std::string name) {
 				return resources[name];
 			}
 
@@ -538,7 +540,7 @@ namespace vkx {
 			}
 		}
 
-		const Material get(std::string name) {
+		const Material& get(std::string name) {
 			return resources[name];
 		}
 

@@ -91,10 +91,23 @@ vkx::Texture vkx::TextureLoader::loadTexture(const std::string & filename, vk::F
 		filenameKTX = filenameKTX + "ktx";
 	}
 
-	gli::texture2d tex2D(gli::load(filenameKTX.c_str()));
+	// Load into a plain gli::texture first: constructing a gli::texture2d from an
+	// empty texture dereferences null storage and crashes, so check before that.
+	// Fall back to the dummy texture when an asset is missing or unreadable —
+	// some bundled models reference texture paths that no longer resolve.
+	gli::texture rawTex = gli::load(filenameKTX.c_str());
+	if (rawTex.empty()) {
+		std::string dummy = vkx::getAssetPath() + "models/dummy/dummy.dds";
+		printf("Warning: could not load texture \"%s\", falling back to \"%s\"\n", filenameKTX.c_str(), dummy.c_str());
+		fflush(stdout);
+		rawTex = gli::load(dummy.c_str());
+	}
+	if (rawTex.empty()) {
+		throw std::runtime_error("TextureLoader: failed to load texture (and dummy fallback): " + filename);
+	}
+	gli::texture2d tex2D(rawTex);
 
 	#endif
-	assert(!tex2D.empty());
 
 	Texture texture;
 	texture.device = this->context.device;

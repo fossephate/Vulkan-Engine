@@ -52,7 +52,7 @@ namespace vkx {
 			// for async loading:
 			std::future<void> myFuture;
 
-			std::atomic<bool> buffersReady = false;
+			std::atomic<bool> buffersReady{ false };
 
 			
 

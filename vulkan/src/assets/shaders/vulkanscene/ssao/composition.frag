@@ -610,8 +610,11 @@ void main() {
 
             
             float lightCosInnerAngle = cos(radians(light.innerAngle-SPOT_LIGHT_FOV_OFFSET));
-            //float lightCosOuterAngle = cos(radians(light.outerAngle));
-            float lightCosOuterAngle = cos(radians(light.innerAngle-SPOT_LIGHT_FOV_OFFSET));
+            // Must differ from the inner angle: smoothstep(edge0, edge1, x) with
+            // edge0 == edge1 is undefined GLSL (divide by zero) — it happened to
+            // act like a step() on Windows/NVIDIA but returns 0 on Metal,
+            // which made spotlights contribute nothing.
+            float lightCosOuterAngle = cos(radians(light.outerAngle));
             float lightRange = light.range;
 
             // float lightCosInnerAngle = cos(radians(45));
@@ -768,6 +771,84 @@ void main() {
     }
    
     outFragcolor = vec4(fragcolor, 1.0);
+
+    // Light markers: a screen-space disc at every live light's position, in the
+    // light's color. Occluded lights show dimmed (visible through walls) so you
+    // can always tell where the lights are.
+    {
+        vec2 fragNdc = inUV * 2.0 - 1.0;
+        float aspect = ubo.projection[1][1] / ubo.projection[0][0];
+
+        // point lights: screen-space discs
+        for (int i = 0; i < NUM_POINT_LIGHTS; ++i) {
+
+            vec3 lpos = ubo.pointlights[i].position.xyz;
+            vec3 lcol = ubo.pointlights[i].color.rgb;
+            if (length(lcol) < 0.01) { continue; }// skip unused light slots
+
+            vec4 lightClip = ubo.projection * ubo.view * vec4(lpos, 1.0);
+            if (lightClip.w <= 0.1) { continue; }// behind the camera
+
+            vec2 d = fragNdc - (lightClip.xy / lightClip.w);
+            d.x *= aspect;// make the disc round on screen
+            float r = clamp(0.12 / lightClip.w, 0.004, 0.08);
+            float distToLight = length(d);
+
+            if (distToLight < r) {
+                float lightDepth = lightClip.z / lightClip.w;
+                if (depth < lightDepth) { continue; }// hidden behind geometry
+                vec3 markerColor = normalize(abs(lcol) + vec3(0.001));
+                float edge = smoothstep(r, r * 0.6, distToLight);// soft edge
+                outFragcolor.rgb = mix(outFragcolor.rgb, markerColor, edge);
+            }
+        }
+
+        // spotlights: ray-traced translucent cones showing aim direction and the
+        // outerAngle cutoff (the same angle the lighting math uses)
+        {
+            // this pixel's view ray, from the near plane through the scene
+            vec3 rayOrigin = worldPosFromDepth(inUV.st, 0.0);
+            vec3 rayDir = normalize(worldPosFromDepth(inUV.st, 1.0) - rayOrigin);
+            float tScene = length(worldPos - rayOrigin);
+
+            for (int i = 0; i < NUM_SPOT_LIGHTS; ++i) {
+
+                vec3 lcol = ubo.spotlights[i].color.rgb;
+                if (length(lcol) < 0.01) { continue; }
+
+                vec3 apex = ubo.spotlights[i].position.xyz;
+                vec3 axis = normalize(ubo.spotlights[i].target.xyz - apex);
+                float cosTheta = cos(radians(ubo.spotlights[i].outerAngle));
+                float cos2 = cosTheta * cosTheta;
+                const float coneLen = 0.05;// drawn length of the marker cone — just enough to read the aim/angle
+
+                // analytic ray vs infinite cone, then clip to [0, coneLen] along the axis
+                vec3 co = rayOrigin - apex;
+                float rdA = dot(rayDir, axis);
+                float coA = dot(co, axis);
+                float qa = rdA * rdA - cos2;
+                float qb = 2.0 * (rdA * coA - cos2 * dot(rayDir, co));
+                float qc = coA * coA - cos2 * dot(co, co);
+                if (abs(qa) < 1e-6) { continue; }// ray parallel to cone surface
+                float disc = qb * qb - 4.0 * qa * qc;
+                if (disc <= 0.0) { continue; }
+                float sq = sqrt(disc);
+
+                vec3 markerColor = normalize(abs(lcol) + vec3(0.001));
+
+                for (int k = 0; k < 2; ++k) {
+                    float t = (k == 0) ? (-qb - sq) / (2.0 * qa) : (-qb + sq) / (2.0 * qa);
+                    if (t <= 0.0) { continue; }
+                    float h = dot((rayOrigin + rayDir * t) - apex, axis);
+                    if (h < 0.0 || h > coneLen) { continue; }// mirror cone / past the end
+
+                    float vis = (t > tScene) ? 0.25 : 1.0;// dim behind geometry
+                    float fade = 1.0 - (h / coneLen);// brightest at the apex
+                    outFragcolor.rgb = mix(outFragcolor.rgb, markerColor, vis * (0.15 + 0.45 * fade));
+                }
+            }
+        }
+    }
 }
 
 

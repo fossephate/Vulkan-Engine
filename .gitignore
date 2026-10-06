@@ -245,3 +245,7 @@ ModelManifest.xml
 # FAKE - F# Make
 .fake/
 /graphicalProjects/
+
+# CMake / clangd output
+/build/
+/.cache/

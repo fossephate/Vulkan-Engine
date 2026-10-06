@@ -24,6 +24,9 @@
 #if USE_SDL2
 	#include <SDL2/SDL.h>
 	#include <SDL2/SDL_syswm.h>
+	#if defined(__APPLE__)
+		#include <SDL2/SDL_vulkan.h>
+	#endif
 #endif
 
 
@@ -133,7 +136,7 @@ namespace vkx
 		* @note Targets other than XCB ar not yet supported
 		*/
 		// define params for this function based on os and settings
-		#if defined(_WIN32)
+		#if defined(_WIN32) || defined(__APPLE__)
 			void createSurface(SDL_Window * SDLWindow, SDL_SysWMinfo windowInfo);
 		#elif defined(__linux__)
 			void createSurface(xcb_connection_t* connection, xcb_window_t window);

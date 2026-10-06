@@ -84,8 +84,7 @@
 
 #define VERTEX_BUFFER_BIND_ID 0
 #define INSTANCE_BUFFER_BIND_ID 1
-#define ENABLE_VALIDATION true
-//#define ENABLE_VALIDATION false// causes error?
+#define ENABLE_VALIDATION false
 
 namespace vkx
 {

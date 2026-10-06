@@ -92,10 +92,10 @@ inline size_t alignedSize(size_t align, size_t sz) {
 
 inline glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4* from) {
 	glm::mat4 to;
-	to[0][0] = (GLfloat)from->a1; to[0][1] = (GLfloat)from->b1;  to[0][2] = (GLfloat)from->c1; to[0][3] = (GLfloat)from->d1;
-	to[1][0] = (GLfloat)from->a2; to[1][1] = (GLfloat)from->b2;  to[1][2] = (GLfloat)from->c2; to[1][3] = (GLfloat)from->d2;
-	to[2][0] = (GLfloat)from->a3; to[2][1] = (GLfloat)from->b3;  to[2][2] = (GLfloat)from->c3; to[2][3] = (GLfloat)from->d3;
-	to[3][0] = (GLfloat)from->a4; to[3][1] = (GLfloat)from->b4;  to[3][2] = (GLfloat)from->c4; to[3][3] = (GLfloat)from->d4;
+	to[0][0] = (float)from->a1; to[0][1] = (float)from->b1;  to[0][2] = (float)from->c1; to[0][3] = (float)from->d1;
+	to[1][0] = (float)from->a2; to[1][1] = (float)from->b2;  to[1][2] = (float)from->c2; to[1][3] = (float)from->d2;
+	to[2][0] = (float)from->a3; to[2][1] = (float)from->b3;  to[2][2] = (float)from->c3; to[2][3] = (float)from->d3;
+	to[3][0] = (float)from->a4; to[3][1] = (float)from->b4;  to[3][2] = (float)from->c4; to[3][3] = (float)from->d4;
 	return to;
 }
 
@@ -1774,12 +1774,13 @@ class VulkanExample : public vkx::vulkanApp {
 		{
 
 			// Shadow mapping pipeline
-			// The shadow mapping pipeline uses geometry shader instancing (invocations layout modifier) to output 
-			// shadow maps for multiple lights sources into the different shadow map layers in one single render pass
-			std::array<vk::PipelineShaderStageCreateInfo, 3> shadowStages;
+			// The vertex shader writes gl_Layer (VK_EXT_shader_viewport_index_layer)
+			// and the scene is drawn with instanceCount = NUM_LIGHTS_TOTAL, one
+			// instance per shadow map layer. This replaces the old geometry-shader
+			// approach, which MoltenVK/Metal cannot run (no geometry shaders).
+			std::array<vk::PipelineShaderStageCreateInfo, 2> shadowStages;
 			shadowStages[0] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/shadow.vert.spv", vk::ShaderStageFlagBits::eVertex);
 			shadowStages[1] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/shadow.frag.spv", vk::ShaderStageFlagBits::eFragment);
-			shadowStages[2] = context.loadShader(getAssetPath() + "shaders/vulkanscene/ssao/shadow.geom.spv", vk::ShaderStageFlagBits::eGeometry);
 
 			pipelineCreateInfo.pStages = shadowStages.data();
 			pipelineCreateInfo.stageCount = static_cast<uint32_t>(shadowStages.size());
@@ -2143,6 +2144,18 @@ class VulkanExample : public vkx::vulkanApp {
 				// increment counter
 				n++;
 			}
+		}
+
+		// The grid above only fills w*h of the NUM_POINT_LIGHTS slots. Give the
+		// rest sane values: a zero radius/falloff makes the shader compute
+		// attenuation = 1/0, and the resulting inf/NaN poisons the lighting
+		// accumulator (GPU/fast-math dependent).
+		for (; n < NUM_POINT_LIGHTS; ++n) {
+			uboFSLights.pointlights[n].position = glm::vec4(0.0f);
+			uboFSLights.pointlights[n].color = glm::vec4(0.0f);
+			uboFSLights.pointlights[n].radius = 1.0f;
+			uboFSLights.pointlights[n].linearFalloff = 1.0f;
+			uboFSLights.pointlights[n].quadraticFalloff = 1.0f;
 		}
 
 		//uboFSLights.spotlights[0].target = glm::vec4(cos(globalP*8.0f)*9.0f, sin(globalP*8.0f)*4.0f, 0.0f, 0.0f);
@@ -3489,7 +3502,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 				// Clear values for all attachments written in the fragment shader
 				std::array<vk::ClearValue, 1> clearValues;
-				clearValues[0].depthStencil = { 1.0f, 0 };
+				clearValues[0].depthStencil = vk::ClearDepthStencilValue{ 1.0f, 0 };
 
 				vk::RenderPassBeginInfo renderPassBeginInfo;
 				renderPassBeginInfo.renderPass = offscreen.framebuffers[3].renderPass;
@@ -3569,8 +3582,9 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
-						// draw:
-						offscreenCmdBuffer.drawIndexed(meshBuffer->indexCount, 1, 0, 0, 0);
+						// draw: one instance per shadow map layer (vertex shader
+						// routes each instance to its layer via gl_Layer)
+						offscreenCmdBuffer.drawIndexed(meshBuffer->indexCount, NUM_LIGHTS_TOTAL, 0, 0, 0);
 					}
 
 				}
@@ -3606,7 +3620,7 @@ class VulkanExample : public vkx::vulkanApp {
 			clearValues[0].color = vkx::clearColor({ 0.0f, 0.0f, 0.0f, 0.0f });
 			clearValues[1].color = vkx::clearColor({ 0.0f, 0.0f, 0.0f, 0.0f });
 			clearValues[2].color = vkx::clearColor({ 0.0f, 0.0f, 0.0f, 0.0f });
-			clearValues[3].depthStencil = { 1.0f, 0 };
+			clearValues[3].depthStencil = vk::ClearDepthStencilValue{ 1.0f, 0 };
 
 			vk::RenderPassBeginInfo renderPassBeginInfo;
 			renderPassBeginInfo.renderPass = offscreen.framebuffers[0].renderPass;
@@ -3795,7 +3809,7 @@ class VulkanExample : public vkx::vulkanApp {
 
 			// Clear values for all attachments written in the fragment shader
 			clearValues[0].color = vkx::clearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
-			clearValues[1].depthStencil = { 1.0f, 0 };
+			clearValues[1].depthStencil = vk::ClearDepthStencilValue{ 1.0f, 0 };
 
 			vk::RenderPassBeginInfo renderPassBeginInfo2;
 			renderPassBeginInfo2.renderPass = offscreen.framebuffers[1].renderPass;
@@ -4181,7 +4195,11 @@ class VulkanExample : public vkx::vulkanApp {
 
 
 
+#if defined(_WIN32)
 int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow) {
+#else
+int main(int argc, char *argv[]) {
+#endif
 
 	VulkanExample* example = new VulkanExample();
 	example->run();

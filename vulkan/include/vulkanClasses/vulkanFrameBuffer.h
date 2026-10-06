@@ -376,7 +376,7 @@ namespace vkx {
 			//device.bindImageMemory(newAttachment.image, newAttachment.memory, 0);
 
 
-			newAttachment.subresourceRange = {};
+			newAttachment.subresourceRange = vk::ImageSubresourceRange();
 			newAttachment.subresourceRange.aspectMask = aspectMask;
 			newAttachment.subresourceRange.levelCount = 1;
 			newAttachment.subresourceRange.layerCount = layerCount;
@@ -397,7 +397,7 @@ namespace vkx {
 
 
 			// Fill attachment description
-			newAttachment.description = {};
+			newAttachment.description = vk::AttachmentDescription();
 			newAttachment.description.samples = vk::SampleCountFlagBits::e1;
 			newAttachment.description.loadOp = vk::AttachmentLoadOp::eClear;
 			newAttachment.description.storeOp = ((VkImageUsageFlags)usage & (VkImageUsageFlagBits)vk::ImageUsageFlagBits::eSampled) ? vk::AttachmentStoreOp::eStore : vk::AttachmentStoreOp::eDontCare;// todo figure out bitmasks with vulkan.hpp
